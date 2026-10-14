@@ -1,12 +1,12 @@
 # 1er Reunion 13-10-2026
 ### Pre-reunion
 
-| Rol   | Alumno    | Función    |
+| Rol   | Alumno    | Función   |
 | :---  | :---      | :---      |
-|A      |           |implementa la parte de SDL del cliente|
-|B      |           |implementa la parte de QT del cliente (con editor)|
-|C      |           |implementa la parte de comunicación entre cliente y servidor, threads, protocolo, testing y tareas extras (persistencia, configuración, etc)|
-|D      |           |implementa la parte de lógica del servidor|
+|A      | Ciro      |implementa la parte de SDL del cliente|
+|B      | Luisa     |implementa la parte de QT del cliente (con editor)|
+|C      | Caro      |implementa la parte de comunicación entre cliente y servidor, threads, protocolo, testing y tareas extras (persistencia, configuración, etc)|
+|D      | Agus      |implementa la parte de lógica del servidor|
 
 ### Preguntas
 - "Para jugar con amigos, cada partida contará con un id único de invitación, que se le enviará a los demás jugadores que desean participar"
@@ -21,7 +21,8 @@
     --> cuatro como en ele juego real?
 
     abril dice:
-    "si, como la del juego real" 
+    "si, como la del juego real"
+    asumimos que el maximo historico que se puede unir a una partida es 4 (como en el juego)
 
 - Cuando el jugador llega a 0% de vida y cae inconsciente:
     
@@ -97,7 +98,7 @@
 ### TODO para la proxima reunión:
 - features: 
     - musica y sonidos(efectos y musica de fondo)
-    - cheats (soporte de protocolo)
+    - cheats (soporte de protocolo) (/cheat )
 - diseño de implementación  (reunion mínimo C y D)
     - cant hilos, clases, modelado de datos, seguir KISS, composición por sobre la herencia, etc...
 - conexión cliente-servidor simple funcionando para tener de base. 
