@@ -1,12 +1,12 @@
-#include "acceptor.h"
-
-#include <sys/socket.h>
+#include "../common/acceptor.h"
 
 #include <iostream>
 #include <memory>
 #include <utility>
 
-#include "liberror.h"
+#include <sys/socket.h>
+
+#include "../common/liberror.h"
 
 Acceptor::Acceptor(Socket& listenSocket, GameManager& manager)
     : listenSocket(listenSocket), manager(manager) {}

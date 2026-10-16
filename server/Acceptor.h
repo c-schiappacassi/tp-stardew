@@ -4,10 +4,11 @@
 #include <list>
 #include <memory>
 
+#include "../common/socket.h"
+#include "../common/thread.h"
+
 #include "client_handler.h"
 #include "game_manager.h"
-#include "socket.h"
-#include "thread.h"
 
 
 class Acceptor : public Thread {
