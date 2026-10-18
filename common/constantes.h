@@ -1,0 +1,5 @@
+#ifndef COMMON_CONSTANTES_H
+#define COMMON_CONSTANTES_H
+
+
+#endif
