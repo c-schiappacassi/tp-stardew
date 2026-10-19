@@ -19,3 +19,22 @@ private:
 };
 
 #endif
+
+
+/*
+class GameManager { // agus
+public:
+    GameManager(const GameManager&) = delete;
+    GameManager& operator=(const GameManager&) = delete;
+
+    GameSession createGame(const CreateGameDTO& dto,
+                           const std::shared_ptr<OutQueue>& out);
+    GameSession joinGame(const JoinGameDTO& dto,
+                         const std::shared_ptr<OutQueue>& out);
+
+    GameSession resumeGame(const ResumeGameDTO& dto,
+                           const std::shared_ptr<OutQueue>& out);
+    GameListDTO listGames();
+
+};
+*/
