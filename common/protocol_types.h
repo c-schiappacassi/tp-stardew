@@ -12,6 +12,7 @@ enum class MessageType : uint8_t {
     ResumeGame = 0x04, // llamamos a todas las partidas y vemos si entre ellas
                        // esta la aprtida a la que nos queremos reunir
     */
+    ExitGame = 0x05,
 
     Move = 0x10,
     SelectItem = 0x11,   // cofre a inventario
@@ -166,8 +167,7 @@ enum class ItemId : uint16_t {
 
 // CHEATS
 enum class CheatType : uint8_t {
-    SetLife = 0,
-    SetEnergy = 1,
+    SetLife = 1,
     AddGold = 2,
     RemoveGold = 3,
     CompleteSet = 4,
