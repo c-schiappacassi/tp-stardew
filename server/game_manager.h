@@ -3,38 +3,26 @@
 
 #include <cstddef>
 #include <memory>
+#include <mutex>
 #include <string>
 #include <vector>
 
+#include "dtos.h"
 #include "game.h"
+#include "game_types.h"
 
 class GameManager {
-public:
-    Game& createGame(const std::string& name);
-    Game* findGame(const std::string& id);
-
 private:
     std::size_t nextId = 1;
+    std::mutex mtx;
     std::vector<std::unique_ptr<Game>> games;
+
+public:
+    ~GameManager();
+
+    GameSession createGame(const CreateGameDTO& dto,const std::shared_ptr<OutQueue>& out);
+    GameSession joinGame(const JoinGameDTO& dto,const std::shared_ptr<OutQueue>& out);
+    Game* findGame(const std::string& id);
 };
 
 #endif
-
-
-/*
-class GameManager { // agus
-public:
-    GameManager(const GameManager&) = delete;
-    GameManager& operator=(const GameManager&) = delete;
-
-    GameSession createGame(const CreateGameDTO& dto,
-                           const std::shared_ptr<OutQueue>& out);
-    GameSession joinGame(const JoinGameDTO& dto,
-                         const std::shared_ptr<OutQueue>& out);
-
-    GameSession resumeGame(const ResumeGameDTO& dto,
-                           const std::shared_ptr<OutQueue>& out);
-    GameListDTO listGames();
-
-};
-*/
