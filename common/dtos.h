@@ -7,7 +7,6 @@
 
 #include "protocol_types.h"
 
-
 struct CreateGameDTO {
     std::string gameName;
     std::string playerName;
@@ -22,11 +21,11 @@ struct JoinGameDTO {
 };
 
 struct ResumeGameDTO {
-    uint16_t gameId;
+    std::string gameId;
 };
 
 struct GameInfoDTO {
-    uint16_t id;
+    std::string id;
     std::string gameName;
     std::string playerName;
     uint8_t skin;
@@ -38,6 +37,7 @@ struct GameListDTO {
 };
 
 struct GameJoinedDTO {
+    std::string gameId;
     uint16_t playerId;
     uint8_t worldId;
 };
