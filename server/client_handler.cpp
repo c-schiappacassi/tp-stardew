@@ -103,10 +103,12 @@ void ClientHandler::runGame() {
 
 
 bool ClientHandler::answerEntry() {
+    const bool joined =session.status.status == StatusCode::Ok && session.input;
     protocol.sendStatus(session.status);
-    const bool joined =
-            session.status.status == StatusCode::Ok && session.input;
-    if (!joined) {
+
+    if (joined) {
+        protocol.sendGameJoined(GameJoinedDTO{session.gameId, session.playerId, session.worldId});
+    } else {
         session = GameSession();
     }
     return joined;

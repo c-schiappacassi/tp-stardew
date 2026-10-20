@@ -56,6 +56,7 @@ void ServerProtocol::sendGameList(const GameListDTO& dto) {
 
 void ServerProtocol::sendGameJoined(const GameJoinedDTO& dto) {
     base.sendUint8(static_cast<uint8_t>(MessageType::GameJoined));
+    base.sendString(dto.gameId);
     base.sendUint16(dto.playerId);
     base.sendUint8(dto.worldId);
 }

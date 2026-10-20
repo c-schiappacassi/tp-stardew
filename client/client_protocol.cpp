@@ -62,6 +62,7 @@ GameListDTO ClientProtocol::receiveGameList() {
 
 GameJoinedDTO ClientProtocol::receiveGameJoined() {
     GameJoinedDTO dto;
+    dto.gameId = base.receiveString();
     dto.playerId = base.receiveUint16();
     dto.worldId = base.receiveUint8();
     return dto;
