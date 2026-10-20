@@ -1,4 +1,4 @@
-#include "../common/server_protocol.h"
+#include "server_protocol.h"
 
 #include <cstdint>
 

@@ -42,4 +42,10 @@ struct GameJoinedDTO {
     uint8_t worldId;
 };
 
+struct StatusDTO {
+    StatusCode status;
+    std::string errorMsg;
+    std::string successMsg;
+};
+
 #endif
