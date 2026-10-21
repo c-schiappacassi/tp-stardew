@@ -103,3 +103,41 @@
     - cant hilos, clases, modelado de datos, seguir KISS, composición por sobre la herencia, etc...
 - conexión cliente-servidor simple funcionando para tener de base. 
 - SDL y QT: investiguen en la semana (QT juga con inputs) (SDL pp haga algo y se pueda interactuar)
+
+
+# 2da Reunión 20-10-2026
+
+### Preguntas y respuestas
+- **El server solo envia struct serverStatus a los clientes**
+- **Cada vez qeu corres el juego, el cliente tiene que ingresar su nombre de usuario(unico e identificador de cliente)**
+- Map de funciones: se guarda una referencia a la funcion, el map te devuelve eso y lo ejecutas
+- Class Player: no compartido
+- Se puede usar std::variant? abril dice que se puede usar eso o herencia. como quieran
+- Enums para los items o toml puro? enums
+- Hitbox: servidor, sdl manda al servidor la posicion a donde voy, el server me devuelve donde termino estando (si se pudo, me va a devolver la pos que le mande, si no, me devuelve donde estaba)
+- Dimenciones de los colisionables en un constastes.h
+- Cliente: antes de renderizar chequear que del serverStatus entra en mi vista/cuadrado 
+- Estaciones?  una vez que este lo del enuciado podemos ver si llegamos con extras
+
+### TODO para la proxima reunión:
+- QT: para pantallas de inicio son 2 semanas (ingresar ususario, crear partida, elegir mapa, elegir aspecto, joinear partida)
+- Protocolo:
+    - una semana: base del protocolo (ej hacer el serializador, definir que info se manda y su modelado)
+    - 2 semanas: concurrencia(poder tener multiples partidas y multiples juagdores)
+- Servidor + SDL:
+    - Constant Rate loop - gameloop - leer el articulo
+    - feat/movimiento completo
+    - dto directo cada comando del sdl
+- feat/mineria + inventario (1 semana)
+  - picar los minerales
+  - inventario (10 slots de stacks de 50)
+  - conseguir la reconpensa de minar
+- feat/granja (3 semanas)
+  - logica animales (caminan)
+
+
+# 3ra Reunión xx-10-2026
+
+
+
+
