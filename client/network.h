@@ -1,16 +1,16 @@
 #include "queue.h"
-#include "sendThread.h"
-#include "recvThread.h"
-#include "gameDTO.h"
+#include "send_thread.h"
+#include "recv_thread.h"
+#include "dtos.h"
 #include <optional>
-//#include "ClientProtocol.h"
+#include "client_protocol.h"
 
 #define MAX_SIZE_QUEUE 100
 
 class NetworkManager {
 private:
     Queue<GameDTO> send_queue;
-    Queue<serverStatus> recv_queue;
+    Queue<ServerStatus> recv_queue;
     ClientProtocol protocolo;
     SendThread sender;
     RecvThread receiver;
@@ -24,16 +24,16 @@ public:
           receiver(recv_queue, protocolo) {}
 
     void start() {
-        sender.start();
-        receiver.start();
+        sender.run();
+        receiver.run();
     }
 
     void push_to_send(const GameDTO& dto) {
         send_queue.push(dto);
     }
 
-    std::optional<serverStatus> try_pop_recv() {
-        serverStatus status;
+    std::optional<ServerStatus> try_pop_recv() {
+        ServerStatus status;
         if (recv_queue.try_pop(status)) {
             return status;
         }

@@ -1,5 +1,3 @@
-#ifndef COMMON_CONSTANTES_H
-#define COMMON_CONSTANTES_H
+#pragma once
 
-
-#endif
+#define FPS 30

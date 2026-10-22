@@ -3,11 +3,9 @@
 #include <chrono>
 #include "foo.h"
 #include "network.h"
-#include "inputTranslator.h"
+#include "input_translator.h"
 #include "state.h"
-#include "gameUI.h"
-
-#define FPS 30
+#include "game_ui.h"
 
 class Game
 {

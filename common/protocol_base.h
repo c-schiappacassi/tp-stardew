@@ -1,5 +1,4 @@
-#ifndef PROTOCOL_BASE_H
-#define PROTOCOL_BASE_H
+#pragma once
 
 #include <cstdint>
 #include <string>
@@ -30,5 +29,3 @@ public:
     uint32_t receiveUint32();
     std::string receiveString();
 };
-
-#endif

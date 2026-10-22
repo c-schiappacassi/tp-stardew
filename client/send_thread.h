@@ -1,7 +1,7 @@
 #include "thread.h"
 #include "queue.h"
-#include "gameDTO.h" // MOCK
-//#include "ClientProtocol.h"
+#include "dtos.h"
+#include "client_protocol.h"
 
 class SendThread : public Thread {
 private:

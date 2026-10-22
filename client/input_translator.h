@@ -3,7 +3,7 @@
 #include <variant>
 #include <optional>
 
-#include "gameDTO.h" // MOCK
+#include "dtos.h"
 
 struct EventKey {
     uint32_t event_type;

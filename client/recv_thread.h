@@ -1,23 +1,23 @@
 #include "thread.h"
 #include "queue.h"
-#include "gameDTO.h"
-// #include "ClientProtocol.h"
+#include "dtos.h"
+#include "client_protocol.h"
 
 
 class RecvThread : public Thread {
 private:
-    Queue<serverStatus>& recv_queue;
+    Queue<ServerStatus>& recv_queue;
     ClientProtocol& protocolo;
     bool should_keep_running;
 
 public:
-    RecvThread(Queue<serverStatus>& queue, ClientProtocol& prot):recv_queue(queue), protocolo(prot) {}
+    RecvThread(Queue<ServerStatus>& queue, ClientProtocol& prot):recv_queue(queue), protocolo(prot) {}
 
     void run() override {
         this->should_keep_running = true;
         try {
             while (this->should_keep_running) {
-                serverStatus status = protocolo.try_recv(); 
+                ServerStatus status = protocolo.try_recv(); 
                 
                 recv_queue.push(status);
             }
