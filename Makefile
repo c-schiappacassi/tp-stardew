@@ -10,5 +10,8 @@ run-tests: compile-debug
 
 all: clean run-tests
 
+run-client: compile-debug
+	./build/taller_client
+	
 clean:
 	rm -Rf build/
