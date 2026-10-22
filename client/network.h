@@ -13,6 +13,7 @@ class NetworkManager {
 private:
     Queue<GameDTO> send_queue;
     Queue<ServerStatus> recv_queue;
+    // TODO:TBD si protocolo deberia ser dueño del socket o deberia tenerlo network
     Socket socket;
     ClientProtocol protocolo;
     SendThread sender;
@@ -28,8 +29,8 @@ public:
           receiver(recv_queue, protocolo, socket) {}
 
     void start() {
-        sender.run();
-        receiver.run();
+        sender.start();
+        receiver.start();
     }
 
     void push_to_send(const GameDTO& dto) {

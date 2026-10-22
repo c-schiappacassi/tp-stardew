@@ -1,4 +1,5 @@
 #include "client_protocol.h"
+#include <stdexcept>
 
 #include <cstdint>
 
@@ -30,7 +31,16 @@ void ClientProtocol::send(const ResumeGameDTO& dto) {
 }
 */
 
+// TODO: terminar recv de server status cuando tengamos status definido
 void ClientProtocol::recv(ServerStatus& status) {
-    printf("%li", (sizeof(status)));
-    // TODO
+    const auto type = static_cast<MessageType>(base.receiveUint8());
+
+    if (type != MessageType::Status) {
+        throw std::runtime_error("Se esperaba un mensaje Status");
+    }
+
+    status.status = static_cast<StatusCode>(base.receiveUint8());
+    status.errorMsg = base.receiveString();
+    status.successMsg = base.receiveString();
 }
+

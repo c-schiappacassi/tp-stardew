@@ -2,7 +2,7 @@ target_sources(taller_server
     PRIVATE
     # .cpp files
         main.cpp
-        Acceptor.cpp
+        acceptor.cpp
         client_handler.cpp
         client_sender.cpp
         server_protocol.cpp
@@ -11,7 +11,7 @@ target_sources(taller_server
 
     PUBLIC
     # .h files
-        Acceptor.h
+        acceptor.h
         client_handler.h
         client_sender.h
         server_protocol.h

@@ -2,7 +2,8 @@
 #include <iostream>
 #include <string>
 
-#include "Acceptor.h"
+// IMPORTANTE TODO: acceptor lo debe tener el hilo partida, que acepta jugarores y lanza los clinet handlers
+#include "acceptor.h"
 #include "game_manager.h"
 #include "socket.h"
 

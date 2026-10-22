@@ -49,9 +49,11 @@ struct StatusDTO {
     std::string successMsg;
 };
 
-struct ServerStatus
-{
-    // TODO
+// TODO: seguir completando server status
+struct ServerStatus {
+    StatusCode status;
+    std::string errorMsg;
+    std::string successMsg;
 };
 
 using GameDTO = std::variant<CreateGameDTO, JoinGameDTO>;

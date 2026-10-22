@@ -13,6 +13,7 @@ target_sources(taller_common
         constantes.h
         dtos.h
         foo.h
+        position.h
         foo.tpp
         liberror.h
         protocol_base.h
