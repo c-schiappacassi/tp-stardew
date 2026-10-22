@@ -1,5 +1,6 @@
 #pragma once
-#include "gameDTO.h"
+
+#include "dtos.h"
 
 
 // TODO
@@ -10,7 +11,7 @@ private:
 public:
     State() = default;
 
-    void update(const serverStatus& status) {
+    void update(const ServerStatus&) {
 
     }
 };

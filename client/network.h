@@ -1,16 +1,20 @@
+#pragma once
+
 #include "queue.h"
-#include "sendThread.h"
-#include "recvThread.h"
-#include "gameDTO.h"
+#include "send_thread.h"
+#include "recv_thread.h"
+#include "dtos.h"
 #include <optional>
-//#include "ClientProtocol.h"
+#include "client_protocol.h"
 
 #define MAX_SIZE_QUEUE 100
 
 class NetworkManager {
 private:
     Queue<GameDTO> send_queue;
-    Queue<serverStatus> recv_queue;
+    Queue<ServerStatus> recv_queue;
+    // TODO:TBD si protocolo deberia ser dueño del socket o deberia tenerlo network
+    Socket socket;
     ClientProtocol protocolo;
     SendThread sender;
     RecvThread receiver;
@@ -19,9 +23,10 @@ public:
     NetworkManager(const std::string& host, const std::string& port)
         : send_queue(MAX_SIZE_QUEUE),
           recv_queue(MAX_SIZE_QUEUE), 
-          protocolo(host, port), 
+          socket(host.c_str(), port.c_str()),
+          protocolo(socket),
           sender(send_queue, protocolo), 
-          receiver(recv_queue, protocolo) {}
+          receiver(recv_queue, protocolo, socket) {}
 
     void start() {
         sender.start();
@@ -32,8 +37,8 @@ public:
         send_queue.push(dto);
     }
 
-    std::optional<serverStatus> try_pop_recv() {
-        serverStatus status;
+    std::optional<ServerStatus> try_pop_recv() {
+        ServerStatus status;
         if (recv_queue.try_pop(status)) {
             return status;
         }

@@ -87,11 +87,13 @@ void ClientHandler::runGame() {
 
     while (should_keep_running()) {
         switch (protocol.receiveType()) {
+            /* TODO: habilitar cuando existan MoveDTO y receiveMove().
             case MessageType::Move: {
                 session.input->push(PlayerCommand{
                         session.playerId, protocol.receiveMove()});
                 break;
             }
+            */
             case MessageType::ExitGame: {
                 return;
             }

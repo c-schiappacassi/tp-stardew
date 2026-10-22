@@ -1,11 +1,12 @@
-#ifndef DTOS_H
-#define DTOS_H
+#pragma once
 
 #include <cstdint>
 #include <string>
+#include <variant>
 #include <vector>
 
 #include "protocol_types.h"
+
 
 struct CreateGameDTO {
     std::string gameName;
@@ -48,4 +49,11 @@ struct StatusDTO {
     std::string successMsg;
 };
 
-#endif
+// TODO: seguir completando server status
+struct ServerStatus {
+    StatusCode status;
+    std::string errorMsg;
+    std::string successMsg;
+};
+
+using GameDTO = std::variant<CreateGameDTO, JoinGameDTO>;

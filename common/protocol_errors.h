@@ -1,5 +1,4 @@
-#ifndef PROTOCOL_ERRORS_H
-#define PROTOCOL_ERRORS_H
+#pragma once
 
 #include <stdexcept>
 #include <string>
@@ -13,5 +12,3 @@ class ProtocolError : public std::runtime_error {
 public:
     explicit ProtocolError(const std::string& what);
 };
-
-#endif

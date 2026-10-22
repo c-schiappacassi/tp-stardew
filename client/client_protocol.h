@@ -1,5 +1,4 @@
-#ifndef CLIENT_PROTOCOL_H
-#define CLIENT_PROTOCOL_H
+#pragma once
 
 #include "dtos.h"
 #include "protocol_base.h"
@@ -13,17 +12,12 @@ private:
 public:
     explicit ClientProtocol(Socket& socket);
 
-    void sendCreateGame(const CreateGameDTO& dto);
-    void sendJoinGame(const JoinGameDTO& dto);
+    void send(const CreateGameDTO& dto);
+    void send(const JoinGameDTO& dto);
     /*
-    void sendListGames();
-    void sendResumeGame(const ResumeGameDTO& dto);
+    void send();
+    void send(const ResumeGameDTO& dto);
     */
 
-    MessageType receiveType();
-    StatusDTO receiveStatus();
-//    GameListDTO receiveGameList();
-    GameJoinedDTO receiveGameJoined();
+    void recv(ServerStatus& status);
 };
-
-#endif
