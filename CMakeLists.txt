@@ -31,6 +31,20 @@ add_library(taller_common STATIC)
 # add the source files that make the lib
 # HEY!! TODO XXX: add more subfolders here
 add_subdirectory(common/)
+target_sources(taller_common
+    PRIVATE
+    common/socket.cpp
+    common/resolver.cpp
+    common/resolvererror.cpp
+    common/liberror.cpp
+    common/protocol_base.cpp
+    common/protocol_errors.cpp
+)
+
+target_include_directories(taller_common
+    PUBLIC
+    "${CMAKE_CURRENT_SOURCE_DIR}/common"
+)
 
 
 # set compiler warnings to the targets
