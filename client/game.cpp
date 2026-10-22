@@ -1,5 +1,7 @@
 #include "game.h"
 
+#include "constantes.h"
+
 void Game::exe() {
     auto rate = std::chrono::milliseconds(1000/FPS);
 

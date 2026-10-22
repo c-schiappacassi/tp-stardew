@@ -11,7 +11,7 @@ private:
 public:
     State() = default;
 
-    void update(const ServerStatus& status) {
+    void update(const ServerStatus&) {
 
     }
 };

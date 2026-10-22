@@ -8,7 +8,9 @@ private:
     SDL2pp::Renderer& renderer;
 
 public:
-    void update(const State& state, long long it) {
+    explicit GameUI(SDL2pp::Renderer& renderer) : renderer(renderer) {}
+
+    void update(const State&, long long) {
 
     }
 };

@@ -1,3 +1,5 @@
+#pragma once
+
 #include "thread.h"
 #include "queue.h"
 #include "dtos.h"
@@ -31,7 +33,7 @@ public:
     }
 
     void stop() override {
-        this->shoud_keep_running = false
+        this->shoud_keep_running = false;
         Thread::stop();
         send_queue.close();
     }

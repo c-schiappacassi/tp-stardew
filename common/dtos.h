@@ -54,4 +54,4 @@ struct ServerStatus
     // TODO
 };
 
-using GameDTO = std::variant<CreateGameDTO, JoinGameDTO, GameInfoDTO, GameListDTO, ServerStatus>;
+using GameDTO = std::variant<CreateGameDTO, JoinGameDTO>;

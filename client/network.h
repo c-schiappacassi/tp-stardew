@@ -1,3 +1,5 @@
+#pragma once
+
 #include "queue.h"
 #include "send_thread.h"
 #include "recv_thread.h"
@@ -11,6 +13,7 @@ class NetworkManager {
 private:
     Queue<GameDTO> send_queue;
     Queue<ServerStatus> recv_queue;
+    Socket socket;
     ClientProtocol protocolo;
     SendThread sender;
     RecvThread receiver;
@@ -19,9 +22,10 @@ public:
     NetworkManager(const std::string& host, const std::string& port)
         : send_queue(MAX_SIZE_QUEUE),
           recv_queue(MAX_SIZE_QUEUE), 
-          protocolo(host, port), 
+          socket(host.c_str(), port.c_str()),
+          protocolo(socket),
           sender(send_queue, protocolo), 
-          receiver(recv_queue, protocolo) {}
+          receiver(recv_queue, protocolo, socket) {}
 
     void start() {
         sender.run();
