@@ -16,7 +16,7 @@ struct DisconnectCommand {};
 
 //Queda pendiente por charlar: MoveDTO, InteractDTO, DonateDTO, ChatDTO, UseItemCommand, RequestMultiplayerCode
 //using Command = std::variant<MoveDTO, InteractDTO, DonateDTO, ChatDTO,UseItemCommand, RequestMultiplayerCode,DisconnectCommand>;
-using Command = std::variant<DisconnectCommand>;
+using Command = std::variant<MoveDTO,DisconnectCommand>;
 
 struct PlayerCommand {
     uint16_t playerId;
@@ -27,7 +27,7 @@ struct PlayerCommand {
 
 //queda pendiente por charlar: hatMessageDTO, MultiplayerCodeDTO
 //using OutgoingMessage = std::variant<StatusDTO, ChatMessageDTO, MultiplayerCodeDTO>;
-using OutgoingMessage = std::variant<StatusDTO>;
+using OutgoingMessage = ServerStatus;
 
 // lo de abajo es como establecer un "sinonimo" y uso eso en todo el codigo
 using CommandQueue = Queue<PlayerCommand>;

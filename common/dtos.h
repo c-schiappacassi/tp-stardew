@@ -6,6 +6,7 @@
 #include <vector>
 
 #include "protocol_types.h"
+#include "position.h"
 
 
 struct CreateGameDTO {
@@ -49,11 +50,16 @@ struct StatusDTO {
     std::string successMsg;
 };
 
+struct MoveDTO {
+    Position position{0, 0};
+};
+
 // TODO: seguir completando server status
 struct ServerStatus {
     StatusCode status;
     std::string errorMsg;
     std::string successMsg;
+    Position positionPlayer{0, 0};
 };
 
-using GameDTO = std::variant<CreateGameDTO, JoinGameDTO>;
+using GameDTO = std::variant<CreateGameDTO, JoinGameDTO, MoveDTO>;

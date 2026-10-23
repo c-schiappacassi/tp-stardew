@@ -6,6 +6,10 @@
 #include "../common/protocol_types.h"
 #include "../common/socket.h"
 
+// TODO: agregar receiveMove() que devuelva MoveDTO con el destino (x, y).
+// receiveType() ya usa el tipo de mensaje.
+// Cambiar sendStatus() para recibir const ServerStatus& e incluir positionPlayer.
+
 class ServerProtocol {
 private:
     ProtocolBase base;

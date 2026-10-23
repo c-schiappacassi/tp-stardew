@@ -87,7 +87,10 @@ void ClientHandler::runGame() {
 
     while (should_keep_running()) {
         switch (protocol.receiveType()) {
-            /* TODO: habilitar cuando existan MoveDTO y receiveMove().
+            // TODO: el MoveDTO ya existe. Cuando este receiveMove(), habilita este
+            // encola el comando con session.playerId, como esta escrito abajo
+            // por ahora el id del jugador la obtengo de su conexion, hablalo con ciro.
+            /* 
             case MessageType::Move: {
                 session.input->push(PlayerCommand{
                         session.playerId, protocol.receiveMove()});
@@ -103,6 +106,10 @@ void ClientHandler::runGame() {
     }
 }
 
+
+// TODO: juntar la respuesta de ingreso dentro de ServerStatus.Incorporar los datos actuales de GameJoined (gameId, playerId y worldId)
+// al DTO y al protocolo, manteniendolos errores de ingreso.
+// no mandar GameJoined como mensaje separado.
 
 bool ClientHandler::answerEntry() {
     const bool joined =session.status.status == StatusCode::Ok && session.input;
