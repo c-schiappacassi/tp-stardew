@@ -10,6 +10,8 @@
 #include "game_types.h"
 #include "player_record.h"
 #include "thread.h"
+#include "acceptor.h"
+#include "socket.h"
 
 class Game:public Thread {
 
@@ -19,22 +21,27 @@ class Game:public Thread {
         uint8_t worldId;
         std::shared_ptr<CommandQueue> input;
         std::mutex mtx;
+        bool configured = false;
         std::map<uint16_t, PlayerRecord> players;
         uint16_t nextPlayerId = 1;
+        Socket skt;
+        Acceptor acceptor;
 
         void disconnectPlayer(uint16_t playerId);
         void movePlayer(uint16_t playerId, const MoveDTO& move);
         void processCommands();
         void sendStatus();
+        GameSession addPlayer(const std::string& playerName, uint8_t skin,const std::shared_ptr<OutQueue>& output,const std::string& successMsg);
 
     public:
-        Game(const std::string& id, const std::string& name, uint8_t worldId);
+        Game(const std::string& id, const std::string& name, uint8_t worldId, const char* servicename);
 
         const std::string& getId() const;
-        const std::string& getName() const;
+        std::string getName() const;
         uint8_t getWorldId() const;
         std::shared_ptr<CommandQueue> getInputQueue() const;
-        bool tryAddPlayer(const std::string& playerName,uint8_t skin,const std::shared_ptr<OutQueue>& output,uint16_t& assignedId);
+        GameSession createGame(const CreateGameDTO& dto,const std::shared_ptr<OutQueue>& output);
+        GameSession joinGame(const JoinGameDTO& dto,const std::shared_ptr<OutQueue>& output);
 
         void run() override;
         void stop() override;

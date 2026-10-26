@@ -2,32 +2,26 @@
 #include <iostream>
 #include <string>
 
-// IMPORTANTE TODO: acceptor lo debe tener el hilo partida, que acepta jugarores y lanza los clinet handlers
-#include "acceptor.h"
 #include "game_manager.h"
-#include "socket.h"
 
 int main(int argc, char* argv[]) {
-    if (argc != 2) {
+    if (argc < 2) {
         std::cerr << "Uso: " << argv[0] << " <puerto>\n";
         return 1;
     }
     try {
-        Socket listenSocket(argv[1]);
         GameManager manager;
-        Acceptor acceptor(listenSocket, manager);
 
-        acceptor.start();
-
-        std::cout << "Servidor escuchando en el puerto " << argv[1]<< ". Escribi q para salir.\n";
+        for (int i = 1; i < argc; ++i) {
+            const std::string id = manager.createGame(argv[i]);
+            std::cout << "Partida " << id<< " escuchando en " << argv[i] << '\n';
+        }
 
         std::string line;
         while (std::getline(std::cin, line) && line != "q") {
-            
         }
 
-        acceptor.stop();
-        acceptor.join();
+        manager.stopAll();
         return 0;
     } catch (const std::exception& e) {
         std::cerr << "Error del servidor: " << e.what() << "\n";

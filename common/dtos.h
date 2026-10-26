@@ -62,6 +62,9 @@ struct ServerStatus {
     StatusCode status;
     std::string errorMsg;
     std::string successMsg;
+    std::string gameId;
+    uint16_t playerId = 0;
+    uint8_t worldId = 0;
     Position positionPlayer{0, 0};
 };
 

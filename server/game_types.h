@@ -34,7 +34,7 @@ using CommandQueue = Queue<PlayerCommand>;
 using OutQueue = Queue<OutgoingMessage>;
 
 struct GameSession {
-    StatusDTO status;
+    ServerStatus status;
     std::string gameId;
     uint16_t playerId=0;
     uint8_t worldId=0;
