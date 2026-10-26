@@ -10,13 +10,14 @@
 #include "socket.h"
 #include "thread.h"
 
+class Game;
 
 class ClientHandler : public Thread {
 private:
     // agus fijate si los nombres del game son otros y estos no te sirven no se que implementaste!
     Socket socket;
     ServerProtocol protocol;
-    GameManager& manager;
+    Game& game;
     std::shared_ptr<OutQueue> outQueue;
     GameSession session;
     std::unique_ptr<ClientSender> sender;
@@ -28,7 +29,7 @@ private:
     void disconnect();
 
 public:
-    ClientHandler(Socket&& socket, GameManager& manager);
+    ClientHandler(Socket&& socket, Game& game);
 
     void run() override;
     void stop() override;
