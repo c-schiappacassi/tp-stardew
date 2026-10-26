@@ -8,6 +8,9 @@
 #include "protocol_types.h"
 #include "position.h"
 
+// TODO IMPORTANTE: cambio de variant a herencia porque todos los dtos mandan el id del usuario en la 
+// partida para que la partida identifique a que clientHandler le tiene que responder
+// TBD: con que identificar al usuario(el apodo de la partida o un id?)
 
 struct CreateGameDTO {
     std::string gameName;
