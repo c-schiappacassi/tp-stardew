@@ -4,6 +4,9 @@
 
 struct Sprite {
     SDL2pp::Texture texture;
+    // TBD si sirve de algo 
+    uint8_t heigth;
+    uint8_t width;
 };
 
 struct Sound {
@@ -29,7 +32,6 @@ enum class SpriteId : uint16_t {
     Pants = 3,
     Shirts = 4,
     Tools = 5,
-    Weapons = 6
 };
 
 enum class SoundId : uint16_t{
@@ -42,4 +44,5 @@ struct ClipId{
     SpriteId sprite;
     Action currentAction;
     Direction dir;
+    std::optional<uint16_t> model; // para el modelo de la ropa y para la herramienta
 };

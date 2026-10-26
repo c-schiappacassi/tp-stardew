@@ -9,4 +9,5 @@ private:
     std::map<ClipId, Clip> clips;
     std::map<SoundId, Sound> sounds;
 public:
+    // load completo y getters
 };
