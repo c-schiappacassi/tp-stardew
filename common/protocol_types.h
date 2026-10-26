@@ -5,11 +5,9 @@ enum class MessageType : uint8_t {
 
     CreateGame = 0x01,
     JoinGame = 0x02,
-    /*
     ListGames = 0x03,  // lo usamos para cuando hay que retomar una partida
     ResumeGame = 0x04, // llamamos a todas las partidas y vemos si entre ellas
                        // esta la aprtida a la que nos queremos reunir
-    */
     ExitGame = 0x05,
 
     Move = 0x10,
