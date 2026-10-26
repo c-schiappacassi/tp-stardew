@@ -1,6 +1,4 @@
-#ifndef PROTOCOL_TYPES_H
-#define PROTOCOL_TYPES_H
-
+#pragma once
 #include <cstdint>
 
 enum class MessageType : uint8_t {
@@ -65,7 +63,7 @@ enum class TargetType : uint8_t {
 enum class PlayerState : uint8_t {
     Idle = 0,
     Walking = 1,
-    UsingTool = 2,
+    UsingTool = 2, // TBD: cambiar a UsingPick, UsingSword...
     Unconscious = 3,
     Sleeping = 4
 };
@@ -173,5 +171,3 @@ enum class CheatType : uint8_t {
     CompleteSet = 4,
     NextLevel = 5,
 };
-
-#endif

@@ -66,3 +66,8 @@ struct ServerStatus {
 };
 
 using GameDTO = std::variant<CreateGameDTO, JoinGameDTO, MoveDTO>;
+
+struct PlayerData
+{
+    /* data */
+};
