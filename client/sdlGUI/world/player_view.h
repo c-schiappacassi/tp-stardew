@@ -16,6 +16,7 @@
 class PlayerView {
 private:
     std::vector<LayerView> appearence; // TODO
+    // TODO: ToolView tool
     Animator anim;
 public:
     explicit PlayerView(const PlayerData& d);

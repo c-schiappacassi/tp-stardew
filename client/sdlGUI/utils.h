@@ -23,8 +23,13 @@ struct Frame {
     bool flip_h;
 };
 
-enum class SpriteId : uint16_t{
-
+enum class SpriteId : uint16_t {
+    FarmerBase = 1,
+    Hairstyles = 2,
+    Pants = 3,
+    Shirts = 4,
+    Tools = 5,
+    Weapons = 6
 };
 
 enum class SoundId : uint16_t{

@@ -1,16 +1,12 @@
-#pragma once
 #include <map>
-#include "protocol_types.h"
 #include "utils.h"
 
-
 // TODO
-class AssetManager {
+class AssetManager{
 private:
+    // todos estos mapas se hardcodean en el constructor de assetmanager
     std::map<SpriteId, Sprite> sprites;
     std::map<ClipId, Clip> clips;
     std::map<SoundId, Sound> sounds;
 public:
-    const Sprite& get_sprite(SpriteId id);
-    const Sound& get_sound(SoundId id);
 };
