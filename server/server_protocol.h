@@ -6,6 +6,7 @@
 #include "../common/protocol_types.h"
 #include "../common/socket.h"
 
+
 // TODO: agregar receiveMove() que devuelva MoveDTO con el destino (x, y).
 // receiveType() ya usa el tipo de mensaje.
 // Cambiar sendStatus() para recibir const ServerStatus& e incluir positionPlayer.
@@ -14,19 +15,31 @@ class ServerProtocol {
 private:
     ProtocolBase base;
 
+    Position receivePosition();
+    void sendPosition(const Position& pos);
+
 public:
     explicit ServerProtocol(Socket& socket);
 
     MessageType receiveType();
-    CreateGameDTO receiveCreateGame();
-    JoinGameDTO receiveJoinGame();
-//    ResumeGameDTO receiveResumeGame();
 
-    void sendStatus(const StatusDTO& dto);
-//    void sendGameList(const GameListDTO& dto);
-    void sendGameJoined(const GameJoinedDTO& dto);
+    void receive(CreateGameDTO& dto);
+    void receive(JoinGameDTO& dto);
+    void receive(ResumeGameDTO& dto);
+    void receive(MoveDTO& dto);
+    void receive(InteractDTO& dto);
+    void receive(DonateDTO& dto);
+    void receive(ChatDTO& dto);
+    void receive(UseItemDTO& dto);
+    void receive(RequestMultiplayerCodeDTO& dto);
+    void receive(DisconnectDTO& dto);
 
+    void send(const ServerStatus& status);
+
+    // mismo que antes, mantengo para no romper lo suyo
+    void send(const StatusDTO& dto);
+    void send(const GameJoinedDTO& dto);
+    void send(const GameListDTO& dto);
 };
 
 #endif
-
