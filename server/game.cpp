@@ -1,7 +1,7 @@
 #include "game.h"
 #include <chrono>
 #include <thread>
-#include "constantes.h"
+#include "constants.h"
 #include "foo.h"
 
 Game::Game(const std::string& id, const std::string& name, uint8_t worldId, const char* servicename):
@@ -42,7 +42,14 @@ GameSession Game::createGame(const CreateGameDTO& dto,const std::shared_ptr<OutQ
 
     name = dto.gameName;
     worldId = dto.worldId;
-    session = addPlayer(dto.playerName, dto.skin, output, "Partida creada");
+    PlayerData data;
+    data.hairModel = dto.hairModel;
+    data.shirtModel = dto.shirtModel;
+    data.pantsModel = dto.pantsModel;
+    data.hairColor = dto.hairColor;
+    data.pantsColor = dto.pantsColor;
+
+    session = addPlayer(dto.playerName, data, output, "Partida creada");
 
     if (session.status.status == StatusCode::Ok) {
         configured = true;
@@ -51,7 +58,7 @@ GameSession Game::createGame(const CreateGameDTO& dto,const std::shared_ptr<OutQ
     return session;
 }
 
-GameSession Game::addPlayer(const std::string& playerName, uint8_t skin,const std::shared_ptr<OutQueue>& output,const std::string& successMsg) {
+GameSession Game::addPlayer(const std::string& playerName,const PlayerData& data,const std::shared_ptr<OutQueue>& output,const std::string& successMsg) {
     GameSession session{};
     session.status.status = StatusCode::Error;
 
@@ -60,21 +67,25 @@ GameSession Game::addPlayer(const std::string& playerName, uint8_t skin,const st
         return session;
     }
 
+    for (const auto& entry : players) {
+        if (entry.second.name == playerName) {
+            session.status.errorMsg = "Ya existe un jugador con ese nombre";
+            return session;
+        }
+    }
+
     if (players.size() >= 4) {
         session.status.errorMsg = "La partida esta llena";
         return session;
     }
 
     const uint16_t playerId = nextPlayerId;
-    players.emplace(
-            playerId, PlayerRecord{playerId, playerName, skin, output, true});
+    players.emplace(playerId,PlayerRecord{playerId, playerName, output, true, data});
     ++nextPlayerId;
 
-    session.status.status = StatusCode::Ok;
-    session.status.successMsg = successMsg;
-    session.status.gameId = id;
+    session.status = buildStatus();
     session.status.playerId = playerId;
-    session.status.worldId = worldId;
+    session.status.successMsg = successMsg;
     session.gameId = id;
     session.playerId = playerId;
     session.worldId = worldId;
@@ -93,7 +104,7 @@ GameSession Game::joinGame(const JoinGameDTO& dto,const std::shared_ptr<OutQueue
         return session;
     }
 
-    return addPlayer(dto.playerName, dto.skin, output,"Te uniste a la partida");
+    return addPlayer(dto.playerName, PlayerData{}, output, "Te uniste a la partida");
 }
 
 void Game::disconnectPlayer(uint16_t playerId) {
@@ -116,11 +127,38 @@ void Game::movePlayer(uint16_t playerId, const MoveDTO& move) {
         return;
     }
 
-    it->second.position = move.position;
+    PlayerData& data = it->second.data;
+
+    data.pos = move.position;
+    if (move.dir == Direction::None) {
+        data.state = PlayerState::Idle;
+    } else {
+        data.dir = move.dir;
+        data.state = PlayerState::Walking;
+    }
+}
+
+ServerStatus Game::buildStatus() const {
+    ServerStatus status;
+    status.status = StatusCode::Ok;
+    status.gameId = id;
+    status.worldId = worldId;
+
+    for (const auto& pl : players) {
+        const PlayerRecord& pl = entry.second;
+
+        if (player.connected) {
+            status.players.emplace(player.name, player.data);
+        }
+    }
+
+    return status;
 }
 
 void Game::sendStatus() {
     std::lock_guard<std::mutex> lock(mtx);
+
+    ServerStatus status = buildStatus();
 
     for (const auto& entry : players) {
         const PlayerRecord& player = entry.second;
@@ -129,12 +167,7 @@ void Game::sendStatus() {
             continue;
         }
 
-        ServerStatus status;
-        status.status = StatusCode::Ok;
-        status.positionPlayer = player.position;
-        status.gameId = id;
         status.playerId = player.id;
-        status.worldId = worldId;
 
         try {
             player.output->push(status);

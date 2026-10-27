@@ -11,10 +11,9 @@
 struct PlayerRecord {
     uint16_t id;
     std::string name;
-    uint8_t skin;
     std::shared_ptr<OutQueue> output;
     bool connected;
-    Position position{0, 0};
+    PlayerData data;
 };
 
 #endif
