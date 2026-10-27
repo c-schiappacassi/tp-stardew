@@ -11,6 +11,12 @@ private:
     ProtocolBase base;
 
     Position receivePosition();
+    void sendPosition(const Position& pos);
+
+    void sendColor(const Color& color);
+    Color receiveColor();
+
+    PlayerData receivePlayerData();
 
 public:
     explicit ClientProtocol(Socket& socket);

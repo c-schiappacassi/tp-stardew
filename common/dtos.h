@@ -5,6 +5,7 @@
 #include <variant>
 #include <vector>
 #include <stdexcept>
+#include <map>
 
 #include "protocol_types.h"
 #include "position.h"
@@ -13,6 +14,27 @@
 // TODO IMPORTANTE: cambio de variant a herencia porque todos los dtos mandan el id del usuario en la
 // partida para que la partida identifique a que clientHandler le tiene que responder
 // TBD: con que identificar al usuario(el apodo de la partida o un id?)
+
+// AUXILIARES
+
+struct Color{
+    uint8_t r;
+    uint8_t g;
+    uint8_t b;
+};
+
+struct PlayerData{
+    Position pos{0,0};
+    PlayerState state{PlayerState::Idle};
+    Direction dir{Direction::None};
+    uint16_t hairModel = 0;
+    uint16_t shirtModel = 0;
+    uint16_t pantsModel = 0;
+    Color hairColor{0,0,0};
+    Color pantsColor{0,0,0};
+};
+
+// COMMAND_DTO CON HERENCIA
 
 struct CommandDTO {
     std::string playerName;
@@ -33,7 +55,6 @@ struct CreateGameDTO : public CommandDTO {
     uint16_t hairModel = 0;
     uint16_t shirtModel = 0;
     uint16_t pantsModel = 0;
-    uint16_t hairModel = 0;
     Color hairColor{0,0,0};
     Color pantsColor{0,0,0};
 
@@ -42,7 +63,11 @@ struct CreateGameDTO : public CommandDTO {
 
 struct JoinGameDTO : public CommandDTO {
     std::string code;
-    uint8_t skin;
+    uint16_t hairModel = 0;
+    uint16_t shirtModel = 0;
+    uint16_t pantsModel = 0;
+    Color hairColor{0,0,0};
+    Color pantsColor{0,0,0};
 
     explicit JoinGameDTO(const std::string& name) : CommandDTO(name) {}
 };
@@ -81,7 +106,7 @@ struct ChatDTO : public CommandDTO {
 };
 
 struct UseItemDTO : public CommandDTO {
-    uint8_t itemSlot{0};
+    uint8_t itemSlot;
 
     explicit UseItemDTO(const std::string& name) : CommandDTO(name) {}
 };
@@ -130,26 +155,7 @@ struct GameInfoDTO {
     std::string gameName;
     std::string playerName;
     uint8_t skin;
-    bool isMultiplayer; // // tal vez false deberia ser el default bool isMultiplayer{false};
-};
-
-struct Color{
-    uint8_t r;
-    uint8_t g;
-    uint8_t b;
-};
-
-struct PlayerData
-{
-    Position pos{0,0};
-    PlayerState state{PlayerState::Idle};
-    Direction dir{Direction::None};
-    uint16_t hairModel = 0;
-    uint16_t shirtModel = 0;
-    uint16_t pantsModel = 0;
-    uint16_t hairModel = 0;
-    Color hairColor{0,0,0};
-    Color pantsColor{0,0,0};
+    bool isMultiplayer; // tal vez false deberia ser el default bool isMultiplayer{false};
 };
 
 /*

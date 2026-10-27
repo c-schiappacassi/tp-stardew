@@ -18,6 +18,11 @@ private:
     Position receivePosition();
     void sendPosition(const Position& pos);
 
+    Color receiveColor();
+    void sendColor(const Color& color);
+
+    void sendPlayerData(const PlayerData& data);
+
 public:
     explicit ServerProtocol(Socket& socket);
 

@@ -13,20 +13,61 @@ Position ClientProtocol::receivePosition() {
     return Position(x, y);
 }
 
+void ClientProtocol::sendPosition(const Position& pos) {
+    base.sendUint16(static_cast<uint16_t>(pos.getX()));
+    base.sendUint16(static_cast<uint16_t>(pos.getY()));
+}
+
+void ClientProtocol::sendColor(const Color& color) {
+    base.sendUint8(color.r);
+    base.sendUint8(color.g);
+    base.sendUint8(color.b);
+}
+
+Color ClientProtocol::receiveColor() {
+    Color color;
+    color.r = base.receiveUint8();
+    color.g = base.receiveUint8();
+    color.b = base.receiveUint8();
+    return color;
+}
+
+PlayerData ClientProtocol::receivePlayerData() {
+    PlayerData data;
+    data.pos = receivePosition();
+    data.state = static_cast<PlayerState>(base.receiveUint8());
+    data.dir = static_cast<Direction>(base.receiveUint8());
+    data.hairModel = base.receiveUint16();
+    data.shirtModel = base.receiveUint16();
+    data.pantsModel = base.receiveUint16();
+    data.hairColor = receiveColor();
+    data.pantsColor = receiveColor();
+    return data;
+}
+
+// SENDERS
+
 void ClientProtocol::send(const CreateGameDTO& dto) {
     base.sendUint8(static_cast<uint8_t>(MessageType::CreateGame));
     base.sendString(dto.playerName);
     base.sendString(dto.gameName);
-    // TODO: faltan los datos de la apariencian
-    base.sendUint8(dto.skin);
     base.sendUint8(dto.worldId);
+    base.sendUint16(dto.hairModel);
+    base.sendUint16(dto.shirtModel);
+    base.sendUint16(dto.pantsModel);
+    sendColor(dto.hairColor);
+    sendColor(dto.pantsColor);
 }
 
 void ClientProtocol::send(const JoinGameDTO& dto) {
     base.sendUint8(static_cast<uint8_t>(MessageType::JoinGame));
     base.sendString(dto.playerName);
     base.sendString(dto.code);
-    base.sendUint8(dto.skin);
+    base.sendUint16(dto.hairModel);
+    base.sendUint16(dto.shirtModel);
+    base.sendUint16(dto.pantsModel);
+    sendColor(dto.hairColor);
+    sendColor(dto.pantsColor);
 }
 
 void ClientProtocol::send(const ResumeGameDTO& dto) {
@@ -38,8 +79,7 @@ void ClientProtocol::send(const ResumeGameDTO& dto) {
 void ClientProtocol::send(const MoveDTO& dto) {
     base.sendUint8(static_cast<uint8_t>(MessageType::Move));
     base.sendString(dto.playerName);
-    base.sendUint16(static_cast<uint16_t>(dto.position.getX()));
-    base.sendUint16(static_cast<uint16_t>(dto.position.getY()));
+    sendPosition(dto.position);
     base.sendUint8(static_cast<uint8_t>(dto.dir));
 }
 
@@ -54,7 +94,7 @@ void ClientProtocol::send(const DonateDTO& dto) {
     base.sendUint8(static_cast<uint8_t>(MessageType::Donate));
     base.sendString(dto.playerName);
     base.sendUint8(dto.slot);
-    base.sendUint8(dto.quantity);
+    base.sendUint32(dto.quantity);
 }
 
 void ClientProtocol::send(const ChatDTO& dto) {
@@ -79,19 +119,20 @@ void ClientProtocol::send(const DisconnectDTO& dto) {
     base.sendString(dto.playerName);
 }
 
+// RECEIVERS
 
 void ClientProtocol::recv(ServerStatus& status) {
-    const auto type = static_cast<MessageType>(base.receiveUint8());
-
-    if (type != MessageType::Status) {
-        throw std::runtime_error("Se esperaba un mensaje Status");
-    }
-
     status.status = static_cast<StatusCode>(base.receiveUint8());
     status.errorMsg = base.receiveString();
     status.successMsg = base.receiveString();
     status.gameId = base.receiveString();
     status.playerId = base.receiveUint16();
     status.worldId = base.receiveUint8();
-    //TODO: falta el map
+
+    uint16_t length = base.receiveUint16();
+    status.players.clear();
+    for (uint16_t i = 0; i < length; ++i) {
+        std::string name = base.receiveString();
+        status.players[name] = receivePlayerData();
+    }
 }
