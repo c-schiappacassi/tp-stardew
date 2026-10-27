@@ -29,8 +29,13 @@ struct CommandDTO {
 
 struct CreateGameDTO : public CommandDTO {
     std::string gameName;
-    uint8_t skin;
     uint8_t worldId;
+    uint16_t hairModel = 0;
+    uint16_t shirtModel = 0;
+    uint16_t pantsModel = 0;
+    uint16_t hairModel = 0;
+    Color hairColor{0,0,0};
+    Color pantsColor{0,0,0};
 
     explicit CreateGameDTO(const std::string& name) : CommandDTO(name) {}
 };
@@ -50,6 +55,7 @@ struct ResumeGameDTO : public CommandDTO {
 
 struct MoveDTO : public CommandDTO {
     Position position{0, 0};
+    Direction dir{Direction::None};
 
     explicit MoveDTO(const std::string& name) : CommandDTO(name) {}
 };
@@ -116,7 +122,7 @@ struct ServerStatus {
     std::string gameId;
     uint16_t playerId = 0;
     uint8_t worldId = 0;
-    Position positionPlayer{0, 0};
+    std::map<std::string, PlayerData> players;
 };
 
 struct GameInfoDTO {
@@ -127,9 +133,23 @@ struct GameInfoDTO {
     bool isMultiplayer; // // tal vez false deberia ser el default bool isMultiplayer{false};
 };
 
+struct Color{
+    uint8_t r;
+    uint8_t g;
+    uint8_t b;
+};
+
 struct PlayerData
 {
-    /* data */
+    Position pos{0,0};
+    PlayerState state{PlayerState::Idle};
+    Direction dir{Direction::None};
+    uint16_t hairModel = 0;
+    uint16_t shirtModel = 0;
+    uint16_t pantsModel = 0;
+    uint16_t hairModel = 0;
+    Color hairColor{0,0,0};
+    Color pantsColor{0,0,0};
 };
 
 /*
@@ -162,5 +182,3 @@ struct ServerStatus {
     std::vector<std::string> chatTexts;
 };
 */
-
-#endif // DTOS_H

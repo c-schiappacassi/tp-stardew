@@ -1,12 +1,9 @@
 #pragma once
 
-#ifndef CLIENT_PROTOCOL_H
-#define CLIENT_PROTOCOL_H
-
-#include "../common/dtos.h"
-#include "../common/protocol_base.h"
-#include "../common/protocol_types.h"
-#include "../common/socket.h"
+#include "dtos.h"
+#include "protocol_base.h"
+#include "protocol_types.h"
+#include "socket.h"
 
 
 class ClientProtocol {
@@ -33,4 +30,3 @@ public:
     void recv(ServerStatus& status);
 };
 
-#endif

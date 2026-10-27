@@ -26,7 +26,7 @@ const char* const NEXT_LINE = "\n";
 const char* const UNEXPECTED_ERROR_MSG = "Unexpected error: ";
 const char* const UNKNOWN_ERROR_MSG = "Error desconocido";
 const char* const SERVER_ERROR_MSG = "Error de conexion con el servidor: ";
-const char* const SOCKET_ERROR_MSG = "Socket error: ;
+const char* const SOCKET_ERROR_MSG = "Socket error: ";
 const char* const UNKNOWN_OPERATOR_MSG = "Operacion desconocida";
 
-#define FPS 30
+const int FPS = 30;

@@ -27,8 +27,9 @@ void ServerProtocol::sendPosition(const Position& pos) {
 void ServerProtocol::receive(CreateGameDTO& dto) {
     dto.playerName = base.receiveString();
     dto.gameName = base.receiveString();
-    dto.skin = base.receiveUint8();
     dto.worldId = base.receiveUint8();
+
+    // TODO: datos de apariencia
 }
 
 void ServerProtocol::receive(JoinGameDTO& dto) {
@@ -86,7 +87,7 @@ void ServerProtocol::send(const ServerStatus& status) {
     base.sendString(status.gameId);
     base.sendUint16(status.playerId);
     base.sendUint8(status.worldId);
-    sendPosition(status.positionPlayer);
+    // TODO: map de players data
 }
 
 // mismo que antes: para no romperles a ustedes, despues lo volamos

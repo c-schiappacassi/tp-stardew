@@ -13,11 +13,11 @@ Position ClientProtocol::receivePosition() {
     return Position(x, y);
 }
 
-
 void ClientProtocol::send(const CreateGameDTO& dto) {
     base.sendUint8(static_cast<uint8_t>(MessageType::CreateGame));
     base.sendString(dto.playerName);
     base.sendString(dto.gameName);
+    // TODO: faltan los datos de la apariencian
     base.sendUint8(dto.skin);
     base.sendUint8(dto.worldId);
 }
@@ -40,6 +40,7 @@ void ClientProtocol::send(const MoveDTO& dto) {
     base.sendString(dto.playerName);
     base.sendUint16(static_cast<uint16_t>(dto.position.getX()));
     base.sendUint16(static_cast<uint16_t>(dto.position.getY()));
+    base.sendUint8(static_cast<uint8_t>(dto.dir));
 }
 
 void ClientProtocol::send(const InteractDTO& dto) {
@@ -79,7 +80,6 @@ void ClientProtocol::send(const DisconnectDTO& dto) {
 }
 
 
-// TODO: terminar recv de server status cuando tengamos status definido
 void ClientProtocol::recv(ServerStatus& status) {
     const auto type = static_cast<MessageType>(base.receiveUint8());
 
@@ -93,5 +93,5 @@ void ClientProtocol::recv(ServerStatus& status) {
     status.gameId = base.receiveString();
     status.playerId = base.receiveUint16();
     status.worldId = base.receiveUint8();
-    status.positionPlayer = receivePosition();
+    //TODO: falta el map
 }
