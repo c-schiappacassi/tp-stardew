@@ -82,6 +82,6 @@ void Acceptor::stop() {
     Thread::stop();
     try {
         listenSocket.shutdown(SHUT_RDWR);
-    } catch (const std::exception& e) {
+    } catch (const std::exception&) {
     } catch (...) {}
 }

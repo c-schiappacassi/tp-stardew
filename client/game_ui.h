@@ -1,13 +1,4 @@
 #pragma once
-#include <SDL2pp/SDL2pp.hh>
-#include "state.h"
-#include "sdlGUI/asset_manager.h"
-#include "sdlGUI/world/player_view.h"
-#include "sdlGUI/camera.h"
-#include "sdlGUI/render_info.h"
-
-// TODO
-#pragma once
 
 #include <SDL2pp/SDL2pp.hh>
 

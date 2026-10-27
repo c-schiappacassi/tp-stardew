@@ -144,8 +144,8 @@ ServerStatus Game::buildStatus() const {
     status.gameId = id;
     status.worldId = worldId;
 
-    for (const auto& pl : players) {
-        const PlayerRecord& pl = entry.second;
+    for (const auto& entry : players) {
+        const PlayerRecord& player = entry.second;
 
         if (player.connected) {
             status.players.emplace(player.name, player.data);
@@ -181,10 +181,13 @@ void Game::processCommands() {
     PlayerCommand command;
 
     while (should_keep_running() && input->try_pop(command)) {
-        if (std::holds_alternative<MoveDTO>(command.command)) {
-            const MoveDTO& move = std::get<MoveDTO>(command.command);
+        if (!command.command) {
+            continue;
+        }
+        if (command.command->type() == MessageType::Move) {
+            const MoveDTO& move = static_cast<const MoveDTO&>(*command.command);
             movePlayer(command.playerId, move);
-        } else if (std::holds_alternative<DisconnectCommand>(command.command)) {
+        } else if (command.command->type() == MessageType::ExitGame) {
             disconnectPlayer(command.playerId);
         }
     }

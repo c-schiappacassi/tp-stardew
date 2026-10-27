@@ -11,7 +11,7 @@
 
 
 struct PlayerCommand {
-    std::string playerName;
+    uint16_t playerId = 0;
     std::shared_ptr<CommandDTO> command;
 };
 

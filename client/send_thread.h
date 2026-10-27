@@ -1,5 +1,6 @@
 #pragma once
 
+#include <memory>
 #include "thread.h"
 #include "queue.h"
 #include "dtos.h"
@@ -9,7 +10,7 @@ class SendThread : public Thread {
 private:
     Queue<std::shared_ptr<CommandDTO>>& send_queue;
     ClientProtocol& protocolo;
-    bool shoud_keep_running;
+    bool shoud_keep_running = false;
 
 public:
     SendThread(Queue<std::shared_ptr<CommandDTO>>& queue, ClientProtocol& prot)
@@ -24,7 +25,7 @@ public:
             }
         } catch (const ClosedQueue&) {
             // TODO
-        } catch (const std::exception& e) {
+        } catch (const std::exception&) {
             // TODO
         }
     }

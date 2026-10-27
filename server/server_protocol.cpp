@@ -107,7 +107,7 @@ UseItemDTO ServerProtocol::receiveUseItem() {
     dto.itemSlot = base.receiveUint8();
     return dto;
 }
-/*
+
 RequestMultiplayerCodeDTO ServerProtocol::receiveRequestMultiplayerCode() {
     return RequestMultiplayerCodeDTO(base.receiveString());
 }
@@ -115,7 +115,7 @@ RequestMultiplayerCodeDTO ServerProtocol::receiveRequestMultiplayerCode() {
 DisconnectDTO ServerProtocol::receiveDisconnect() {
     return DisconnectDTO(base.receiveString());
 }
-*/
+
 // SENDERS
 
 void ServerProtocol::sendStatus(const ServerStatus& status) {

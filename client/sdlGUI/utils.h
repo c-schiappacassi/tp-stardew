@@ -1,5 +1,6 @@
 #pragma once
 #include <SDL2pp/SDL2pp.hh>
+#include <compare>
 #include <cstdint>
 #include <optional>
 #include <string>

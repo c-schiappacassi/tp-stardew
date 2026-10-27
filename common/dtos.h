@@ -122,10 +122,12 @@ struct UseItemDTO : public CommandDTO {
 
 struct RequestMultiplayerCodeDTO : public CommandDTO {
 
+    MessageType type() const override { return MessageType::MultiplayerCode; }
     explicit RequestMultiplayerCodeDTO(const std::string& name) : CommandDTO(name) {}
 };
 
 struct DisconnectDTO : public CommandDTO {
+    MessageType type() const override { return MessageType::ExitGame; }
     explicit DisconnectDTO(const std::string& name) : CommandDTO(name) {}
 };
 

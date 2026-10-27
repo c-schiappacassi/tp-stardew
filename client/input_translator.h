@@ -1,6 +1,10 @@
 #pragma once
 
 #include <SDL2/SDL.h>
+#include <algorithm>
+#include <string>
+#include <utility>
+#include <vector>
 #include <unordered_map>
 #include <memory>
 #include <optional>

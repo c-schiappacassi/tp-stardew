@@ -20,7 +20,7 @@ class Game:public Thread {
         std::string name;
         uint8_t worldId;
         std::shared_ptr<CommandQueue> input;
-        std::mutex mtx;
+        mutable std::mutex mtx;
         bool configured = false;
         std::map<uint16_t, PlayerRecord> players;
         uint16_t nextPlayerId = 1;

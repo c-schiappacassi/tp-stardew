@@ -22,4 +22,4 @@ void Foo::constant_rate_loop(Callback&& func, std::chrono::milliseconds rate, bo
         t1 += rate;
         it += 1;
     }
-};
+}
