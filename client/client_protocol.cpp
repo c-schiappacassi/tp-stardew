@@ -47,6 +47,23 @@ PlayerData ClientProtocol::receivePlayerData() {
 
 // SENDERS
 
+void ClientProtocol::send(const CommandDTO& dto) {
+    switch (dto.type()) {
+        case MessageType::CreateGame: send(static_cast<const CreateGameDTO&>(dto)); break;
+        case MessageType::JoinGame: send(static_cast<const JoinGameDTO&>(dto)); break;
+        case MessageType::ResumeGame: send(static_cast<const ResumeGameDTO&>(dto)); break;
+        case MessageType::Move: send(static_cast<const MoveDTO&>(dto)); break;
+        case MessageType::Interact: send(static_cast<const InteractDTO&>(dto)); break;
+        case MessageType::Donate: send(static_cast<const DonateDTO&>(dto)); break;
+        case MessageType::Chat: send(static_cast<const ChatDTO&>(dto)); break;
+        case MessageType::UseItem: send(static_cast<const UseItemDTO&>(dto)); break;
+        case MessageType::MultiplayerCode:
+            send(static_cast<const RequestMultiplayerCodeDTO&>(dto)); break;
+        case MessageType::ExitGame: send(static_cast<const DisconnectDTO&>(dto)); break;
+        default: throw std::invalid_argument("ClientProtocol: unsupported command");
+    }
+}
+
 void ClientProtocol::send(const CreateGameDTO& dto) {
     base.sendUint8(static_cast<uint8_t>(MessageType::CreateGame));
     base.sendString(dto.playerName);

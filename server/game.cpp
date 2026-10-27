@@ -61,7 +61,7 @@ GameSession Game::createGame(const CreateGameDTO& dto,const std::shared_ptr<OutQ
 GameSession Game::addPlayer(const std::string& playerName,const PlayerData& data,const std::shared_ptr<OutQueue>& output,const std::string& successMsg) {
     GameSession session{};
     session.status.status = StatusCode::Error;
-
+    session.playerName = playerName;
     if (playerName.empty() || !output) {
         session.status.errorMsg = "No se pudo registrar al jugador";
         return session;

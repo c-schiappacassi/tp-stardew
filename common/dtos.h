@@ -45,6 +45,7 @@ struct CommandDTO {
         }
     }
     virtual ~CommandDTO() = default;
+    virtual MessageType type() const = 0;
 };
 
 // CLIENTE -> SERVIDOR
@@ -58,6 +59,7 @@ struct CreateGameDTO : public CommandDTO {
     Color hairColor{0,0,0};
     Color pantsColor{0,0,0};
 
+    MessageType type() const override { return MessageType::CreateGame; }
     explicit CreateGameDTO(const std::string& name) : CommandDTO(name) {}
 };
 
@@ -69,12 +71,14 @@ struct JoinGameDTO : public CommandDTO {
     Color hairColor{0,0,0};
     Color pantsColor{0,0,0};
 
+    MessageType type() const override { return MessageType::JoinGame; }
     explicit JoinGameDTO(const std::string& name) : CommandDTO(name) {}
 };
 
 struct ResumeGameDTO : public CommandDTO {
     uint16_t gameId;
 
+    MessageType type() const override { return MessageType::ResumeGame; }
     explicit ResumeGameDTO(const std::string& name) : CommandDTO(name) {}
 };
 
@@ -82,6 +86,7 @@ struct MoveDTO : public CommandDTO {
     Position position{0, 0};
     Direction dir{Direction::None};
 
+    MessageType type() const override { return MessageType::Move; }
     explicit MoveDTO(const std::string& name) : CommandDTO(name) {}
 };
 
@@ -89,6 +94,7 @@ struct InteractDTO : public CommandDTO {
     TargetType targetType; // usemos un type para esto
     uint16_t targetId;
 
+    MessageType type() const override { return MessageType::Interact; }
     explicit InteractDTO(const std::string& name) : CommandDTO(name) {}
 };
 
@@ -96,22 +102,26 @@ struct DonateDTO : public CommandDTO {
     uint8_t slot;
     uint32_t quantity;
 
+    MessageType type() const override { return MessageType::Donate; }
     explicit DonateDTO(const std::string& name) : CommandDTO(name) {}
 };
 
 struct ChatDTO : public CommandDTO {
     std::string text;
 
+    MessageType type() const override { return MessageType::Chat; }
     explicit ChatDTO(const std::string& name) : CommandDTO(name) {}
 };
 
 struct UseItemDTO : public CommandDTO {
     uint8_t itemSlot;
 
+    MessageType type() const override { return MessageType::UseItem; }
     explicit UseItemDTO(const std::string& name) : CommandDTO(name) {}
 };
 
 struct RequestMultiplayerCodeDTO : public CommandDTO {
+
     explicit RequestMultiplayerCodeDTO(const std::string& name) : CommandDTO(name) {}
 };
 
@@ -120,6 +130,15 @@ struct DisconnectDTO : public CommandDTO {
 };
 
 // DEBERIAMOS VOLARLOS:
+/*
+
+struct GameInfoDTO {
+    uint16_t id;
+    std::string gameName;
+    std::string playerName;
+    uint8_t skin;
+    bool isMultiplayer; // tal vez false deberia ser el default bool isMultiplayer{false};
+};
 
 struct GameListDTO {
     std::vector<GameInfoDTO> games;
@@ -136,6 +155,7 @@ struct StatusDTO {
     std::string errorMsg;
     std::string successMsg;
 };
+*/
 
 // SERVIDOR -> CLIENTE
 
@@ -148,14 +168,6 @@ struct ServerStatus {
     uint16_t playerId = 0;
     uint8_t worldId = 0;
     std::map<std::string, PlayerData> players;
-};
-
-struct GameInfoDTO {
-    uint16_t id;
-    std::string gameName;
-    std::string playerName;
-    uint8_t skin;
-    bool isMultiplayer; // tal vez false deberia ser el default bool isMultiplayer{false};
 };
 
 /*

@@ -7,17 +7,19 @@
 #include "state.h"
 #include "game_ui.h"
 
-class Game
-{
-    private:
-        bool running;
-        long long it_interno = 0;
-        // TODO:TBD si gameUI no deberia ser el dueño de translator
-        InputTranslator translator;
-        NetworkManager net;
-        State currentState;
-        GameUI ui;
-        void loopInternalLogic(long long it);
-    public:
-        void exe();
+class Game {
+private:
+    bool running = true;
+    std::string player_name;
+    InputTranslator translator;
+    NetworkManager net;
+    State currentState;
+    GameUI ui;
+    void loopInternalLogic(long long it);
+
+public:
+    Game(const std::string& host, const std::string& port, const std::string& player_name)
+        : player_name(player_name), translator(player_name), net(host, port), ui(player_name) {}
+        
+    void exe();
 };

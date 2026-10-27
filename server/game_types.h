@@ -12,7 +12,7 @@
 
 struct PlayerCommand {
     std::string playerName;
-    std::unique_ptr<CommandDTO> command;
+    std::shared_ptr<CommandDTO> command;
 };
 
 // esto despues lo sacamos pero es para no romper nada de lo que hicieron
@@ -25,9 +25,10 @@ using OutQueue = Queue<OutgoingMessage>;
 struct GameSession {
     ServerStatus status;
     std::string gameId;
-    uint16_t playerId;
-    uint8_t worldId;
-    std::shared_ptr<CommandQueue> input; // nullptr si status != OK
+    std::string playerName;
+    uint16_t playerId = 0;
+    uint8_t worldId = 0;
+    std::shared_ptr<CommandQueue> input;   // nullptr si status != OK
 };
 
 #endif

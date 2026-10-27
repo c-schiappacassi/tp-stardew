@@ -2,14 +2,11 @@
 
 #include <cstdint>
 
-
 ServerProtocol::ServerProtocol(Socket& socket) : base(socket) {}
 
 MessageType ServerProtocol::receiveType() {
     return static_cast<MessageType>(base.receiveUint8());
 }
-
-// VER POSITION.H PORQUE SE PUEDE HACER SIN INSTANCIAR UNA POSICION NUEVA TODO EL TIEMPO
 
 Position ServerProtocol::receivePosition() {
     int x = static_cast<int>(base.receiveUint16());
@@ -47,10 +44,10 @@ void ServerProtocol::sendPlayerData(const PlayerData& data) {
     sendColor(data.pantsColor);
 }
 
-// RECEIVERS
+// RECEIVERS (the type byte was already consumed by receiveType())
 
-void ServerProtocol::receive(CreateGameDTO& dto) {
-    dto.playerName = base.receiveString();
+CreateGameDTO ServerProtocol::receiveCreateGame() {
+    CreateGameDTO dto(base.receiveString());
     dto.gameName = base.receiveString();
     dto.worldId = base.receiveUint8();
     dto.hairModel = base.receiveUint16();
@@ -58,62 +55,70 @@ void ServerProtocol::receive(CreateGameDTO& dto) {
     dto.pantsModel = base.receiveUint16();
     dto.hairColor = receiveColor();
     dto.pantsColor = receiveColor();
+    return dto;
 }
 
-void ServerProtocol::receive(JoinGameDTO& dto) {
-    dto.playerName = base.receiveString();
+JoinGameDTO ServerProtocol::receiveJoinGame() {
+    JoinGameDTO dto(base.receiveString());
     dto.code = base.receiveString();
     dto.hairModel = base.receiveUint16();
     dto.shirtModel = base.receiveUint16();
     dto.pantsModel = base.receiveUint16();
     dto.hairColor = receiveColor();
     dto.pantsColor = receiveColor();
+    return dto;
 }
 
-void ServerProtocol::receive(ResumeGameDTO& dto) {
-    dto.playerName = base.receiveString();
+ResumeGameDTO ServerProtocol::receiveResumeGame() {
+    ResumeGameDTO dto(base.receiveString());
     dto.gameId = base.receiveUint16();
+    return dto;
 }
 
-void ServerProtocol::receive(MoveDTO& dto) {
-    dto.playerName = base.receiveString();
+MoveDTO ServerProtocol::receiveMove() {
+    MoveDTO dto(base.receiveString());
     dto.position = receivePosition();
     dto.dir = static_cast<Direction>(base.receiveUint8());
+    return dto;
 }
 
-void ServerProtocol::receive(InteractDTO& dto) {
-    dto.playerName = base.receiveString();
+InteractDTO ServerProtocol::receiveInteract() {
+    InteractDTO dto(base.receiveString());
     dto.targetType = static_cast<TargetType>(base.receiveUint8());
     dto.targetId = base.receiveUint16();
+    return dto;
 }
 
-void ServerProtocol::receive(DonateDTO& dto) {
-    dto.playerName = base.receiveString();
+DonateDTO ServerProtocol::receiveDonate() {
+    DonateDTO dto(base.receiveString());
     dto.slot = base.receiveUint8();
     dto.quantity = base.receiveUint32();
+    return dto;
 }
 
-void ServerProtocol::receive(ChatDTO& dto) {
-    dto.playerName = base.receiveString();
+ChatDTO ServerProtocol::receiveChat() {
+    ChatDTO dto(base.receiveString());
     dto.text = base.receiveString();
+    return dto;
 }
 
-void ServerProtocol::receive(UseItemDTO& dto) {
-    dto.playerName = base.receiveString();
+UseItemDTO ServerProtocol::receiveUseItem() {
+    UseItemDTO dto(base.receiveString());
     dto.itemSlot = base.receiveUint8();
+    return dto;
+}
+/*
+RequestMultiplayerCodeDTO ServerProtocol::receiveRequestMultiplayerCode() {
+    return RequestMultiplayerCodeDTO(base.receiveString());
 }
 
-void ServerProtocol::receive(RequestMultiplayerCodeDTO& dto) {
-    dto.playerName = base.receiveString();
+DisconnectDTO ServerProtocol::receiveDisconnect() {
+    return DisconnectDTO(base.receiveString());
 }
-
-void ServerProtocol::receive(DisconnectDTO& dto) {
-    dto.playerName = base.receiveString();
-}
-
+*/
 // SENDERS
 
-void ServerProtocol::send(const ServerStatus& status) {
+void ServerProtocol::sendStatus(const ServerStatus& status) {
     base.sendUint8(static_cast<uint8_t>(status.status));
     base.sendString(status.errorMsg);
     base.sendString(status.successMsg);
@@ -125,33 +130,5 @@ void ServerProtocol::send(const ServerStatus& status) {
     for (const auto& [name, data] : status.players) {
         base.sendString(name);
         sendPlayerData(data);
-    }
-}
-
-// mismo que antes: para no romperles a ustedes, despues lo volamos
-
-void ServerProtocol::send(const StatusDTO& dto) {
-    base.sendUint8(static_cast<uint8_t>(MessageType::Status));
-    base.sendUint8(static_cast<uint8_t>(dto.status));
-    base.sendString(dto.errorMsg);
-    base.sendString(dto.successMsg);
-}
-
-void ServerProtocol::send(const GameJoinedDTO& dto) {
-    base.sendUint8(static_cast<uint8_t>(MessageType::GameJoined));
-    base.sendString(dto.gameId);
-    base.sendUint16(dto.playerId);
-    base.sendUint8(dto.worldId);
-}
-
-void ServerProtocol::send(const GameListDTO& dto) {
-    base.sendUint8(static_cast<uint8_t>(MessageType::GameList));
-    base.sendUint16(static_cast<uint16_t>(dto.games.size()));
-    for (const auto& game : dto.games) {
-        base.sendUint16(game.id);
-        base.sendString(game.gameName);
-        base.sendString(game.playerName);
-        base.sendUint8(game.skin);
-        base.sendUint8(game.isMultiplayer ? 1 : 0);
     }
 }

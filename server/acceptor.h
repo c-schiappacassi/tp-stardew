@@ -8,7 +8,6 @@
 #include "../common/thread.h"
 
 #include "client_handler.h"
-#include "game_manager.h"
 
 class Game;
 

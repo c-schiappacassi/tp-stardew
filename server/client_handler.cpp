@@ -5,7 +5,7 @@
 #include <utility>
 
 #include <sys/socket.h>
-
+#include "game.h"
 #include "liberror.h"
 #include "protocol_errors.h"
 #include "queue.h"
@@ -74,10 +74,11 @@ void ClientHandler::runGame() {
         switch (protocol.receiveType()) {
             // TODO: el MoveDTO ya existe. falta receiveMove(),
             // por ahora el id del jugador la obtengo de su conexion, hablalo con ciro.
-            case MessageType::Move:
-                session.input->push(PlayerCommand{
-                        session.playerId, protocol.receiveMove()});
+            case MessageType::Move: {
+                auto move = std::make_shared<MoveDTO>(protocol.receiveMove());
+                session.input->push(PlayerCommand{session.playerId, move});
                 break;
+            }
 
             case MessageType::ExitGame:
                 return;
@@ -115,8 +116,9 @@ void ClientHandler::disconnect() {
     stop();
     if (session.input) {
         try {
-            session.input->push(PlayerCommand{session.playerId, DisconnectCommand{}});
+            session.input->push(PlayerCommand{ session.playerId, std::make_shared<DisconnectDTO>(session.playerName)});
         } catch (const ClosedQueue&) {
+            // TODO
         }
     }
     try {
