@@ -32,4 +32,4 @@ const char* const UNKNOWN_OPERATOR_MSG = "Operacion desconocida";
 const int FPS = 30;
 const int SPAWN_X = 1000;
 const int SPAWN_Y = 1000;
-const int PLAYER_STEP = 2; 
+const int PLAYER_STEP = 4;

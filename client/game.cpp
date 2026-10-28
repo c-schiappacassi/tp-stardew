@@ -8,7 +8,8 @@ void Game::exe() {
     CreateGameDTO create(player_name);
     create.gameName = "test";
     create.worldId = 0;
-    create.shirtModel = 1;
+    create.shirtModel = 0;
+    create.hairColor = {200,200,200};
 
     ServerStatus st = net.handshake(create);
     if (st.status != StatusCode::Ok) {
