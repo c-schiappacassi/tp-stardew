@@ -12,7 +12,6 @@
 #include "state.h"
 
 #include "dtos.h"
-#define PLAYER_STEP 1
 
 struct EventKey {
     uint32_t event_type;
@@ -36,7 +35,7 @@ private:
     std::string player_name;
     std::unordered_map<EventKey, ActionHandler, EventKeyHash> actions;
     std::vector<Direction> held;
-    bool was_moving = false;
+    Direction last_sent = Direction::None;
     bool quit = false;
 
     static Direction direction_from_key(SDL_Keycode key) {
@@ -73,17 +72,8 @@ private:
         }
     }
 
-    std::shared_ptr<CommandDTO> make_move(const Position& from, Direction dir) const {
-        static const std::unordered_map<Direction, std::pair<int, int>> delta = {
-            {Direction::None, {0, 0}},
-            {Direction::Up, {0, -PLAYER_STEP}},
-            {Direction::Down, {0, PLAYER_STEP}},
-            {Direction::Left, {-PLAYER_STEP, 0}},
-            {Direction::Right, {PLAYER_STEP, 0}},
-        };
-        const auto [dx, dy] = delta.at(dir);
+    std::shared_ptr<CommandDTO> make_move(Direction dir) const {
         auto dto = std::make_shared<MoveDTO>(player_name);
-        dto->position = Position(std::max(0, from.getX() + dx), std::max(0, from.getY() + dy));
         dto->dir = dir;
         return dto;
     }
@@ -95,7 +85,7 @@ public:
 
     bool quit_requested() const { return quit; }
 
-    std::vector<std::shared_ptr<CommandDTO>> poll(const State& state) {
+    std::vector<std::shared_ptr<CommandDTO>> poll() {
         std::vector<std::shared_ptr<CommandDTO>> out;
 
         SDL_Event event;
@@ -116,18 +106,11 @@ public:
             }
         }
 
-        const PlayerData* me = state.find_player(player_name);
-        if (!me) {
-            return out;
+        const Direction current = held.empty() ? Direction::None : held.back();
+        if (current != last_sent) {
+            out.push_back(make_move(current));
+            last_sent = current;
         }
-
-        const bool moving = !held.empty();
-        if (moving) {
-            out.push_back(make_move(me->pos, held.back()));
-        } else if (was_moving) {
-            out.push_back(make_move(me->pos, Direction::None));
-        }
-        was_moving = moving;
         return out;
     }
 };

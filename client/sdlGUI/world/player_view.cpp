@@ -70,7 +70,7 @@ void PlayerView::draw_shirt(const RenderInfo& ctx, const Cell& cell) {
         case Direction::None: dir_offset = 0; break;
     }
     const SDL2pp::Rect src((shirt_model % farmer::SHIRTS_PER_ROW) * farmer::SHIRT_SIZE, (shirt_model / farmer::SHIRTS_PER_ROW) * farmer::SHIRT_BLOCK_H + dir_offset * farmer::SHIRT_SIZE, farmer::SHIRT_SIZE, farmer::SHIRT_SIZE);
-    blit(ctx, SpriteId::Shirts, src, cell.origin, farmer::SHIRT_X, farmer::SHIRT_BELOW_HEAD, false, std::nullopt);
+    blit(ctx, SpriteId::Shirts, src, cell.origin, farmer::SHIRT_X,farmer::SHIRT_BELOW_HEAD + cell.bob, false, std::nullopt);
 }
 
 void PlayerView::draw_hair(const RenderInfo& ctx, const Cell& cell) {
@@ -81,7 +81,7 @@ void PlayerView::draw_hair(const RenderInfo& ctx, const Cell& cell) {
         dir_row = 2;
     }
     const SDL2pp::Rect src((hair_model % farmer::HAIR_PER_ROW) * farmer::CELL_W, (hair_model / farmer::HAIR_PER_ROW) * farmer::HAIR_BLOCK_H + dir_row * farmer::CELL_H, farmer::CELL_W, farmer::CELL_H);
-    blit(ctx, SpriteId::Hairstyles, src, cell.origin, 0, farmer::HAIR_ABOVE_HEAD, facing == Direction::Left, hair_color);
+    blit(ctx, SpriteId::Hairstyles, src, cell.origin, 0, farmer::HAIR_ABOVE_HEAD + cell.bob, facing == Direction::Left, hair_color);
 }
 
 void PlayerView::draw_arms(const RenderInfo& ctx, const Cell& cell) {
@@ -100,9 +100,11 @@ void PlayerView::draw(const RenderInfo& ctx) {
     last_it = ctx.it;
     const Frame frame = anim.get_current_frame(ctx.assets.get_clip(clip_id));
 
-    const int z = ctx.cam.get_zoom();
+        const int z = ctx.cam.get_zoom();
     const SDL2pp::Point tile = ctx.cam.world_to_screen(pos.getX(), pos.getY());
-    const Cell cell{SDL2pp::Point(tile.x, tile.y + (TILE_TO_PIXEL - farmer::FEET_Y) * z), frame};
+
+    const int bob = (state == PlayerState::Walking && frame.col != 0) ? farmer::WALK_BOB : 0;
+    const Cell cell{SDL2pp::Point(tile.x, tile.y + (TILE_TO_PIXEL - farmer::FEET_Y) * z), frame, bob};
 
     draw_body(ctx, cell);
     draw_pants(ctx, cell);

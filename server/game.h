@@ -31,6 +31,7 @@ class Game:public Thread {
         void movePlayer(uint16_t playerId, const MoveDTO& move);
         void processCommands();
         void sendStatus();
+        void advancePlayers();
         ServerStatus buildStatus() const;
         GameSession addPlayer(const std::string& playerName,const PlayerData& data,const std::shared_ptr<OutQueue>& output,const std::string& successMsg);
 

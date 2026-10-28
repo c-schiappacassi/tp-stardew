@@ -27,13 +27,14 @@ constexpr int FEET_Y = 30;
 
 constexpr int HAIR_PER_ROW = 16;
 constexpr int HAIR_BLOCK_H = 96;
-constexpr int HAIR_ABOVE_HEAD = 4;
+constexpr int HAIR_ABOVE_HEAD = 1;
 constexpr int SHIRT_SIZE = 8;
 constexpr int SHIRTS_PER_ROW = 16;
 constexpr int SHIRT_BLOCK_H = 32;
 constexpr int SHIRT_X = 4;
-constexpr int SHIRT_BELOW_HEAD = 10;
+constexpr int SHIRT_BELOW_HEAD = 15;
 
+constexpr int WALK_BOB = 1;
 constexpr int PANTS_BLOCK_W = 192;
 constexpr int PANTS_BLOCK_H = 688;
 constexpr int PANTS_PER_ROW = 10;
@@ -54,8 +55,8 @@ private:
     uint16_t shirt_model = 0;
     uint16_t pant_model = 0;
     uint16_t hair_model = 0;
-    SDL_Color pant_color{255, 255, 255, 255};
-    SDL_Color hair_color{255, 255, 255, 255};
+    SDL_Color pant_color{1, 1, 1, 255};
+    SDL_Color hair_color{2, 2, 2, 255};
 
     // TBD: std::optional<ToolView> currentTool;
 
@@ -66,8 +67,8 @@ private:
     struct Cell {
         SDL2pp::Point origin;
         Frame frame;
+        int bob = 0;
     };
-
     void draw_body(const RenderInfo& ctx, const Cell& cell);
     void draw_pants(const RenderInfo& ctx, const Cell& cell);
     void draw_shirt(const RenderInfo& ctx, const Cell& cell);

@@ -8,6 +8,8 @@ void Game::exe() {
     CreateGameDTO create(player_name);
     create.gameName = "test";
     create.worldId = 0;
+    create.shirtModel = 1;
+
     ServerStatus st = net.handshake(create);
     if (st.status != StatusCode::Ok) {
         throw std::runtime_error(st.errorMsg);
@@ -21,7 +23,7 @@ void Game::exe() {
 }
 
 void Game::loopInternalLogic(long long it) {
-    for (auto& cmd : translator.poll(currentState)) {
+    for (auto& cmd : translator.poll()) {
         net.push_to_send(cmd);
     }
     if (translator.quit_requested()) {

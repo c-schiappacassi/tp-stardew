@@ -58,6 +58,28 @@ GameSession Game::createGame(const CreateGameDTO& dto,const std::shared_ptr<OutQ
     return session;
 }
 
+void Game::advancePlayers() {
+    std::lock_guard<std::mutex> lock(mtx);
+
+    for (auto& entry : players) {
+        PlayerRecord& player = entry.second;
+        if (!player.connected || player.data.state != PlayerState::Walking) {
+            continue;
+        }
+
+        int x = player.data.pos.getX();
+        int y = player.data.pos.getY();
+        switch (player.data.dir) {
+            case Direction::Up: y -= PLAYER_STEP; break;
+            case Direction::Down: y += PLAYER_STEP; break;
+            case Direction::Left: x -= PLAYER_STEP; break;
+            case Direction::Right: x += PLAYER_STEP; break;
+            case Direction::None: break;
+        }
+        player.data.pos = Position(std::max(0, x), std::max(0, y));
+    }
+}
+
 GameSession Game::addPlayer(const std::string& playerName,const PlayerData& data,const std::shared_ptr<OutQueue>& output,const std::string& successMsg) {
     GameSession session{};
     session.status.status = StatusCode::Error;
@@ -80,7 +102,9 @@ GameSession Game::addPlayer(const std::string& playerName,const PlayerData& data
     }
 
     const uint16_t playerId = nextPlayerId;
-    players.emplace(playerId,PlayerRecord{playerId, playerName, output, true, data});
+    PlayerData spawn = data;
+    spawn.pos = Position(SPAWN_X, SPAWN_Y);
+    players.emplace(playerId, PlayerRecord{playerId, playerName, output, true, spawn});
     ++nextPlayerId;
 
     session.status = buildStatus();
@@ -129,7 +153,6 @@ void Game::movePlayer(uint16_t playerId, const MoveDTO& move) {
 
     PlayerData& data = it->second.data;
 
-    data.pos = move.position;
     if (move.dir == Direction::None) {
         data.state = PlayerState::Idle;
     } else {
@@ -204,6 +227,7 @@ void Game::run() {
         Foo::constant_rate_loop(
             [this, &running](long long) {
                 processCommands();
+                advancePlayers();
                 running = should_keep_running();
 
                 if (running) {
