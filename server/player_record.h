@@ -6,13 +6,14 @@
 #include <string>
 
 #include "game_types.h"
+#include "position.h"
 
 struct PlayerRecord {
     uint16_t id;
     std::string name;
-    uint8_t skin;
     std::shared_ptr<OutQueue> output;
     bool connected;
+    PlayerData data;
 };
 
 #endif

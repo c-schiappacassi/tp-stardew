@@ -5,21 +5,20 @@
 #include <utility>
 
 #include <sys/socket.h>
-
+#include "game.h"
 #include "liberror.h"
 #include "protocol_errors.h"
 #include "queue.h"
 
 
 struct ClosedQueue;
-ClientHandler::ClientHandler(Socket&& socket, GameManager& manager)
-    : socket(std::move(socket)),
-      protocol(this->socket),
-      manager(manager),
-      outQueue(std::make_shared<OutQueue>()),
-      session(),
-      sender() {}
-
+ClientHandler::ClientHandler(Socket&& socket, Game& game):
+    socket(std::move(socket)),
+    protocol(this->socket),
+    game(game),
+    outQueue(std::make_shared<OutQueue>()),
+    session(),
+    sender() {}
 
 void ClientHandler::run() {
     try {
@@ -43,40 +42,26 @@ void ClientHandler::run() {
 bool ClientHandler::runMenu() {
     while (should_keep_running()) {
         switch (protocol.receiveType()) {
+            case MessageType::CreateGame:
+                session = game.createGame(protocol.receiveCreateGame(), outQueue);
+                break;
 
-            case MessageType::CreateGame: {
-                const CreateGameDTO dto = protocol.receiveCreateGame();
-                session = manager.createGame(dto, outQueue); // agus
-                if (answerEntry()) {
-                    return true;
-                }
+            case MessageType::JoinGame:
+                session = game.joinGame(protocol.receiveJoinGame(), outQueue);
                 break;
-            }
-            case MessageType::JoinGame: {
-                const JoinGameDTO dto = protocol.receiveJoinGame();
-                session = manager.joinGame(dto, outQueue); // agus
-                if (answerEntry()) {
-                    return true;
-                }
-                break;
-            }
-            /* internamente seria un list y despues un resume
-            case MessageType::ResumeGame: {
-                const ResumeGameDTO dto = protocol.receiveResumeGame();
-                session = manager.resumeGame(dto, outQueue); // agus
-                if (answerEntry()) {
-                    return true;
-                }
-                break;
-            }
-            */
-            case MessageType::ExitGame: {
+
+            case MessageType::ExitGame:
                 return false;
-            }
+
             default:
                 throw ProtocolError("unexpected message");
         }
+
+        if (answerEntry()) {
+            return true;
+        }
     }
+
     return false;
 }
 
@@ -87,16 +72,17 @@ void ClientHandler::runGame() {
 
     while (should_keep_running()) {
         switch (protocol.receiveType()) {
-            /* TODO: habilitar cuando existan MoveDTO y receiveMove().
+            // TODO: el MoveDTO ya existe. falta receiveMove(),
+            // por ahora el id del jugador la obtengo de su conexion, hablalo con ciro.
             case MessageType::Move: {
-                session.input->push(PlayerCommand{
-                        session.playerId, protocol.receiveMove()});
+                auto move = std::make_shared<MoveDTO>(protocol.receiveMove());
+                session.input->push(PlayerCommand{session.playerId, move});
                 break;
             }
-            */
-            case MessageType::ExitGame: {
+
+            case MessageType::ExitGame:
                 return;
-            }
+
             default:
                 throw ProtocolError("unexpected message");
         }
@@ -104,13 +90,15 @@ void ClientHandler::runGame() {
 }
 
 
+// TODO: juntar la respuesta de ingreso dentro de ServerStatus.Incorporar los datos actuales de GameJoined (gameId, playerId y worldId)
+// al DTO y al protocolo, manteniendolos errores de ingreso.
+// no mandar GameJoined como mensaje separado.
+
 bool ClientHandler::answerEntry() {
     const bool joined =session.status.status == StatusCode::Ok && session.input;
     protocol.sendStatus(session.status);
 
-    if (joined) {
-        protocol.sendGameJoined(GameJoinedDTO{session.gameId, session.playerId, session.worldId});
-    } else {
+    if (!joined) {
         session = GameSession();
     }
     return joined;
@@ -125,10 +113,12 @@ void ClientHandler::stop() {
 }
 
 void ClientHandler::disconnect() {
+    stop();
     if (session.input) {
         try {
-            session.input->push(PlayerCommand{session.playerId, DisconnectCommand{}});
+            session.input->push(PlayerCommand{ session.playerId, std::make_shared<DisconnectDTO>(session.playerName)});
         } catch (const ClosedQueue&) {
+            // TODO
         }
     }
     try {

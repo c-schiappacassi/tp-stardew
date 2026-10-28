@@ -20,8 +20,8 @@ private:
 public:
     ~GameManager();
 
-    GameSession createGame(const CreateGameDTO& dto,const std::shared_ptr<OutQueue>& out);
-    GameSession joinGame(const JoinGameDTO& dto,const std::shared_ptr<OutQueue>& out);
+    std::string createGame(const char* servicename);
+    void stopAll();
     Game* findGame(const std::string& id);
 };
 

@@ -11,7 +11,7 @@ private:
     Queue<ServerStatus>& recv_queue;
     ClientProtocol& protocolo;
     Socket& socket;
-    bool should_keep_running;
+    bool should_keep_running = false;
 
 public:
     RecvThread(Queue<ServerStatus>& queue, ClientProtocol& prot, Socket& socket)
@@ -28,7 +28,7 @@ public:
             }
         } catch (const ClosedQueue&) {
             // TODO
-        } catch (const std::exception& e) {
+        } catch (const std::exception&) {
             // TODO
         }
     }

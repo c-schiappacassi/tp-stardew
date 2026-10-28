@@ -12,6 +12,9 @@ all: clean run-tests
 
 run-client: compile-debug
 	./build/taller_client
+
+run-server: compile-debug
+	./build/taller_server
 	
 clean:
 	rm -Rf build/

@@ -8,20 +8,20 @@
 #include "../common/thread.h"
 
 #include "client_handler.h"
-#include "game_manager.h"
 
+class Game;
 
 class Acceptor : public Thread {
 private:
     Socket& listenSocket;
-    GameManager& manager;
+    Game& game;
     std::list<std::unique_ptr<ClientHandler>> clients;
 
     void reap();
     void clear();
 
 public:
-    Acceptor(Socket& listenSocket, GameManager& manager);
+    Acceptor(Socket& listenSocket, Game& game);
 
     void run() override;
     void stop() override;

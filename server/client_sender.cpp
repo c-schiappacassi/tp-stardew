@@ -24,12 +24,7 @@ void ClientSender::run() {
     }
 }
 
-// no esta terminada esta funcion (falta implementar metodos que usa)
+// queda asi ya que usamos server status
 void ClientSender::sendMessage(const OutgoingMessage& message) {
-    if (const StatusDTO* status = std::get_if<StatusDTO>(&message)) {
-        protocol.sendStatus(*status);
-    }
-    // else if (const ChatMessageDTO* chat = <ChatMessageDTO>(&message)) {
-    //    protocol.sendChatMsg(*chat);
-    //}
+    protocol.sendStatus(message);
 }

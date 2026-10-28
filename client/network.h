@@ -11,7 +11,7 @@
 
 class NetworkManager {
 private:
-    Queue<GameDTO> send_queue;
+    Queue<std::shared_ptr<CommandDTO>> send_queue;
     Queue<ServerStatus> recv_queue;
     // TODO:TBD si protocolo deberia ser dueño del socket o deberia tenerlo network
     Socket socket;
@@ -33,8 +33,13 @@ public:
         receiver.start();
     }
 
-    void push_to_send(const GameDTO& dto) {
-        send_queue.push(dto);
+   
+    void push_to_send(std::shared_ptr<CommandDTO> dto) {
+        try {
+            send_queue.try_push(dto);
+        } catch (const ClosedQueue&) {
+            // TODO
+        }
     }
 
     std::optional<ServerStatus> try_pop_recv() {
@@ -51,5 +56,13 @@ public:
 
         sender.join();
         receiver.join();
+    }
+    
+    // TEMP
+    ServerStatus handshake(const CommandDTO& dto) {
+        protocolo.send(dto);
+        ServerStatus status;
+        protocolo.recv(status);
+        return status;
     }
 };

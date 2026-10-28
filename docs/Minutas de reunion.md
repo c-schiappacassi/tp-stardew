@@ -135,8 +135,31 @@
 - feat/granja (3 semanas)
   - logica animales (caminan)
 
+# 3ra Reunión 27-10-2026
+- preguntas: Zonas separadas por una loading screen como en el juego? - como les resulte más simple
 
-# 3ra Reunión xx-10-2026
+### Para la semana que viene:
+
+#### lo que no llegamos
+- QT: para pantallas de inicio son 2 semanas (ingresar ususario, crear partida, elegir mapa, elegir aspecto, joinear partida)
+- Protocolo:
+    - 2 semanas: concurrencia(poder tener multiples partidas y multiples juagdores)
+- Server: Diseño/Arqui
+- feat/mineria + inventario (1 semana)
+  - picar los minerales
+  - inventario (10 slots de stacks de 50)
+  - conseguir la reconpensa de minar
+- feat/granja (3 semanas)
+  - logica animales (caminan)
+
+#### lo que es para la proxima
+- Camara: coali con la pared del mapa
+- feat/cultivos -> implica tiempo
+- feat/caverna
+- feat/mapa
+- QT COMPLETO: HANDSHAKE INCLUIDO
+- Concurrencia Completa
+- la idea era que tuvieramos regalos y enemigos
 
 
 
