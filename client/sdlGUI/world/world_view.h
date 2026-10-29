@@ -6,6 +6,7 @@
 
 #include "player_view.h"
 #include "hud/hud_view.h"
+#include "map_view.h"
 #include "../render_info.h"
 #include "../../state.h"
 
@@ -15,6 +16,7 @@ private:
     std::string local_name;
     std::map<std::string, PlayerView> player_views;
     HudView player_hud;
+    MapView map;
 
     void update_players_and_list(const std::map<std::string, PlayerData>& players_data) {
         for (const auto& [username, data] : players_data) {
@@ -28,12 +30,13 @@ private:
         }
     }
 public:
+    // inicializa el mapa una vez y listo, el server no me manda info de los tiles de background
     explicit WorldView(const std::string& local_name){
         this->local_name = local_name;
     };
 
     void update(const State& state){
-        //map.update
+        //map.update // solo actualiza entitys, es el que filtra por lo en zona y visible
         this->update_players_and_list(state.get_players());
 
         const PlayerData* me = state.find_player(this->local_name);
@@ -42,10 +45,18 @@ public:
 
     void draw(const RenderInfo& ctx){
         
-        // TODO: las entidades todas tienen depth, update y draw, podria hacer una interfaz. o un entity manager
-        for (auto& [username, player] : this->player_views) {
-            player.draw(ctx);
-        }
-        this->player_hud.draw(ctx);
+        // TODO:
+
+        // map.draw_backgroud(ctx) // le va a pedir a la zona actual que se dibuje
+
+        // meter drawables de los players en vista en un vec
+
+        // map.get_drawables(ctx,vec) // le va pedir a la zona actual que le de los drawables se se vean
+
+        // sort de los drawables junto con los players
+
+        // .draw a lo ordenado a los elem del vec
+
+        this->player_hud.draw(ctx); // siempre arriba de todo asi que ultimo
     }
 };

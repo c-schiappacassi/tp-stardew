@@ -5,11 +5,18 @@
 #include <optional>
 #include <string>
 #include <variant>
+#include <cstdint>
 #include <vector>
-
 #include "protocol_types.h"
+#include "world/entity_view.h"
 
 #define TILE_TO_PIXEL 16
+
+struct Drawable {
+    float depth;
+    uint64_t tiebreak;
+    EntityView* view;
+};
 
 struct Sprite {
     SDL2pp::Texture texture;

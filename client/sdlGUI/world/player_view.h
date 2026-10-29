@@ -10,6 +10,7 @@
 #include "../animator.h"
 #include "../utils.h"
 #include "../render_info.h"
+#include "entity_view.h"
 // #include "tool_view.h"
 
 namespace farmer {
@@ -44,7 +45,7 @@ constexpr int TOOL_SIZE = 16;
 }
 
 
-class PlayerView {
+class PlayerView : public EntityView {
 private:
     Position pos{0, 0};
     Direction facing = Direction::Down;

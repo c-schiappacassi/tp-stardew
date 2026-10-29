@@ -28,9 +28,11 @@ public:
     }
 
     Sprite& get_sprite(SpriteId id) { return sprites.at(id); }
-    Sprite& get_sprite(ItemId id) { return sprites.at(item_id_to_sprite.at(id)); }
     const Sound& get_sound(SoundId id) const { return sounds.at(id); }
     const Clip& get_clip(const ClipId& id) const { return clips.at(id); }
+
+    // TODO: implementar esta func y la carga
+    Sprite& get_sprite(ItemId id) { return sprites.at(item_id_to_sprite.at(id)); }
 };
 
 // TODO: TBD de usar esto para lo de los anchos y altos de las cosas:
