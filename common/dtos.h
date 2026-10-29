@@ -172,33 +172,14 @@ struct ServerStatus {
     std::map<std::string, PlayerData> players;
 };
 
-/*
-// aca dejo un compilado de los dtos que ya habia estado viendo antes para completar el serverstatus
-
-struct ServerStatus {
-    uint16_t gameId;
-    uint8_t worldId;
-
-    StatusCode status{};
-    std::string errorMsg;
-    std::string successMsg;
-
-    bool isFinished; // tal vez false deberia ser el default bool isFinished{false};
-
-    std::string MultiplayerCode;
-    std::vector<GameInfoDTO> currentGames; // ojo que aca pasamos vector de DTOs
-
-    // y esta es una idea para pasar todos los datos en vectores donde la posicion siempre corresponde a un mismo jugador
-    std::vector<uint16_t> playerIds;
-    std::vector<std::string> playerNames;
-    std::vector<uint8_t> playerSkins;
-    std::vector<Position> playerPositions;
-    std::vector<uint16_t> playerHealths;
-    std::vector<uint32_t> playerMoney;
-
-    // y que el chat sea emisor + mensaje pero creo que ciro necesitaria tambien un receivers por los mensajes privados
-    // la otra es usar lo mismo que arriba y hacer indice = jugador y se va pasando de a un solo mensaje (creo que esto es mas prolijo para leerlo despues porque sigue la misma logica que los vectores de arriba)
-    std::vector<std::string> chatSenders;
-    std::vector<std::string> chatTexts;
+struct Stack {
+    ItemId item_id;
+    uint16_t cuantity; 
+    Quality qual; 
 };
+
+/* TODO: QUE SIGUE PONER EN PLAYER DATA:
+items : map<uint_8, Stack>
+currentSlot : uint_8;
+
 */

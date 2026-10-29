@@ -14,7 +14,7 @@
 
 namespace farmer {
 
-// const de sprite info del farmer
+// const de sprite info del farmer TBD: donde van todos estos tipos de datos
 constexpr int CELL_W = 16;
 constexpr int CELL_H = 32;
 constexpr int COLS = 6;

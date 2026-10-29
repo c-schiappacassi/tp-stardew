@@ -15,6 +15,8 @@ private:
     NetworkManager net;
     State currentState;
     GameUI ui;
+    // TODO: pasar el inputTranslator acá
+
     void loopInternalLogic(long long it);
 
 public:

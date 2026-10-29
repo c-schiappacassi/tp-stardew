@@ -98,11 +98,12 @@ enum class CropState : uint8_t {
 };
 
 enum class Quality : uint8_t {
-    Base = 0,       // x1
-    Good = 1,       // x1.25
-    Excellent = 2,  // x2
-    Incredible = 3, // x4
-    Perfect = 4     // x8
+    None = 0,
+    Base = 1,       // x1
+    Good = 2,       // x1.25
+    Excellent = 3,  // x2
+    Incredible = 5, // x4
+    Perfect = 6     // x8
 };
 
 // ANIMALS

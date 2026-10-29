@@ -1,26 +1,21 @@
 #include "asset_manager.h"
 
 namespace {
-constexpr int FARMER_COLS = 6;
-SDL2pp::Texture load_texture(SDL2pp::Renderer& r, const std::string& path) {
-    SDL_Surface* raw = IMG_Load(path.c_str());
-    if (!raw) {
-        throw std::runtime_error("IMG_Load " + path + ": " + IMG_GetError());
+    constexpr int FARMER_COLS = 6;
+    SDL2pp::Texture load_texture(SDL2pp::Renderer& r, const std::string& path) {
+        SDL_Surface* raw = IMG_Load(path.c_str());
+        if (!raw) {
+            throw std::runtime_error("IMG_Load " + path + ": " + IMG_GetError());
+        }
+        return SDL2pp::Texture(r, SDL2pp::Surface(raw));
     }
-    return SDL2pp::Texture(r, SDL2pp::Surface(raw));
 }
-}
-
-
-
 
 void AssetManager::load_farmer_clips() {
     auto add = [this]( PlayerState state, Direction dir, std::initializer_list<std::pair<int, int>> frames, bool loop, bool mirror_left) {
         Clip clip;
         clip.loop = loop;
-
         const bool flip = mirror_left && dir == Direction::Left;
-
         for (const auto& [index, duration_ms] : frames) {
             clip.sequence.push_back({
                 Frame{
@@ -31,14 +26,12 @@ void AssetManager::load_farmer_clips() {
                 duration_ms
             });
         }
-
         ClipId id{
             SpriteId::FarmerBase,
             Action{state},
             dir,
             std::nullopt
         };
-
         clips.insert_or_assign(std::move(id), std::move(clip));
     };
 
@@ -46,7 +39,6 @@ void AssetManager::load_farmer_clips() {
     add(PlayerState::Idle, Direction::Left,{{6, 1000}}, false, true);
     add(PlayerState::Idle, Direction::Right,{{6, 1000}}, false, true);
     add(PlayerState::Idle, Direction::Up,{{12, 1000}}, false, true);
-
 
     add(PlayerState::Walking, Direction::Down,{{0, 200}, {1, 200}, {0, 200}, {2, 200}}, true, true);
     add(PlayerState::Walking, Direction::Left, {{6, 200}, {7, 200}, {6, 200}, {8, 200}}, true, true);

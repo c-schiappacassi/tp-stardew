@@ -9,7 +9,8 @@ void Game::exe() {
     create.gameName = "test";
     create.worldId = 0;
     create.shirtModel = 0;
-    create.hairColor = {200,200,200};
+    create.hairColor = {163, 113, 5};
+    create.pantsColor = {35, 39, 166};
 
     ServerStatus st = net.handshake(create);
     if (st.status != StatusCode::Ok) {

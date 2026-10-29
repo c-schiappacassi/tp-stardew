@@ -39,11 +39,13 @@ struct Clip {
 };
 
 enum class SpriteId : uint16_t {
-    FarmerBase = 1,
-    Hairstyles = 2,
-    Pants = 3,
-    Shirts = 4,
-    Tools = 5,
+    FarmerBase,
+    Hairstyles,
+    Pants,
+    Shirts,
+    Tools,
+    Clock,
+    InGameUI,
 };
 
 enum class SoundId : uint16_t{

@@ -16,6 +16,9 @@ target_sources(taller_client
     state.h
     sdlGUI/asset_manager.h
     sdlGUI/world/player_view.h
+    sdlGUI/world/world_view.h
+    sdlGUI/world/hud/hud_view.h
+    sdlGUI/world/hud/hotbar_view.h
     sdlGUI/render_info.h
     sdlGUI/utils.h
     sdlGUI/animator.h
