@@ -3,32 +3,33 @@
 
 #include <memory>
 
-#include "client_sender.h"
-#include "game_types.h"   // agus
+#include "game_types.h"
 #include "server_protocol.h"
 #include "socket.h"
 #include "thread.h"
 
-class Game;
 
 class ClientHandler : public Thread {
 private:
-    // agus fijate si los nombres del game son otros y estos no te sirven no se que implementaste!
     Socket socket;
     ServerProtocol protocol;
-    Game& game;
+    GameManager& manager;
     std::shared_ptr<OutQueue> outQueue;
     GameSession session;
     std::unique_ptr<ClientSender> sender;
 
+    bool inGame() const;
 
-    bool runMenu();
-    void runGame();
-    bool answerEntry();
+    void handleCreate();
+    void handleJoin();
+    void handleMove();
+
+    void answer(const GameSession& result);
+
     void disconnect();
 
 public:
-    ClientHandler(Socket&& socket, Game& game);
+    ClientHandler(Socket&& socket, GameManager& manager);
 
     void run() override;
     void stop() override;

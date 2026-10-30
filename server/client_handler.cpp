@@ -1,130 +1,101 @@
 #include "client_handler.h"
 
 #include <iostream>
-#include <memory>
 #include <utility>
 
 #include <sys/socket.h>
-#include "game.h"
-#include "liberror.h"
+
+#include "game_manager.h"
 #include "protocol_errors.h"
-#include "queue.h"
 
-
-struct ClosedQueue;
-ClientHandler::ClientHandler(Socket&& socket, Game& game):
-    socket(std::move(socket)),
-    protocol(this->socket),
-    game(game),
-    outQueue(std::make_shared<OutQueue>()),
-    session(),
-    sender() {}
+ClientHandler::ClientHandler(Socket&& socket, GameManager& manager):
+        socket(std::move(socket)),
+        protocol(this->socket),
+        manager(manager),
+        outQueue(std::make_shared<OutQueue>()),
+        session() {}
 
 void ClientHandler::run() {
     try {
-        if (runMenu()) {
-            runGame();
+        while (should_keep_running()) {
+            switch (protocol.receiveType()) {
+                case MessageType::CreateGame:
+                    handleCreate();
+                    break;
+                case MessageType::JoinGame:
+                    handleJoin();
+                    break;
+                case MessageType::Move:
+                    handleMove();
+                    break;
+                case MessageType::ExitGame:
+                    stop();
+                    break;
+                default:
+                    throw ProtocolError("unexpected message");
+            }
         }
     } catch (const ConnectionClosed&) {
-    } catch (const ClosedQueue&) {
-    } catch (const LibError& e) {
-        if (should_keep_running()) {
-            std::cerr << "Socket error: " << e.what() << "\n";
-        }
     } catch (const std::exception& e) {
-        std::cerr << "Unexpected error: " << e.what() << "\n";
+        if (should_keep_running()) {
+            std::cerr << "ClientHandler error: " << e.what() << "\n";
+        }
     }
     disconnect();
 }
 
+bool ClientHandler::inGame() const { return session.input != nullptr; }
 
-// despues quiero desaparecer este switch pero todavia no termino de entender como hacerlo!
-bool ClientHandler::runMenu() {
-    while (should_keep_running()) {
-        switch (protocol.receiveType()) {
-            case MessageType::CreateGame:
-                session = game.createGame(protocol.receiveCreateGame(), outQueue);
-                break;
-
-            case MessageType::JoinGame:
-                session = game.joinGame(protocol.receiveJoinGame(), outQueue);
-                break;
-
-            case MessageType::ExitGame:
-                return false;
-
-            default:
-                throw ProtocolError("unexpected message");
-        }
-
-        if (answerEntry()) {
-            return true;
-        }
+void ClientHandler::handleCreate() {
+    CreateGameDTO dto = protocol.receiveCreateGame();
+    if (inGame()) {
+        throw ProtocolError("ya estas en una partida");
     }
-
-    return false;
+    answer(manager.createGame(dto, outQueue));
 }
 
-// este switch tambien va a volar ni bien termine de entender como usar un map
-void ClientHandler::runGame() {
-    sender = std::make_unique<ClientSender>(protocol, outQueue);
-    sender->start();
-
-    while (should_keep_running()) {
-        switch (protocol.receiveType()) {
-            // TODO: el MoveDTO ya existe. falta receiveMove(),
-            // por ahora el id del jugador la obtengo de su conexion, hablalo con ciro.
-            case MessageType::Move: {
-                auto move = std::make_shared<MoveDTO>(protocol.receiveMove());
-                session.input->push(PlayerCommand{session.playerId, move});
-                break;
-            }
-
-            case MessageType::ExitGame:
-                return;
-
-            default:
-                throw ProtocolError("unexpected message");
-        }
+void ClientHandler::handleJoin() {
+    JoinGameDTO dto = protocol.receiveJoinGame();
+    if (inGame()) {
+        throw ProtocolError("ya estas en una partida");
     }
+    answer(manager.joinGame(dto, outQueue));
 }
 
-
-// TODO: juntar la respuesta de ingreso dentro de ServerStatus.Incorporar los datos actuales de GameJoined (gameId, playerId y worldId)
-// al DTO y al protocolo, manteniendolos errores de ingreso.
-// no mandar GameJoined como mensaje separado.
-
-bool ClientHandler::answerEntry() {
-    const bool joined =session.status.status == StatusCode::Ok && session.input;
-    protocol.sendStatus(session.status);
-
-    if (!joined) {
-        session = GameSession();
+void ClientHandler::handleMove() {
+    MoveDTO move = protocol.receiveMove();
+    if (!inGame()) {
+        throw ProtocolError("no estas en una partida");
     }
-    return joined;
+    session.input->push(PlayerCommand{session.playerId, std::make_shared<MoveDTO>(move)});
+}
+
+void ClientHandler::answer(const GameSession& result) {
+    protocol.sendStatus(result.status);
+    if (result.input) {
+        session = result;
+        sender = std::make_unique<ClientSender>(protocol, outQueue);
+        sender->start();
+    }
 }
 
 void ClientHandler::stop() {
     Thread::stop();
     try {
         socket.shutdown(SHUT_RDWR);
-    } catch (const std::exception&) {
-    }
+    } catch (const std::exception&) {}
 }
 
 void ClientHandler::disconnect() {
     stop();
-    if (session.input) {
+    if (inGame()) {
         try {
-            session.input->push(PlayerCommand{ session.playerId, std::make_shared<DisconnectDTO>(session.playerName)});
-        } catch (const ClosedQueue&) {
-            // TODO
-        }
+            session.input->push(PlayerCommand{session.playerId, std::make_shared<DisconnectDTO>(session.playerName)});
+        } catch (const ClosedQueue&) {}
     }
     try {
-        outQueue->close();
-    } catch (const std::exception&) {
-    }
+        outQueue->close(); // esto deberia desttrabar el sender
+    } catch (const std::exception&) {}
     if (sender) {
         sender->join();
     }
