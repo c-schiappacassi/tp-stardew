@@ -10,8 +10,7 @@
 #include "game_types.h"
 #include "player_record.h"
 #include "thread.h"
-#include "acceptor.h"
-#include "socket.h"
+
 
 class Game:public Thread {
 
@@ -24,8 +23,6 @@ class Game:public Thread {
         bool configured = false;
         std::map<uint16_t, PlayerRecord> players;
         uint16_t nextPlayerId = 1;
-        Socket skt;
-        Acceptor acceptor;
 
         void disconnectPlayer(uint16_t playerId);
         void movePlayer(uint16_t playerId, const MoveDTO& move);
