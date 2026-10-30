@@ -42,7 +42,7 @@ struct PlayerData{
     Color pantsColor{0, 0, 0};
 };
 
-struct PlayerDataLocal {
+struct PlayerDataLocal : public PlayerData {
     std::map<uint8_t, Stack> items;
     uint8_t current_slot = 0;
     uint32_t gold = 0;
@@ -50,6 +50,10 @@ struct PlayerDataLocal {
     uint16_t maxHealth = 0;
     uint16_t energy = 0;
     uint16_t maxEnergy = 0;
+
+    PlayerDataLocal() = default;
+
+    explicit PlayerDataLocal(const PlayerData& publicData): PlayerData(publicData) {}
 };
 
 // COMMAND_DTO CON HERENCIA
