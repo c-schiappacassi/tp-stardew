@@ -1,11 +1,10 @@
 #ifndef GAME_MANAGER_H
 #define GAME_MANAGER_H
 
-#include <cstddef>
+#include <map>
 #include <memory>
 #include <mutex>
 #include <string>
-#include <vector>
 
 #include "dtos.h"
 #include "game.h"
@@ -13,16 +12,16 @@
 
 class GameManager {
 private:
-    std::size_t nextId = 1;
     std::mutex mtx;
-    std::vector<std::unique_ptr<Game>> games;
+    std::size_t nextId = 1;
+    std::map<std::string, std::unique_ptr<Game>> games;
 
 public:
     ~GameManager();
 
-    std::string createGame(const char* servicename);
+    GameSession createGame(const CreateGameDTO& dto, const std::shared_ptr<OutQueue>& output);
+    GameSession joinGame(const JoinGameDTO& dto, const std::shared_ptr<OutQueue>& output);
     void stopAll();
-    Game* findGame(const std::string& id);
 };
 
 #endif

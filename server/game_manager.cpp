@@ -5,51 +5,47 @@
 #include <string>
 #include <utility>
 
-std::string GameManager::createGame(const char* servicename) {
+
+GameSession GameManager::createGame(const CreateGameDTO& dto,
+                                    const std::shared_ptr<OutQueue>& output) {
     std::lock_guard<std::mutex> lock(mtx);
 
     const std::string id = "game-" + std::to_string(nextId);
-    auto game = std::make_unique<Game>(id, "", 0, servicename);
-    games.push_back(std::move(game));
+    auto game = std::make_unique<Game>(id);
+    GameSession session = game->createGame(dto, output);
 
-    try {
-        games.back()->start();
-    } catch (const std::exception&) {
-        games.pop_back();
-        throw;
+    if (session.status.status == StatusCode::Ok) {
+        game->start();
+        games.emplace(id, std::move(game));
+        ++nextId;
     }
-
-    ++nextId;
-    return id;
+    return session;
 }
 
-
-Game* GameManager::findGame(const std::string& id) {
+GameSession GameManager::joinGame(const JoinGameDTO& dto,
+                                  const std::shared_ptr<OutQueue>& output) {
     std::lock_guard<std::mutex> lock(mtx);
 
-    for (const auto& game : games) {
-        if (game->getId() == id) {
-            return game.get();
-        }
+    auto it = games.find(dto.code);
+    if (it == games.end()) {
+        GameSession session{};
+        session.status.status = StatusCode::Error;
+        session.status.errorMsg = "No existe una partida con ese codigo";
+        return session;
     }
-
-    return nullptr;
+    return it->second->joinGame(dto, output);
 }
 
 void GameManager::stopAll() {
     std::lock_guard<std::mutex> lock(mtx);
 
-    for (const auto& game : games) {
-        game->stop();
+    for (auto& entry: games) {
+        entry.second->stop();
     }
-
-    for (const auto& game : games) {
-        game->join();
+    for (auto& entry: games) {
+        entry.second->join();
     }
-
     games.clear();
 }
 
-GameManager::~GameManager() {
-    stopAll();
-}
+GameManager::~GameManager() { stopAll(); }
