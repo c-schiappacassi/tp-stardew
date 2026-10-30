@@ -1,80 +1,48 @@
 #include "acceptor.h"
 
 #include <iostream>
-#include <memory>
 #include <utility>
 
 #include <sys/socket.h>
 
-#include "../common/liberror.h"
 
-Acceptor::Acceptor(Socket& listenSocket, Game& game):listenSocket(listenSocket), game(game) {}
+Acceptor::Acceptor(const char* servername, GameManager& manager):
+        listenSocket(servername), manager(manager) {}
 
 void Acceptor::run() {
-    while (should_keep_running()) {
-        try {
-            Socket clientSocket = listenSocket.accept();
+    try {
+        while (should_keep_running()) {
+            Socket peer = listenSocket.accept();
             reap();
-            auto handler = std::make_unique<ClientHandler>(std::move(clientSocket), game);
-            clients.push_back(std::move(handler));
+            std::unique_ptr<ClientHandler> client = std::make_unique<ClientHandler>(std::move(peer), manager);
+            clients.push_back(std::move(client));
             clients.back()->start();
-
-        } catch (const LibError& e) {
-            if (should_keep_running()) {
-                std::cerr << "Accept error: " << e.what() << "\n";
-            }
-            break;
-        } catch (const std::exception& e) {
-            std::cerr << "Unexpected error in Acceptor: " << e.what() << "\n";
-            break;
-        } catch (...) {
-            std::cerr << "Unknown error in Acceptor.\n";
-            break;
+        }
+    } catch (const std::exception& e) {
+        if (should_keep_running()) {
+            std::cerr << "Acceptor error: " << e.what() << "\n";
         }
     }
-
     clear();
 }
 
 void Acceptor::reap() {
-    clients.remove_if([](const std::unique_ptr<ClientHandler>& client) {
-        if (client->is_alive()) {
+    clients.remove_if([](const std::unique_ptr<ClientHandler>& c) {
+        if (c->is_alive()) {
             return false;
         }
-
-        try {
-            client->join();
-        } catch (const std::exception& e) {
-            std::cerr << "Error joining client during reap: " << e.what() << "\n";
-        } catch (...) {
-            std::cerr << "Unknown error joining client during reap.\n";
-        }
-
+        c->join();
         return true;
     });
 }
 
 void Acceptor::clear() {
-    for (const std::unique_ptr<ClientHandler>& client : clients) {
-        try {
-            client->stop();
-        } catch (const std::exception& e) {
-            std::cerr << "Error stopping ClientHandler: " << e.what() << "\n";
-        } catch (...) {
-            std::cerr << "Unknown error stopping ClientHandler.\n";
-        }
+    for (auto& c: clients) {
+        c->stop();
     }
-
-    for (const std::unique_ptr<ClientHandler>& client : clients) {
-        try {
-            client->join();
-        } catch (const std::exception& e) {
-            std::cerr << "Error joining ClientHandler: " << e.what() << "\n";
-        } catch (...) {
-            std::cerr << "Unknown error joining ClientHandler.\n";
-        }
+    for (auto& c: clients) {
+        c->join();
     }
-
     clients.clear();
 }
 
@@ -82,6 +50,5 @@ void Acceptor::stop() {
     Thread::stop();
     try {
         listenSocket.shutdown(SHUT_RDWR);
-    } catch (const std::exception&) {
-    } catch (...) {}
+    } catch (const std::exception&) {}
 }
