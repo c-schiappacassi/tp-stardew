@@ -25,7 +25,7 @@ struct Color{
 
 struct Stack {
     ItemId item_id;
-    uint16_t cuantity; 
+    uint16_t quantity;
     Quality qual; 
 };
 
@@ -153,37 +153,9 @@ struct DisconnectDTO : public CommandDTO {
     explicit DisconnectDTO(const std::string& name) : CommandDTO(name) {}
 };
 
-// DEBERIAMOS VOLARLOS:
-/*
-
-struct GameInfoDTO {
-    uint16_t id;
-    std::string gameName;
-    std::string playerName;
-    uint8_t skin;
-    bool isMultiplayer; // tal vez false deberia ser el default bool isMultiplayer{false};
-};
-
-struct GameListDTO {
-    std::vector<GameInfoDTO> games;
-};
-
-struct GameJoinedDTO {
-    std::string gameId;
-    uint16_t playerId;
-    uint8_t worldId;
-};
-
-struct StatusDTO {
-    StatusCode status;
-    std::string errorMsg;
-    std::string successMsg;
-};
-*/
-
 // SERVIDOR -> CLIENTE
 
-// TODO: seguir completando server status
+// seguir completando server status
 struct ServerStatus {
     StatusCode status;
     std::string errorMsg;
@@ -194,10 +166,3 @@ struct ServerStatus {
     std::map<std::string, PlayerData> players;
     PlayerDataLocal localPlayer;
 };
-
-
-/* TODO: QUE SIGUE PONER EN PLAYER DATA:
-items : map<uint_8, Stack>
-currentSlot : uint_8;
-
-*/
