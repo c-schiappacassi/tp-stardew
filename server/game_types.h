@@ -15,12 +15,9 @@ struct PlayerCommand {
     std::shared_ptr<CommandDTO> command;
 };
 
-// esto despues lo sacamos pero es para no romper nada de lo que hicieron
-using OutgoingMessage = ServerStatus;
-
 // lo de abajo es como establecer un "sinonimo" y uso ese nombre en todo el codigo
 using CommandQueue = Queue<PlayerCommand>;
-using OutQueue = Queue<OutgoingMessage>;
+using OutQueue = Queue<ServerStatus>;
 
 struct GameSession {
     ServerStatus status;
