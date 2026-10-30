@@ -23,15 +23,33 @@ struct Color{
     uint8_t b;
 };
 
+struct Stack {
+    ItemId item_id;
+    uint16_t cuantity; 
+    Quality qual; 
+};
+
 struct PlayerData{
     Position pos{0,0};
     PlayerState state{PlayerState::Idle};
     Direction dir{Direction::None};
+    Zone zone{Zone::Farm};
+    uint8_t dungeonLevel = 0;  // 0 seria afuera de la mazmorra por ahora )?
     uint16_t hairModel = 0;
     uint16_t shirtModel = 0;
     uint16_t pantsModel = 0;
-    Color hairColor{0,0,0};
-    Color pantsColor{0,0,0};
+    Color hairColor{0, 0, 0};
+    Color pantsColor{0, 0, 0};
+};
+
+struct PlayerDataLocal {
+    std::map<uint8_t, Stack> items;
+    uint8_t current_slot = 0;
+    uint32_t gold = 0;
+    uint16_t health = 0;
+    uint16_t maxHealth = 0;
+    uint16_t energy = 0;
+    uint16_t maxEnergy = 0;
 };
 
 // COMMAND_DTO CON HERENCIA
@@ -170,13 +188,9 @@ struct ServerStatus {
     uint16_t playerId = 0;
     uint8_t worldId = 0;
     std::map<std::string, PlayerData> players;
+    PlayerDataLocal localPlayer;
 };
 
-struct Stack {
-    ItemId item_id;
-    uint16_t cuantity; 
-    Quality qual; 
-};
 
 /* TODO: QUE SIGUE PONER EN PLAYER DATA:
 items : map<uint_8, Stack>
