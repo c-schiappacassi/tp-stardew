@@ -21,7 +21,7 @@ Inventory::Inventory(uint8_t capacity, uint16_t stackLimit):capacity(capacity), 
 }
 
 bool Inventory::canAdd(const Stack& stack) const {
-    if (stack.cuantity == 0) {
+    if (stack.quantity == 0) {
         return false;
     }
 
@@ -34,10 +34,10 @@ bool Inventory::canAdd(const Stack& stack) const {
         if (it == slots.end()) {
             available += limit;
         } else if (it->second.item_id == stack.item_id && it->second.qual == stack.qual) {
-            available += limit - it->second.cuantity;
+            available += limit - it->second.quantity;
         }
 
-        if (available >= stack.cuantity) {
+        if (available >= stack.quantity) {
             return true;
         }
     }
@@ -53,7 +53,7 @@ bool Inventory::add(const Stack& stack) {
     }
 
     const uint16_t limit = getStackLimit(incoming.item_id);
-    uint16_t remaining = incoming.cuantity;
+    uint16_t remaining = incoming.quantity;
 
     //completa stack si existe del mismo tipo y calidad
     for (auto& [slot, current] : slots) {
@@ -61,8 +61,8 @@ bool Inventory::add(const Stack& stack) {
             continue;
         }
 
-        const uint16_t amount = std::min<uint16_t>(remaining, limit - current.cuantity);
-        current.cuantity += amount;
+        const uint16_t amount = std::min<uint16_t>(remaining, limit - current.quantity);
+        current.quantity += amount;
         remaining -= amount;
 
         if (remaining == 0) {
@@ -89,13 +89,13 @@ bool Inventory::add(const Stack& stack) {
 bool Inventory::remove(uint8_t slot, uint16_t quantity) {
     const auto it = slots.find(slot);
 
-    if (quantity == 0 || it == slots.end() || it->second.cuantity < quantity) {
+    if (quantity == 0 || it == slots.end() || it->second.quantity < quantity) {
         return false;
     }
 
-    it->second.cuantity -= quantity;
+    it->second.quantity -= quantity;
 
-    if (it->second.cuantity == 0) {
+    if (it->second.quantity == 0) {
         slots.erase(it);
     }
 
