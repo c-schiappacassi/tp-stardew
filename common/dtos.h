@@ -56,6 +56,13 @@ struct PlayerDataLocal : public PlayerData {
     explicit PlayerDataLocal(const PlayerData& publicData): PlayerData(publicData) {}
 };
 
+struct MineralData {
+    uint32_t id = 0;
+    Position pos{0, 0};
+    ResourceType type = ResourceType::CoalRock;
+    MineralState state = MineralState::Intact;
+};
+
 // COMMAND_DTO CON HERENCIA
 
 struct CommandDTO {
@@ -193,6 +200,7 @@ struct ServerStatus {
     uint8_t worldId = 0;
     std::map<std::string, PlayerData> players;
     PlayerDataLocal localPlayer;
+    std::map<uint8_t, std::vector<MineralData>> dungeonMinerals;
 };
 
 

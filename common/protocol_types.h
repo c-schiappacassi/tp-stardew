@@ -126,6 +126,11 @@ enum class ResourceType : uint8_t {
     GoldRock = 3
 };
 
+enum class MineralState : uint8_t {
+    Intact = 0,
+    Broken = 1
+};
+
 // ITEMS
 enum class ItemId : uint16_t {
 

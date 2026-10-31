@@ -1,4 +1,5 @@
 #pragma once
+#include <cstdint>
 
 const int SUCCESS = 0;
 const int FAILURE = 1;
@@ -28,6 +29,10 @@ const char* const UNKNOWN_ERROR_MSG = "Error desconocido";
 const char* const SERVER_ERROR_MSG = "Error de conexion con el servidor: ";
 const char* const SOCKET_ERROR_MSG = "Socket error: ";
 const char* const UNKNOWN_OPERATOR_MSG = "Operacion desconocida";
+
+const uint8_t PLAYER_INVENTORY_CAPACITY = 9;
+const uint16_t PLAYER_INITIAL_HEALTH = 100;
+const uint16_t PLAYER_INITIAL_ENERGY = 100;
 
 const int FPS = 30;
 const int SPAWN_X = 1000;
