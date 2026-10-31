@@ -16,7 +16,10 @@ private:
     Color receiveColor();
     void sendColor(const Color& color);
 
+    void sendStack(const Stack& stack);
+
     void sendPlayerData(const PlayerData& data);
+    void sendPlayerDataLocal(const PlayerDataLocal& localData);
 
 public:
     explicit ServerProtocol(Socket& socket);

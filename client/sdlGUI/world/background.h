@@ -1,7 +1,7 @@
+#pragma once
 
 // TODO:
-class Background
-{
+class Background {
 private:
     // map<TileId, TileTextureId> TODO: agregar cosas a asset manager para los dibujos del piso
 public:

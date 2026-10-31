@@ -25,7 +25,7 @@ struct Color{
 
 struct Stack {
     ItemId item_id;
-    uint16_t cuantity; 
+    uint16_t quantity;
     Quality qual; 
 };
 
@@ -52,7 +52,6 @@ struct PlayerDataLocal : public PlayerData {
     uint16_t maxEnergy = 0;
 
     PlayerDataLocal() = default;
-
     explicit PlayerDataLocal(const PlayerData& publicData): PlayerData(publicData) {}
 };
 
@@ -121,7 +120,7 @@ struct MoveDTO : public CommandDTO {
 
 struct InteractDTO : public CommandDTO {
     TargetType targetType; // usemos un type para esto
-    uint16_t targetId;
+    uint32_t targetId;
 
     MessageType type() const override { return MessageType::Interact; }
     explicit InteractDTO(const std::string& name) : CommandDTO(name) {}
@@ -160,37 +159,9 @@ struct DisconnectDTO : public CommandDTO {
     explicit DisconnectDTO(const std::string& name) : CommandDTO(name) {}
 };
 
-// DEBERIAMOS VOLARLOS:
-/*
-
-struct GameInfoDTO {
-    uint16_t id;
-    std::string gameName;
-    std::string playerName;
-    uint8_t skin;
-    bool isMultiplayer; // tal vez false deberia ser el default bool isMultiplayer{false};
-};
-
-struct GameListDTO {
-    std::vector<GameInfoDTO> games;
-};
-
-struct GameJoinedDTO {
-    std::string gameId;
-    uint16_t playerId;
-    uint8_t worldId;
-};
-
-struct StatusDTO {
-    StatusCode status;
-    std::string errorMsg;
-    std::string successMsg;
-};
-*/
-
 // SERVIDOR -> CLIENTE
 
-// TODO: seguir completando server status
+// seguir completando server status
 struct ServerStatus {
     StatusCode status;
     std::string errorMsg;
@@ -203,9 +174,21 @@ struct ServerStatus {
     std::map<uint8_t, std::vector<MineralData>> dungeonMinerals;
 };
 
+// TODO: agregar al server status
 
-/* TODO: QUE SIGUE PONER EN PLAYER DATA:
-items : map<uint_8, Stack>
-currentSlot : uint_8;
+struct OreData {
+    Position pos;
+    ResourceType type;
+    ResourceState state;
+};
 
-*/
+struct LevelData {
+    Position stairs_up, stairs_down;
+    std::unordered_map<uint32_t, OreData> ores;
+};
+
+struct MineData {
+    uint8_t current_level;
+    LevelData current_level_data;
+};
+

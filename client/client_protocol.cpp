@@ -32,17 +32,48 @@ Color ClientProtocol::receiveColor() {
     return color;
 }
 
+Stack ClientProtocol::receiveStack() {
+    Stack stack;
+    stack.item_id = static_cast<ItemId>(base.receiveUint16());
+    stack.quantity = base.receiveUint16();
+    stack.qual = static_cast<Quality>(base.receiveUint8());
+    return stack;
+}
+
 PlayerData ClientProtocol::receivePlayerData() {
     PlayerData data;
     data.pos = receivePosition();
     data.state = static_cast<PlayerState>(base.receiveUint8());
     data.dir = static_cast<Direction>(base.receiveUint8());
+    data.zone = static_cast<Zone>(base.receiveUint8());
+    data.dungeonLevel = base.receiveUint8();
     data.hairModel = base.receiveUint16();
     data.shirtModel = base.receiveUint16();
     data.pantsModel = base.receiveUint16();
     data.hairColor = receiveColor();
     data.pantsColor = receiveColor();
     return data;
+}
+
+PlayerDataLocal ClientProtocol::receivePlayerDataLocal() {
+    PlayerData baseData = receivePlayerData();
+    PlayerDataLocal localData(baseData);
+
+    uint8_t itemCount = base.receiveUint8();
+    localData.items.clear();
+    for (uint8_t i = 0; i < itemCount; ++i) {
+        uint8_t slot = base.receiveUint8();
+        localData.items[slot] = receiveStack();
+    }
+
+    localData.current_slot = base.receiveUint8();
+    localData.gold = base.receiveUint32();
+    localData.health = base.receiveUint16();
+    localData.maxHealth = base.receiveUint16();
+    localData.energy = base.receiveUint16();
+    localData.maxEnergy = base.receiveUint16();
+
+    return localData;
 }
 
 // SENDERS
@@ -152,4 +183,6 @@ void ClientProtocol::recv(ServerStatus& status) {
         std::string name = base.receiveString();
         status.players[name] = receivePlayerData();
     }
+
+    status.localPlayer = receivePlayerDataLocal();
 }

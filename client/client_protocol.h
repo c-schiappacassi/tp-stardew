@@ -16,9 +16,17 @@ private:
     void sendColor(const Color& color);
     Color receiveColor();
 
+    Stack receiveStack();
+
     PlayerData receivePlayerData();
+    PlayerDataLocal receivePlayerDataLocal();
 
+public:
+    explicit ClientProtocol(Socket& socket);
 
+    void send(const CommandDTO& dto);
+
+    void send(const CreateGameDTO& dto);
     void send(const JoinGameDTO& dto);
     void send(const ResumeGameDTO& dto);
     void send(const MoveDTO& dto);
@@ -29,12 +37,5 @@ private:
     void send(const RequestMultiplayerCodeDTO& dto);
     void send(const DisconnectDTO& dto);
 
-public:
-    explicit ClientProtocol(Socket& socket);
-    void send(const CommandDTO& dto);
-    void send(const CreateGameDTO& dto);
-
-
     void recv(ServerStatus& status);
 };
-

@@ -1,72 +1,71 @@
 #pragma once
 
-#include "utils.h"
-
 #include <algorithm>
+#include <cstddef>
 #include <cmath>
 #include <stdexcept>
+#include "utils.h"
 
 class Animator {
 private:
-    float elapsed_time = 0.0f;
+    float elapsed_ms = 0.0f;
     bool finished = false;
 
-public:
-    Animator() = default;
+    std::size_t current_frame_index(const Clip& clip) {
+        if (clip.sequence.empty()) {
+            return 0;
+        }
 
+        float elapsed = elapsed_ms;
+
+        for (std::size_t i = 0; i < clip.sequence.size(); ++i) {
+            const float duration = static_cast<float>(std::max(1, clip.sequence[i].duration_ms));
+
+            if (elapsed < duration) {
+                return i;
+            }
+
+            elapsed -= duration;
+        }
+
+        if (clip.loop) {
+            float total_duration = 0.0f;
+
+            for (const ClipFrame& frame: clip.sequence) {
+                total_duration += static_cast<float>(std::max(1, frame.duration_ms));
+            }
+
+            if (total_duration > 0.0f) {
+                elapsed_ms = std::fmod(elapsed_ms, total_duration);
+            }
+
+            return current_frame_index(clip);
+        }
+
+        finished = true;
+        return clip.sequence.size() - 1;
+    }
+
+public:
     void reset() {
-        elapsed_time = 0.0f;
+        elapsed_ms = 0.0f;
         finished = false;
     }
 
-    void update(float delta_time) {
-        elapsed_time += std::max(0.0f, delta_time);
+    void update(float delta_ms) {
+        if (!finished && delta_ms > 0.0f) {
+            elapsed_ms += delta_ms;
+        }
     }
 
-    bool is_finished() const {
-        return finished;
-    }
+    bool is_finished() const { return finished; }
 
-    Frame get_current_frame(const Clip& clip) {
+    const AnimatedFrame& get_current_frame(const Clip& clip) {
         if (clip.sequence.empty()) {
-            throw std::runtime_error("Clip sin frames");
+            throw std::runtime_error("Animator: clip sin frames");
         }
 
-        if (clip.sequence.size() == 1) {
-            return clip.sequence.front().frame;
-        }
-
-        int total_ms = 0;
-        for (const auto& frame : clip.sequence) {
-            total_ms += std::max(1, frame.duration_ms);
-        }
-
-        if (total_ms <= 0) {
-            finished = true;
-            return clip.sequence.back().frame;
-        }
-
-        float current_ms = elapsed_time * 1000.0f;
-
-        if (clip.loop) {
-            current_ms = std::fmod(
-                current_ms, static_cast<float>(total_ms)
-            );
-        } else if (current_ms >= total_ms) {
-            finished = true;
-            return clip.sequence.back().frame;
-        }
-
-        for (const auto& frame : clip.sequence) {
-            const int duration = std::max(1, frame.duration_ms);
-
-            if (current_ms < duration) {
-                return frame.frame;
-            }
-
-            current_ms -= duration;
-        }
-
-        return clip.sequence.back().frame;
+        const std::size_t index = current_frame_index(clip);
+        return clip.sequence[index].frame;
     }
 };

@@ -56,6 +56,7 @@ enum class TargetType : uint8_t {
     Animal = 2,
     Chest = 3,
     Bed = 4,
+    Ore,
 };
 
 enum class PlayerState : uint8_t {
@@ -120,10 +121,16 @@ enum class AnimalState : uint8_t {
 
 // ROCKS
 enum class ResourceType : uint8_t {
-    CoalRock = 0,
-    LapisRock = 1,
-    SilverRock = 2,
-    GoldRock = 3
+    StoneRock,
+    CoalRock,
+    LapisRock,
+    SilverRock,
+    GoldRock
+};
+
+enum class ResourceState : uint8_t {
+    Intact = 0,
+    Broken = 1,
 };
 
 enum class MineralState : uint8_t {
@@ -133,7 +140,6 @@ enum class MineralState : uint8_t {
 
 // ITEMS
 enum class ItemId : uint16_t {
-
     Pickaxe = 1,
     WateringCan = 2,
     Shovel = 3,

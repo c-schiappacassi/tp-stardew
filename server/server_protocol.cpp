@@ -33,15 +33,40 @@ void ServerProtocol::sendColor(const Color& color) {
     base.sendUint8(color.b);
 }
 
+void ServerProtocol::sendStack(const Stack& stack) {
+    base.sendUint16(static_cast<uint16_t>(stack.item_id));
+    base.sendUint16(stack.quantity);
+    base.sendUint8(static_cast<uint8_t>(stack.qual));
+}
+
 void ServerProtocol::sendPlayerData(const PlayerData& data) {
     sendPosition(data.pos);
     base.sendUint8(static_cast<uint8_t>(data.state));
     base.sendUint8(static_cast<uint8_t>(data.dir));
+    base.sendUint8(static_cast<uint8_t>(data.zone));
+    base.sendUint8(data.dungeonLevel);
     base.sendUint16(data.hairModel);
     base.sendUint16(data.shirtModel);
     base.sendUint16(data.pantsModel);
     sendColor(data.hairColor);
     sendColor(data.pantsColor);
+}
+
+void ServerProtocol::sendPlayerDataLocal(const PlayerDataLocal& localData) {
+    sendPlayerData(localData);
+
+    base.sendUint8(static_cast<uint8_t>(localData.items.size()));
+    for (const auto& [slot, stack] : localData.items) {
+        base.sendUint8(slot);
+        sendStack(stack);
+    }
+
+    base.sendUint8(localData.current_slot);
+    base.sendUint32(localData.gold);
+    base.sendUint16(localData.health);
+    base.sendUint16(localData.maxHealth);
+    base.sendUint16(localData.energy);
+    base.sendUint16(localData.maxEnergy);
 }
 
 // RECEIVERS (the type byte was already consumed by receiveType())
@@ -131,4 +156,6 @@ void ServerProtocol::sendStatus(const ServerStatus& status) {
         base.sendString(name);
         sendPlayerData(data);
     }
+
+    sendPlayerDataLocal(status.localPlayer);
 }
