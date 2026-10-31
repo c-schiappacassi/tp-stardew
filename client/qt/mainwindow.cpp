@@ -15,7 +15,6 @@ MainWindow::MainWindow(QWidget *parent) : QMainWindow(parent), stack(new QStacke
     setStyleSheet(QString("MainWindow { border-image: url(\"%1/Sprites/Menus/DaySky.png\") 0 0 0 0 stretch stretch; }").arg(ASSETS_DIR));
     setCentralWidget(stack);
 
-
     UsernameScreen* usernameScreen = new UsernameScreen(this);
     StartMenuScreen* startMenu = new StartMenuScreen(this);
     JoinScreen* joinScreen = new JoinScreen(this);
@@ -26,7 +25,6 @@ MainWindow::MainWindow(QWidget *parent) : QMainWindow(parent), stack(new QStacke
     stack->addWidget(joinScreen);
     stack->addWidget(loadScreen);
     stack->addWidget(newGameScreen);
-
 
     connect(usernameScreen, &UsernameScreen::usernameConfirmed, this, [this, startMenu](const QString&) {
         stack->setCurrentWidget(startMenu);
