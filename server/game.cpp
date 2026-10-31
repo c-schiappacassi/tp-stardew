@@ -3,6 +3,8 @@
 #include <thread>
 #include "constants.h"
 #include "foo.h"
+#include <random>
+#include <utility>
 
 Game::Game(const std::string& id, const std::string& name, uint8_t worldId, const char* servicename):
     id(id),name(name),worldId(worldId),input(std::make_shared<CommandQueue>()),skt(servicename),acceptor(skt, *this) {}
@@ -40,6 +42,11 @@ GameSession Game::createGame(const CreateGameDTO& dto,const std::shared_ptr<OutQ
         return session;
     }
 
+    if (dungeonWorldId.has_value() && *dungeonWorldId != dto.worldId) {
+        session.status.errorMsg ="La mazmorra cargada corresponde a otro mundo";
+        return session;
+    }
+
     name = dto.gameName;
     worldId = dto.worldId;
     PlayerData data;
@@ -58,27 +65,6 @@ GameSession Game::createGame(const CreateGameDTO& dto,const std::shared_ptr<OutQ
     return session;
 }
 
-void Game::advancePlayers() {
-    std::lock_guard<std::mutex> lock(mtx);
-
-    for (auto& entry : players) {
-        PlayerRecord& player = entry.second;
-        if (!player.connected || player.data.state != PlayerState::Walking) {
-            continue;
-        }
-
-        int x = player.data.pos.getX();
-        int y = player.data.pos.getY();
-        switch (player.data.dir) {
-            case Direction::Up: y -= PLAYER_STEP; break;
-            case Direction::Down: y += PLAYER_STEP; break;
-            case Direction::Left: x -= PLAYER_STEP; break;
-            case Direction::Right: x += PLAYER_STEP; break;
-            case Direction::None: break;
-        }
-        player.data.pos = Position(std::max(0, x), std::max(0, y));
-    }
-}
 
 GameSession Game::addPlayer(const std::string& playerName,const PlayerData& data,const std::shared_ptr<OutQueue>& output,const std::string& successMsg) {
     GameSession session{};
@@ -104,11 +90,24 @@ GameSession Game::addPlayer(const std::string& playerName,const PlayerData& data
     const uint16_t playerId = nextPlayerId;
     PlayerData spawn = data;
     spawn.pos = Position(SPAWN_X, SPAWN_Y);
-    players.emplace(playerId, PlayerRecord{playerId, playerName, output, true, spawn});
+    spawn.zone = Zone::Farm;
+    spawn.dungeonLevel = 0;
+
+    std::mt19937 generator(std::random_device{}());
+    std::uniform_int_distribution<uint32_t> goldDistribution(0, 100);
+
+    Player character(spawn,PLAYER_INVENTORY_CAPACITY,PLAYER_INITIAL_HEALTH,PLAYER_INITIAL_ENERGY,goldDistribution(generator));
+
+    for (const ItemId tool : {ItemId::Pickaxe,ItemId::WateringCan,ItemId::Shovel,ItemId::Sword}) {
+        character.addItem(Stack{tool, 1, Quality::None});
+    }
+
+    auto it = players.emplace(playerId, PlayerRecord{playerId,playerName,output,true,std::move(character)}).first;
     ++nextPlayerId;
 
     session.status = buildStatus();
     session.status.playerId = playerId;
+    session.status.localPlayer = it->second.player.getLocalData();
     session.status.successMsg = successMsg;
     session.gameId = id;
     session.playerId = playerId;
@@ -128,7 +127,14 @@ GameSession Game::joinGame(const JoinGameDTO& dto,const std::shared_ptr<OutQueue
         return session;
     }
 
-    return addPlayer(dto.playerName, PlayerData{}, output, "Te uniste a la partida");
+    PlayerData data;
+    data.hairModel = dto.hairModel;
+    data.shirtModel = dto.shirtModel;
+    data.pantsModel = dto.pantsModel;
+    data.hairColor = dto.hairColor;
+    data.pantsColor = dto.pantsColor;
+
+    return addPlayer(dto.playerName,data,output,"Te uniste a la partida");
 }
 
 void Game::disconnectPlayer(uint16_t playerId) {
@@ -143,6 +149,39 @@ void Game::disconnectPlayer(uint16_t playerId) {
     it->second.output.reset();
 }
 
+void Game::advancePlayers() {
+    std::lock_guard<std::mutex> lock(mtx);
+
+    for (auto& [id, record] : players) {
+        if (!record.connected) {
+            continue;
+        }
+
+        Player& player = record.player;
+
+        if (player.getZone() != Zone::Dungeon) {
+            player.advance(PLAYER_STEP);
+            continue;
+        }
+
+        const DungeonRoom* room =dungeon.findRoom(player.getDungeonLevel());
+
+        if (room == nullptr) {
+            continue;
+        }
+
+        for (int distance = 0; distance < PLAYER_STEP; ++distance) {
+            const Position next = player.getNextPosition(1);
+
+            if (!room->canWalk(next)) {
+                break;
+            }
+
+            player.advance(1);
+        }
+    }
+}
+
 void Game::movePlayer(uint16_t playerId, const MoveDTO& move) {
     std::lock_guard<std::mutex> lock(mtx);
 
@@ -151,53 +190,98 @@ void Game::movePlayer(uint16_t playerId, const MoveDTO& move) {
         return;
     }
 
-    PlayerData& data = it->second.data;
+    it->second.player.setMovement(move.dir);
+}
 
-    if (move.dir == Direction::None) {
-        data.state = PlayerState::Idle;
-    } else {
-        data.dir = move.dir;
-        data.state = PlayerState::Walking;
+bool Game::mineMineral(uint16_t playerId, EntityId mineralId) {
+    std::lock_guard<std::mutex> lock(mtx);
+
+    auto it = players.find(playerId);
+    if (it == players.end() || !it->second.connected) {
+        return false;
+    }
+
+    return dungeon.mineMineral(it->second.player, mineralId);
+}
+
+void Game::updateToolStates() {
+    std::lock_guard<std::mutex> lock(mtx);
+    const auto now = std::chrono::steady_clock::now();
+
+    for (auto& [id, record] : players) {
+        if (record.connected) {
+            record.player.updateToolState(now);
+        }
     }
 }
 
-ServerStatus Game::buildStatus() const {
+bool Game::setDungeonRoomMap(uint8_t roomNumber, const ZoneMap& map) {
+    std::lock_guard<std::mutex> lock(mtx);
+    if (configured) {
+        return false;
+    }
+
+    DungeonRoom* room = dungeon.findRoom(roomNumber);
+    if (room == nullptr) {
+        return false;
+    }
+
+    return room->setMap(map);
+}
+
+bool Game::loadDungeon(uint8_t selectedWorldId,const std::map<uint8_t, DungeonRoomLayout>& layout) {
+    std::lock_guard<std::mutex> lock(mtx);
+
+    if (configured) {
+        return false;
+    }
+
+    if (!dungeon.initialize(layout, entityIds)) {
+        return false;
+    }
+
+    dungeonWorldId = selectedWorldId;
+    return true;
+}
+
+ServerStatus Game::buildStatus(bool includeBroken) const {
     ServerStatus status;
     status.status = StatusCode::Ok;
     status.gameId = id;
     status.worldId = worldId;
+    status.dungeonMinerals = dungeon.getMineralData(includeBroken);
 
-    for (const auto& entry : players) {
-        const PlayerRecord& player = entry.second;
-
-        if (player.connected) {
-            status.players.emplace(player.name, player.data);
+    for (const auto& [id, record] : players) {
+        if (record.connected) {
+            status.players.emplace(
+                record.name,
+                record.player.getPublicData());
         }
     }
-
     return status;
 }
 
 void Game::sendStatus() {
     std::lock_guard<std::mutex> lock(mtx);
 
-    ServerStatus status = buildStatus();
+    ServerStatus status = buildStatus(true);
 
-    for (const auto& entry : players) {
-        const PlayerRecord& player = entry.second;
-
-        if (!player.connected) {
+    for (const auto& [id, record] : players) {
+        if (!record.connected) {
             continue;
         }
 
-        status.playerId = player.id;
+        status.playerId = record.id;
+        status.localPlayer = record.player.getLocalData();
 
         try {
-            player.output->push(status);
+            record.output->push(status);
         } catch (const ClosedQueue&) {
             // cliente desconectado y su salida ya fue cerrada.
         }
     }
+    //una vez enviados los minerales rotos los elimanmos
+    dungeon.removeBrokenMinerals();
 }
 
 void Game::processCommands() {
@@ -216,7 +300,6 @@ void Game::processCommands() {
     }
 }
 
-
 void Game::run() {
     bool running = should_keep_running();
     const auto rate = std::chrono::milliseconds(1000 / FPS);
@@ -226,6 +309,7 @@ void Game::run() {
     try {
         Foo::constant_rate_loop(
             [this, &running](long long) {
+                updateToolStates();
                 processCommands();
                 advancePlayers();
                 running = should_keep_running();

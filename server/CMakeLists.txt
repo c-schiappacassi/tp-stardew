@@ -8,7 +8,13 @@ target_sources(taller_server
         server_protocol.cpp
         game.cpp
         game_manager.cpp
-
+        inventory.cpp
+        player.cpp
+        mineral.cpp
+        dungeon_room.cpp
+        dungeon.cpp
+        entity_id_generator.cpp
+        zone_map.cpp
     PUBLIC
     # .h files
         acceptor.h
@@ -19,4 +25,14 @@ target_sources(taller_server
         game_manager.h
         game_types.h
         player_record.h
+        inventory.h
+        player.h
+        entity_id.h
+        dungeon_room.h
+        mineral.h
+        dungeon.h
+        entity_id_generator.h
+        dungeon_config.h
+        player_config.h
+        zone_map.h        
 )

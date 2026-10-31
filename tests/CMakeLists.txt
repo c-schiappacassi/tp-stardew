@@ -9,6 +9,13 @@ target_sources(taller_tests
     ../server/server_protocol.cpp
     ../server/game.cpp
     ../server/game_manager.cpp
+    ../server/player.cpp
+    ../server/inventory.cpp
+    ../server/mineral.cpp
+    ../server/dungeon_room.cpp
+    ../server/dungeon.cpp
+    ../server/entity_id_generator.cpp
+    ../server/zone_map.cpp
     PUBLIC
     # .h files
 )
