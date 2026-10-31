@@ -3,10 +3,12 @@
 #include <SDL2/SDL.h>
 
 #include <algorithm>
+#include <compare>
+#include <cstdint>
 #include <functional>
+#include <map>
 #include <memory>
 #include <string>
-#include <unordered_map>
 #include <utility>
 #include <vector>
 
@@ -18,17 +20,7 @@ struct EventKey {
     uint32_t event_type;
     int32_t code;
 
-    bool operator==(const EventKey& other) const {
-        return event_type == other.event_type && code == other.code;
-    }
-};
-
-struct EventKeyHash {
-    std::size_t operator()(const EventKey& k) const {
-        const std::size_t a = std::hash<uint32_t>()(k.event_type);
-        const std::size_t b = std::hash<int32_t>()(k.code);
-        return a ^ (b + 0x9e3779b9 + (a << 6) + (a >> 2));
-    }
+    auto operator<=>(const EventKey&) const = default;
 };
 
 class InputTranslator {
@@ -38,7 +30,7 @@ private:
 
     std::string player_name;
     TargetPicker pick;
-    std::unordered_map<EventKey, Handler, EventKeyHash> bindings;
+    std::map<EventKey, Handler> bindings;
     std::vector<Direction> held;
     Direction last_sent = Direction::None;
     bool quit = false;
@@ -60,9 +52,7 @@ private:
 
     void bind_system() {
         bind(SDL_QUIT, 0, [this](const SDL_Event&, Out&) { quit = true; });
-        // sin foco no llega el KEYUP, la direccion quedaria pegada
-        bind(SDL_WINDOWEVENT, SDL_WINDOWEVENT_FOCUS_LOST,
-             [this](const SDL_Event&, Out&) { held.clear(); });
+        bind(SDL_WINDOWEVENT, SDL_WINDOWEVENT_FOCUS_LOST, [this](const SDL_Event&, Out&) { held.clear(); });
     }
 
     void bind_movement() {

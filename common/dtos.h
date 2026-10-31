@@ -52,7 +52,6 @@ struct PlayerDataLocal : public PlayerData {
     uint16_t maxEnergy = 0;
 
     PlayerDataLocal() = default;
-
     explicit PlayerDataLocal(const PlayerData& publicData): PlayerData(publicData) {}
 };
 
@@ -114,7 +113,7 @@ struct MoveDTO : public CommandDTO {
 
 struct InteractDTO : public CommandDTO {
     TargetType targetType; // usemos un type para esto
-    uint16_t targetId;
+    uint32_t targetId;
 
     MessageType type() const override { return MessageType::Interact; }
     explicit InteractDTO(const std::string& name) : CommandDTO(name) {}
@@ -166,3 +165,22 @@ struct ServerStatus {
     std::map<std::string, PlayerData> players;
     PlayerDataLocal localPlayer;
 };
+
+// TODO: agregar al server status
+
+struct OreData {
+    Position pos;
+    ResourceType type;
+    ResourceState state;
+};
+
+struct LevelData {
+    Position stairs_up, stairs_down;
+    std::unordered_map<uint32_t, OreData> ores;
+};
+
+struct MineData {
+    uint8_t current_level;
+    LevelData current_level_data;
+};
+
