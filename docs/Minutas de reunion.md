@@ -4,7 +4,7 @@
 | Rol   | Alumno    | Función   |
 | :---  | :---      | :---      |
 |A      | Ciro      |implementa la parte de SDL del cliente|
-|B      | Luisa     |implementa la parte de QT del cliente (con editor)|
+|B      | Luisana   |implementa la parte de QT del cliente (con editor)|
 |C      | Caro      |implementa la parte de comunicación entre cliente y servidor, threads, protocolo, testing y tareas extras (persistencia, configuración, etc)|
 |D      | Agus      |implementa la parte de lógica del servidor|
 
