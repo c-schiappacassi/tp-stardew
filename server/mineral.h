@@ -3,6 +3,7 @@
 #include "entity_id.h"
 #include "position.h"
 #include "protocol_types.h"
+#include "dtos.h"
 
 class Mineral {
 private:
@@ -19,4 +20,6 @@ public:
     ResourceType getType() const;
     bool isDepleted() const;
     bool hit();
+    MineralState getState() const;
+    MineralData getPublicData() const;
 };

@@ -36,3 +36,15 @@ bool Mineral::hit() {
     --remainingHits;
     return remainingHits == 0;
 }
+
+MineralState Mineral::getState() const {
+    if (isDepleted()) {
+        return MineralState::Broken;
+    }
+
+    return MineralState::Intact;
+}
+
+MineralData Mineral::getPublicData() const {
+    return MineralData{id, pos, type, getState()};
+}
