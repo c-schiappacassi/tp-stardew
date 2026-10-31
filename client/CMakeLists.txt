@@ -3,26 +3,35 @@ target_sources(taller_client
     # .cpp files
     main.cpp
     client_protocol.cpp
-    sdlGUI/world/player_view.cpp
-    sdlGUI/asset_manager.cpp
     game.cpp
+    game_ui.cpp
+    sdlGUI/asset_manager.cpp
+    sdlGUI/world/player_view.cpp
     PUBLIC
     # .h files
     game.h
+    game_ui.h
     input_translator.h
     network.h
     recv_thread.h
     send_thread.h
     state.h
     sdlGUI/asset_manager.h
-    sdlGUI/world/player_view.h
-    sdlGUI/world/world_view.h
-    sdlGUI/world/hud/hud_view.h
-    sdlGUI/world/hud/hotbar_view.h
-    sdlGUI/world/zone_view.h
-    sdlGUI/world/entity_view.h
+    sdlGUI/click_target.h
     sdlGUI/render_info.h
     sdlGUI/utils.h
     sdlGUI/animator.h
     sdlGUI/camera.h
+    sdlGUI/draw_region.h
+    sdlGUI/world/player_view.h
+    sdlGUI/world/world_view.h
+    sdlGUI/world/map_view.h
+    sdlGUI/world/zone_view.h
+    sdlGUI/world/entity_view.h
+    sdlGUI/world/background.h
+    sdlGUI/world/hud/hud_view.h
+    sdlGUI/world/hud/hotbar_view.h
+    sdlGUI/world/mines/level_view.h
+    sdlGUI/world/mines/mine_view.h
+    sdlGUI/world/mines/ore_view.h
     )

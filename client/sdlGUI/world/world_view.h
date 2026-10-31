@@ -1,17 +1,18 @@
 #pragma once
-#include "player_view.h"
-#pragma once
 #include <map>
+#include <optional>
 #include <string>
 
-#include "player_view.h"
-#include "hud/hud_view.h"
-#include "map_view.h"
-#include "../render_info.h"
 #include "../../state.h"
+#include "../camera.h"
+#include "../click_target.h"
+#include "../render_info.h"
+#include "hud/hud_view.h"
 
-class WorldView
-{
+#include "map_view.h"
+#include "player_view.h"
+
+class WorldView {
 private:
     std::string local_name;
     std::map<std::string, PlayerView> player_views;
@@ -19,32 +20,34 @@ private:
     MapView map;
 
     void update_players_and_list(const std::map<std::string, PlayerData>& players_data) {
-        for (const auto& [username, data] : players_data) {
-            auto [it, _] = player_views.try_emplace(username, username, data);
+        for (const auto& [username, data]: players_data) {
+            auto [it, _] = player_views.try_emplace(username, data);
             it->second.update(data);
         }
 
         for (auto it = player_views.begin(); it != player_views.end();) {
-            if (players_data.find(it->first) == players_data.end()) it = player_views.erase(it);
-            else ++it;
+            if (players_data.find(it->first) == players_data.end())
+                it = player_views.erase(it);
+            else
+                ++it;
         }
     }
+
 public:
-    // inicializa el mapa una vez y listo, el server no me manda info de los tiles de background
-    explicit WorldView(const std::string& local_name){
-        this->local_name = local_name;
-    };
+    explicit WorldView(const std::string& local_name): local_name(local_name) {}
 
-    void update(const State& state){
-        //map.update // solo actualiza entitys, es el que filtra por lo en zona y visible
+    void update(const State& state) {
         this->update_players_and_list(state.get_players());
+        this->player_hud.update(state.get_local());
+    }
 
-        const PlayerData* me = state.find_player(this->local_name);
-        this->player_hud.update(*me);
-    };
+    std::optional<ClickTarget> pick_target(const Camera& cam, int screen_x, int screen_y) const {
+        const SDL2pp::Point w = cam.screen_to_world(screen_x, screen_y);
+        return map.pick_target(w.x, w.y);
+    }
 
-    void draw(const RenderInfo& ctx){
-        
+    void draw(const RenderInfo& ctx) {
+
         // TODO:
 
         // map.draw_backgroud(ctx) // le va a pedir a la zona actual que se dibuje
@@ -57,6 +60,6 @@ public:
 
         // .draw a lo ordenado a los elem del vec
 
-        this->player_hud.draw(ctx); // siempre arriba de todo asi que ultimo
+        this->player_hud.draw(ctx);  // siempre arriba de todo asi que ultimo
     }
 };
