@@ -82,6 +82,24 @@ void ServerProtocol::sendPlayerDataLocal(const PlayerDataLocal& localData) {
     base.sendUint16(localData.maxEnergy);
 }
 
+void ServerProtocol::sendMineralData(const MineralData& mineral) {
+    base.sendUint32(mineral.id);
+    sendPosition(mineral.pos);
+    base.sendUint8(static_cast<uint8_t>(mineral.type));
+    base.sendUint8(static_cast<uint8_t>(mineral.state));
+}
+
+void ServerProtocol::sendDungeonMinerals(const std::map<uint8_t, std::vector<MineralData>>& dungeonMinerals) {
+    base.sendUint8(static_cast<uint8_t>(dungeonMinerals.size()));
+    for (const auto& [roomNumber, minerals] : dungeonMinerals) {
+        base.sendUint8(roomNumber);
+        base.sendUint16(static_cast<uint16_t>(minerals.size()));
+        for (const MineralData& mineral : minerals) {
+            sendMineralData(mineral);
+        }
+    }
+}
+
 // RECEIVERS (the type byte was already consumed by receiveType())
 
 CreateGameDTO ServerProtocol::receiveCreateGame() {
@@ -123,7 +141,7 @@ MoveDTO ServerProtocol::receiveMove() {
 InteractDTO ServerProtocol::receiveInteract() {
     InteractDTO dto(base.receiveString());
     dto.targetType = static_cast<TargetType>(base.receiveUint8());
-    dto.targetId = base.receiveUint16();
+    dto.targetId = base.receiveUint32();
     return dto;
 }
 
@@ -171,6 +189,7 @@ void ServerProtocol::sendStatus(const ServerStatus& status) {
     }
 
     sendPlayerDataLocal(status.localPlayer);
+<<<<<<< HEAD
     base.sendUint8(static_cast<uint8_t>(status.dungeonMinerals.size()));
     for (const auto& [level, minerals] : status.dungeonMinerals) {
         base.sendUint8(level);
@@ -179,4 +198,7 @@ void ServerProtocol::sendStatus(const ServerStatus& status) {
             sendMineral(mineral);
         }
     }
+=======
+    sendDungeonMinerals(status.dungeonMinerals);
+>>>>>>> 25fa9e80bf60aee81d248bde64d822df4c1b6498
 }

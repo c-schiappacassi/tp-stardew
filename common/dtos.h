@@ -179,20 +179,14 @@ struct ServerStatus {
     uint8_t worldId = 0;
     std::map<std::string, PlayerData> players;
     PlayerDataLocal localPlayer;
-    std::map<uint8_t, std::vector<MineralData>> dungeonMinerals;
-};
-
-// TODO: agregar al server status
-
-struct OreData {
-    Position pos;
-    ResourceType type;
-    ResourceState state;
+    std::optional<MineData> mine;
 };
 
 struct LevelData {
-    Position stairs_up, stairs_down;
-    std::unordered_map<uint32_t, OreData> ores;
+    Position entry{0, 0};
+    Position exit{0, 0};
+    std::optional<Position> nextRoom;
+    std::vector<MineralData> minerals;
 };
 
 struct MineData {

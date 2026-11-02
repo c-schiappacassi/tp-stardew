@@ -22,6 +22,9 @@ private:
 
     void sendPlayerData(const PlayerData& data);
     void sendPlayerDataLocal(const PlayerDataLocal& localData);
+    
+    void sendMineralData(const MineralData& mineral);
+    void sendDungeonMinerals(const std::map<uint8_t, std::vector<MineralData>>& dungeonMinerals);
 
 public:
     explicit ServerProtocol(Socket& socket);
