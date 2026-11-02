@@ -5,6 +5,7 @@
 #include <variant>
 #include <vector>
 #include <stdexcept>
+#include <unordered_map>
 #include <map>
 
 #include "protocol_types.h"
@@ -157,6 +158,13 @@ struct RequestMultiplayerCodeDTO : public CommandDTO {
 struct DisconnectDTO : public CommandDTO {
     MessageType type() const override { return MessageType::ExitGame; }
     explicit DisconnectDTO(const std::string& name) : CommandDTO(name) {}
+};
+
+struct SelectSlotDTO : public CommandDTO {
+    uint8_t slot = 0;
+
+    MessageType type() const override { return MessageType::SelectSlot; }
+    explicit SelectSlotDTO(const std::string& name) : CommandDTO(name) {}
 };
 
 // SERVIDOR -> CLIENTE

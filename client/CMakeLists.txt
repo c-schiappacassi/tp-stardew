@@ -7,6 +7,10 @@ target_sources(taller_client
     game_ui.cpp
     sdlGUI/asset_manager.cpp
     sdlGUI/world/player_view.cpp
+    sdlGUI/world/hud/hotbar_view.cpp
+    sdlGUI/world/mines/ore_view.cpp
+    sdlGUI/world/mines/level_view.cpp
+    sdlGUI/world/mines/mine_view.cpp
     PUBLIC
     # .h files
     game.h

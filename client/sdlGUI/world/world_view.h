@@ -39,6 +39,7 @@ public:
     void update(const State& state) {
         this->update_players_and_list(state.get_players());
         this->player_hud.update(state.get_local());
+        this->map.update(state);
     }
 
     std::optional<ClickTarget> pick_target(const Camera& cam, int screen_x, int screen_y) const {
@@ -60,6 +61,26 @@ public:
 
         // .draw a lo ordenado a los elem del vec
 
+        std::vector<Drawable> drawables;
+        uint64_t tiebreak = 0;
+
+        for (auto& [name, view]: player_views) {
+            if (const auto d = view.depth(ctx)) {  // nullopt = fuera de camara
+                drawables.push_back(Drawable{*d, tiebreak++, &view});
+            }
+        }
+
+        map.collect_drawables(ctx, drawables);  // minerales, animales, etc. (por ahora vacio)
+
+        std::sort(drawables.begin(), drawables.end(), [](const Drawable& a, const Drawable& b) {
+            return a.depth != b.depth ? a.depth < b.depth : a.tiebreak < b.tiebreak;
+        });
+
+        for (const Drawable& d: drawables) {
+            d.view->draw(ctx);
+        }
+
+        
         this->player_hud.draw(ctx);  // siempre arriba de todo asi que ultimo
     }
 };

@@ -33,6 +33,7 @@ class Game:public Thread {
         EntityIdGenerator entityIds;
         std::optional<uint8_t> dungeonWorldId;
 
+        void selectSlot(uint16_t playerId, uint8_t slot);
         void disconnectPlayer(uint16_t playerId);
         void movePlayer(uint16_t playerId, const MoveDTO& move);
         void processCommands();

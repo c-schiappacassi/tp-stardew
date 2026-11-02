@@ -79,7 +79,16 @@ void ClientHandler::runGame() {
                 session.input->push(PlayerCommand{session.playerId, move});
                 break;
             }
-
+            case MessageType::SelectSlot: {
+                auto sel = std::make_shared<SelectSlotDTO>(protocol.receiveSelectSlot());
+                session.input->push(PlayerCommand{session.playerId, sel});
+                break;
+            }
+            case MessageType::Interact: {
+                auto interact = std::make_shared<InteractDTO>(protocol.receiveInteract());
+                session.input->push(PlayerCommand{session.playerId, interact});
+                break;
+            }
             case MessageType::ExitGame:
                 return;
 

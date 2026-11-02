@@ -12,7 +12,7 @@
 
 
 class LevelView: public ZoneView {
-    const Background map;
+    Background map;
     uint8_t number;
     Position stairs_up, stairs_down;
     std::unordered_map<uint32_t, OreView> ores;
@@ -23,22 +23,12 @@ class LevelView: public ZoneView {
 
 public:
     // TODO:
-    explicit LevelView(const Background map, uint8_t number):
-            map(Background()),
-            number(number),
-            stairs_up(Position(0, 0)),
-            stairs_down(Position(0, 0)){};
+    explicit LevelView(uint8_t number): number(number), stairs_up(Position(0, 0)), stairs_down(Position(0, 0)){};
 
-    void update(const LevelData& data);
+    // TODO: areglar para usar LevelData
+    void update(const std::vector<MineralData>& minerals);
     void draw_background(const RenderInfo& ctx) override;
     void collect_drawables(const RenderInfo& ctx, std::vector<Drawable>& out) override;
 
-    std::optional<ClickTarget> pick_target(int world_x, int world_y) const override {
-        for (const auto& [id, ore]: ores) {
-            if (ore.is_hit(world_x, world_y)) {
-                return ClickTarget{TargetType::Ore, id};
-            }
-        }
-        return std::nullopt;
-    }
+    std::optional<ClickTarget> pick_target(int world_x, int world_y) const override;
 };
