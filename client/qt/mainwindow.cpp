@@ -7,8 +7,9 @@
 #include "joinscreen.h"
 #include "loadscreen.h"
 #include "newgamescreen.h"
+#include "network.h"
 
-MainWindow::MainWindow(QWidget *parent) : QMainWindow(parent), stack(new QStackedWidget(this)) {
+MainWindow::MainWindow(NetworkManager& net, QWidget *parent) : QMainWindow(parent), stack(new QStackedWidget(this)), net(net) {
     setWindowTitle("Stardew Valley");
     setMinimumSize(1600, 900);
     resize(1920, 1200);
@@ -26,8 +27,16 @@ MainWindow::MainWindow(QWidget *parent) : QMainWindow(parent), stack(new QStacke
     stack->addWidget(loadScreen);
     stack->addWidget(newGameScreen);
 
-    connect(usernameScreen, &UsernameScreen::usernameConfirmed, this, [this, startMenu](const QString&) {
-        stack->setCurrentWidget(startMenu);
+    connect(usernameScreen, &UsernameScreen::usernameConfirmed, this, [this, usernameScreen, startMenu](const QString& name) {
+        const std::string user = name.toStdString();
+        const ServerStatus reply = send(RequestGameListDTO(user));
+        if (reply.status == StatusCode::Ok) {
+            username = user;
+            games = reply.games;
+            stack->setCurrentWidget(startMenu);
+        } else {
+            usernameScreen->showError(QString::fromStdString(reply.errorMsg));
+        }
     });
     connect(startMenu, &StartMenuScreen::exitRequested, this, &QWidget::close);
     connect(startMenu, &StartMenuScreen::joinGameRequested, this, [this, joinScreen]() {
@@ -49,4 +58,15 @@ MainWindow::MainWindow(QWidget *parent) : QMainWindow(parent), stack(new QStacke
         stack->setCurrentWidget(startMenu);
     });
 
+}
+
+ServerStatus MainWindow::send(const CommandDTO& dto) {
+    try {
+        return net.handshake(dto);
+    } catch (const std::exception&) {
+        ServerStatus failed{};
+        failed.status = StatusCode::Error;
+        failed.errorMsg = "Could not connect to the server";
+        return failed;
+    }
 }
