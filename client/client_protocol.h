@@ -18,6 +18,8 @@ private:
 
     PlayerData receivePlayerData();
 
+    GameInfoDTO receiveGameInfo();
+
 public:
     explicit ClientProtocol(Socket& socket);
     void send(const CommandDTO& dto);
@@ -34,6 +36,5 @@ public:
     void send(const RequestGameListDTO& dto);
 
     void recv(ServerStatus& status);
-    GameListDTO receiveGameList();
 };
 

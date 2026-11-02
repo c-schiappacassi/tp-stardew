@@ -46,6 +46,15 @@ PlayerData ClientProtocol::receivePlayerData() {
     return data;
 }
 
+GameInfoDTO ClientProtocol::receiveGameInfo() {
+    GameInfoDTO game;
+    game.id = base.receiveUint16();
+    game.farmName = base.receiveString();
+    game.playerData = receivePlayerData();
+    game.isMultiplayer = (base.receiveUint8() != 0);
+    return game;
+}
+
 // SENDERS
 
 void ClientProtocol::send(const CommandDTO& dto) {
@@ -154,27 +163,17 @@ void ClientProtocol::recv(ServerStatus& status) {
     status.playerId = base.receiveUint16();
     status.worldId = base.receiveUint8();
 
+    uint16_t gamesCount = base.receiveUint16();
+    status.games.clear();
+    status.games.reserve(gamesCount);
+    for (uint16_t i = 0; i < gamesCount; ++i) {
+        status.games.push_back(receiveGameInfo());
+    }
+
     uint16_t length = base.receiveUint16();
     status.players.clear();
     for (uint16_t i = 0; i < length; ++i) {
         std::string name = base.receiveString();
         status.players[name] = receivePlayerData();
     }
-}
-
-GameListDTO ClientProtocol::receiveGameList() {
-    GameListDTO list;
-    uint16_t count = base.receiveUint16();
-    list.games.reserve(count);
-
-    for (uint16_t i = 0; i < count; ++i) {
-        GameInfoDTO game;
-        game.id = base.receiveUint16();
-        game.farmName = base.receiveString();
-        game.playerData = receivePlayerData();
-        game.isMultiplayer = (base.receiveUint8() != 0);
-        list.games.push_back(std::move(game));
-    }
-
-    return list;
 }

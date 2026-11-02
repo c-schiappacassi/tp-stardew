@@ -202,3 +202,6 @@ struct GameInfoDTO {
 struct GameListDTO {
     std::vector<GameInfoDTO> games;
 };
+
+// hay que agregar abajo del wordId: (serverstatus)
+// std::vector<GameInfoDTO> games;

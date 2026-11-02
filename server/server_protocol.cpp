@@ -45,7 +45,14 @@ void ServerProtocol::sendPlayerData(const PlayerData& data) {
     sendColor(data.pantsColor);
 }
 
-// RECEIVERS (the type byte was already consumed by receiveType())
+void ServerProtocol::sendGameInfo(const GameInfoDTO& game) {
+    base.sendUint16(game.id);
+    base.sendString(game.farmName);
+    sendPlayerData(game.playerData);
+    base.sendUint8(game.isMultiplayer ? 1 : 0);
+}
+
+// RECEIVERS
 
 CreateGameDTO ServerProtocol::receiveCreateGame() {
     CreateGameDTO dto(base.receiveString());
@@ -133,6 +140,11 @@ void ServerProtocol::sendStatus(const ServerStatus& status) {
     base.sendUint16(status.playerId);
     base.sendUint8(status.worldId);
 
+    base.sendUint16(static_cast<uint16_t>(status.games.size()));
+    for (const GameInfoDTO& game : status.games) {
+        sendGameInfo(game);
+    }
+
     base.sendUint16(static_cast<uint16_t>(status.players.size()));
     for (const auto& [name, data] : status.players) {
         base.sendString(name);
@@ -140,12 +152,10 @@ void ServerProtocol::sendStatus(const ServerStatus& status) {
     }
 }
 
-void ServerProtocol::sendGameList(const GameListDTO& dto) {
-    base.sendUint16(static_cast<uint16_t>(dto.games.size()));
-    for (const GameInfoDTO& game : dto.games) {
-        base.sendUint16(game.id);
-        base.sendString(game.farmName);
-        sendPlayerData(game.playerData);
-        base.sendUint8(game.isMultiplayer ? 1 : 0);
+// EN SERVERTSTAUS ABAJO DE GAME ID
+/*
+base.sendUint16(static_cast<uint16_t>(status.games.size()));
+    for (const GameInfoDTO& game : status.games) {
+        sendGameInfo(game);
     }
-}
+ */

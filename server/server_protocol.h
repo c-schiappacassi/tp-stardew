@@ -18,6 +18,8 @@ private:
 
     void sendPlayerData(const PlayerData& data);
 
+    void sendGameInfo(const GameInfoDTO& game);
+
 public:
     explicit ServerProtocol(Socket& socket);
 
@@ -36,7 +38,6 @@ public:
     RequestGameListDTO receiveRequestGameList();
 
     void sendStatus(const ServerStatus& status);
-    void sendGameList(const GameListDTO& dto);
 };
 
 #endif
