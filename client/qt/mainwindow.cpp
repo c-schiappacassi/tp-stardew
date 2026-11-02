@@ -67,6 +67,24 @@ MainWindow::MainWindow(NetworkManager& net, QWidget *parent) : QMainWindow(paren
     connect(newGameScreen, &NewGameScreen::backRequested, this, [this, startMenu]() {
         stack->setCurrentWidget(startMenu);
     });
+    connect(newGameScreen, &NewGameScreen::confirmed, this, [this, newGameScreen]() {
+        CreateGameDTO dto(username);
+        dto.characterName = newGameScreen->characterName().toStdString();
+        dto.gameName = newGameScreen->farmName().toStdString();
+        dto.worldId = 0;
+        dto.hairModel = newGameScreen->hairModel();
+        dto.shirtModel = newGameScreen->shirtModel();
+        dto.pantsModel = newGameScreen->pantsModel();
+        dto.hairColor = newGameScreen->hairColor();
+        dto.pantsColor = newGameScreen->pantsColor();
+
+        const ServerStatus reply = send(dto);
+        if (reply.status == StatusCode::Ok) {
+            // empieza la partida (conectar con sdl)
+        } else {
+            newGameScreen->showError(QString::fromStdString(reply.errorMsg));
+        }
+    });
 
 }
 

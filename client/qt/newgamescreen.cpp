@@ -15,19 +15,20 @@
 #include "spritebutton.h"
 
 namespace {
+const QRect panelRect(0, 0, 440, 260);
+const QRect fieldRect(0, 620, 440, 100);
 const QRect characterRect(40, 60, 80, 160);
-const QSize panelSize(900, 840);
-const QSize portraitSize(160, 240);
-const QSize inputSize(400, 90);
-const QSize arrowSize(56, 52);
-const QSize okSize(100, 100);
-const QSize backSize(200, 85);
-const QRect panelRect(1200, 51, 175, 201);
 const QRect leftArrowRect(352, 495, 13, 13);
 const QRect rightArrowRect(365, 495, 14, 13);
 const QRect okRect(128, 256, 64, 64);
 const QRect backNormalRect(296, 252, 66, 28);
 const QRect backHoverRect(296, 280, 66, 26);
+const QSize panelSize(900, 840);
+const QSize portraitSize(160, 240);
+const QSize fieldSize(400, 90);
+const QSize arrowSize(56, 52);
+const QSize okSize(100, 100);
+const QSize backSize(200, 85);
 
 constexpr int labelWidth = 110;
 constexpr int counterWidth = 130;
@@ -35,6 +36,7 @@ constexpr int firstBackHair = 40;
 constexpr int lastBackHair = 47;
 
 const QString textColor = "#4a2a0a";
+const QString errorColor = "#a01010";
 
 struct SheetLayout {
     int perRow;
@@ -98,6 +100,11 @@ QPixmap tinted(const QPixmap& sprite, const QColor& color) {
     return QPixmap::fromImage(image);
 }
 
+Color toColor(const QColor& color) {
+    return Color{static_cast<uint8_t>(color.red()), static_cast<uint8_t>(color.green()),
+            static_cast<uint8_t>(color.blue())};
+}
+
 // descarto los tipos de peloo vacios
 std::vector<int> validModels(const QPixmap& sheet, const SheetLayout& layout) {
     const QImage image = sheet.toImage();
@@ -123,14 +130,19 @@ QLabel* makeLabel(const QString& text, QWidget* parent) {
     return label;
 }
 
-QLineEdit* makeInput(QWidget* parent) {
-    QLineEdit* input = new QLineEdit(parent);
-    input->setFixedSize(inputSize);
+QLabel* makeField(QLineEdit* input, const QPixmap& frame, QWidget* parent) {
     input->setMaxLength(16);
-    input->setStyleSheet(QString("QLineEdit { border-image: url(\"%1TextBox.png\") 0 0 0 0 stretch stretch;"
-         " font: bold 32px; color: %2; padding: 0 20px; }")
-         .arg(QString(ASSETS_DIR) + "/Sprites/Menus/", textColor));
-    return input;
+    input->setStyleSheet(QString("QLineEdit { background: transparent; border: none; font: bold 32px; color: %1; }")
+        .arg(textColor));
+
+    QLabel* field = new QLabel(parent);
+    field->setPixmap(frame);
+    field->setScaledContents(true);
+    field->setFixedSize(fieldSize);
+    QHBoxLayout* fieldLayout = new QHBoxLayout(field);
+    fieldLayout->setContentsMargins(20, 0, 20, 0);
+    fieldLayout->addWidget(input);
+    return field;
 }
 
 SpriteButton* makeArrowButton(const QPixmap& arrow, QWidget* parent) {
@@ -142,7 +154,8 @@ SpriteButton* makeArrowButton(const QPixmap& arrow, QWidget* parent) {
 
 NewGameScreen::NewGameScreen(QWidget* parent): QWidget(parent) {
     QLabel* panel = new QLabel(this);
-    panel->setPixmap(QPixmap(QString(ASSETS_DIR) + "/Sprites/Menus/FQMenu.png").copy(panelRect).transformed(QTransform().rotate(90)));
+    const QPixmap frames(QString(ASSETS_DIR) + "/Sprites/Menus/Frames.png");
+    panel->setPixmap(frames.copy(panelRect));
     panel->setScaledContents(true);
     panel->setFixedSize(panelSize);
 
@@ -160,8 +173,10 @@ NewGameScreen::NewGameScreen(QWidget* parent): QWidget(parent) {
     shirtModels = validModels(shirtSheet, shirtLayout);
     pantsModels = validModels(pantsSheet, pantsLayout);
 
-    nameInput = makeInput(panel);
-    farmNameInput = makeInput(panel);
+    nameInput = new QLineEdit(panel);
+    farmNameInput = new QLineEdit(panel);
+    errorLabel = new QLabel(panel);
+    errorLabel->setStyleSheet(QString("font: bold 26px; color: %1;").arg(errorColor));
 
     portrait = new QLabel(panel);
     portrait->setFixedSize(portraitSize);
@@ -174,9 +189,10 @@ NewGameScreen::NewGameScreen(QWidget* parent): QWidget(parent) {
     QLabel* farmLabel = makeLabel("Farm\nname", panel);
     farmLabel->setFixedWidth(labelWidth);
     fieldsLayout->addWidget(nameLabel, 0, 0);
-    fieldsLayout->addWidget(nameInput, 0, 1);
+    fieldsLayout->addWidget(makeField(nameInput, frames.copy(fieldRect), panel), 0, 1);
     fieldsLayout->addWidget(farmLabel, 1, 0);
-    fieldsLayout->addWidget(farmNameInput, 1, 1);
+    fieldsLayout->addWidget(makeField(farmNameInput, frames.copy(fieldRect), panel), 1, 1);
+    fieldsLayout->addWidget(errorLabel, 2, 1);
 
     QVBoxLayout* rightColumn = new QVBoxLayout();
     rightColumn->addLayout(fieldsLayout);
@@ -220,6 +236,9 @@ NewGameScreen::NewGameScreen(QWidget* parent): QWidget(parent) {
     layout->addWidget(backButton, 0, 0, Qt::AlignRight | Qt::AlignBottom);
 
     connect(backButton, &QAbstractButton::clicked, this, &NewGameScreen::backRequested);
+    connect(okButton, &QAbstractButton::clicked, this, &NewGameScreen::confirm);
+    connect(nameInput, &QLineEdit::textChanged, this, [this]() { errorLabel->clear(); });
+    connect(farmNameInput, &QLineEdit::textChanged, this, [this]() { errorLabel->clear(); });
 
     updatePreview();
 }
@@ -287,4 +306,42 @@ void NewGameScreen::updatePreview() {
         painter.drawPixmap(characterRect, character);
     }
     portrait->setPixmap(canvas);
+}
+
+void NewGameScreen::confirm() {
+    if (!characterName().isEmpty() && !farmName().isEmpty()) {
+        emit confirmed();
+    }
+}
+
+void NewGameScreen::showError(const QString& message) {
+    errorLabel->setText(message);
+}
+
+QString NewGameScreen::characterName() const {
+    return nameInput->text().trimmed();
+}
+
+QString NewGameScreen::farmName() const {
+    return farmNameInput->text().trimmed();
+}
+
+uint16_t NewGameScreen::hairModel() const {
+    return hairModels[hairIndex];
+}
+
+uint16_t NewGameScreen::shirtModel() const {
+    return shirtModels[shirtIndex];
+}
+
+uint16_t NewGameScreen::pantsModel() const {
+    return pantsModels[pantsIndex];
+}
+
+Color NewGameScreen::hairColor() const {
+    return toColor(colorAt(hairColorSlider->value()));
+}
+
+Color NewGameScreen::pantsColor() const {
+    return toColor(colorAt(pantsColorSlider->value()));
 }
