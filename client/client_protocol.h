@@ -1,5 +1,7 @@
 #pragma once
 
+#include <optional>
+
 #include "dtos.h"
 #include "protocol_base.h"
 #include "protocol_types.h"
@@ -17,13 +19,14 @@ private:
     Color receiveColor();
 
     Stack receiveStack();
-    MineralData receiveMineral();
+
+    MineralData receiveMineralData();
+    LevelData receiveLevelData();
+    MineData receiveMineData();
+    ZoneData receiveZoneData(Zone currentZone);
 
     PlayerData receivePlayerData();
     PlayerDataLocal receivePlayerDataLocal();
-
-    MineralData receiveMineralData();
-    std::map<uint8_t, std::vector<MineralData>> receiveDungeonMinerals();
 
 public:
     explicit ClientProtocol(Socket& socket);

@@ -26,7 +26,7 @@ public:
     explicit LevelView(uint8_t number): number(number), stairs_up(Position(0, 0)), stairs_down(Position(0, 0)){};
 
     // TODO: areglar para usar LevelData
-    void update(const std::vector<MineralData>& minerals);
+    void update(const  LevelData& data);
     void draw_background(const RenderInfo& ctx) override;
     void collect_drawables(const RenderInfo& ctx, std::vector<Drawable>& out) override;
 

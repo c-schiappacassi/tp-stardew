@@ -14,8 +14,7 @@ Player::Player(
         pos(initialData.pos),
         state(initialData.state),
         dir(initialData.dir),
-        zone(initialData.zone),
-        dungeonLevel(initialData.dungeonLevel),
+        zone(initialData.currentZone),
         hairModel(initialData.hairModel),
         shirtModel(initialData.shirtModel),
         pantsModel(initialData.pantsModel),
@@ -118,8 +117,7 @@ PlayerData Player::getPublicData() const {
     data.pos = pos;
     data.state = state;
     data.dir = dir;
-    data.zone = zone;
-    data.dungeonLevel = dungeonLevel;
+    data.currentZone = zone;    
     data.hairModel = hairModel;
     data.shirtModel = shirtModel;
     data.pantsModel = pantsModel;

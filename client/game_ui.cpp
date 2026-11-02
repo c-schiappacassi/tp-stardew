@@ -41,7 +41,7 @@ void GameUI::update_camera(const State& state) {
     cam.set_viewport(size.x, size.y);
 
     if (const PlayerData* me = state.find_player(local_player)) {
-        currentZone = me->zone;
+        currentZone = me->currentZone;
         cam.center_on(me->pos.getX(), me->pos.getY());
     }
 }

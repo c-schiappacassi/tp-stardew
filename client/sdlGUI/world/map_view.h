@@ -28,13 +28,13 @@ private:
 
 public:
     void update(const State& data) {
-        const PlayerData& local = data.get_local();
-        current = local.zone;
+        const PlayerDataLocal& local = data.get_local();
+        current = local.currentZone ;
+
         if (current == Zone::Dungeon) {
-            const auto it = data.get_dungeon_minerals().find(local.dungeonLevel);
-            static const std::vector<MineralData> empty;
-            mines.update(local.dungeonLevel,
-                         it == data.get_dungeon_minerals().end() ? empty : it->second);
+            if (const auto* mine = std::get_if<MineData>(&local.zoneData)) {
+                mines.update(*mine);
+            }
         }
     }
 

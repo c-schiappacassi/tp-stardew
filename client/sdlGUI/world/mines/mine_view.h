@@ -13,7 +13,7 @@ private:
 
 public:
     // TODO: arreglar para que use level data
-    void update(uint8_t level, const std::vector<MineralData>& minerals);
+    void update(const MineData& data);
     void draw_background(const RenderInfo& ctx) override;
     void collect_drawables(const RenderInfo& ctx, std::vector<Drawable>& out) override;
 

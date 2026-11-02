@@ -1,10 +1,9 @@
 #include "mine_view.h"
 
-void MinesView::update(uint8_t level, const std::vector<MineralData>& minerals) {
-    current_level = level;
-    auto [it, inserted] = levels.try_emplace(level, level);
-    (void)inserted;
-    it->second.update(minerals);
+void MinesView::update(const MineData& data) {
+    current_level = data.current_level;
+    auto [it, _] = levels.try_emplace(current_level, current_level);
+    it->second.update(data.current_level_data);
 }
 
 void MinesView::draw_background(const RenderInfo& ctx) {

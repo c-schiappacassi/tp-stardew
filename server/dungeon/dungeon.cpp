@@ -202,7 +202,6 @@ std::optional<MineData> Dungeon::getMineData(uint8_t roomNumber,bool includeBrok
 
     level.entry = passages.entry;
     level.exit = passages.exit;
-    level.nextRoom = passages.nextRoom;
 
     level.minerals.reserve(room->getMinerals().size());
 

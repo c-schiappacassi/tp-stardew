@@ -51,7 +51,6 @@ class Game:public Thread {
         void usePlayerItem(uint16_t playerId,uint8_t slot);
         void interactPlayer(uint16_t playerId,const InteractDTO& interaction);
         bool useDungeonPassage(Player& player);
-
     public:
         Game(const std::string& id,const std::string& name,uint8_t worldId,const char* servicename,const PlayerConfig& playerConfig = {});
 

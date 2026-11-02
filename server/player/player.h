@@ -14,7 +14,7 @@ private:
     Direction dir;
     Direction movementDirection = Direction::None;
     Zone zone;
-    uint8_t dungeonLevel;
+    uint8_t dungeonLevel = 0;
     uint16_t hairModel;
     uint16_t shirtModel;
     uint16_t pantsModel;

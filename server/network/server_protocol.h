@@ -18,13 +18,13 @@ private:
 
     void sendStack(const Stack& stack);
 
-    void sendMineral(const MineralData& mineral);
+    void sendMineralData(const MineralData& mineral);
+    void sendLevelData(const LevelData& level);
+    void sendMineData(const MineData& mine);
+    void sendZoneData(const ZoneData& zoneData);
 
     void sendPlayerData(const PlayerData& data);
     void sendPlayerDataLocal(const PlayerDataLocal& localData);
-    
-    void sendMineralData(const MineralData& mineral);
-    void sendDungeonMinerals(const std::map<uint8_t, std::vector<MineralData>>& dungeonMinerals);
 
 public:
     explicit ServerProtocol(Socket& socket);

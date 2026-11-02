@@ -1,7 +1,9 @@
 #include "client_protocol.h"
 
-#include <stdexcept>
 #include <cstdint>
+#include <stdexcept>
+
+#include "protocol_errors.h"
 
 
 ClientProtocol::ClientProtocol(Socket& socket) : base(socket) {}
@@ -40,18 +42,58 @@ Stack ClientProtocol::receiveStack() {
     return stack;
 }
 
+MineralData ClientProtocol::receiveMineralData() {
+    MineralData mineral;
+    mineral.id = base.receiveUint32();
+    mineral.pos = receivePosition();
+    mineral.type = static_cast<ResourceType>(base.receiveUint8());
+    mineral.state = static_cast<MineralState>(base.receiveUint8());
+    return mineral;
+}
+
+LevelData ClientProtocol::receiveLevelData() {
+    LevelData level;
+    level.entry = receivePosition();
+    level.exit = receivePosition();
+
+    const uint16_t count = base.receiveUint16();
+    level.minerals.reserve(count);
+    for (uint16_t i = 0; i < count; ++i) {
+        level.minerals.push_back(receiveMineralData());
+    }
+    return level;
+}
+
+MineData ClientProtocol::receiveMineData() {
+    MineData mine{};
+    mine.current_level = base.receiveUint8();
+    mine.current_level_data = receiveLevelData();
+    return mine;
+}
+
+
+// TODO:
+ZoneData ClientProtocol::receiveZoneData(Zone currentZone) {
+    switch (currentZone) {
+        case Zone::Dungeon : return ZoneData{receiveMineData()};
+        case Zone::Farm : return ZoneData{receiveMineData()};
+        case Zone::Town : return ZoneData{receiveMineData()};
+    }
+
+    throw ProtocolError("ZoneData desconocida");
+}
+
 PlayerData ClientProtocol::receivePlayerData() {
     PlayerData data;
     data.pos = receivePosition();
     data.state = static_cast<PlayerState>(base.receiveUint8());
     data.dir = static_cast<Direction>(base.receiveUint8());
-    data.zone = static_cast<Zone>(base.receiveUint8());
-    data.dungeonLevel = base.receiveUint8();
     data.hairModel = base.receiveUint16();
     data.shirtModel = base.receiveUint16();
     data.pantsModel = base.receiveUint16();
     data.hairColor = receiveColor();
     data.pantsColor = receiveColor();
+    data.currentZone = static_cast<Zone>(base.receiveUint8());
     return data;
 }
 
@@ -72,6 +114,7 @@ PlayerDataLocal ClientProtocol::receivePlayerDataLocal() {
     localData.maxHealth = base.receiveUint16();
     localData.energy = base.receiveUint16();
     localData.maxEnergy = base.receiveUint16();
+    localData.zoneData = receiveZoneData(baseData.currentZone);
 
     return localData;
 }
@@ -175,6 +218,8 @@ void ClientProtocol::send(const SelectSlotDTO& dto) {
 
 // RECEIVERS
 
+// ServerStatus { status, errorMsg, successMsg, gameId, playerId, worldId,
+//                players, localPlayer }
 void ClientProtocol::recv(ServerStatus& status) {
     status.status = static_cast<StatusCode>(base.receiveUint8());
     status.errorMsg = base.receiveString();

@@ -7,8 +7,8 @@
 #include "../../render_info.h"
 
 // TODO: cambiar a level data
-void LevelView::update(const std::vector<MineralData>& minerals) {
-    for (const MineralData& data : minerals) {
+void LevelView::update(const  LevelData& data) {
+    for (const MineralData& data : data.minerals) {
         auto it = ores.find(data.id);
         if (it == ores.end()) {
             ores.emplace(data.id, OreView(data));
@@ -18,9 +18,9 @@ void LevelView::update(const std::vector<MineralData>& minerals) {
     }
 
     for (auto it = ores.begin(); it != ores.end();) {
-        const auto found = std::find_if(minerals.begin(), minerals.end(),
+        const auto found = std::find_if( data.minerals.begin(),  data.minerals.end(),
             [id = it->first](const MineralData& data) { return data.id == id; });
-        if (found == minerals.end()) {
+        if (found ==  data.minerals.end()) {
             it = ores.erase(it);
         } else {
             ++it;

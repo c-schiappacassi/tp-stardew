@@ -84,9 +84,13 @@ GameSession Game::createGame(const CreateGameDTO& dto,const std::shared_ptr<OutQ
 void Game::completePlayerStatus(ServerStatus& status,const PlayerRecord& record,bool includeBroken) const {
     status.playerId = record.id;
     status.localPlayer = record.player.getLocalData();
-    status.mine.reset();
+
+    // zoneData queda con un MineData vacio si el jugador no esta en la mina
     if (record.player.getZone() == Zone::Dungeon) {
-        status.mine = dungeon.getMineData(record.player.getDungeonLevel(),includeBroken);
+        const auto mine = dungeon.getMineData(record.player.getDungeonLevel(),includeBroken);
+        if (mine) {
+            status.localPlayer.zoneData = *mine;
+        }
     }
 }
 
@@ -117,13 +121,14 @@ GameSession Game::addPlayer(const std::string& playerName,const PlayerData& data
 
     // TODO: temporal, hasta que haya transicion Farm -> Mines
     spawn.pos = Position(48, 48);
-    spawn.zone = Zone::Dungeon;
-    spawn.dungeonLevel = 1;
+    spawn.currentZone = Zone::Dungeon;
 
     std::mt19937 generator(std::random_device{}());
     std::uniform_int_distribution<uint32_t> goldDistribution(0, 100);
 
     Player character(spawn,PLAYER_INVENTORY_CAPACITY,PLAYER_INITIAL_HEALTH,PLAYER_INITIAL_ENERGY,goldDistribution(generator),playerConfig);
+    // PlayerData ya no lleva el nivel de mazmorra: lo maneja el Player (TODO temporal, igual que arriba)
+    character.changeLocation(Zone::Dungeon, 1, spawn.pos);
 
     for (const ItemId tool : {ItemId::Pickaxe,ItemId::WateringCan,ItemId::Shovel,ItemId::Sword}) {
         character.addItem(Stack{tool, 1, Quality::None});
@@ -233,22 +238,6 @@ void Game::updateToolStates() {
     }
 }
 
-
-bool Game::loadDungeon(uint8_t selectedWorldId,const std::map<uint8_t, DungeonRoomLayout>& layout) {
-    std::lock_guard<std::mutex> lock(mtx);
-
-    if (configured) {
-        return false;
-    }
-
-    if (!dungeon.initialize(layout, entityIds)) {
-        return false;
-    }
-
-    dungeonWorldId = selectedWorldId;
-    dungeonEntrance.reset();
-    return true;
-}
 bool Game::configureDungeonEntrance(const DungeonEntrance& entrance) {
     std::lock_guard<std::mutex> lock(mtx);
 
@@ -396,7 +385,7 @@ void Game::processCommands() {
             selectSlot(command.playerId, sel.slot);
         } else if (command.command->type() == MessageType::Interact) {
             const InteractDTO& interact = static_cast<const InteractDTO&>(*command.command);
-            if (interact.targetType == TargetType::Ore) {mineMineral(command.playerId, interact.targetId);}
+            interactPlayer(command.playerId, interact);
         }
     }
 }
