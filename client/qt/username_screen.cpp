@@ -1,52 +1,55 @@
-#include "joinscreen.h"
+#include "username_screen.h"
 
-#include <QHBoxLayout>
 #include <QLabel>
 #include <QLineEdit>
 #include <QPixmap>
+#include <QHBoxLayout>
 #include <QVBoxLayout>
 
-#include "spritebutton.h"
+#include "sprite_button.h"
 
 namespace {
+const QRect logoRect(0, 0, 400, 187);
 const QRect panelRect(0, 300, 440, 260);
 const QRect fieldRect(0, 620, 440, 100);
 const QRect buttonRect(480, 760, 300, 80);
 const QRect buttonHoverRect(800, 760, 300, 80);
-const QRect backNormalRect(296, 252, 66, 28);
-const QRect backHoverRect(296, 280, 66, 26);
-const QSize panelSize(768, 380);
-const QSize fieldSize(480, 120);
+const QSize logoSize(960, 449);
+const QSize panelSize(768, 304);
+const QSize fieldSize(480, 100);
 const QSize buttonSize(320, 80);
 const QSize errorSize(640, 80);
-const QSize backSize(200, 85);
-
 const QString textColor = "#4a2a0a";
-const QString errorColor = "#a01010";
+const QString errorColor = "#4a2a0a";
 }
 
-JoinScreen::JoinScreen(QWidget* parent): QWidget(parent), input(new QLineEdit(this)) {
-    const QPixmap frames(QString(ASSETS_DIR) + "/Sprites/Menus/Frames.png");
+UsernameScreen::UsernameScreen(QWidget* parent): QWidget(parent), input(new QLineEdit(this)) {
+    const QPixmap sheet(QString(ASSETS_DIR) + "/Sprites/Menus/Title Screen.png");
+    QLabel* logo = new QLabel(this);
+    logo->setPixmap(sheet.copy(logoRect));
+    logo->setScaledContents(true);
+    logo->setFixedSize(logoSize);
+
+    const QPixmap frames = QPixmap(QString(ASSETS_DIR) + "/Sprites/Menus/Frames.png");
 
     QLabel* panel = new QLabel(this);
     panel->setPixmap(frames.copy(panelRect));
     panel->setScaledContents(true);
     panel->setFixedSize(panelSize);
 
-    QLabel* title = new QLabel("Enter invite code", panel);
+    QLabel* title = new QLabel("Enter username", panel);
     title->setAlignment(Qt::AlignCenter);
     title->setStyleSheet(QString("font: bold 40px; color: %1;").arg(textColor));
 
     input->setAlignment(Qt::AlignCenter);
     input->setMaxLength(16);
     input->setStyleSheet(QString("QLineEdit { background: transparent; border: none; font: bold 38px; color: %1; }")
-            .arg(textColor));
+        .arg(textColor));
 
     QLabel* field = new QLabel(panel);
     field->setPixmap(frames.copy(fieldRect));
     field->setScaledContents(true);
     field->setFixedSize(fieldSize);
-
     QHBoxLayout* fieldLayout = new QHBoxLayout(field);
     fieldLayout->setContentsMargins(20, 0, 20, 0);
     fieldLayout->addWidget(input);
@@ -65,39 +68,35 @@ JoinScreen::JoinScreen(QWidget* parent): QWidget(parent), input(new QLineEdit(th
     panelLayout->addWidget(errorLabel, 0, Qt::AlignHCenter);
     panelLayout->addStretch(1);
 
-    SpriteButton* joinButton = new SpriteButton(frames.copy(buttonRect), frames.copy(buttonHoverRect), this);
-    joinButton->setFixedSize(buttonSize);
+    SpriteButton* continueButton = new SpriteButton(frames.copy(buttonRect), frames.copy(buttonHoverRect), this);
+    continueButton->setFixedSize(buttonSize);
 
-    QLabel* joinText = new QLabel("Join", joinButton);
-    joinText->setGeometry(joinButton->rect());
-    joinText->setAlignment(Qt::AlignCenter);
-    joinText->setStyleSheet(QString("font: bold 34px; color: %1;").arg(textColor));
-
-    const QPixmap titleSheet(QString(ASSETS_DIR) + "/Sprites/Menus/Title Screen.png");
-    SpriteButton* backButton = new SpriteButton(titleSheet.copy(backNormalRect), titleSheet.copy(backHoverRect), this);
-    backButton->setFixedSize(backSize);
+    QLabel* continueText = new QLabel("Continue", continueButton);
+    continueText->setGeometry(continueButton->rect());
+    continueText->setAlignment(Qt::AlignCenter);
+    continueText->setStyleSheet(QString("font: bold 34px; color: %1;").arg(textColor));
 
     QVBoxLayout* layout = new QVBoxLayout(this);
-    layout->addStretch(2);
+    layout->addStretch(1);
+    layout->addWidget(logo, 0, Qt::AlignHCenter);
+    layout->addStretch(1);
     layout->addWidget(panel, 0, Qt::AlignHCenter);
     layout->addSpacing(30);
-    layout->addWidget(joinButton, 0, Qt::AlignHCenter);
+    layout->addWidget(continueButton, 0, Qt::AlignHCenter);
     layout->addStretch(2);
-    layout->addWidget(backButton, 0, Qt::AlignRight);
 
-    connect(input, &QLineEdit::returnPressed, this, &JoinScreen::confirm);
+    connect(input, &QLineEdit::returnPressed, this, &UsernameScreen::confirm);
     connect(input, &QLineEdit::textChanged, this, [this]() { errorLabel->clear(); });
-    connect(joinButton, &QAbstractButton::clicked, this, &JoinScreen::confirm);
-    connect(backButton, &QAbstractButton::clicked, this, &JoinScreen::backRequested);
+    connect(continueButton, &QAbstractButton::clicked, this, &UsernameScreen::confirm);
 }
 
-void JoinScreen::confirm() {
-    const QString inviteCode = input->text().trimmed();
-    if (!inviteCode.isEmpty()) {
-        emit joinRequested(inviteCode);
+void UsernameScreen::confirm() {
+    const QString username = input->text().trimmed();
+    if (!username.isEmpty()) {
+        emit usernameConfirmed(username);
     }
 }
 
-void JoinScreen::showError(const QString& message) {
+void UsernameScreen::showError(const QString& message) {
     errorLabel->setText(message);
 }

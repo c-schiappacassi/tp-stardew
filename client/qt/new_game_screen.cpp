@@ -1,4 +1,4 @@
-#include "newgamescreen.h"
+#include "new_game_screen.h"
 
 #include <QGridLayout>
 #include <QHBoxLayout>
@@ -11,7 +11,7 @@
 #include <QVBoxLayout>
 #include <algorithm>
 
-#include "spritebutton.h"
+#include "sprite_button.h"
 
 namespace {
 const QRect panelRect(0, 0, 440, 260);

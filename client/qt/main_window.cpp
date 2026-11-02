@@ -1,13 +1,13 @@
-#include "mainwindow.h"
+#include "main_window.h"
 
 #include <QStackedWidget>
 
-#include "startmenuscreen.h"
-#include "usernamescreen.h"
-#include "joinscreen.h"
-#include "loadscreen.h"
-#include "newgamescreen.h"
-#include "joincharacterscreen.h"
+#include "start_menu_screen.h"
+#include "username_screen.h"
+#include "join_screen.h"
+#include "load_screen.h"
+#include "new_game_screen.h"
+#include "join_character_screen.h"
 #include "network.h"
 
 MainWindow::MainWindow(NetworkManager& net, QWidget *parent) : QMainWindow(parent), stack(new QStackedWidget(this)), net(net) {

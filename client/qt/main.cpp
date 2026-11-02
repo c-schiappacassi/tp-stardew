@@ -1,7 +1,7 @@
 #include <QApplication>
 #include <iostream>
 
-#include "mainwindow.h"
+#include "main_window.h"
 #include "network.h"
 
 int main(int argc, char *argv[]) {

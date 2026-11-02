@@ -1,4 +1,4 @@
-#include "loadscreen.h"
+#include "load_screen.h"
 
 #include <QHBoxLayout>
 #include <QLabel>
@@ -8,7 +8,7 @@
 #include <QPainter>
 #include <algorithm>
 
-#include "spritebutton.h"
+#include "sprite_button.h"
 
 namespace {
 const QRect panelRect(0, 0, 440, 260);
