@@ -10,10 +10,10 @@
 #include "game_types.h"
 #include "player_record.h"
 #include "thread.h"
-#include "acceptor.h"
+#include "network/acceptor.h"
 #include "socket.h"
-#include "entity_id_generator.h"
-#include "dungeon.h"
+#include "entities/entity_id_generator.h"
+#include "dungeon/dungeon.h"
 #include <optional>
 
 class Game:public Thread {

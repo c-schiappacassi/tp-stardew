@@ -5,7 +5,7 @@
 #include <utility>
 
 #include <sys/socket.h>
-#include "game.h"
+#include "game/game.h"
 #include "liberror.h"
 #include "protocol_errors.h"
 #include "queue.h"

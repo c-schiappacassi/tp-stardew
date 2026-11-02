@@ -4,8 +4,8 @@
 #include <list>
 #include <memory>
 
-#include "../common/socket.h"
-#include "../common/thread.h"
+#include "socket.h"
+#include "thread.h"
 
 #include "client_handler.h"
 

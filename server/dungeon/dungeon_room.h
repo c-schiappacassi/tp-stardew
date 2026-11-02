@@ -3,7 +3,7 @@
 #include <cstdint>
 #include <map>
 #include "mineral.h"
-#include "zone_map.h"
+#include "world/zone_map.h"
 #include <optional>
 
 struct DungeonRoomPassages {

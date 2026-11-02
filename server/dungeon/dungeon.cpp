@@ -1,6 +1,6 @@
 #include "dungeon.h"
-#include "player.h"
-#include "entity_id_generator.h"
+#include "player/player.h"
+#include "entities/entity_id_generator.h"
 #include <utility>
 
 Dungeon::Dungeon(const DungeonConfig& config, uint32_t seed):config(config), generator(seed) {

@@ -8,7 +8,7 @@
 #include "dungeon_config.h"
 #include <chrono>
 #include <vector>
-#include "zone_map.h"
+#include "world/zone_map.h"
 
 class Player;
 class EntityIdGenerator;

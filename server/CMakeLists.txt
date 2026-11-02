@@ -2,37 +2,39 @@ target_sources(taller_server
     PRIVATE
     # .cpp files
         main.cpp
-        acceptor.cpp
-        client_handler.cpp
-        client_sender.cpp
-        server_protocol.cpp
-        game.cpp
-        game_manager.cpp
-        inventory.cpp
-        player.cpp
-        mineral.cpp
-        dungeon_room.cpp
-        dungeon.cpp
-        entity_id_generator.cpp
-        zone_map.cpp
+        network/acceptor.cpp
+        network/client_handler.cpp
+        network/client_sender.cpp
+        network/server_protocol.cpp
+        game/game.cpp
+        game/game_manager.cpp
+        inventory/inventory.cpp
+        player/player.cpp
+        dungeon/mineral.cpp
+        dungeon/dungeon_room.cpp
+        dungeon/dungeon.cpp
+        entities/entity_id_generator.cpp
+        world/zone_map.cpp
     PUBLIC
     # .h files
-        acceptor.h
-        client_handler.h
-        client_sender.h
-        server_protocol.h
-        game.h
-        game_manager.h
-        game_types.h
-        player_record.h
-        inventory.h
-        player.h
-        entity_id.h
-        dungeon_room.h
-        mineral.h
-        dungeon.h
-        entity_id_generator.h
-        dungeon_config.h
-        player_config.h
-        zone_map.h        
+        network/acceptor.h
+        network/client_handler.h
+        network/client_sender.h
+        network/server_protocol.h
+        game/game.h
+        game/game_manager.h
+        game/game_types.h
+        game/player_record.h
+        inventory/inventory.h
+        player/player.h
+        entities/entity_id.h
+        dungeon/dungeon_room.h
+        dungeon/mineral.h
+        dungeon/dungeon.h
+        entities/entity_id_generator.h
+        dungeon/dungeon_config.h
+        player/player_config.h
+        world/zone_map.h
 )
+
+target_include_directories(taller_server PRIVATE ${CMAKE_CURRENT_SOURCE_DIR})

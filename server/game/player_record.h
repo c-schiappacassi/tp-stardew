@@ -6,7 +6,7 @@
 #include <string>
 
 #include "game_types.h"
-#include "player.h"
+#include "player/player.h"
 
 struct PlayerRecord {
     uint16_t id;

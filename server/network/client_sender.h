@@ -3,9 +3,9 @@
 
 #include <memory>
 
-#include "../common/thread.h"
+#include "thread.h"
 
-#include "game_types.h"
+#include "game/game_types.h"
 #include "server_protocol.h"
 
 

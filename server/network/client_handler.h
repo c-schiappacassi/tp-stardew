@@ -4,7 +4,7 @@
 #include <memory>
 
 #include "client_sender.h"
-#include "game_types.h"   // agus
+#include "game/game_types.h"   // agus
 #include "server_protocol.h"
 #include "socket.h"
 #include "thread.h"

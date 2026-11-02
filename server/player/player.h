@@ -3,7 +3,7 @@
 #include <cstdint>
 
 #include "dtos.h"
-#include "inventory.h"
+#include "inventory/inventory.h"
 #include <chrono>
 #include "player_config.h"
 

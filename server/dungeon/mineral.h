@@ -1,6 +1,6 @@
 #pragma once
 #include <cstdint>
-#include "entity_id.h"
+#include "entities/entity_id.h"
 #include "position.h"
 #include "protocol_types.h"
 #include "dtos.h"
