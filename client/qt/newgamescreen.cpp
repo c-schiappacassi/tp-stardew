@@ -8,7 +8,6 @@
 #include <QList>
 #include <QPainter>
 #include <QSlider>
-#include <QTransform>
 #include <QVBoxLayout>
 #include <algorithm>
 

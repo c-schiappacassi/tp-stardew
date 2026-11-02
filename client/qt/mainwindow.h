@@ -23,6 +23,7 @@ private:
     NetworkManager& net;
     std::string username;
     std::vector<GameInfoDTO> games;
+    std::string joinCode;
 };
 
 #endif // MAINWINDOW_H

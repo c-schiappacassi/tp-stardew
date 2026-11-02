@@ -14,6 +14,7 @@ qt_add_executable(stardew_client_qt
     newgamescreen.h newgamescreen.cpp
     loadscreen.h loadscreen.cpp
     joinscreen.h joinscreen.cpp
+    joincharacterscreen.h joincharacterscreen.cpp
     spritebutton.h spritebutton.cpp
 )
 

@@ -7,6 +7,7 @@
 #include "joinscreen.h"
 #include "loadscreen.h"
 #include "newgamescreen.h"
+#include "joincharacterscreen.h"
 #include "network.h"
 
 MainWindow::MainWindow(NetworkManager& net, QWidget *parent) : QMainWindow(parent), stack(new QStackedWidget(this)), net(net) {
@@ -19,11 +20,14 @@ MainWindow::MainWindow(NetworkManager& net, QWidget *parent) : QMainWindow(paren
     UsernameScreen* usernameScreen = new UsernameScreen(this);
     StartMenuScreen* startMenu = new StartMenuScreen(this);
     JoinScreen* joinScreen = new JoinScreen(this);
+    JoinCharacterScreen* joinCharacterScreen = new JoinCharacterScreen(this);
     LoadScreen* loadScreen = new LoadScreen(this);
     NewGameScreen* newGameScreen = new NewGameScreen(this);
+
     stack->addWidget(usernameScreen);
     stack->addWidget(startMenu);
     stack->addWidget(joinScreen);
+    stack->addWidget(joinCharacterScreen);
     stack->addWidget(loadScreen);
     stack->addWidget(newGameScreen);
 
@@ -38,10 +42,13 @@ MainWindow::MainWindow(NetworkManager& net, QWidget *parent) : QMainWindow(paren
             usernameScreen->showError(QString::fromStdString(reply.errorMsg));
         }
     });
+
     connect(startMenu, &StartMenuScreen::exitRequested, this, &QWidget::close);
+
     connect(startMenu, &StartMenuScreen::joinGameRequested, this, [this, joinScreen]() {
         stack->setCurrentWidget(joinScreen);
     });
+
     connect(startMenu, &StartMenuScreen::loadGameRequested, this, [this, loadScreen]() {
         loadScreen->setGames(games);
         stack->setCurrentWidget(loadScreen);
@@ -55,18 +62,56 @@ MainWindow::MainWindow(NetworkManager& net, QWidget *parent) : QMainWindow(paren
             //emppieza la partida (conectar con sdl)
         }
     });
+
     connect(startMenu, &StartMenuScreen::newGameRequested, this, [this, newGameScreen]() {
         stack->setCurrentWidget(newGameScreen);
     });
+
+    connect(joinScreen, &JoinScreen::joinRequested, this, [this, joinScreen, joinCharacterScreen](const QString& code) {        CheckCodeDTO dto(username);
+        dto.code = code.toStdString();
+        const ServerStatus reply = send(dto);
+        if (reply.status == StatusCode::Ok) {
+            joinCode = dto.code;
+            stack->setCurrentWidget(joinCharacterScreen);
+        } else {
+            joinScreen->showError(QString::fromStdString(reply.errorMsg));
+        }
+    });
+
+    connect(joinCharacterScreen, &JoinCharacterScreen::confirmed, this, [this, joinCharacterScreen]() {
+        JoinGameDTO dto(username);
+        dto.characterName = joinCharacterScreen->characterName().toStdString();
+        dto.code = joinCode;
+        dto.hairModel = joinCharacterScreen->hairModel();
+        dto.shirtModel = joinCharacterScreen->shirtModel();
+        dto.pantsModel = joinCharacterScreen->pantsModel();
+        dto.hairColor = joinCharacterScreen->hairColor();
+        dto.pantsColor = joinCharacterScreen->pantsColor();
+
+        const ServerStatus reply = send(dto);
+        if (reply.status == StatusCode::Ok) {
+            //emppieza la partida (conectar con sdl)
+        } else {
+            joinCharacterScreen->showError(QString::fromStdString(reply.errorMsg));
+        }
+    });
+
+    connect(joinCharacterScreen, &JoinCharacterScreen::backRequested, this, [this, joinScreen]() {
+        stack->setCurrentWidget(joinScreen);
+    });
+
     connect(joinScreen, &JoinScreen::backRequested, this, [this, startMenu]() {
         stack->setCurrentWidget(startMenu);
     });
+
     connect(loadScreen, &LoadScreen::backRequested, this, [this, startMenu]() {
         stack->setCurrentWidget(startMenu);
     });
+
     connect(newGameScreen, &NewGameScreen::backRequested, this, [this, startMenu]() {
         stack->setCurrentWidget(startMenu);
     });
+
     connect(newGameScreen, &NewGameScreen::confirmed, this, [this, newGameScreen]() {
         CreateGameDTO dto(username);
         dto.characterName = newGameScreen->characterName().toStdString();
