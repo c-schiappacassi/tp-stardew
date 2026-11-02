@@ -21,6 +21,9 @@ private:
     PlayerData receivePlayerData();
     PlayerDataLocal receivePlayerDataLocal();
 
+    MineralData receiveMineralData();
+    std::map<uint8_t, std::vector<MineralData>> receiveDungeonMinerals();
+
 public:
     explicit ClientProtocol(Socket& socket);
 

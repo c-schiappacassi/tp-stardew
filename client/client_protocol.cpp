@@ -76,6 +76,31 @@ PlayerDataLocal ClientProtocol::receivePlayerDataLocal() {
     return localData;
 }
 
+MineralData ClientProtocol::receiveMineralData() {
+    MineralData mineral;
+    mineral.id = base.receiveUint32();
+    mineral.pos = receivePosition();
+    mineral.type = static_cast<ResourceType>(base.receiveUint8());
+    mineral.state = static_cast<MineralState>(base.receiveUint8());
+    return mineral;
+}
+
+std::map<uint8_t, std::vector<MineralData>> ClientProtocol::receiveDungeonMinerals() {
+    std::map<uint8_t, std::vector<MineralData>> dungeonMinerals;
+    uint8_t roomCount = base.receiveUint8();
+    for (uint8_t i = 0; i < roomCount; ++i) {
+        uint8_t roomNumber = base.receiveUint8();
+        uint16_t mineralCount = base.receiveUint16();
+        std::vector<MineralData> minerals;
+        minerals.reserve(mineralCount);
+        for (uint16_t j = 0; j < mineralCount; ++j) {
+            minerals.push_back(receiveMineralData());
+        }
+        dungeonMinerals[roomNumber] = std::move(minerals);
+    }
+    return dungeonMinerals;
+}
+
 // SENDERS
 
 void ClientProtocol::send(const CommandDTO& dto) {
@@ -135,7 +160,7 @@ void ClientProtocol::send(const InteractDTO& dto) {
     base.sendUint8(static_cast<uint8_t>(MessageType::Interact));
     base.sendString(dto.playerName);
     base.sendUint8(static_cast<uint8_t>(dto.targetType));
-    base.sendUint16(dto.targetId);
+    base.sendUint32(dto.targetId);
 }
 
 void ClientProtocol::send(const DonateDTO& dto) {
@@ -185,4 +210,5 @@ void ClientProtocol::recv(ServerStatus& status) {
     }
 
     status.localPlayer = receivePlayerDataLocal();
+    status.dungeonMinerals = receiveDungeonMinerals();
 }
