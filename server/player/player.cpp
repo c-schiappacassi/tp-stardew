@@ -2,6 +2,7 @@
 
 #include <algorithm>
 #include <stdexcept>
+#include <cmath>
 
 Player::Player(
     const PlayerData& initialData,
@@ -89,7 +90,7 @@ void Player::advance(int step) {
 }
 
 bool Player::selectSlot(uint8_t slot) {
-    if (state == PlayerState::UsingTool) {
+    if (!canAct()) {
         return false;
     }
     if (slot >= inventory.getCapacity()) {
@@ -140,10 +141,7 @@ PlayerDataLocal Player::getLocalData() const {
 }
 
 bool Player::canUseTool(std::chrono::steady_clock::time_point now) const {
-    if (state != PlayerState::Idle && state != PlayerState::Walking) {
-        return false;
-    }
-    if (health == 0 || energy == 0) {
+    if (!canAct()) {
         return false;
     }
     if (now < nextToolUseTime) {
@@ -155,12 +153,7 @@ bool Player::canUseTool(std::chrono::steady_clock::time_point now) const {
         return false;
     }
 
-    const auto tool = config.tools.find(item->item_id);
-    if (tool == config.tools.end()) {
-        return false;
-    }
-
-    return energy >= tool->second.energyCost;
+    return config.tools.contains(item->item_id);
 }
 
 bool Player::canUsePickaxe(std::chrono::steady_clock::time_point now) const {
@@ -172,17 +165,23 @@ bool Player::canUsePickaxe(std::chrono::steady_clock::time_point now) const {
 }
 
 bool Player::useTool(std::chrono::steady_clock::time_point now) {
+
     if (!canUseTool(now)) {
         return false;
     }
 
-    const ToolConfig& tool = config.tools.at(getSelectedItem()->item_id);
+    const ToolConfig& tool =config.tools.at(getSelectedItem()->item_id);
 
-    energy -= tool.energyCost;
-    nextToolUseTime = now + std::chrono::milliseconds(tool.intervalMs);
+    if (tool.energyCost >= energy) {
+        energy = 0;
+    } else {
+        energy -= tool.energyCost;
+    }
 
+    nextToolUseTime =now + std::chrono::milliseconds(tool.intervalMs);
     if (energy == 0) {
         state = PlayerState::Unconscious;
+        movementDirection = Direction::None;
     } else {
         state = PlayerState::UsingTool;
     }
@@ -218,4 +217,79 @@ Zone Player::getZone() const {
 
 uint8_t Player::getDungeonLevel() const {
     return dungeonLevel;
+}
+
+const Position& Player::getPosition() const {
+    return pos;
+}
+
+bool Player::canAct() const {
+    return(state == PlayerState::Idle ||state == PlayerState::Walking) &&health > 0 &&energy > 0;
+}
+
+bool Player::changeLocation(Zone destination,uint8_t level,const Position& target) {
+    if (!canAct() ||target.getX() < 0 ||target.getY() < 0) {
+        return false;
+    }
+
+    if (destination == Zone::Dungeon) {
+        if (level == 0) {
+            return false;
+        }
+    } else if ( destination == Zone::Farm ||destination == Zone::Town) {
+        if (level != 0) {
+            return false;
+        }
+
+    } else {
+        return false;
+    }
+
+    pos = target;
+    zone = destination;
+    dungeonLevel = level;
+
+    return true;
+}
+
+void Player::faceTarget(const Position& target) {
+    if (!canAct()) {
+        return;
+    }
+
+    const double dx =
+        static_cast<double>(target.getX()) - pos.getX();
+
+    const double dy =
+        static_cast<double>(target.getY()) - pos.getY();
+
+    if (dx == 0 && dy == 0) {
+        return;
+    }
+
+    if (std::abs(dx) >= std::abs(dy)) {
+        if (dx > 0) {
+            dir = Direction::Right;
+        } else {
+            dir = Direction::Left;
+        }
+    } else {
+        if (dy > 0) {
+            dir = Direction::Down;
+        } else {
+            dir = Direction::Up;
+        }
+    }
+}
+
+int Player::getMovementStep(int normalStep) const {
+    if (normalStep <= 0) {
+        return 0;
+    }
+
+    if (static_cast<uint32_t>(energy) * 10 <= maxEnergy) {
+        return std::max(1, normalStep / 2);
+    }
+
+    return normalStep;
 }

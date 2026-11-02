@@ -37,4 +37,9 @@ public:
     std::map<uint8_t, std::vector<MineralData>> getMineralData(bool includeBroken = false) const;
     void removeBrokenMinerals();
     bool initialize(const std::map<uint8_t, DungeonRoomLayout>& layout,EntityIdGenerator& entityIds);
+    std::optional<MineData> getMineData(uint8_t roomNumber,bool includeBroken = false) const;
+    bool enter(Player& player);
+    bool advanceRoom(Player& player);
+    bool canExit(const Player& player) const;
+    bool useSelectedItem(Player& player,std::chrono::steady_clock::time_point now);
 };

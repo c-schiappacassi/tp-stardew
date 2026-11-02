@@ -2,6 +2,8 @@
 
 #include <stdexcept>
 #include <utility>
+#include <algorithm>
+#include <cmath>
 #include "dungeon_config.h"
 
 DungeonRoom::DungeonRoom(uint8_t number) : number(number) {
@@ -163,7 +165,7 @@ bool DungeonRoom::arePassagesValid( const ZoneMap& map, const DungeonRoomPassage
         }
     }
 
-    return true;
+    return map.hasPath(data.entry, data.exit) && (!data.nextRoom || map.hasPath(data.entry, *data.nextRoom));
 }
 
 bool DungeonRoom::setPassages(const DungeonRoomPassages& data) {
@@ -182,4 +184,52 @@ bool DungeonRoom::setPassages(const DungeonRoomPassages& data) {
 
 const std::optional<DungeonRoomPassages>&DungeonRoom::getPassages() const {
     return passages;
+}
+
+//con esto hacemos que si el player quiere romper algo que entre medio tiene una pared o piedra no puede por mas que le de la distancia
+bool DungeonRoom::hasClearLine(const Position& from,const Position& target) const {
+    if (!canWalk(from) || !terrain.isWalkable(target)) {
+        return false;
+    }
+
+    const double dx =static_cast<double>(target.getX()) - from.getX();
+    const double dy =static_cast<double>(target.getY()) - from.getY();
+    const int steps = static_cast<int>(std::max(std::abs(dx), std::abs(dy)));
+
+    if (steps == 0) {
+        return true;
+    }
+
+    Position previous = from;
+
+    for (int step = 1; step <= steps; ++step) {
+        const Position sample(static_cast<int>(std::round(from.getX() + dx * step / steps)),static_cast<int>(std::round(from.getY() + dy * step / steps)));
+        const auto previousCell = terrain.cellAt(previous);
+        const auto sampleCell = terrain.cellAt(sample);
+
+        if (!previousCell || !sampleCell) {
+            return false;
+        }
+
+        const bool crossesCorner =previousCell->first != sampleCell->first &&previousCell->second != sampleCell->second;
+        //controlamos las esquinas
+        if (crossesCorner) {
+            const Position horizontal(sample.getX(), previous.getY());
+            const Position vertical(previous.getX(), sample.getY());
+            if (!canWalk(horizontal) || !canWalk(vertical)) {
+                return false;
+            }
+        }
+
+        if (terrain.sameCell(sample, target)) {
+            return true;
+        }
+        if (!canWalk(sample)) {
+            return false;
+        }
+
+        previous = sample;
+    }
+
+    return true;
 }

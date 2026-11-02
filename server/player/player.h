@@ -46,6 +46,11 @@ public:
     Zone getZone() const;
     uint8_t getDungeonLevel() const;
     Position getNextPosition(int step) const;
+    const Position& getPosition() const;
+    bool canAct() const;
+    bool changeLocation(Zone destination,uint8_t level,const Position& target);
+    void faceTarget(const Position& target);
+    int getMovementStep(int normalStep) const;
 
     PlayerData getPublicData() const;
     PlayerDataLocal getLocalData() const;

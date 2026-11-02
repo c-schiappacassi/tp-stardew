@@ -6,8 +6,14 @@
 #include <random>
 #include <utility>
 
-Game::Game(const std::string& id, const std::string& name, uint8_t worldId, const char* servicename):
-    id(id),name(name),worldId(worldId),input(std::make_shared<CommandQueue>()),skt(servicename),acceptor(skt, *this) {}
+Game::Game(const std::string& id,const std::string& name,uint8_t worldId,const char* servicename,const PlayerConfig& playerConfig):
+        id(id),
+        name(name),
+        worldId(worldId),
+        input(std::make_shared<CommandQueue>()),
+        skt(servicename),
+        acceptor(skt, *this),
+        playerConfig(playerConfig) {}
 
 const std::string& Game::getId() const {
     return id;
@@ -65,6 +71,15 @@ GameSession Game::createGame(const CreateGameDTO& dto,const std::shared_ptr<OutQ
     return session;
 }
 
+void Game::completePlayerStatus(ServerStatus& status,const PlayerRecord& record,bool includeBroken) const {
+    status.playerId = record.id;
+    status.localPlayer = record.player.getLocalData();
+    status.mine.reset();
+    if (record.player.getZone() == Zone::Dungeon) {
+        status.mine = dungeon.getMineData(record.player.getDungeonLevel(),includeBroken);
+    }
+}
+
 
 GameSession Game::addPlayer(const std::string& playerName,const PlayerData& data,const std::shared_ptr<OutQueue>& output,const std::string& successMsg) {
     GameSession session{};
@@ -96,7 +111,7 @@ GameSession Game::addPlayer(const std::string& playerName,const PlayerData& data
     std::mt19937 generator(std::random_device{}());
     std::uniform_int_distribution<uint32_t> goldDistribution(0, 100);
 
-    Player character(spawn,PLAYER_INVENTORY_CAPACITY,PLAYER_INITIAL_HEALTH,PLAYER_INITIAL_ENERGY,goldDistribution(generator));
+    Player character(spawn,PLAYER_INVENTORY_CAPACITY,PLAYER_INITIAL_HEALTH,PLAYER_INITIAL_ENERGY,goldDistribution(generator),playerConfig);
 
     for (const ItemId tool : {ItemId::Pickaxe,ItemId::WateringCan,ItemId::Shovel,ItemId::Sword}) {
         character.addItem(Stack{tool, 1, Quality::None});
@@ -106,8 +121,7 @@ GameSession Game::addPlayer(const std::string& playerName,const PlayerData& data
     ++nextPlayerId;
 
     session.status = buildStatus();
-    session.status.playerId = playerId;
-    session.status.localPlayer = it->second.player.getLocalData();
+    completePlayerStatus(session.status, it->second);
     session.status.successMsg = successMsg;
     session.gameId = id;
     session.playerId = playerId;
@@ -158,25 +172,27 @@ void Game::advancePlayers() {
         }
 
         Player& player = record.player;
+        const int step =player.getMovementStep(PLAYER_STEP);
+        const DungeonRoom* room = nullptr;
+        const ZoneMap* outside = nullptr;
 
-        if (player.getZone() != Zone::Dungeon) {
-            player.advance(PLAYER_STEP);
-            continue;
+        if (player.getZone() == Zone::Dungeon) {
+            room = dungeon.findRoom(player.getDungeonLevel());
+            if (!room) {
+                continue;
+            }
+        } else if (dungeonEntrance &&player.getZone() == dungeonEntrance->zone) {
+            outside = &dungeonEntrance->terrain;
         }
 
-        const DungeonRoom* room =dungeon.findRoom(player.getDungeonLevel());
-
-        if (room == nullptr) {
-            continue;
-        }
-
-        for (int distance = 0; distance < PLAYER_STEP; ++distance) {
-            const Position next = player.getNextPosition(1);
-
-            if (!room->canWalk(next)) {
+        for (int distance = 0; distance < step; ++distance) {
+            const Position next =player.getNextPosition(1);
+            if (room && !room->canWalk(next)) {
                 break;
             }
-
+            if (outside && !outside->isWalkable(next)) {
+                break;
+            }
             player.advance(1);
         }
     }
@@ -193,16 +209,6 @@ void Game::movePlayer(uint16_t playerId, const MoveDTO& move) {
     it->second.player.setMovement(move.dir);
 }
 
-bool Game::mineMineral(uint16_t playerId, EntityId mineralId) {
-    std::lock_guard<std::mutex> lock(mtx);
-
-    auto it = players.find(playerId);
-    if (it == players.end() || !it->second.connected) {
-        return false;
-    }
-
-    return dungeon.mineMineral(it->second.player, mineralId);
-}
 
 void Game::updateToolStates() {
     std::lock_guard<std::mutex> lock(mtx);
@@ -215,19 +221,6 @@ void Game::updateToolStates() {
     }
 }
 
-bool Game::setDungeonRoomMap(uint8_t roomNumber, const ZoneMap& map) {
-    std::lock_guard<std::mutex> lock(mtx);
-    if (configured) {
-        return false;
-    }
-
-    DungeonRoom* room = dungeon.findRoom(roomNumber);
-    if (room == nullptr) {
-        return false;
-    }
-
-    return room->setMap(map);
-}
 
 bool Game::loadDungeon(uint8_t selectedWorldId,const std::map<uint8_t, DungeonRoomLayout>& layout) {
     std::lock_guard<std::mutex> lock(mtx);
@@ -241,15 +234,108 @@ bool Game::loadDungeon(uint8_t selectedWorldId,const std::map<uint8_t, DungeonRo
     }
 
     dungeonWorldId = selectedWorldId;
+    dungeonEntrance.reset();
+    return true;
+}
+bool Game::configureDungeonEntrance(const DungeonEntrance& entrance) {
+    std::lock_guard<std::mutex> lock(mtx);
+
+    if (configured || !dungeonWorldId) {
+        return false;
+    }
+
+    if (entrance.zone != Zone::Farm &&entrance.zone != Zone::Town) {
+        return false;
+    }
+
+    if (!entrance.terrain.isWalkable(entrance.position) ||!entrance.terrain.isWalkable(entrance.returnPosition)) {
+        return false;
+    }
+
+    dungeonEntrance = entrance;
     return true;
 }
 
-ServerStatus Game::buildStatus(bool includeBroken) const {
+void Game::selectPlayerSlot(uint16_t playerId,uint8_t slot) {
+    std::lock_guard<std::mutex> lock(mtx);
+    auto it = players.find(playerId);
+
+    if (it == players.end() || !it->second.connected) {
+        return;
+    }
+
+    it->second.player.selectSlot(slot);
+}
+
+void Game::usePlayerItem(uint16_t playerId,uint8_t slot) {
+    std::lock_guard<std::mutex> lock(mtx);
+    auto it = players.find(playerId);
+
+    if (it == players.end() || !it->second.connected) {
+        return;
+    }
+
+    Player& player = it->second.player;
+
+    if (player.selectSlot(slot)) {
+        dungeon.useSelectedItem(player,std::chrono::steady_clock::now());
+    }
+}
+
+bool Game::useDungeonPassage(Player& player) {
+    // interactPlayer ya tiene el mutex
+    if (!dungeonWorldId ||!dungeonEntrance ||!player.canAct()) {
+        return false;
+    }
+
+    if (player.getZone() == Zone::Dungeon) {
+        if (dungeon.canExit(player)) {
+            return player.changeLocation(dungeonEntrance->zone,0,dungeonEntrance->returnPosition);
+        }
+        return dungeon.advanceRoom(player);
+    }
+
+    if (player.getZone() != dungeonEntrance->zone) {
+        return false;
+    }
+
+    if (!dungeonEntrance->terrain.sameCell(player.getPosition(),dungeonEntrance->position)) {
+        return false;
+    }
+    return dungeon.enter(player);
+}
+
+void Game::interactPlayer(uint16_t playerId,const InteractDTO& interaction) {
+    std::lock_guard<std::mutex> lock(mtx);
+    auto it = players.find(playerId);
+
+    if (it == players.end() || !it->second.connected) {
+        return;
+    }
+
+    Player& player = it->second.player;
+
+    switch (interaction.targetType) {
+        case TargetType::Ore:
+            dungeon.mineMineral(player,interaction.targetId);
+            break;
+
+        case TargetType::DungeonPassage:
+            if (interaction.targetId == 0) {
+                useDungeonPassage(player);
+            }
+            break;
+
+        default:
+            break;
+    }
+}
+
+ServerStatus Game::buildStatus() const {
     ServerStatus status;
     status.status = StatusCode::Ok;
     status.gameId = id;
     status.worldId = worldId;
-    status.dungeonMinerals = dungeon.getMineralData(includeBroken);
 
     for (const auto& [id, record] : players) {
         if (record.connected) {
@@ -264,16 +350,13 @@ ServerStatus Game::buildStatus(bool includeBroken) const {
 void Game::sendStatus() {
     std::lock_guard<std::mutex> lock(mtx);
 
-    ServerStatus status = buildStatus(true);
-
+    ServerStatus status = buildStatus();
     for (const auto& [id, record] : players) {
         if (!record.connected) {
             continue;
         }
 
-        status.playerId = record.id;
-        status.localPlayer = record.player.getLocalData();
-
+        completePlayerStatus(status, record, true);
         try {
             record.output->push(status);
         } catch (const ClosedQueue&) {
@@ -287,15 +370,45 @@ void Game::sendStatus() {
 void Game::processCommands() {
     PlayerCommand command;
 
-    while (should_keep_running() && input->try_pop(command)) {
+    while (should_keep_running() &&input->try_pop(command)) {
         if (!command.command) {
             continue;
         }
-        if (command.command->type() == MessageType::Move) {
-            const MoveDTO& move = static_cast<const MoveDTO&>(*command.command);
-            movePlayer(command.playerId, move);
-        } else if (command.command->type() == MessageType::ExitGame) {
-            disconnectPlayer(command.playerId);
+        switch (command.command->type()) {
+            case MessageType::Move:
+                movePlayer(
+                    command.playerId,
+                    static_cast<const MoveDTO&>(
+                        *command.command));
+                break;
+
+            case MessageType::SelectItem:
+                selectPlayerSlot(
+                    command.playerId,
+                    static_cast<const SelectItemDTO&>(
+                        *command.command).itemSlot);
+                break;
+
+            case MessageType::UseItem:
+                usePlayerItem(
+                    command.playerId,
+                    static_cast<const UseItemDTO&>(
+                        *command.command).itemSlot);
+                break;
+
+            case MessageType::Interact:
+                interactPlayer(
+                    command.playerId,
+                    static_cast<const InteractDTO&>(
+                        *command.command));
+                break;
+
+            case MessageType::ExitGame:
+                disconnectPlayer(command.playerId);
+                break;
+
+            default:
+                break;
         }
     }
 }

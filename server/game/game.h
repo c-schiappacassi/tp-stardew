@@ -14,6 +14,8 @@
 #include "socket.h"
 #include "entities/entity_id_generator.h"
 #include "dungeon/dungeon.h"
+#include "dungeon/dungeon_entrance.h"
+#include "player/player_config.h"
 #include <optional>
 
 class Game:public Thread {
@@ -32,20 +34,25 @@ class Game:public Thread {
         Dungeon dungeon;
         EntityIdGenerator entityIds;
         std::optional<uint8_t> dungeonWorldId;
+        PlayerConfig playerConfig;
+        std::optional<DungeonEntrance> dungeonEntrance;
 
         void disconnectPlayer(uint16_t playerId);
         void movePlayer(uint16_t playerId, const MoveDTO& move);
         void processCommands();
         void sendStatus();
         void advancePlayers();
-        ServerStatus buildStatus(bool includeBroken = false) const;
+        ServerStatus buildStatus() const;
+        void completePlayerStatus(ServerStatus& status,const PlayerRecord& record,bool includeBroken = false) const;
         GameSession addPlayer(const std::string& playerName,const PlayerData& data,const std::shared_ptr<OutQueue>& output,const std::string& successMsg);
-        bool mineMineral(uint16_t playerId, EntityId mineralId);
         void updateToolStates();
-        bool setDungeonRoomMap(uint8_t roomNumber, const ZoneMap& map);
+        void selectPlayerSlot(uint16_t playerId,uint8_t slot);
+        void usePlayerItem(uint16_t playerId,uint8_t slot);
+        void interactPlayer(uint16_t playerId,const InteractDTO& interaction);
+        bool useDungeonPassage(Player& player);
 
     public:
-        Game(const std::string& id, const std::string& name, uint8_t worldId, const char* servicename);
+        Game(const std::string& id,const std::string& name,uint8_t worldId,const char* servicename,const PlayerConfig& playerConfig = {});
 
         const std::string& getId() const;
         std::string getName() const;
@@ -54,6 +61,7 @@ class Game:public Thread {
         GameSession createGame(const CreateGameDTO& dto,const std::shared_ptr<OutQueue>& output);
         GameSession joinGame(const JoinGameDTO& dto,const std::shared_ptr<OutQueue>& output);
         bool loadDungeon(uint8_t selectedWorldId,const std::map<uint8_t, DungeonRoomLayout>& layout);
+        bool configureDungeonEntrance(const DungeonEntrance& entrance);
 
         void run() override;
         void stop() override;

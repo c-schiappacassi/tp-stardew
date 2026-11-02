@@ -56,7 +56,8 @@ enum class TargetType : uint8_t {
     Animal = 2,
     Chest = 3,
     Bed = 4,
-    Ore,
+    Ore = 5,
+    DungeonPassage = 6
 };
 
 enum class PlayerState : uint8_t {

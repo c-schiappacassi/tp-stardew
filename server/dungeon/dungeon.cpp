@@ -2,6 +2,8 @@
 #include "player/player.h"
 #include "entities/entity_id_generator.h"
 #include <utility>
+#include <cmath>
+#include <limits>
 
 Dungeon::Dungeon(const DungeonConfig& config, uint32_t seed):config(config), generator(seed) {
     for (uint8_t number = 1; number <= DUNGEON_ROOM_COUNT; ++number) {
@@ -94,7 +96,7 @@ bool Dungeon::mineMineral(Player& player,EntityId mineralId,std::chrono::steady_
         return false;
     }
 
-    DungeonRoom* room = findRoom(player.getDungeonLevel());
+    DungeonRoom* room =findRoom(player.getDungeonLevel());
     if (room == nullptr) {
         return false;
     }
@@ -104,9 +106,10 @@ bool Dungeon::mineMineral(Player& player,EntityId mineralId,std::chrono::steady_
         return false;
     }
 
-    if (!player.canReach(mineral->getPosition(), config.miningRange)) {
+    if (!player.canReach(mineral->getPosition(),config.miningRange) ||!room->hasClearLine(player.getPosition(),mineral->getPosition())) {
         return false;
     }
+    player.faceTarget(mineral->getPosition());
 
     if (!player.useTool(now)) {
         return false;
@@ -116,7 +119,7 @@ bool Dungeon::mineMineral(Player& player,EntityId mineralId,std::chrono::steady_
         return true;
     }
 
-    const auto reward = rollMiningReward(mineral->getType());
+    const auto reward =rollMiningReward(mineral->getType());
     if (reward.has_value()) {
         //si la recompensa no entra se pierde
         player.addItem(*reward);
@@ -185,4 +188,133 @@ bool Dungeon::initialize(const std::map<uint8_t, DungeonRoomLayout>& layout,Enti
     entityIds = preparedIds;
 
     return true;
+}
+
+std::optional<MineData> Dungeon::getMineData(uint8_t roomNumber,bool includeBroken) const {
+    const DungeonRoom* room = findRoom(roomNumber);
+    if (!room || !room->getPassages()) {
+        return std::nullopt;
+    }
+    MineData data;
+    data.current_level = roomNumber;
+    LevelData& level = data.current_level_data;
+    const auto& passages = *room->getPassages();
+
+    level.entry = passages.entry;
+    level.exit = passages.exit;
+    level.nextRoom = passages.nextRoom;
+
+    level.minerals.reserve(room->getMinerals().size());
+
+    for (const auto& [id, mineral] : room->getMinerals()) {
+        if (includeBroken || !mineral.isDepleted()) {
+            level.minerals.push_back(mineral.getPublicData());
+        }
+    }
+
+    return data;
+}
+
+bool Dungeon::enter(Player& player) {
+    if (player.getZone() == Zone::Dungeon ||!player.canAct()) {
+        return false;
+    }
+
+    const DungeonRoom* first = findRoom(1);
+
+    if (!first ||!first->getPassages() ||!first->canWalk(first->getPassages()->entry)) {
+        return false;
+    }
+
+    return player.changeLocation(Zone::Dungeon,1,first->getPassages()->entry);
+}
+
+bool Dungeon::advanceRoom(Player& player) {
+    if (player.getZone() != Zone::Dungeon ||!player.canAct()) {
+        return false;
+    }
+
+    const DungeonRoom* room =findRoom(player.getDungeonLevel());
+
+    if (!room ||!room->getPassages()||!room->getPassages()->nextRoom) {
+        return false;
+    }
+
+    if (!room->getMap().sameCell(player.getPosition(),*room->getPassages()->nextRoom)) {
+        return false;
+    }
+
+    const DungeonRoom* next =findRoom(player.getDungeonLevel() + 1);
+
+    if (!next ||!next->getPassages()||!next->canWalk(next->getPassages()->entry)) {
+        return false;
+    }
+
+    return player.changeLocation(Zone::Dungeon,next->getNumber(),next->getPassages()->entry);
+}
+
+bool Dungeon::canExit(const Player& player) const {
+    if (player.getZone() != Zone::Dungeon ||!player.canAct()) {
+        return false;
+    }
+
+    const DungeonRoom* room =findRoom(player.getDungeonLevel());
+
+    return room &&room->getPassages() &&room->getMap().sameCell(player.getPosition(),room->getPassages()->exit);
+}
+
+bool Dungeon::useSelectedItem(Player& player,std::chrono::steady_clock::time_point now) {
+    if (player.getZone() != Zone::Dungeon||!player.canUsePickaxe(now)) {
+        return false;
+    }
+
+    DungeonRoom* room =findRoom(player.getDungeonLevel());
+    if (!room) {
+        return false;
+    }
+
+    EntityId chosen = 0;
+    double nearest =std::numeric_limits<double>::max();
+
+    for (const auto& [id, mineral] : room->getMinerals()) {
+        if (mineral.isDepleted()) {
+            continue;
+        }
+        if (!player.canReach(mineral.getPosition(),config.miningRange)) {
+            continue;
+        }
+        if (!room->hasClearLine(player.getPosition(),mineral.getPosition())) {
+            continue;
+        }
+
+        const double dx =static_cast<double>(mineral.getPosition().getX()) -player.getPosition().getX();
+        const double dy =static_cast<double>(mineral.getPosition().getY()) -player.getPosition().getY();
+        bool ahead = false;
+        switch (player.getPublicData().dir) {
+            case Direction::Up:
+                ahead = dy < 0 && std::abs(dx) <= -dy;
+                break;
+
+            case Direction::Down:
+                ahead = dy > 0 && std::abs(dx) <= dy;
+                break;
+
+            case Direction::Left:
+                ahead = dx < 0 && std::abs(dy) <= -dx;
+                break;
+
+            case Direction::Right:
+                ahead = dx > 0 && std::abs(dy) <= dx;
+                break;
+
+            default:
+                break;
+        }
+        const double distance = dx * dx + dy * dy;
+        if (ahead && distance < nearest) {
+            nearest = distance;
+            chosen = id;
+        }
+    }
+    return chosen != 0 &&mineMineral(player, chosen, now);
 }

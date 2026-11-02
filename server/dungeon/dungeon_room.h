@@ -39,4 +39,5 @@ public:
     void removeBrokenMinerals();
     bool setPassages(const DungeonRoomPassages& data);
     const std::optional<DungeonRoomPassages>& getPassages() const;
+    bool hasClearLine(const Position& from,const Position& target) const;
 };

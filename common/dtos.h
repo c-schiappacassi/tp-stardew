@@ -6,6 +6,7 @@
 #include <vector>
 #include <stdexcept>
 #include <map>
+#include <optional>
 
 #include "protocol_types.h"
 #include "position.h"
@@ -60,6 +61,19 @@ struct MineralData {
     Position pos{0, 0};
     ResourceType type = ResourceType::CoalRock;
     MineralState state = MineralState::Intact;
+};
+
+struct LevelData {
+    Position entry{0, 0};
+    Position exit{0, 0};
+    std::optional<Position> nextRoom;
+
+    std::vector<MineralData> minerals;
+};
+
+struct MineData {
+    uint8_t current_level = 0;
+    LevelData current_level_data;
 };
 
 // COMMAND_DTO CON HERENCIA
@@ -159,6 +173,14 @@ struct DisconnectDTO : public CommandDTO {
     explicit DisconnectDTO(const std::string& name) : CommandDTO(name) {}
 };
 
+struct SelectItemDTO : public CommandDTO {
+    uint8_t itemSlot = 0;
+
+    MessageType type() const override { return MessageType::SelectItem;}
+
+    explicit SelectItemDTO(const std::string& name):CommandDTO(name) {}
+};
+
 // SERVIDOR -> CLIENTE
 
 // seguir completando server status
@@ -174,15 +196,4 @@ struct ServerStatus {
     std::optional<MineData> mine;
 };
 
-struct LevelData {
-    Position entry{0, 0};
-    Position exit{0, 0};
-    std::optional<Position> nextRoom;
-    std::vector<MineralData> minerals;
-};
-
-struct MineData {
-    uint8_t current_level;
-    LevelData current_level_data;
-};
 

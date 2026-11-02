@@ -2,6 +2,7 @@
 
 #include <cstddef>
 #include <stdexcept>
+#include <queue>
 
 ZoneMap::ZoneMap(const std::vector<std::vector<bool>>& walkableTiles,int cellSize):walkableTiles(walkableTiles),cellSize(cellSize) {
     if (cellSize <= 0) {
@@ -64,4 +65,48 @@ std::optional<ZoneMap::Cell> ZoneMap::cellAt(
         pos.getY()/cellSize,
         pos.getX()/cellSize
     };
+}
+
+bool ZoneMap::hasPath(const Position& from, const Position& to) const {
+    if (!isWalkable(from) || !isWalkable(to)) {
+        return false;
+    }
+
+    const Cell start = *cellAt(from);
+    const Cell goal = *cellAt(to);
+    std::vector<std::vector<bool>> visited(walkableTiles.size(),std::vector<bool>(walkableTiles.front().size(), false));
+    std::queue<Cell> pending;
+    pending.push(start);
+    visited[start.first][start.second] = true;
+
+    constexpr Cell directions[] = {
+        {-1, 0}, {1, 0}, {0, -1}, {0, 1}
+    };
+
+    while (!pending.empty()) {
+        const Cell current = pending.front();
+        pending.pop();
+
+        if (current == goal) {
+            return true;
+        }
+
+        for (const auto& [dr, dc] : directions) {
+            const int row = current.first + dr;
+            const int col = current.second + dc;
+
+            if (row < 0 || col < 0 ||static_cast<std::size_t>(row) >= walkableTiles.size() ||static_cast<std::size_t>(col) >= walkableTiles.front().size()) {
+                continue;
+            }
+
+            if (!walkableTiles[row][col] || visited[row][col]) {
+                continue;
+            }
+
+            visited[row][col] = true;
+            pending.emplace(row, col);
+        }
+    }
+
+    return false;
 }

@@ -21,4 +21,5 @@ public:
     bool contains(const Position& pos) const;
     bool isWalkable(const Position& pos) const;
     bool sameCell(const Position& first, const Position& second) const;
+    bool hasPath(const Position& from, const Position& to) const;
 };
