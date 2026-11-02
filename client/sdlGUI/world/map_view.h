@@ -1,26 +1,53 @@
 #pragma once
+
 #include <map>
 #include <memory>
-#include <optional>
+#include <vector>
 
 #include "zone_view.h"
 #include "protocol_types.h"
+#include "mines/mine_view.h"
 
-class MapView: public ZoneView {
+class MapView : public ZoneView {
 private:
     Zone current = Zone::Farm;
+    MinesView mines;
     std::map<Zone, std::unique_ptr<ZoneView>> zones;
 
+    ZoneView* current_view() {
+        if (current == Zone::Dungeon) return &mines;
+        const auto it = zones.find(current);
+        return it == zones.end() ? nullptr : it->second.get();
+    }
+
+    const ZoneView* current_view() const {
+        if (current == Zone::Dungeon) return &mines;
+        const auto it = zones.find(current);
+        return it == zones.end() ? nullptr : it->second.get();
+    }
+
 public:
-    void update(const State& data);
-    void draw_background(const RenderInfo& ctx) override;
-    void collect_drawables(const RenderInfo& ctx, std::vector<Drawable>& out) override;
+    void update(const State& data) {
+        const PlayerData& local = data.get_local();
+        current = local.zone;
+        if (current == Zone::Dungeon) {
+            const auto it = data.get_dungeon_minerals().find(local.dungeonLevel);
+            static const std::vector<MineralData> empty;
+            mines.update(local.dungeonLevel,
+                         it == data.get_dungeon_minerals().end() ? empty : it->second);
+        }
+    }
+
+    void draw_background(const RenderInfo& ctx) override {
+        if (ZoneView* view = current_view()) view->draw_background(ctx);
+    }
+
+    void collect_drawables(const RenderInfo& ctx, std::vector<Drawable>& out) override {
+        if (ZoneView* view = current_view()) view->collect_drawables(ctx, out);
+    }
 
     std::optional<ClickTarget> pick_target(int world_x, int world_y) const override {
-        auto it = zones.find(current);
-        if (it == zones.end()) {
-            return std::nullopt;
-        }
-        return it->second->pick_target(world_x, world_y);
+        const ZoneView* view = current_view();
+        return view ? view->pick_target(world_x, world_y) : std::nullopt;
     }
 };

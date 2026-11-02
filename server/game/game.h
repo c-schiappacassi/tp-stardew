@@ -37,6 +37,7 @@ class Game:public Thread {
         PlayerConfig playerConfig;
         std::optional<DungeonEntrance> dungeonEntrance;
 
+        void selectSlot(uint16_t playerId, uint8_t slot);
         void disconnectPlayer(uint16_t playerId);
         void movePlayer(uint16_t playerId, const MoveDTO& move);
         void processCommands();

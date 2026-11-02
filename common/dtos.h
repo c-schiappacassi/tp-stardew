@@ -5,6 +5,7 @@
 #include <variant>
 #include <vector>
 #include <stdexcept>
+#include <unordered_map>
 #include <map>
 #include <optional>
 
@@ -179,6 +180,13 @@ struct SelectItemDTO : public CommandDTO {
     MessageType type() const override { return MessageType::SelectItem;}
 
     explicit SelectItemDTO(const std::string& name):CommandDTO(name) {}
+}
+
+struct SelectSlotDTO : public CommandDTO {
+    uint8_t slot = 0;
+
+    MessageType type() const override { return MessageType::SelectSlot; }
+    explicit SelectSlotDTO(const std::string& name) : CommandDTO(name) {}
 };
 
 // SERVIDOR -> CLIENTE

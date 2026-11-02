@@ -12,17 +12,15 @@
 class HotbarView {
 private:
     std::map<uint8_t, Stack> items;
-    SpriteId hud_sprite_sheet;
     uint8_t current_slot = 0;
+    uint8_t capacity = 9;
 
-    void draw_bar(const RenderInfo& ctx, const SDL2pp::Rect& dest, int s);
-    void drawStack(const RenderInfo& ctx, const Stack& stack, const SDL2pp::Point& slot_pos, int slot_px, int s);
-    void draw_slot_label(const RenderInfo& ctx, uint8_t slot, const SDL2pp::Point& slot_pos, int s);
+    void draw_slot(const RenderInfo& ctx, uint8_t slot, const SDL2pp::Point& pos, int u);
+    void draw_stack(const RenderInfo& ctx, const Stack& stack, const SDL2pp::Point& pos, int u);
 
 public:
-    explicit HotbarView(): hud_sprite_sheet(SpriteId::InGameUI) {}
+    HotbarView() = default;
 
     void update(const PlayerDataLocal& local);
-
     void draw(const RenderInfo& ctx);
 };

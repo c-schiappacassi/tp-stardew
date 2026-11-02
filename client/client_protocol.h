@@ -17,6 +17,7 @@ private:
     Color receiveColor();
 
     Stack receiveStack();
+    MineralData receiveMineral();
 
     PlayerData receivePlayerData();
     PlayerDataLocal receivePlayerDataLocal();
@@ -28,7 +29,7 @@ public:
     explicit ClientProtocol(Socket& socket);
 
     void send(const CommandDTO& dto);
-
+    void send(const SelectSlotDTO& dto);
     void send(const CreateGameDTO& dto);
     void send(const JoinGameDTO& dto);
     void send(const ResumeGameDTO& dto);

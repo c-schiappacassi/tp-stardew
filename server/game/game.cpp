@@ -33,6 +33,16 @@ std::shared_ptr<CommandQueue> Game::getInputQueue() const {
     return input;
 }
 
+void Game::selectSlot(uint16_t playerId, uint8_t slot) {
+    std::lock_guard<std::mutex> lock(mtx);
+
+    auto it = players.find(playerId);
+    if (it == players.end() || !it->second.connected) {
+        return;
+    }
+    it->second.player.selectSlot(slot);
+}
+
 GameSession Game::createGame(const CreateGameDTO& dto,const std::shared_ptr<OutQueue>& output) {
     std::lock_guard<std::mutex> lock(mtx);
     GameSession session{};
@@ -104,9 +114,11 @@ GameSession Game::addPlayer(const std::string& playerName,const PlayerData& data
 
     const uint16_t playerId = nextPlayerId;
     PlayerData spawn = data;
-    spawn.pos = Position(SPAWN_X, SPAWN_Y);
-    spawn.zone = Zone::Farm;
-    spawn.dungeonLevel = 0;
+
+    // TODO: temporal, hasta que haya transicion Farm -> Mines
+    spawn.pos = Position(48, 48);
+    spawn.zone = Zone::Dungeon;
+    spawn.dungeonLevel = 1;
 
     std::mt19937 generator(std::random_device{}());
     std::uniform_int_distribution<uint32_t> goldDistribution(0, 100);
@@ -374,41 +386,17 @@ void Game::processCommands() {
         if (!command.command) {
             continue;
         }
-        switch (command.command->type()) {
-            case MessageType::Move:
-                movePlayer(
-                    command.playerId,
-                    static_cast<const MoveDTO&>(
-                        *command.command));
-                break;
-
-            case MessageType::SelectItem:
-                selectPlayerSlot(
-                    command.playerId,
-                    static_cast<const SelectItemDTO&>(
-                        *command.command).itemSlot);
-                break;
-
-            case MessageType::UseItem:
-                usePlayerItem(
-                    command.playerId,
-                    static_cast<const UseItemDTO&>(
-                        *command.command).itemSlot);
-                break;
-
-            case MessageType::Interact:
-                interactPlayer(
-                    command.playerId,
-                    static_cast<const InteractDTO&>(
-                        *command.command));
-                break;
-
-            case MessageType::ExitGame:
-                disconnectPlayer(command.playerId);
-                break;
-
-            default:
-                break;
+        if (command.command->type() == MessageType::Move) {
+            const MoveDTO& move = static_cast<const MoveDTO&>(*command.command);
+            movePlayer(command.playerId, move);
+        } else if (command.command->type() == MessageType::ExitGame) {
+            disconnectPlayer(command.playerId);
+        } else if (command.command->type() == MessageType::SelectSlot) {
+            const SelectSlotDTO& sel = static_cast<const SelectSlotDTO&>(*command.command);
+            selectSlot(command.playerId, sel.slot);
+        } else if (command.command->type() == MessageType::Interact) {
+            const InteractDTO& interact = static_cast<const InteractDTO&>(*command.command);
+            if (interact.targetType == TargetType::Ore) {mineMineral(command.playerId, interact.targetId);}
         }
     }
 }

@@ -71,6 +71,17 @@ private:
         }
     }
 
+    // TODO: por ahora hardcode la cant de slots que puede tener el el jugador a 9
+    void bind_hotbar() {
+        for (int i = 0; i < 9; ++i) {
+            bind(SDL_KEYDOWN, SDLK_1 + i, [this, i](const SDL_Event&, Out& out) {
+                auto dto = std::make_shared<SelectSlotDTO>(player_name);
+                dto->slot = static_cast<uint8_t>(i);
+                out.push_back(dto);
+            });
+        }
+    }
+
     void bind_mouse() {
         bind(SDL_MOUSEBUTTONDOWN, SDL_BUTTON_LEFT, [this](const SDL_Event& e, Out& out) {
             if (auto target = pick(e.button.x, e.button.y)) {
@@ -98,6 +109,7 @@ public:
             player_name(std::move(name)), pick(std::move(picker)) {
         bind_system();
         bind_movement();
+        bind_hotbar();
         bind_mouse();
     }
 

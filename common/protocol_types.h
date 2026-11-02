@@ -19,6 +19,7 @@ enum class MessageType : uint8_t {
     DayOk = 0x16,
     Donate = 0x17,       // para completar las misiones
     ItemTransfer = 0x18, // inventario a cofre
+    SelectSlot = 0x19,
 
     Status = 0x80,
     GameList = 0x81,

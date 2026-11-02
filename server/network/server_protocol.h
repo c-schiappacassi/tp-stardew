@@ -18,6 +18,8 @@ private:
 
     void sendStack(const Stack& stack);
 
+    void sendMineral(const MineralData& mineral);
+
     void sendPlayerData(const PlayerData& data);
     void sendPlayerDataLocal(const PlayerDataLocal& localData);
     
@@ -28,7 +30,7 @@ public:
     explicit ServerProtocol(Socket& socket);
 
     MessageType receiveType();
-
+    SelectSlotDTO receiveSelectSlot();
     CreateGameDTO receiveCreateGame();
     JoinGameDTO receiveJoinGame();
     ResumeGameDTO receiveResumeGame();

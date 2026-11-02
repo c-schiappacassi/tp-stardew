@@ -1,10 +1,10 @@
 #pragma once
-#include <compare>
 #include <cstdint>
 #include <optional>
 #include <string>
 #include <variant>
 #include <vector>
+#include <tuple>
 
 #include <SDL2pp/SDL2pp.hh>
 
@@ -13,6 +13,19 @@
 #include "protocol_types.h"
 
 #define TILE_TO_PIXEL 16
+
+enum class SpriteId : uint16_t {
+    FarmerBase,
+    Hairstyles,
+    Pants,
+    Shirts,
+    Tools,
+    Clock,
+    InGameUI,
+    Ores,
+    MenuTiles,
+};
+
 
 struct Drawable {
     float depth;
@@ -43,25 +56,24 @@ struct Clip {
     bool loop = false;
 };
 
+
+using Action = std::variant<PlayerState, AnimalState, EnemyState>;
+
 struct ClipId {
     SpriteId sprite_id;
     Action action;
     Direction direction;
 
-    auto operator<=>(const ClipId&) const = default;
-};
+    bool operator<(const ClipId& other) const {
+        return std::tie(sprite_id, action, direction) <
+               std::tie(other.sprite_id, other.action, other.direction);
+    }
 
-using Action = std::variant<PlayerState, AnimalState, EnemyState>;
-
-enum class SpriteId : uint16_t {
-    FarmerBase,
-    Hairstyles,
-    Pants,
-    Shirts,
-    Tools,
-    Clock,
-    InGameUI,
-    Ores
+    bool operator==(const ClipId& other) const {
+        return sprite_id == other.sprite_id &&
+               action == other.action &&
+               direction == other.direction;
+    }
 };
 
 struct Sound{

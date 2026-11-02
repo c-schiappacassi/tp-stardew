@@ -52,6 +52,19 @@ void ServerProtocol::sendPlayerData(const PlayerData& data) {
     sendColor(data.pantsColor);
 }
 
+SelectSlotDTO ServerProtocol::receiveSelectSlot() {
+    SelectSlotDTO dto(base.receiveString());
+    dto.slot = base.receiveUint8();
+    return dto;
+}
+
+void ServerProtocol::sendMineral(const MineralData& mineral) {
+    base.sendUint32(mineral.id);
+    sendPosition(mineral.pos);
+    base.sendUint8(static_cast<uint8_t>(mineral.type));
+    base.sendUint8(static_cast<uint8_t>(mineral.state));
+}
+
 void ServerProtocol::sendPlayerDataLocal(const PlayerDataLocal& localData) {
     sendPlayerData(localData);
 
@@ -176,5 +189,16 @@ void ServerProtocol::sendStatus(const ServerStatus& status) {
     }
 
     sendPlayerDataLocal(status.localPlayer);
+<<<<<<< HEAD
+    base.sendUint8(static_cast<uint8_t>(status.dungeonMinerals.size()));
+    for (const auto& [level, minerals] : status.dungeonMinerals) {
+        base.sendUint8(level);
+        base.sendUint16(static_cast<uint16_t>(minerals.size()));
+        for (const MineralData& mineral : minerals) {
+            sendMineral(mineral);
+        }
+    }
+=======
     sendDungeonMinerals(status.dungeonMinerals);
+>>>>>>> 25fa9e80bf60aee81d248bde64d822df4c1b6498
 }

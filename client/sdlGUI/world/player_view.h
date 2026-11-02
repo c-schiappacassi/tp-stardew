@@ -23,12 +23,12 @@ constexpr int BODY_REGION_W = 96;
 constexpr int FEET_Y = 30;
 constexpr int HAIR_PER_ROW = 16;
 constexpr int HAIR_BLOCK_H = 96;
-constexpr int HAIR_ABOVE_HEAD = 4;
+constexpr int HAIR_ABOVE_HEAD = 1;
 constexpr int SHIRT_SIZE = 8;
 constexpr int SHIRTS_PER_ROW = 16;
 constexpr int SHIRT_BLOCK_H = 32;
 constexpr int SHIRT_X = 4;
-constexpr int SHIRT_BELOW_HEAD = 10;
+constexpr int SHIRT_BELOW_HEAD = 15;
 constexpr int PANTS_BLOCK_W = 192;
 constexpr int PANTS_BLOCK_H = 688;
 constexpr int PANTS_PER_ROW = 10;
@@ -67,7 +67,7 @@ public:
     void update(const PlayerData& data);
 
     // Devuelve nullopt si el jugador está fuera de la cámara.
-    std::optional<float> depth(const RenderInfo& ctx) const;
+    std::optional<float> depth(const RenderInfo& ctx) const override;
 
-    void draw(const RenderInfo& ctx);
+    void draw(const RenderInfo& ctx) override;
 };

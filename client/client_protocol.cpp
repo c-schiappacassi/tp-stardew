@@ -76,31 +76,6 @@ PlayerDataLocal ClientProtocol::receivePlayerDataLocal() {
     return localData;
 }
 
-MineralData ClientProtocol::receiveMineralData() {
-    MineralData mineral;
-    mineral.id = base.receiveUint32();
-    mineral.pos = receivePosition();
-    mineral.type = static_cast<ResourceType>(base.receiveUint8());
-    mineral.state = static_cast<MineralState>(base.receiveUint8());
-    return mineral;
-}
-
-std::map<uint8_t, std::vector<MineralData>> ClientProtocol::receiveDungeonMinerals() {
-    std::map<uint8_t, std::vector<MineralData>> dungeonMinerals;
-    uint8_t roomCount = base.receiveUint8();
-    for (uint8_t i = 0; i < roomCount; ++i) {
-        uint8_t roomNumber = base.receiveUint8();
-        uint16_t mineralCount = base.receiveUint16();
-        std::vector<MineralData> minerals;
-        minerals.reserve(mineralCount);
-        for (uint16_t j = 0; j < mineralCount; ++j) {
-            minerals.push_back(receiveMineralData());
-        }
-        dungeonMinerals[roomNumber] = std::move(minerals);
-    }
-    return dungeonMinerals;
-}
-
 // SENDERS
 
 void ClientProtocol::send(const CommandDTO& dto) {
@@ -113,9 +88,9 @@ void ClientProtocol::send(const CommandDTO& dto) {
         case MessageType::Donate: send(static_cast<const DonateDTO&>(dto)); break;
         case MessageType::Chat: send(static_cast<const ChatDTO&>(dto)); break;
         case MessageType::UseItem: send(static_cast<const UseItemDTO&>(dto)); break;
-        case MessageType::MultiplayerCode:
-            send(static_cast<const RequestMultiplayerCodeDTO&>(dto)); break;
+        case MessageType::MultiplayerCode: send(static_cast<const RequestMultiplayerCodeDTO&>(dto)); break;
         case MessageType::ExitGame: send(static_cast<const DisconnectDTO&>(dto)); break;
+        case MessageType::SelectSlot: send(static_cast<const SelectSlotDTO&>(dto)); break;
         default: throw std::invalid_argument("ClientProtocol: unsupported command");
     }
 }
@@ -192,6 +167,12 @@ void ClientProtocol::send(const DisconnectDTO& dto) {
     base.sendString(dto.playerName);
 }
 
+void ClientProtocol::send(const SelectSlotDTO& dto) {
+    base.sendUint8(static_cast<uint8_t>(MessageType::SelectSlot));
+    base.sendString(dto.playerName);
+    base.sendUint8(dto.slot);
+}
+
 // RECEIVERS
 
 void ClientProtocol::recv(ServerStatus& status) {
@@ -210,5 +191,4 @@ void ClientProtocol::recv(ServerStatus& status) {
     }
 
     status.localPlayer = receivePlayerDataLocal();
-    status.dungeonMinerals = receiveDungeonMinerals();
 }
