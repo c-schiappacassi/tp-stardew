@@ -33,8 +33,10 @@ public:
     UseItemDTO receiveUseItem();
     RequestMultiplayerCodeDTO receiveRequestMultiplayerCode();
     DisconnectDTO receiveDisconnect();
+    RequestGameListDTO receiveRequestGameList();
 
     void sendStatus(const ServerStatus& status);
+    void sendGameList(const GameListDTO& dto);
 };
 
 #endif

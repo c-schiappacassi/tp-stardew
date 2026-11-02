@@ -24,6 +24,7 @@ struct Color{
 };
 
 struct PlayerData{
+    std::string characterName;
     Position pos{0,0};
     PlayerState state{PlayerState::Idle};
     Direction dir{Direction::None};
@@ -37,11 +38,11 @@ struct PlayerData{
 // COMMAND_DTO CON HERENCIA
 
 struct CommandDTO {
-    std::string playerName;
+    std::string userName;
 
-    explicit CommandDTO(std::string name) : playerName(std::move(name)) {
-        if (playerName.empty()) {
-            throw std::invalid_argument("playerName no puede estar vacio");
+    explicit CommandDTO(std::string name) : userName(std::move(name)) {
+        if (userName.empty()) {
+            throw std::invalid_argument("userName no puede estar vacio");
         }
     }
     virtual ~CommandDTO() = default;
@@ -51,6 +52,7 @@ struct CommandDTO {
 // CLIENTE -> SERVIDOR
 
 struct CreateGameDTO : public CommandDTO {
+    std::string characterName;
     std::string gameName;
     uint8_t worldId;
     uint16_t hairModel = 0;
@@ -64,6 +66,7 @@ struct CreateGameDTO : public CommandDTO {
 };
 
 struct JoinGameDTO : public CommandDTO {
+    std::string characterName;
     std::string code;
     uint16_t hairModel = 0;
     uint16_t shirtModel = 0;
@@ -127,38 +130,21 @@ struct RequestMultiplayerCodeDTO : public CommandDTO {
 };
 
 struct DisconnectDTO : public CommandDTO {
+
     MessageType type() const override { return MessageType::ExitGame; }
     explicit DisconnectDTO(const std::string& name) : CommandDTO(name) {}
 };
 
+struct RequestGameListDTO : public CommandDTO {
+
+    MessageType type() const override { return MessageType::ListGames; }
+    explicit RequestGameListDTO(const std::string& name) : CommandDTO(name) {}
+};
+
+
 // DEBERIAMOS VOLARLOS:
 /*
-
-struct GameInfoDTO {
-    uint16_t id;
-    std::string gameName;
-    std::string playerName;
-    uint8_t skin;
-    bool isMultiplayer; // tal vez false deberia ser el default bool isMultiplayer{false};
-};
-
-struct GameListDTO {
-    std::vector<GameInfoDTO> games;
-};
-
-struct GameJoinedDTO {
-    std::string gameId;
-    uint16_t playerId;
-    uint8_t worldId;
-};
-
-struct StatusDTO {
-    StatusCode status;
-    std::string errorMsg;
-    std::string successMsg;
-};
-*/
-
+ *
 // SERVIDOR -> CLIENTE
 
 // TODO: seguir completando server status
@@ -190,7 +176,7 @@ struct ServerStatus {
 
     // y esta es una idea para pasar todos los datos en vectores donde la posicion siempre corresponde a un mismo jugador
     std::vector<uint16_t> playerIds;
-    std::vector<std::string> playerNames;
+    std::vector<std::string> userNames;
     std::vector<uint8_t> playerSkins;
     std::vector<Position> playerPositions;
     std::vector<uint16_t> playerHealths;
@@ -202,3 +188,17 @@ struct ServerStatus {
     std::vector<std::string> chatTexts;
 };
 */
+
+// SERVIDOR --> CLIENTE
+// habria que ver si esto por ser qt se tiene que enviar "suelto" o dentro del server status"
+
+struct GameInfoDTO {
+    uint16_t id = 0;
+    std::string farmName;
+    PlayerData playerData;
+    bool isMultiplayer = false;
+};
+
+struct GameListDTO {
+    std::vector<GameInfoDTO> games;
+};

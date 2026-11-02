@@ -34,6 +34,7 @@ void ServerProtocol::sendColor(const Color& color) {
 }
 
 void ServerProtocol::sendPlayerData(const PlayerData& data) {
+    base.sendString(data.characterName);
     sendPosition(data.pos);
     base.sendUint8(static_cast<uint8_t>(data.state));
     base.sendUint8(static_cast<uint8_t>(data.dir));
@@ -48,6 +49,7 @@ void ServerProtocol::sendPlayerData(const PlayerData& data) {
 
 CreateGameDTO ServerProtocol::receiveCreateGame() {
     CreateGameDTO dto(base.receiveString());
+    dto.characterName = base.receiveString();
     dto.gameName = base.receiveString();
     dto.worldId = base.receiveUint8();
     dto.hairModel = base.receiveUint16();
@@ -60,6 +62,7 @@ CreateGameDTO ServerProtocol::receiveCreateGame() {
 
 JoinGameDTO ServerProtocol::receiveJoinGame() {
     JoinGameDTO dto(base.receiveString());
+    dto.characterName = base.receiveString();
     dto.code = base.receiveString();
     dto.hairModel = base.receiveUint16();
     dto.shirtModel = base.receiveUint16();
@@ -116,6 +119,10 @@ DisconnectDTO ServerProtocol::receiveDisconnect() {
     return DisconnectDTO(base.receiveString());
 }
 
+RequestGameListDTO ServerProtocol::receiveRequestGameList() {
+    return RequestGameListDTO(base.receiveString());
+}
+
 // SENDERS
 
 void ServerProtocol::sendStatus(const ServerStatus& status) {
@@ -130,5 +137,15 @@ void ServerProtocol::sendStatus(const ServerStatus& status) {
     for (const auto& [name, data] : status.players) {
         base.sendString(name);
         sendPlayerData(data);
+    }
+}
+
+void ServerProtocol::sendGameList(const GameListDTO& dto) {
+    base.sendUint16(static_cast<uint16_t>(dto.games.size()));
+    for (const GameInfoDTO& game : dto.games) {
+        base.sendUint16(game.id);
+        base.sendString(game.farmName);
+        sendPlayerData(game.playerData);
+        base.sendUint8(game.isMultiplayer ? 1 : 0);
     }
 }

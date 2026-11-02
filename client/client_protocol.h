@@ -18,7 +18,10 @@ private:
 
     PlayerData receivePlayerData();
 
-
+public:
+    explicit ClientProtocol(Socket& socket);
+    void send(const CommandDTO& dto);
+    void send(const CreateGameDTO& dto);
     void send(const JoinGameDTO& dto);
     void send(const ResumeGameDTO& dto);
     void send(const MoveDTO& dto);
@@ -28,13 +31,9 @@ private:
     void send(const UseItemDTO& dto);
     void send(const RequestMultiplayerCodeDTO& dto);
     void send(const DisconnectDTO& dto);
-
-public:
-    explicit ClientProtocol(Socket& socket);
-    void send(const CommandDTO& dto);
-    void send(const CreateGameDTO& dto);
-
+    void send(const RequestGameListDTO& dto);
 
     void recv(ServerStatus& status);
+    GameListDTO receiveGameList();
 };
 
