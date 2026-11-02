@@ -43,7 +43,17 @@ MainWindow::MainWindow(NetworkManager& net, QWidget *parent) : QMainWindow(paren
         stack->setCurrentWidget(joinScreen);
     });
     connect(startMenu, &StartMenuScreen::loadGameRequested, this, [this, loadScreen]() {
+        loadScreen->setGames(games);
         stack->setCurrentWidget(loadScreen);
+    });
+
+    connect(loadScreen, &LoadScreen::resumeRequested, this, [this](uint16_t gameId) {
+        ResumeGameDTO dto(username);
+        dto.gameId = gameId;
+        const ServerStatus reply = send(dto);
+        if (reply.status == StatusCode::Ok) {
+            //emppieza la partida (conectar con sdl)
+        }
     });
     connect(startMenu, &StartMenuScreen::newGameRequested, this, [this, newGameScreen]() {
         stack->setCurrentWidget(newGameScreen);
