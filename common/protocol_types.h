@@ -8,7 +8,8 @@ enum class MessageType : uint8_t {
     ListGames = 0x03,  // lo usamos para cuando hay que retomar una partida
     ResumeGame = 0x04, // llamamos a todas las partidas y vemos si entre ellas
                        // esta la aprtida a la que nos queremos reunir
-    ExitGame = 0x05,
+    CheckCode = 0x05,
+    ExitGame = 0x06,
 
     Move = 0x10,
     SelectItem = 0x11,   // cofre a inventario
