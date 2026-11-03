@@ -7,19 +7,11 @@
 #include <utility>
 #include <stdexcept>
 
-<<<<<<< HEAD:server/game_manager.cpp
 
 GameSession GameManager::createGame(const CreateGameDTO& dto,
                                     const std::shared_ptr<OutQueue>& output) {
-=======
-std::string GameManager::createGame(const char* servicename,const GameSetup& setup) {
->>>>>>> feat/mining:server/game/game_manager.cpp
     std::lock_guard<std::mutex> lock(mtx);
     const std::string id = "game-" + std::to_string(nextId);
-<<<<<<< HEAD:server/game_manager.cpp
-    auto game = std::make_unique<Game>(id);
-    GameSession session = game->createGame(dto, output);
-=======
 
     auto game = std::make_unique<Game>(id,"",setup.worldId,servicename,setup.playerConfig,setup.dungeonConfig);
     if (!game->loadDungeon(setup.worldId, setup.layout)) {
@@ -31,7 +23,6 @@ std::string GameManager::createGame(const char* servicename,const GameSetup& set
     }
 
     games.push_back(std::move(game));
->>>>>>> feat/mining:server/game/game_manager.cpp
 
     if (session.status.status == StatusCode::Ok) {
         game->start();
