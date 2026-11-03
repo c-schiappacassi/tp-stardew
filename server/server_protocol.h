@@ -16,15 +16,21 @@ private:
     Color receiveColor();
     void sendColor(const Color& color);
 
-    void sendPlayerData(const PlayerData& data);
+    void sendStack(const Stack& stack);
 
-    void sendGameInfo(const GameInfoDTO& game);
+    void sendMineralData(const MineralData& mineral);
+    void sendLevelData(const LevelData& level);
+    void sendMineData(const MineData& mine);
+    void sendZoneData(const ZoneData& zoneData);
+
+    void sendPlayerData(const PlayerData& data);
+    void sendPlayerDataLocal(const PlayerDataLocal& localData);
 
 public:
     explicit ServerProtocol(Socket& socket);
 
     MessageType receiveType();
-
+    SelectSlotDTO receiveSelectSlot();
     CreateGameDTO receiveCreateGame();
     JoinGameDTO receiveJoinGame();
     ResumeGameDTO receiveResumeGame();
@@ -35,7 +41,6 @@ public:
     UseItemDTO receiveUseItem();
     RequestMultiplayerCodeDTO receiveRequestMultiplayerCode();
     DisconnectDTO receiveDisconnect();
-    RequestGameListDTO receiveRequestGameList();
 
     void sendStatus(const ServerStatus& status);
 };
