@@ -4,23 +4,22 @@
 #include <list>
 #include <memory>
 
-#include "client_handler.h"
-#include "game_manager.h"
 #include "socket.h"
 #include "thread.h"
 
+#include "client_handler.h"
 
 class Acceptor : public Thread {
 private:
-    Socket listenSocket;
-    GameManager& manager;
+    Socket& listenSocket;
+    Game& game;
     std::list<std::unique_ptr<ClientHandler>> clients;
 
     void reap();
     void clear();
 
 public:
-    Acceptor(const char* servername, GameManager& manager);
+    Acceptor(Socket& listenSocket, Game& game);
 
     void run() override;
     void stop() override;

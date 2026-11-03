@@ -1,143 +1,143 @@
 #include "client_handler.h"
 
 #include <iostream>
+#include <memory>
 #include <utility>
 
 #include <sys/socket.h>
 
 #include "game_manager.h"
+#include "liberror.h"
 #include "protocol_errors.h"
+#include "queue.h"
+
+
+template <typename DTO>
+ClientHandler::Receiver ClientHandler::receiver(DTO (ServerProtocol::*recv)()) {
+    return [this, recv]() { return std::make_shared<DTO>((protocol.*recv)()); };
+}
 
 ClientHandler::ClientHandler(Socket&& socket, GameManager& manager):
         socket(std::move(socket)),
         protocol(this->socket),
         manager(manager),
         outQueue(std::make_shared<OutQueue>()),
-        session() {}
+        session(),
+        sender() {
+    gameReceivers = {
+        {MessageType::Move,       receiver(&ServerProtocol::receiveMove)},
+        {MessageType::SelectSlot, receiver(&ServerProtocol::receiveSelectSlot)},
+        {MessageType::Interact,   receiver(&ServerProtocol::receiveInteract)},
+        {MessageType::UseItem,    receiver(&ServerProtocol::receiveUseItem)},
+        {MessageType::Donate,     receiver(&ServerProtocol::receiveDonate)},
+        {MessageType::Chat,       receiver(&ServerProtocol::receiveChat)},
+    };
+    menuActions = {
+        {MessageType::CreateGame, [this] { session = this->manager.createGame(protocol.receiveCreateGame(), outQueue); }},
+        {MessageType::JoinGame,   [this] { session = this->manager.joinGame(protocol.receiveJoinGame(), outQueue); }},
+        {MessageType::ResumeGame, [this] { session = this->manager.resumeGame(protocol.receiveResumeGame(), outQueue); }},
+    };
+    qtActions = {
+        {MessageType::ListGames, [this] {
+            const ListGamesDTO dto = protocol.receiveListGames();
+            qtStatus reply;
+            reply.status = StatusCode::Ok;
+            reply.games = this->manager.listGames(dto.userName);
+            protocol.sendQtStatus(reply);
+        }},
+        {MessageType::CheckCode, [this] {
+            const CheckCodeDTO dto = protocol.receiveCheckCode();
+            qtStatus reply;
+            reply.status = StatusCode::Ok;
+            if (!this->manager.codeExists(dto.code)) {
+                reply.status = StatusCode::Error;
+                reply.errorMsg = "codigo invalido";
+            }
+            protocol.sendQtStatus(reply);
+        }},
+    };
+}
 
 void ClientHandler::run() {
     try {
-        while (should_keep_running()) {
-            switch (protocol.receiveType()) {
-                case MessageType::CreateGame:
-                    handleCreate();
-                    break;
-                case MessageType::JoinGame:
-                    handleJoin();
-                    break;
-                case MessageType::ResumeGame:
-                    handleResume();
-                    break;
-                case MessageType::Move:
-                    handleMove();
-                    break;
-                case MessageType::ListGames:
-                    handleListGames();
-                    break;
-                case MessageType::CheckCode:
-                    handleCheckCode();
-                    break;
-                case MessageType::ExitGame:
-                    stop();
-                    break;
-                default:
-                    throw ProtocolError("unexpected message");
-            }
+        if (runMenu()) {
+            runGame();
         }
     } catch (const ConnectionClosed&) {
-    } catch (const std::exception& e) {
+    } catch (const ClosedQueue&) {
+    } catch (const LibError& e) {
         if (should_keep_running()) {
-            std::cerr << "ClientHandler error: " << e.what() << "\n";
+            std::cerr << "Socket error: " << e.what() << "\n";
         }
+    } catch (const std::exception& e) {
+        std::cerr << "Unexpected error: " << e.what() << "\n";
     }
     disconnect();
 }
 
-bool ClientHandler::inGame() const { return session.input != nullptr; }
+bool ClientHandler::runMenu() {
+    while (should_keep_running()) {
+        const auto type = protocol.receiveType();
+        if (type == MessageType::ExitGame) return false;
 
-void ClientHandler::handleCreate() {
-    CreateGameDTO dto = protocol.receiveCreateGame();
-    if (inGame()) {
-        throw ProtocolError("ya estas en una partida");
+        const auto query = queryActions.find(type);
+        if (query != queryActions.end()) {
+            query->second();
+            continue;
+        }
+
+        const auto it = menuActions.find(type);
+        if (it == menuActions.end()) throw ProtocolError("unexpected message");
+        it->second();
+        if (answerEntry()) return true;
     }
-    answer(manager.createGame(dto, outQueue));
+    return false;
 }
 
-void ClientHandler::handleJoin() {
-    JoinGameDTO dto = protocol.receiveJoinGame();
-    if (inGame()) {
-        throw ProtocolError("ya estas en una partida");
+void ClientHandler::runGame() {
+    sender = std::make_unique<ClientSender>(protocol, outQueue);
+    sender->start();
+
+    while (should_keep_running()) {
+        const auto type = protocol.receiveType();
+        if (type == MessageType::ExitGame) return;
+        const auto it = gameReceivers.find(type);
+        if (it == gameReceivers.end()) throw ProtocolError("unexpected message");
+        session.input->push(PlayerCommand{session.playerId, it->second()});
     }
-    answer(manager.joinGame(dto, outQueue));
 }
 
-void ClientHandler::handleResume() {
-    ResumeGameDTO dto = protocol.receiveResumeGame();
-    if (inGame()) {
-        throw ProtocolError("ya estas en una partida");
-    }
-    answer(manager.resumeGame(dto, outQueue));
-}
+bool ClientHandler::answerEntry() {
+    const bool joined = session.status.status == StatusCode::Ok && session.input;
+    protocol.sendStatus(session.status);
 
-void ClientHandler::handleMove() {
-    MoveDTO move = protocol.receiveMove();
-    if (!inGame()) {
-        throw ProtocolError("no estas en una partida");
+    if (!joined) {
+        session = GameSession();
     }
-    session.input->push(PlayerCommand{session.playerId, std::make_shared<MoveDTO>(move)});
-}
-
-void ClientHandler::handleListGames() {
-    ListGamesDTO dto = protocol.receiveListGames();
-    if (inGame()) {
-        throw ProtocolError("ya estas en una partida");
-    }
-    qtStatus status;
-    status.status = StatusCode::Ok;
-    status.games = manager.listGames(dto.userName);
-    protocol.sendQtStatus(status);
-}
-
-void ClientHandler::handleCheckCode() {
-    CheckCodeDTO dto = protocol.receiveCheckCode();
-    if (inGame()) {
-        throw ProtocolError("ya estas en una partida");
-    }
-    qtStatus status;
-    status.status = StatusCode::Ok;
-    if (!manager.codeExists(dto.code)) {
-        status.status = StatusCode::Error;
-        status.errorMsg = "codigo invalido";
-    }
-    protocol.sendQtStatus(status);
-}
-
-void ClientHandler::answer(const GameSession& result) {
-    protocol.sendStatus(result.status);
-    if (result.input) {
-        session = result;
-        sender = std::make_unique<ClientSender>(protocol, outQueue);
-        sender->start();
-    }
+    return joined;
 }
 
 void ClientHandler::stop() {
     Thread::stop();
     try {
         socket.shutdown(SHUT_RDWR);
-    } catch (const std::exception&) {}
+    } catch (const std::exception&) {
+    }
 }
 
 void ClientHandler::disconnect() {
     stop();
-    if (inGame()) {
+    if (session.input) {
         try {
             session.input->push(PlayerCommand{session.playerId, std::make_shared<DisconnectDTO>(session.userName)});
-        } catch (const ClosedQueue&) {}
+        } catch (const ClosedQueue&) {
+            // TODO
+        }
     }
     try {
-        outQueue->close(); // esto deberia destranar el sender
-    } catch (const std::exception&) {}
+        outQueue->close();
+    } catch (const std::exception&) {
+    }
     if (sender) {
         sender->join();
     }

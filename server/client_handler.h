@@ -1,9 +1,14 @@
 #ifndef CLIENT_HANDLER_H
 #define CLIENT_HANDLER_H
 
+#include <functional>
+#include <map>
 #include <memory>
 
+#include "client_sender.h"
+#include "game_manager.h"
 #include "game_types.h"
+#include "protocol_types.h"
 #include "server_protocol.h"
 #include "socket.h"
 #include "thread.h"
@@ -11,6 +16,9 @@
 
 class ClientHandler : public Thread {
 private:
+    using Receiver = std::function<std::shared_ptr<CommandDTO>()>;
+    using Action = std::function<void()>;
+
     Socket socket;
     ServerProtocol protocol;
     GameManager& manager;
@@ -18,16 +26,17 @@ private:
     GameSession session;
     std::unique_ptr<ClientSender> sender;
 
-    bool inGame() const;
+    std::map<MessageType, Receiver> gameReceivers;
+    std::map<MessageType, Action> menuActions;
+    std::map<MessageType, Action> qtActions;
 
-    void handleCreate();
-    void handleJoin();
-    void handleResume();
-    void handleMove();
-    void handleListGames();
-    void handleCheckCode();
+    template <typename DTO>
+    Receiver receiver(DTO (ServerProtocol::*recv)());
 
-    void answer(const GameSession& result);
+
+    bool runMenu();
+    void runGame();
+    bool answerEntry();
 
     void disconnect();
 
