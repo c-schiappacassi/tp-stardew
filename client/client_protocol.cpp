@@ -95,6 +95,8 @@ PlayerData ClientProtocol::receivePlayerData() {
     data.hairColor = receiveColor();
     data.pantsColor = receiveColor();
     data.currentZone = static_cast<Zone>(base.receiveUint8());
+    const uint16_t heldItem = base.receiveUint16();
+    if (heldItem != 0) data.heldItem = static_cast<ItemId>(heldItem);
     return data;
 }
 

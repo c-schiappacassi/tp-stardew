@@ -50,6 +50,7 @@ void ServerProtocol::sendPlayerData(const PlayerData& data) {
     sendColor(data.hairColor);
     sendColor(data.pantsColor);
     base.sendUint8(static_cast<uint8_t>(data.currentZone));
+    base.sendUint16(data.heldItem ? static_cast<uint16_t>(*data.heldItem) : 0);
 }
 
 void ServerProtocol::sendGameInfo(const GameInfoDTO& info) {

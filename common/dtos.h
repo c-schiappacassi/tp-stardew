@@ -95,6 +95,7 @@ struct PlayerData{
     Color hairColor{0, 0, 0};
     Color pantsColor{0, 0, 0};
     Zone currentZone = Zone::Farm;
+    std::optional<ItemId> heldItem;
 };
 
 struct GameInfoDTO {
