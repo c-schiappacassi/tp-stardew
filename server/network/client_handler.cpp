@@ -12,13 +12,32 @@
 
 
 struct ClosedQueue;
+
+template <typename DTO>
+ClientHandler::Receiver ClientHandler::receiver(DTO (ServerProtocol::*recv)()) {
+    return [this, recv]() { return std::make_shared<DTO>((protocol.*recv)()); };
+}
+
 ClientHandler::ClientHandler(Socket&& socket, Game& game):
     socket(std::move(socket)),
     protocol(this->socket),
     game(game),
     outQueue(std::make_shared<OutQueue>()),
     session(),
-    sender() {}
+    sender() {
+    gameReceivers = {
+        {MessageType::Move,       receiver(&ServerProtocol::receiveMove)},
+        {MessageType::SelectSlot, receiver(&ServerProtocol::receiveSelectSlot)},
+        {MessageType::Interact,   receiver(&ServerProtocol::receiveInteract)},
+        {MessageType::UseItem,    receiver(&ServerProtocol::receiveUseItem)},
+        {MessageType::Donate,     receiver(&ServerProtocol::receiveDonate)},
+        {MessageType::Chat,       receiver(&ServerProtocol::receiveChat)},
+    };
+    menuActions = {
+        {MessageType::CreateGame, [this] { session = this->game.createGame(protocol.receiveCreateGame(), outQueue); }},
+        {MessageType::JoinGame,   [this] { session = this->game.joinGame(protocol.receiveJoinGame(), outQueue); }},
+    };
+}
 
 void ClientHandler::run() {
     try {
@@ -38,70 +57,30 @@ void ClientHandler::run() {
 }
 
 
-// despues quiero desaparecer este switch pero todavia no termino de entender como hacerlo!
 bool ClientHandler::runMenu() {
     while (should_keep_running()) {
-        switch (protocol.receiveType()) {
-            case MessageType::CreateGame:
-                session = game.createGame(protocol.receiveCreateGame(), outQueue);
-                break;
-
-            case MessageType::JoinGame:
-                session = game.joinGame(protocol.receiveJoinGame(), outQueue);
-                break;
-
-            case MessageType::ExitGame:
-                return false;
-
-            default:
-                throw ProtocolError("unexpected message");
-        }
-
-        if (answerEntry()) {
-            return true;
-        }
+        const auto type = protocol.receiveType();
+        if (type == MessageType::ExitGame) return false;
+        const auto it = menuActions.find(type);
+        if (it == menuActions.end()) throw ProtocolError("unexpected message");
+        it->second();
+        if (answerEntry()) return true;
     }
-
     return false;
 }
 
-// este switch tambien va a volar ni bien termine de entender como usar un map
 void ClientHandler::runGame() {
     sender = std::make_unique<ClientSender>(protocol, outQueue);
     sender->start();
 
     while (should_keep_running()) {
-        switch (protocol.receiveType()) {
-            // TODO: el MoveDTO ya existe. falta receiveMove(),
-            // por ahora el id del jugador la obtengo de su conexion, hablalo con ciro.
-            case MessageType::Move: {
-                auto move = std::make_shared<MoveDTO>(protocol.receiveMove());
-                session.input->push(PlayerCommand{session.playerId, move});
-                break;
-            }
-            case MessageType::SelectSlot: {
-                auto sel = std::make_shared<SelectSlotDTO>(protocol.receiveSelectSlot());
-                session.input->push(PlayerCommand{session.playerId, sel});
-                break;
-            }
-            case MessageType::Interact: {
-                auto interact = std::make_shared<InteractDTO>(protocol.receiveInteract());
-                session.input->push(PlayerCommand{session.playerId, interact});
-                break;
-            }
-            case MessageType::ExitGame:
-                return;
-
-            default:
-                throw ProtocolError("unexpected message");
-        }
+        const auto type = protocol.receiveType();
+        if (type == MessageType::ExitGame) return;
+        const auto it = gameReceivers.find(type);
+        if (it == gameReceivers.end()) throw ProtocolError("unexpected message");
+        session.input->push(PlayerCommand{session.playerId, it->second()});
     }
 }
-
-
-// TODO: juntar la respuesta de ingreso dentro de ServerStatus.Incorporar los datos actuales de GameJoined (gameId, playerId y worldId)
-// al DTO y al protocolo, manteniendolos errores de ingreso.
-// no mandar GameJoined como mensaje separado.
 
 bool ClientHandler::answerEntry() {
     const bool joined =session.status.status == StatusCode::Ok && session.input;
