@@ -5,6 +5,7 @@
 #include <memory>
 #include <mutex>
 #include <string>
+#include <vector>
 
 #include "dtos.h"
 #include "game.h"
@@ -21,6 +22,8 @@ public:
 
     GameSession createGame(const CreateGameDTO& dto, const std::shared_ptr<OutQueue>& output);
     GameSession joinGame(const JoinGameDTO& dto, const std::shared_ptr<OutQueue>& output);
+    bool codeExists(const std::string& code);
+    std::vector<GameInfoDTO> listGames(const std::string& userName);
     void stopAll();
 };
 

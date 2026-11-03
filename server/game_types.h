@@ -22,7 +22,7 @@ using OutQueue = Queue<ServerStatus>;
 struct GameSession {
     ServerStatus status;
     std::string gameId;
-    std::string playerName;
+    std::string userName;
     uint16_t playerId = 0;
     uint8_t worldId = 0;
     std::shared_ptr<CommandQueue> input;   // nullptr si status != OK

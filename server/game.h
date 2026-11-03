@@ -30,7 +30,7 @@ class Game:public Thread {
         void sendStatus();
         void advancePlayers();
         ServerStatus buildStatus() const;
-        GameSession addPlayer(const std::string& playerName,const PlayerData& data,const std::shared_ptr<OutQueue>& output,const std::string& successMsg);
+        GameSession addPlayer(const std::string& userName,const PlayerData& data,const std::shared_ptr<OutQueue>& output,const std::string& successMsg);
 
     public:
         Game(const std::string& id, const std::string& name, uint8_t worldId, const char* servicename);

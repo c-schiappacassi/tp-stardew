@@ -1,6 +1,7 @@
 #include "game_manager.h"
 
 #include <exception>
+#include <optional>
 #include <mutex>
 #include <string>
 #include <utility>
@@ -34,6 +35,24 @@ GameSession GameManager::joinGame(const JoinGameDTO& dto,
         return session;
     }
     return it->second->joinGame(dto, output);
+}
+
+bool GameManager::codeExists(const std::string& code) {
+    std::lock_guard<std::mutex> lock(mtx);
+    return games.find(code) != games.end();
+}
+
+std::vector<GameInfoDTO> GameManager::listGames(const std::string& userName) {
+    std::lock_guard<std::mutex> lock(mtx);
+
+    std::vector<GameInfoDTO> result;
+    for (const auto& entry: games) {
+        std::optional<GameInfoDTO> info = entry.second->infoFor(userName);
+        if (info) {
+            result.push_back(*info);
+        }
+    }
+    return result;
 }
 
 void GameManager::stopAll() {
