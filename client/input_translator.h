@@ -81,7 +81,7 @@ private:
     }
 
     void bind_mouse() {
-        bind(SDL_MOUSEBUTTONDOWN, SDL_BUTTON_LEFT, [this](const SDL_Event& e, Out& out) {
+        bind(SDL_MOUSEBUTTONDOWN, SDL_BUTTON_LEFT, [this](const SDL_Event&, Out& out) {
             const Direction current = held.empty() ? Direction::None : held.back();
             auto dto = std::make_shared<InteractDTO>(player_name);
             dto->dir = current;

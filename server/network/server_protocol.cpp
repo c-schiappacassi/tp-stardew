@@ -144,15 +144,13 @@ ResumeGameDTO ServerProtocol::receiveResumeGame() {
 
 MoveDTO ServerProtocol::receiveMove() {
     MoveDTO dto(base.receiveString());
-    dto.position = receivePosition();
     dto.dir = static_cast<Direction>(base.receiveUint8());
     return dto;
 }
 
 InteractDTO ServerProtocol::receiveInteract() {
     InteractDTO dto(base.receiveString());
-    dto.targetType = static_cast<TargetType>(base.receiveUint8());
-    dto.targetId = base.receiveUint32();
+    dto.dir = static_cast<Direction>(base.receiveUint8());
     return dto;
 }
 

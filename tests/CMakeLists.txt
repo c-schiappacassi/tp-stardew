@@ -8,6 +8,7 @@ target_sources(taller_tests
     ../server/network/client_sender.cpp
     ../server/network/server_protocol.cpp
     ../server/game/game.cpp
+    ../server/game/game_setup.cpp
     ../server/game/game_manager.cpp
     ../server/player/player.cpp
     ../server/inventory/inventory.cpp

@@ -28,7 +28,7 @@ private:
 
     void update_camera(const State& state);
 public:
-    explicit GameUI(const std::string& local_player);
+    GameUI(const std::string& local_player, const std::string& gameId);
 
     GameUI(const GameUI&) = delete;
     GameUI& operator=(const GameUI&) = delete;

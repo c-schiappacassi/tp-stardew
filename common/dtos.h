@@ -63,7 +63,7 @@ struct LevelData {
 };
 
 struct MineData{
-    uint8_t current_level;
+    uint8_t current_level = 0;
     LevelData current_level_data;
 };
 // Fin Mine
@@ -94,7 +94,14 @@ struct PlayerData{
     uint16_t pantsModel = 0;
     Color hairColor{0, 0, 0};
     Color pantsColor{0, 0, 0};
-    Zone currentZone;
+    Zone currentZone = Zone::Farm;
+};
+
+struct GameInfoDTO {
+    std::string id;
+    std::string farmName;
+    PlayerData playerData;
+    bool isMultiplayer = false;
 };
 
 struct PlayerDataLocal : public PlayerData {
@@ -132,7 +139,7 @@ struct CommandDTO {
 struct CreateGameDTO : public CommandDTO {
     std::string characterName;
     std::string gameName;
-    uint8_t worldId;
+    uint8_t worldId = 0;
     uint16_t hairModel = 0;
     uint16_t shirtModel = 0;
     uint16_t pantsModel = 0;
@@ -171,13 +178,8 @@ struct MoveDTO : public CommandDTO {
 };
 
 struct InteractDTO : public CommandDTO {
-<<<<<<< HEAD
-    TargetType targetType; // usemos un type para esto
-    uint32_t targetId;
+    Direction dir{Direction::None};
 
-=======
-    Direction dir;
->>>>>>> feat/mining
     MessageType type() const override { return MessageType::Interact; }
     explicit InteractDTO(const std::string& name) : CommandDTO(name) {}
 };
@@ -223,7 +225,6 @@ struct SelectSlotDTO : public CommandDTO {
     explicit SelectSlotDTO(const std::string& name) : CommandDTO(name) {}
 };
 
-<<<<<<< HEAD
 struct ListGamesDTO : public CommandDTO {
 
     MessageType type() const override { return MessageType::ListGames; }
@@ -237,16 +238,10 @@ struct CheckCodeDTO : public CommandDTO {
     explicit CheckCodeDTO(const std::string& name) : CommandDTO(name) {}
 };
 
-=======
->>>>>>> feat/mining
 // SERVIDOR -> CLIENTE
 
 // seguir completando server status
 
-<<<<<<< HEAD
-=======
-
->>>>>>> feat/mining
 struct ServerStatus {
     StatusCode status = StatusCode::Ok;
     std::string errorMsg;
@@ -256,15 +251,11 @@ struct ServerStatus {
     uint8_t worldId = 0;
     std::map<std::string, PlayerData> players;
     PlayerDataLocal localPlayer;
-<<<<<<< HEAD
 };
 
 struct qtStatus {
-    StatusCode status;
+    StatusCode status = StatusCode::Ok;
     std::string errorMsg;
     std::string successMsg;
     std::vector<GameInfoDTO> games;
 };
-=======
-};
->>>>>>> feat/mining

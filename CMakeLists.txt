@@ -16,6 +16,8 @@ project(taller_tp
     LANGUAGES C CXX
     )
 
+find_package(Threads REQUIRED)
+
 option(TALLER_TESTS "Enable / disable tests." ON)
 option(TALLER_CLIENT "Enable / disable client program." ON)
 option(TALLER_SERVER "Enable / disable server program." ON)
@@ -27,19 +29,11 @@ message(CMAKE_CXX_COMPILER_ID="${CMAKE_CXX_COMPILER_ID}")
 # Define target: lib common between client, server and editor programs
 # HEY TODO XXX: change the name to something that you like
 add_library(taller_common STATIC)
+target_link_libraries(taller_common PUBLIC Threads::Threads)
 
 # add the source files that make the lib
 # HEY!! TODO XXX: add more subfolders here
 add_subdirectory(common/)
-target_sources(taller_common
-    PRIVATE
-    common/socket.cpp
-    common/resolver.cpp
-    common/resolvererror.cpp
-    common/liberror.cpp
-    common/protocol_base.cpp
-    common/protocol_errors.cpp
-)
 
 target_include_directories(taller_common
     PUBLIC
@@ -68,41 +62,61 @@ target_include_directories(taller_common PUBLIC .)
 # HEY!! TODO XXX: add more dependendies (either for client, server or editor)
 if(TALLER_CLIENT OR TALLER_EDITOR)
     include(FetchContent)
-    FetchContent_Declare(
-        SDL2
-        GIT_REPOSITORY https://github.com/libsdl-org/SDL.git
-        GIT_TAG release-2.32.10
-        GIT_SHALLOW TRUE
-        GIT_PROGRESS TRUE
-        OVERRIDE_FIND_PACKAGE
-    )
+    find_package(SDL2 QUIET CONFIG)
+    find_package(SDL2_image QUIET CONFIG)
+    find_package(SDL2_mixer QUIET CONFIG)
+    find_package(SDL2_ttf QUIET CONFIG)
+    if(NOT TARGET SDL2::SDL2)
+        FetchContent_Declare(
+            SDL2
+            GIT_REPOSITORY https://github.com/libsdl-org/SDL.git
+            GIT_TAG release-2.32.10
+            GIT_SHALLOW TRUE
+            GIT_PROGRESS TRUE
+            OVERRIDE_FIND_PACKAGE
+        )
 
-    FetchContent_Declare(
-        SDL2_image
-        GIT_REPOSITORY https://github.com/libsdl-org/SDL_image.git
-        GIT_TAG release-2.8.2
-        GIT_SHALLOW TRUE
-        GIT_PROGRESS TRUE
-        OVERRIDE_FIND_PACKAGE
-    )
+        FetchContent_MakeAvailable(SDL2)
+    endif()
 
-    FetchContent_Declare(
-        SDL2_mixer
-        GIT_REPOSITORY https://github.com/libsdl-org/SDL_mixer.git
-        GIT_TAG release-2.8.0
-        GIT_SHALLOW TRUE
-        GIT_PROGRESS TRUE
-        OVERRIDE_FIND_PACKAGE
-    )
+    if(NOT TARGET SDL2_image::SDL2_image)
+        FetchContent_Declare(
+            SDL2_image
+            GIT_REPOSITORY https://github.com/libsdl-org/SDL_image.git
+            GIT_TAG release-2.8.2
+            GIT_SHALLOW TRUE
+            GIT_PROGRESS TRUE
+            OVERRIDE_FIND_PACKAGE
+        )
 
-    FetchContent_Declare(
-        SDL2_ttf
-        GIT_REPOSITORY https://github.com/libsdl-org/SDL_ttf.git
-        GIT_TAG release-2.22.0
-        GIT_SHALLOW TRUE
-        GIT_PROGRESS TRUE
-        OVERRIDE_FIND_PACKAGE
-    )
+        FetchContent_MakeAvailable(SDL2_image)
+    endif()
+
+    if(NOT TARGET SDL2_mixer::SDL2_mixer)
+        FetchContent_Declare(
+            SDL2_mixer
+            GIT_REPOSITORY https://github.com/libsdl-org/SDL_mixer.git
+            GIT_TAG release-2.8.0
+            GIT_SHALLOW TRUE
+            GIT_PROGRESS TRUE
+            OVERRIDE_FIND_PACKAGE
+        )
+
+        FetchContent_MakeAvailable(SDL2_mixer)
+    endif()
+
+    if(NOT TARGET SDL2_ttf::SDL2_ttf)
+        FetchContent_Declare(
+            SDL2_ttf
+            GIT_REPOSITORY https://github.com/libsdl-org/SDL_ttf.git
+            GIT_TAG release-2.22.0
+            GIT_SHALLOW TRUE
+            GIT_PROGRESS TRUE
+            OVERRIDE_FIND_PACKAGE
+        )
+
+        FetchContent_MakeAvailable(SDL2_ttf)
+    endif()
 
     FetchContent_Declare(
         libSDL2pp
@@ -112,7 +126,7 @@ if(TALLER_CLIENT OR TALLER_EDITOR)
     set(SDL2PP_WITH_IMAGE ON CACHE BOOL "" FORCE)
     set(SDL2PP_WITH_MIXER ON CACHE BOOL "" FORCE)
     set(SDL2PP_WITH_TTF   ON CACHE BOOL "" FORCE)
-    FetchContent_MakeAvailable(SDL2 SDL2_image SDL2_mixer SDL2_ttf libSDL2pp)
+    FetchContent_MakeAvailable(libSDL2pp)
 endif()
 
 # Program section
@@ -134,7 +148,7 @@ if(TALLER_CLIENT)
     target_include_directories(taller_client PRIVATE ${libSDL2pp_SOURCE_DIR})
 
     # Link the taller_common lib target
-    target_link_libraries(taller_client taller_common SDL2pp::SDL2pp)
+    target_link_libraries(taller_client PRIVATE taller_common SDL2pp::SDL2pp)
 endif()
 
 if(TALLER_SERVER)
@@ -179,6 +193,7 @@ endif()
 # ---------------
 
 if(TALLER_TESTS)
+    enable_testing()
     # Let's use google test
     include(FetchContent)
     FetchContent_Declare(
@@ -224,4 +239,8 @@ if(TALLER_TESTS)
         taller_common
         GTest::gtest_main
     )
+endif()
+
+if(TALLER_TESTS)
+    gtest_discover_tests(taller_tests DISCOVERY_TIMEOUT 30 PROPERTIES TIMEOUT 15)
 endif()

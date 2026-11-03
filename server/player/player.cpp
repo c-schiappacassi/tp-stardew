@@ -11,6 +11,7 @@ Player::Player(
     uint16_t maxEnergy,
     uint32_t initialGold,
     const PlayerConfig& config):
+        characterName(initialData.characterName),
         pos(initialData.pos),
         state(initialData.state),
         dir(initialData.dir),
@@ -114,6 +115,7 @@ const Stack* Player::getSelectedItem() const {
 
 PlayerData Player::getPublicData() const {
     PlayerData data;
+    data.characterName = characterName;
     data.pos = pos;
     data.state = state;
     data.dir = dir;

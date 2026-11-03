@@ -12,14 +12,14 @@
 class Acceptor : public Thread {
 private:
     Socket& listenSocket;
-    Game& game;
+    GameManager& manager;
     std::list<std::unique_ptr<ClientHandler>> clients;
 
     void reap();
     void clear();
 
 public:
-    Acceptor(Socket& listenSocket, Game& game);
+    Acceptor(Socket& listenSocket, GameManager& manager);
 
     void run() override;
     void stop() override;

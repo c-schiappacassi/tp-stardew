@@ -4,11 +4,11 @@
 #include <functional>
 #include <map>
 #include <memory>
-#include <functional>
 #include <unordered_map>
 
-#include "game_manager.h"
-#include "game_types.h"
+#include "game/game_manager.h"
+#include "client_sender.h"
+#include "game/game_types.h"
 #include "protocol_types.h"
 #include "server_protocol.h"
 #include "socket.h"

@@ -1,17 +1,29 @@
-#include "common/foo.h"
-
-#include <iostream>
+#include <QApplication>
 #include <exception>
+#include <iostream>
+
 #include "game.h"
+#include "qt/main_window.h"
 
-#include <SDL2pp/SDL2pp.hh>
-#include <SDL2/SDL.h>
-
-using namespace SDL2pp;
-
-int main(int argc, char* argv[]) try {
-    if (argc < 4) { std::cerr << "Uso: " << argv[0] << " <host> <puerto> <nombre>\n"; return 1; }
-    Game game(argv[1], argv[2], argv[3]);
-    game.exe();
-    return 0;
-} catch (const std::exception& e) { std::cerr << e.what() << "\n"; return 1; }
+int main(int argc, char* argv[]) {
+    if (argc != 3) {
+        std::cerr << "Uso: " << argv[0] << " <host> <puerto>\n";
+        return 1;
+    }
+    try {
+        QApplication app(argc, argv);
+        NetworkManager net(argv[1], argv[2]);
+        MainWindow menu(net);
+        menu.showMaximized();
+        const int result = QApplication::exec();
+        if (menu.gameStatus()) {
+            std::cout << "Partida: " << menu.gameStatus()->gameId << '\n';
+            Game game(net, menu.userName(), *menu.gameStatus());
+            game.exe();
+        }
+        return result;
+    } catch (const std::exception& e) {
+        std::cerr << e.what() << '\n';
+        return 1;
+    }
+}

@@ -1,6 +1,8 @@
 #pragma once
 
+#include <atomic>
 #include <memory>
+#include <sys/socket.h>
 #include "thread.h"
 #include "queue.h"
 #include "dtos.h"
@@ -10,28 +12,31 @@ class SendThread : public Thread {
 private:
     Queue<std::shared_ptr<CommandDTO>>& send_queue;
     ClientProtocol& protocolo;
-    bool shoud_keep_running = false;
+    Socket& socket;
+    std::atomic<bool>& connected;
 
 public:
-    SendThread(Queue<std::shared_ptr<CommandDTO>>& queue, ClientProtocol& prot)
-        : send_queue(queue), protocolo(prot) {}
+    SendThread(Queue<std::shared_ptr<CommandDTO>>& queue, ClientProtocol& prot,
+               Socket& socket, std::atomic<bool>& connected):
+            send_queue(queue), protocolo(prot), socket(socket), connected(connected) {}
 
     void run() override {
-        this->shoud_keep_running = true;
         try {
-            while (shoud_keep_running) {
-                std::shared_ptr<CommandDTO> dto = send_queue.pop();                
+            while (should_keep_running()) {
+                const auto dto = send_queue.pop();
                 protocolo.send(*dto);
             }
         } catch (const ClosedQueue&) {
-            // TODO
         } catch (const std::exception&) {
-            // TODO
+            connected = false;
+            try {
+                socket.shutdown(SHUT_RDWR);
+            } catch (const std::exception&) {
+            }
         }
     }
 
     void stop() override {
-        this->shoud_keep_running = false;
         Thread::stop();
         send_queue.close();
     }

@@ -6,27 +6,12 @@
 #include "constants.h"
 #include "foo.h"
 
-Game::Game(const std::string& host, const std::string& port, const std::string& player_name):
-        player_name(player_name), net(host, port), ui(player_name) {}
-
-void Game::connect_placeholder() {
-    CreateGameDTO create(player_name);
-    create.gameName = "test";
-    create.worldId = 0;
-    create.shirtModel = 0;
-    create.hairColor = {163, 113, 5};
-    create.pantsColor = {35, 39, 166};
-
-    ServerStatus st = net.handshake(create);
-    if (st.status != StatusCode::Ok) {
-        throw std::runtime_error(st.errorMsg);
-    }
-    currentState.update(st);
+Game::Game(NetworkManager& net, const std::string& player_name, const ServerStatus& initialStatus):
+        player_name(player_name), net(net), ui(player_name, initialStatus.gameId) {
+    currentState.update(initialStatus);
 }
 
 void Game::exe() {
-    connect_placeholder();
-
     net.start();
 
     const auto rate = std::chrono::milliseconds(1000 / FPS);
@@ -47,6 +32,10 @@ void Game::loopInternalLogic(long long it) {
     if (ui.quit_requested()) {
         running = false;
         return;
+    }
+
+    if (!net.isConnected()) {
+        throw std::runtime_error("Se perdio la conexion con el servidor");
     }
 
     while (auto status = net.try_pop_recv()) {

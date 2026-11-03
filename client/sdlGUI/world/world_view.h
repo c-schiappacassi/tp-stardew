@@ -33,6 +33,7 @@ public:
     }
 
     void draw(const RenderInfo& ctx) {
+        map.draw_background(ctx);
 
         // TODO:
 

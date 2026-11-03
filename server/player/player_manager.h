@@ -4,6 +4,7 @@
 #include <cstdint>
 #include <map>
 #include <memory>
+#include <optional>
 #include <string>
 
 #include "player/player_record.h"
@@ -26,6 +27,9 @@ public:
     explicit PlayerManager(const PlayerConfig& config,const MovementRules& movement,const ZoneDataSource& zones,PlayerInteractions& interactions,uint8_t maxPlayers = 4);
     
     ServerStatus addPlayer(const std::string& name,const PlayerData& appearance,const std::shared_ptr<OutQueue>& output);
+    ServerStatus resumePlayer(const std::string& name, const std::shared_ptr<OutQueue>& output);
+    std::optional<PlayerData> dataFor(const std::string& name) const;
+    bool isMultiplayer() const;
     void disconnectPlayer(uint16_t playerId);
     void updateToolStates(std::chrono::steady_clock::time_point now);
     void advancePlayers(int normalStep);

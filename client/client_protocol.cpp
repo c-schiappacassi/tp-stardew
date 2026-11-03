@@ -184,15 +184,13 @@ void ClientProtocol::send(const ResumeGameDTO& dto) {
 void ClientProtocol::send(const MoveDTO& dto) {
     base.sendUint8(static_cast<uint8_t>(MessageType::Move));
     base.sendString(dto.userName);
-    sendPosition(dto.position);
     base.sendUint8(static_cast<uint8_t>(dto.dir));
 }
 
 void ClientProtocol::send(const InteractDTO& dto) {
     base.sendUint8(static_cast<uint8_t>(MessageType::Interact));
     base.sendString(dto.userName);
-    base.sendUint8(static_cast<uint8_t>(dto.targetType));
-    base.sendUint32(dto.targetId);
+    base.sendUint8(static_cast<uint8_t>(dto.dir));
 }
 
 void ClientProtocol::send(const DonateDTO& dto) {
@@ -240,21 +238,11 @@ void ClientProtocol::send(const CheckCodeDTO& dto) {
     base.sendString(dto.userName);
     base.sendString(dto.code);
 }
-
-void ClientProtocol::send(const SelectSlotDTO& dto) {
-    base.sendUint8(static_cast<uint8_t>(MessageType::SelectSlot));
-    base.sendString(dto.playerName);
-    base.sendUint8(dto.slot);
-}
-
 // RECEIVERS
 
 // ServerStatus { status, errorMsg, successMsg, gameId, playerId, worldId,
 //                players, localPlayer }
-<<<<<<< HEAD
 
-=======
->>>>>>> feat/mining
 void ClientProtocol::recv(ServerStatus& status) {
     status.status = static_cast<StatusCode>(base.receiveUint8());
     status.errorMsg = base.receiveString();
@@ -271,7 +259,6 @@ void ClientProtocol::recv(ServerStatus& status) {
     }
 
     status.localPlayer = receivePlayerDataLocal();
-<<<<<<< HEAD
 }
 
 // qtStatus { status, errorMsg, successMsg, games }
@@ -287,6 +274,4 @@ void ClientProtocol::recv(qtStatus& status) {
     for (uint16_t i = 0; i < gamesCount; ++i) {
         status.games.push_back(receiveGameInfo());
     }
-=======
->>>>>>> feat/mining
 }

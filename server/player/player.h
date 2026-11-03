@@ -9,6 +9,7 @@
 
 class Player {
 private:
+    std::string characterName;
     Position pos;
     PlayerState state;
     Direction dir;

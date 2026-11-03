@@ -1,71 +1,91 @@
 #pragma once
 
-#include "queue.h"
-#include "send_thread.h"
-#include "recv_thread.h"
-#include "dtos.h"
+#include <atomic>
 #include <optional>
-#include "client_protocol.h"
+#include <sys/socket.h>
 
-#define MAX_SIZE_QUEUE 100
+#include "client_protocol.h"
+#include "dtos.h"
+#include "queue.h"
+#include "recv_thread.h"
+#include "send_thread.h"
 
 class NetworkManager {
 private:
-    Queue<std::shared_ptr<CommandDTO>> send_queue;
-    Queue<ServerStatus> recv_queue;
-    // TODO:TBD si protocolo deberia ser dueño del socket o deberia tenerlo network
+    Queue<std::shared_ptr<CommandDTO>> send_queue{100};
+    Queue<ServerStatus> recv_queue{100};
     Socket socket;
     ClientProtocol protocolo;
+    std::atomic<bool> connected{true};
     SendThread sender;
     RecvThread receiver;
+    bool started = false;
+    bool closed = false;
 
 public:
-    NetworkManager(const std::string& host, const std::string& port)
-        : send_queue(MAX_SIZE_QUEUE),
-          recv_queue(MAX_SIZE_QUEUE), 
-          socket(host.c_str(), port.c_str()),
-          protocolo(socket),
-          sender(send_queue, protocolo), 
-          receiver(recv_queue, protocolo, socket) {}
+    NetworkManager(const std::string& host, const std::string& port):
+            socket(host.c_str(), port.c_str()), protocolo(socket),
+            sender(send_queue, protocolo, socket, connected),
+            receiver(recv_queue, protocolo, connected) {}
+
+    ~NetworkManager() { quit(); }
 
     void start() {
+        if (started || closed) throw std::logic_error("La conexion no se puede reiniciar");
         sender.start();
-        receiver.start();
+        try {
+            receiver.start();
+        } catch (...) {
+            sender.stop();
+            sender.join();
+            throw;
+        }
+        started = true;
     }
 
-   
-    void push_to_send(std::shared_ptr<CommandDTO> dto) {
-        try {
-            send_queue.try_push(dto);
-        } catch (const ClosedQueue&) {
-            // TODO
+    bool isConnected() const { return connected; }
+
+    void push_to_send(const std::shared_ptr<CommandDTO>& dto) {
+        if (!connected || !send_queue.try_push(dto)) {
+            throw std::runtime_error("No se pudo enviar el comando al servidor");
         }
     }
 
     std::optional<ServerStatus> try_pop_recv() {
         ServerStatus status;
-        if (recv_queue.try_pop(status)) {
-            return status;
+        try {
+            if (recv_queue.try_pop(status)) return status;
+        } catch (const ClosedQueue&) {
+            connected = false;
         }
         return std::nullopt;
     }
 
     void quit() {
-        sender.stop();
-        receiver.stop();
-
-        sender.join();
-        receiver.join();
+        if (closed) return;
+        closed = true;
+        connected = false;
+        if (started) {
+            sender.stop();
+            receiver.stop();
+        }
+        try {
+            socket.shutdown(SHUT_RDWR);
+        } catch (const std::exception&) {
+        }
+        if (started) {
+            sender.join();
+            receiver.join();
+        }
     }
-    
-    // TEMP
+
     ServerStatus handshake(const CommandDTO& dto) {
         protocolo.send(dto);
         ServerStatus status;
         protocolo.recv(status);
         return status;
     }
-    //para ListGames y Checkcode que no respondern con ServerStatus sino qtstatus
+
     qtStatus handshakeQt(const CommandDTO& dto) {
         protocolo.send(dto);
         qtStatus status;

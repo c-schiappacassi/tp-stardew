@@ -8,14 +8,14 @@
 
 #include "liberror.h"
 
-Acceptor::Acceptor(Socket& listenSocket, Game& game):listenSocket(listenSocket), game(game) {}
+Acceptor::Acceptor(Socket& listenSocket, GameManager& manager):listenSocket(listenSocket), manager(manager) {}
 
 void Acceptor::run() {
     while (should_keep_running()) {
         try {
             Socket clientSocket = listenSocket.accept();
             reap();
-            auto handler = std::make_unique<ClientHandler>(std::move(clientSocket), game);
+            auto handler = std::make_unique<ClientHandler>(std::move(clientSocket), manager);
             clients.push_back(std::move(handler));
             clients.back()->start();
 

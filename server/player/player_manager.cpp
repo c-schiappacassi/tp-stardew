@@ -35,10 +35,42 @@ ServerStatus PlayerManager::addPlayer(const std::string& name,const PlayerData& 
 
     return playerStatus.buildForPlayer(players, it->second);
 }
-//por ahora lo dejo asi porq de la otra forma si te volvias a conectar te toma como otra persona
 void PlayerManager::disconnectPlayer(uint16_t playerId) {
-    players.erase(playerId);
+    const auto it = players.find(playerId);
+    if (it != players.end()) {
+        it->second.connected = false;
+        it->second.output.reset();
+        it->second.player.setMovement(Direction::None);
+    }
 }
+
+ServerStatus PlayerManager::resumePlayer(const std::string& name,
+                                        const std::shared_ptr<OutQueue>& output) {
+    ServerStatus result{};
+    result.status = StatusCode::Error;
+    for (auto& [id, record] : players) {
+        if (record.name != name) continue;
+        if (record.connected || !output) {
+            result.errorMsg = "Ya estas conectado a esta partida";
+            return result;
+        }
+        record.connected = true;
+        record.output = output;
+        record.player.setMovement(Direction::None);
+        return playerStatus.buildForPlayer(players, record);
+    }
+    result.errorMsg = "No tenes un jugador en esta partida";
+    return result;
+}
+
+std::optional<PlayerData> PlayerManager::dataFor(const std::string& name) const {
+    for (const auto& [id, record] : players) {
+        if (record.name == name) return record.player.getPublicData();
+    }
+    return std::nullopt;
+}
+
+bool PlayerManager::isMultiplayer() const { return players.size() > 1; }
 
 void PlayerManager::updateToolStates(
     std::chrono::steady_clock::time_point now) {

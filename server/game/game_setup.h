@@ -14,3 +14,6 @@ struct GameSetup {
     DungeonConfig dungeonConfig;
     PlayerConfig playerConfig;
 };
+
+// Temporary playable layout until maps can be loaded from the editor.
+GameSetup makeDefaultGameSetup(uint8_t worldId);

@@ -1,41 +1,34 @@
 #pragma once
 
+#include <atomic>
 #include "thread.h"
 #include "queue.h"
 #include "dtos.h"
 #include "client_protocol.h"
 
-
 class RecvThread : public Thread {
 private:
     Queue<ServerStatus>& recv_queue;
     ClientProtocol& protocolo;
-    Socket& socket;
-    bool should_keep_running = false;
+    std::atomic<bool>& connected;
 
 public:
-    RecvThread(Queue<ServerStatus>& queue, ClientProtocol& prot, Socket& socket)
-        : recv_queue(queue), protocolo(prot), socket(socket) {}
+    RecvThread(Queue<ServerStatus>& queue, ClientProtocol& prot, std::atomic<bool>& connected):
+            recv_queue(queue), protocolo(prot), connected(connected) {}
 
     void run() override {
-        this->should_keep_running = true;
         try {
-            while (this->should_keep_running) {
+            while (should_keep_running()) {
                 ServerStatus status;
                 protocolo.recv(status);
-                
                 recv_queue.push(status);
             }
-        } catch (const ClosedQueue&) {
-            // TODO
         } catch (const std::exception&) {
-            // TODO
         }
+        connected = false;
     }
 
     void stop() override {
-        this->should_keep_running = false;
-        socket.close();
         Thread::stop();
         recv_queue.close();
     }

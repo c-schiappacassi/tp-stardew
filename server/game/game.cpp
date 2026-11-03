@@ -1,11 +1,9 @@
 #include "game.h"
-Game::Game(const std::string& id,const std::string& name,uint8_t worldId,const char* servicename,const PlayerConfig& playerConfig,const DungeonConfig& dungeonConfig): 
+Game::Game(const std::string& id,const std::string& name,uint8_t worldId,const PlayerConfig& playerConfig,const DungeonConfig& dungeonConfig):
     id(id),
     name(name),
     worldId(worldId),
     input(std::make_shared<CommandQueue>()),
-    skt(servicename),
-    acceptor(skt, *this),
     world(dungeonConfig),
     playerManager(playerConfig, world, world, world) {}
 

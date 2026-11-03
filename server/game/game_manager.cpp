@@ -13,7 +13,9 @@ GameSession GameManager::createGame(const CreateGameDTO& dto,
     std::lock_guard<std::mutex> lock(mtx);
     const std::string id = "game-" + std::to_string(nextId);
 
-    auto game = std::make_unique<Game>(id,"",setup.worldId,servicename,setup.playerConfig,setup.dungeonConfig);
+    const GameSetup setup = makeDefaultGameSetup(dto.worldId);
+    auto game = std::make_unique<Game>(id, dto.gameName, setup.worldId,
+                                       setup.playerConfig, setup.dungeonConfig);
     if (!game->loadDungeon(setup.worldId, setup.layout)) {
         throw std::invalid_argument("No se pudo cargar la mazmorra de la partida");
     }
@@ -22,7 +24,7 @@ GameSession GameManager::createGame(const CreateGameDTO& dto,
         throw std::invalid_argument("La entrada de la mazmorra es invalida");
     }
 
-    games.push_back(std::move(game));
+    GameSession session = game->createGame(dto, output);
 
     if (session.status.status == StatusCode::Ok) {
         game->start();

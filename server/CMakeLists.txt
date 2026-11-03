@@ -7,6 +7,7 @@ target_sources(taller_server
         network/client_sender.cpp
         network/server_protocol.cpp
         game/game.cpp
+    game/game_setup.cpp
         game/game_manager.cpp
         inventory/inventory.cpp
         player/player.cpp

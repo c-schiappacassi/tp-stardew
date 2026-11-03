@@ -1,6 +1,8 @@
 #include "main_window.h"
 
 #include <QStackedWidget>
+#include <QApplication>
+#include <QMessageBox>
 
 #include "start_menu_screen.h"
 #include "username_screen.h"
@@ -50,6 +52,12 @@ MainWindow::MainWindow(NetworkManager& net, QWidget *parent) : QMainWindow(paren
     });
 
     connect(startMenu, &StartMenuScreen::loadGameRequested, this, [this, loadScreen]() {
+        const qtStatus reply = sendQt(ListGamesDTO(username));
+        if (reply.status != StatusCode::Ok) {
+            QMessageBox::warning(this, "Servidor", QString::fromStdString(reply.errorMsg));
+            return;
+        }
+        games = reply.games;
         loadScreen->setGames(games);
         stack->setCurrentWidget(loadScreen);
     });
@@ -59,7 +67,9 @@ MainWindow::MainWindow(NetworkManager& net, QWidget *parent) : QMainWindow(paren
         dto.gameId = gameId;
         const ServerStatus reply = send(dto);
         if (reply.status == StatusCode::Ok) {
-            //emppieza la partida (conectar con sdl)
+            enterGame(reply);
+        } else {
+            QMessageBox::warning(this, "Servidor", QString::fromStdString(reply.errorMsg));
         }
     });
 
@@ -91,7 +101,7 @@ MainWindow::MainWindow(NetworkManager& net, QWidget *parent) : QMainWindow(paren
 
         const ServerStatus reply = send(dto);
         if (reply.status == StatusCode::Ok) {
-            //emppieza la partida (conectar con sdl)
+            enterGame(reply);
         } else {
             joinCharacterScreen->showError(QString::fromStdString(reply.errorMsg));
         }
@@ -126,12 +136,18 @@ MainWindow::MainWindow(NetworkManager& net, QWidget *parent) : QMainWindow(paren
 
         const ServerStatus reply = send(dto);
         if (reply.status == StatusCode::Ok) {
-            // empieza la partida (conectar con sdl)
+            enterGame(reply);
         } else {
             newGameScreen->showError(QString::fromStdString(reply.errorMsg));
         }
     });
 
+}
+
+void MainWindow::enterGame(const ServerStatus& status) {
+    entryStatus = status;
+    hide();
+    QApplication::quit();
 }
 
 ServerStatus MainWindow::send(const CommandDTO& dto) {

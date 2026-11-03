@@ -47,3 +47,7 @@ target_sources(taller_client
     sdlGUI/world/farm/crop_view.h
     sdlGUI/world/farm/animal_view.h
     )
+
+add_subdirectory(qt)
+target_include_directories(taller_client PRIVATE ${CMAKE_CURRENT_SOURCE_DIR})
+target_compile_definitions(taller_client PRIVATE ASSETS_DIR="${PROJECT_SOURCE_DIR}/common/assets")

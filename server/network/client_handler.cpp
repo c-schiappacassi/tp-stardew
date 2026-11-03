@@ -6,7 +6,7 @@
 
 #include <sys/socket.h>
 
-#include "game_manager.h"
+#include "game/game_manager.h"
 #include "liberror.h"
 #include "protocol_errors.h"
 #include "queue.h"
@@ -78,10 +78,13 @@ void ClientHandler::run() {
 bool ClientHandler::runMenu() {
     while (should_keep_running()) {
         const auto type = protocol.receiveType();
-        if (type == MessageType::ExitGame) return false;
+        if (type == MessageType::ExitGame) {
+            protocol.receiveDisconnect();
+            return false;
+        }
 
-        const auto query = queryActions.find(type);
-        if (query != queryActions.end()) {
+        const auto query = qtActions.find(type);
+        if (query != qtActions.end()) {
             query->second();
             continue;
         }
@@ -95,12 +98,15 @@ bool ClientHandler::runMenu() {
 }
 
 void ClientHandler::runGame() {
-    sender = std::make_unique<ClientSender>(protocol, outQueue);
+    sender = std::make_unique<ClientSender>(protocol, outQueue, socket);
     sender->start();
 
     while (should_keep_running()) {
         const auto type = protocol.receiveType();
-        if (type == MessageType::ExitGame) return;
+        if (type == MessageType::ExitGame) {
+            protocol.receiveDisconnect();
+            return;
+        }
         const auto it = gameReceivers.find(type);
         if (it == gameReceivers.end()) throw ProtocolError("unexpected message");
         session.input->push(PlayerCommand{session.playerId, it->second()});
