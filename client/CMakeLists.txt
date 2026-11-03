@@ -20,22 +20,30 @@ target_sources(taller_client
     recv_thread.h
     send_thread.h
     state.h
+
     sdlGUI/asset_manager.h
-    sdlGUI/click_target.h
     sdlGUI/render_info.h
     sdlGUI/utils.h
     sdlGUI/animator.h
     sdlGUI/camera.h
+    sdlGUI/sync_views.h
     sdlGUI/draw_region.h
+
     sdlGUI/world/player_view.h
     sdlGUI/world/world_view.h
     sdlGUI/world/map_view.h
     sdlGUI/world/zone_view.h
     sdlGUI/world/entity_view.h
     sdlGUI/world/background.h
+
     sdlGUI/world/hud/hud_view.h
     sdlGUI/world/hud/hotbar_view.h
+
     sdlGUI/world/mines/level_view.h
     sdlGUI/world/mines/mine_view.h
     sdlGUI/world/mines/ore_view.h
+
+    sdlGUI/world/farm/farm_view.h
+    sdlGUI/world/farm/crop_view.h
+    sdlGUI/world/farm/animal_view.h
     )

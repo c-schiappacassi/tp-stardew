@@ -29,6 +29,7 @@ AssetManager::AssetManager(SDL2pp::Renderer& renderer, const std::filesystem::pa
     load_farmer_clips();
     load_ore_sprites();
 }
+
 void AssetManager::load_ore_sprites() {
     auto add = [this](ResourceType t, ResourceState s, uint16_t idx_row,  uint16_t idx_col) {
         ore_sprites.insert_or_assign(

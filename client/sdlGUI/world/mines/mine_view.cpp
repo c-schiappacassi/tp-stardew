@@ -19,8 +19,3 @@ void MinesView::collect_drawables(const RenderInfo& ctx, std::vector<Drawable>& 
         it->second.collect_drawables(ctx, out);
     }
 }
-
-std::optional<ClickTarget> MinesView::pick_target(int world_x, int world_y) const {
-    const auto it = levels.find(current_level);
-    return it == levels.end() ? std::nullopt : it->second.pick_target(world_x, world_y);
-}

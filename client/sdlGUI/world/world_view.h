@@ -5,7 +5,7 @@
 
 #include "../../state.h"
 #include "../camera.h"
-#include "../click_target.h"
+#include "../sync_views.h"
 #include "../render_info.h"
 #include "hud/hud_view.h"
 
@@ -20,17 +20,7 @@ private:
     MapView map;
 
     void update_players_and_list(const std::map<std::string, PlayerData>& players_data) {
-        for (const auto& [username, data]: players_data) {
-            auto [it, _] = player_views.try_emplace(username, data);
-            it->second.update(data);
-        }
-
-        for (auto it = player_views.begin(); it != player_views.end();) {
-            if (players_data.find(it->first) == players_data.end())
-                it = player_views.erase(it);
-            else
-                ++it;
-        }
+        sync_views_map(player_views, players_data);
     }
 
 public:
@@ -40,11 +30,6 @@ public:
         this->update_players_and_list(state.get_players());
         this->player_hud.update(state.get_local());
         this->map.update(state);
-    }
-
-    std::optional<ClickTarget> pick_target(const Camera& cam, int screen_x, int screen_y) const {
-        const SDL2pp::Point w = cam.screen_to_world(screen_x, screen_y);
-        return map.pick_target(w.x, w.y);
     }
 
     void draw(const RenderInfo& ctx) {

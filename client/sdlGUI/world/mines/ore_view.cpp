@@ -3,7 +3,7 @@
 #include "../../draw_region.h"
 #include "../../render_info.h"
 
-OreView::OreView(const MineralData& data): entityId(data.id), type(data.type), state(data.state == MineralState::Broken ? ResourceState::Broken : ResourceState::Intact) {
+OreView::OreView(const MineralData& data): type(data.type), state(data.state == MineralState::Broken ? ResourceState::Broken : ResourceState::Intact) {
     update(data);
 }
 
@@ -11,14 +11,6 @@ void OreView::update(const MineralData& data) {
     pos = data.pos;
     type = data.type;
     state = data.state == MineralState::Broken ? ResourceState::Broken : ResourceState::Intact;
-}
-
-bool OreView::is_hit(int world_x, int world_y) const {
-    if (state == ResourceState::Broken) {
-        return false;
-    }
-    return world_x >= pos.getX() && world_x < pos.getX() + TILE_TO_PIXEL &&
-           world_y >= pos.getY() && world_y < pos.getY() + TILE_TO_PIXEL;
 }
 
 std::optional<float> OreView::depth(const RenderInfo& ctx) const {

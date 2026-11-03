@@ -13,7 +13,6 @@
 #include <vector>
 
 #include "dtos.h"
-#include "sdlGUI/click_target.h"
 #include "state.h"
 
 struct EventKey {
@@ -29,7 +28,6 @@ private:
     using Handler = std::function<void(const SDL_Event&, Out&)>;
 
     std::string player_name;
-    TargetPicker pick;
     std::map<EventKey, Handler> bindings;
     std::vector<Direction> held;
     Direction last_sent = Direction::None;
@@ -84,12 +82,10 @@ private:
 
     void bind_mouse() {
         bind(SDL_MOUSEBUTTONDOWN, SDL_BUTTON_LEFT, [this](const SDL_Event& e, Out& out) {
-            if (auto target = pick(e.button.x, e.button.y)) {
-                auto dto = std::make_shared<InteractDTO>(player_name);
-                dto->targetType = target->type;
-                dto->targetId = target->id;
-                out.push_back(dto);
-            }
+            const Direction current = held.empty() ? Direction::None : held.back();
+            auto dto = std::make_shared<InteractDTO>(player_name);
+            dto->dir = current;
+            out.push_back(dto);
         });
     }
 
@@ -105,8 +101,7 @@ private:
     }
 
 public:
-    InputTranslator(std::string name, TargetPicker picker):
-            player_name(std::move(name)), pick(std::move(picker)) {
+    InputTranslator(std::string name): player_name(std::move(name)) {
         bind_system();
         bind_movement();
         bind_hotbar();

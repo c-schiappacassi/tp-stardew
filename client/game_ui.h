@@ -11,7 +11,6 @@
 #include "input_translator.h"
 #include "sdlGUI/asset_manager.h"
 #include "sdlGUI/camera.h"
-#include "sdlGUI/click_target.h"
 #include "sdlGUI/world/world_view.h"
 #include "state.h"
 
@@ -28,9 +27,6 @@ private:
     InputTranslator input;
 
     void update_camera(const State& state);
-
-    std::optional<ClickTarget> pick_target(int window_x, int window_y);
-
 public:
     explicit GameUI(const std::string& local_player);
 

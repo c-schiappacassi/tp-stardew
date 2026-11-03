@@ -15,6 +15,38 @@
 
 // AUXILIARES
 
+// Farm
+struct CropData{
+    uint32_t id = 0;
+    Position pos{0,0};
+    CropType type;
+    CropState state;
+    bool wattered;
+};
+
+struct AnimalData{
+    uint32_t id = 0;
+    Position pos{0,0};
+    Direction dir{Direction::None};
+    AnimalType type;
+    AnimalState state;
+    // Age ? TBD si hacemos logica de que los animales llegan bebes y crecen
+};
+
+struct FarmData{
+    std::vector<CropData> crops;
+    std::vector<AnimalData> animals;
+};
+// FIN Farm
+
+// Mine
+struct EnemyData{
+    uint32_t id = 0;
+    Position pos{0,0};
+    Direction dir{Direction::None};
+    EnemyType type;
+    EnemyState state;
+};
 
 struct MineralData {
     uint32_t id = 0;
@@ -34,9 +66,12 @@ struct MineData{
     uint8_t current_level;
     LevelData current_level_data;
 };
+// Fin Mine
 
 using ZoneData = std::variant<MineData>;
 
+
+// Player
 struct Color{
     uint8_t r;
     uint8_t g;
@@ -74,7 +109,7 @@ struct PlayerDataLocal : public PlayerData {
     PlayerDataLocal() = default;
     explicit PlayerDataLocal(const PlayerData& publicData): PlayerData(publicData) {}
 };
-
+// FIN Player
 
 
 // COMMAND_DTO CON HERENCIA
@@ -126,7 +161,6 @@ struct ResumeGameDTO : public CommandDTO {
 };
 
 struct MoveDTO : public CommandDTO {
-    Position position{0, 0};
     Direction dir{Direction::None};
 
     MessageType type() const override { return MessageType::Move; }
@@ -134,9 +168,7 @@ struct MoveDTO : public CommandDTO {
 };
 
 struct InteractDTO : public CommandDTO {
-    TargetType targetType; // usemos un type para esto
-    uint32_t targetId;
-
+    Direction dir;
     MessageType type() const override { return MessageType::Interact; }
     explicit InteractDTO(const std::string& name) : CommandDTO(name) {}
 };

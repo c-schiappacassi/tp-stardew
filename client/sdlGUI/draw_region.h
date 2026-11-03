@@ -8,9 +8,7 @@
 #include "render_info.h"
 #include "utils.h"
 
-inline void draw_scaled(const RenderInfo& ctx, SpriteId sprite_id, const SDL2pp::Rect& src,
-                        const SDL2pp::Rect& dst, bool flip = false,
-                        std::optional<SDL_Color> tint = std::nullopt) {
+inline void draw_scaled(const RenderInfo& ctx, SpriteId sprite_id, const SDL2pp::Rect& src, const SDL2pp::Rect& dst, bool flip = false, std::optional<SDL_Color> tint = std::nullopt) {
     SDL2pp::Texture& texture = ctx.assets.get_texture(sprite_id);
 
     if (tint) {
@@ -24,16 +22,13 @@ inline void draw_scaled(const RenderInfo& ctx, SpriteId sprite_id, const SDL2pp:
     }
 }
 
-inline void draw_region(const RenderInfo& ctx, SpriteId sprite_id, const SDL2pp::Rect& src,
-                        const SDL2pp::Point& origin, int dx = 0, int dy = 0, bool flip = false,
-                        std::optional<SDL_Color> tint = std::nullopt) {
+inline void draw_region(const RenderInfo& ctx, SpriteId sprite_id, const SDL2pp::Rect& src, const SDL2pp::Point& origin, int dx = 0, int dy = 0, bool flip = false, std::optional<SDL_Color> tint = std::nullopt) {
     const int z = ctx.cam.get_zoom();
     const SDL2pp::Rect dst(origin.x + dx * z, origin.y + dy * z, src.w * z, src.h * z);
     draw_scaled(ctx, sprite_id, src, dst, flip, tint);
 }
 
-inline void draw_texture_box(const RenderInfo& ctx, SpriteId sprite_id, const SDL2pp::Rect& src,
-                             const SDL2pp::Rect& dst, int corner, int scale) {
+inline void draw_texture_box(const RenderInfo& ctx, SpriteId sprite_id, const SDL2pp::Rect& src, const SDL2pp::Rect& dst, int corner, int scale) {
     const int c = corner * scale;
     const int sx[4] = {0, corner, src.w - corner, src.w};
     const int sy[4] = {0, corner, src.h - corner, src.h};
@@ -42,10 +37,8 @@ inline void draw_texture_box(const RenderInfo& ctx, SpriteId sprite_id, const SD
 
     for (int row = 0; row < 3; ++row) {
         for (int col = 0; col < 3; ++col) {
-            const SDL2pp::Rect s(src.x + sx[col], src.y + sy[row], sx[col + 1] - sx[col],
-                                 sy[row + 1] - sy[row]);
-            const SDL2pp::Rect d(dst.x + dx[col], dst.y + dy[row], dx[col + 1] - dx[col],
-                                 dy[row + 1] - dy[row]);
+            const SDL2pp::Rect s(src.x + sx[col], src.y + sy[row], sx[col + 1] - sx[col], sy[row + 1] - sy[row]);
+            const SDL2pp::Rect d(dst.x + dx[col], dst.y + dy[row], dx[col + 1] - dx[col], dy[row + 1] - dy[row]);
             draw_scaled(ctx, sprite_id, s, d);
         }
     }

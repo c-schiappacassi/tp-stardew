@@ -16,6 +16,4 @@ public:
     void update(const MineData& data);
     void draw_background(const RenderInfo& ctx) override;
     void collect_drawables(const RenderInfo& ctx, std::vector<Drawable>& out) override;
-
-    std::optional<ClickTarget> pick_target(int world_x, int world_y) const override;
 };

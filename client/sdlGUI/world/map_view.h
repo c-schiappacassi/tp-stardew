@@ -11,6 +11,7 @@
 class MapView : public ZoneView {
 private:
     Zone current = Zone::Farm;
+    // TODO: mover las Views al map cuando tenga todo para el constructor(Background incluido)
     MinesView mines;
     std::map<Zone, std::unique_ptr<ZoneView>> zones;
 
@@ -19,13 +20,6 @@ private:
         const auto it = zones.find(current);
         return it == zones.end() ? nullptr : it->second.get();
     }
-
-    const ZoneView* current_view() const {
-        if (current == Zone::Dungeon) return &mines;
-        const auto it = zones.find(current);
-        return it == zones.end() ? nullptr : it->second.get();
-    }
-
 public:
     void update(const State& data) {
         const PlayerDataLocal& local = data.get_local();
@@ -44,10 +38,5 @@ public:
 
     void collect_drawables(const RenderInfo& ctx, std::vector<Drawable>& out) override {
         if (ZoneView* view = current_view()) view->collect_drawables(ctx, out);
-    }
-
-    std::optional<ClickTarget> pick_target(int world_x, int world_y) const override {
-        const ZoneView* view = current_view();
-        return view ? view->pick_target(world_x, world_y) : std::nullopt;
     }
 };

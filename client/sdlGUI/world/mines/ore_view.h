@@ -11,7 +11,6 @@
 
 class OreView: public EntityView {
 private:
-    uint32_t entityId;
     Position pos{0, 0};
     ResourceType type;
     ResourceState state;
@@ -21,10 +20,6 @@ public:
     explicit OreView(const MineralData& data);
 
     void update(const MineralData& data);
-
-    uint32_t id() const { return entityId; }
-
-    bool is_hit(int world_x, int world_y) const;
 
     std::optional<float> depth(const RenderInfo& ctx) const override;
     void draw(const RenderInfo& ctx) override;
