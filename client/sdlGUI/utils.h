@@ -21,6 +21,7 @@ enum class SpriteId : uint16_t {
     Shirts,
     Tools,
     Clock,
+    Weapons,
     InGameUI,
     Ores,
     MenuTiles,

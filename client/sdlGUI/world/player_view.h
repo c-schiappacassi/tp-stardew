@@ -1,6 +1,7 @@
 #pragma once
 
 #include <cstdint>
+#include <map>
 #include <optional>
 
 #include <SDL2/SDL.h>
@@ -60,6 +61,7 @@ private:
     void draw_shirt(const RenderInfo& ctx, const SDL2pp::Point& origin);
     void draw_hair(const RenderInfo& ctx, const SDL2pp::Point& origin);
     void draw_arms(const RenderInfo& ctx, const AnimatedFrame& frame, const SDL2pp::Point& origin);
+    void draw_tool(const RenderInfo& ctx, const SDL2pp::Point& origin);
 
 public:
     explicit PlayerView(const PlayerData& data);

@@ -44,10 +44,20 @@ inline void draw_texture_box(const RenderInfo& ctx, SpriteId sprite_id, const SD
     }
 }
 
+// TODO: pasar todo a usar dir de px en lugar de calcular columnas
 inline SDL2pp::Rect sprite_rect(const Sprite& sprite) {
     return SDL2pp::Rect(
         sprite.col * sprite.width,
         sprite.row * sprite.height,
+        sprite.width,
+        sprite.height
+    );
+}
+
+inline SDL2pp::Rect sprite_rect_all_px(const Sprite& sprite) {
+    return SDL2pp::Rect(
+        sprite.col,
+        sprite.row,
         sprite.width,
         sprite.height
     );

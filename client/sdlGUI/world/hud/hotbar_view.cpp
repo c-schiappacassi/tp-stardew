@@ -16,7 +16,7 @@ namespace {
     constexpr int BAR_CORNER = 16;
     constexpr int SLOT_PX = 64;
     constexpr int ICON_PX = 16;
-    constexpr int ICON_SCALE = 4;
+    constexpr int ICON_SCALE = 3;
     constexpr int BOTTOM_MARGIN = 8;
 
     constexpr int GLYPH_W = 3;
@@ -65,10 +65,27 @@ void HotbarView::update(const PlayerDataLocal& local) {
 }
 
 void HotbarView::draw_stack(const RenderInfo& ctx, const Stack& stack, const SDL2pp::Point& pos, int u) {
-    const int icon = ICON_PX * ICON_SCALE * u;
-
     if (const Sprite* sprite = ctx.assets.find_sprite(stack.item_id)) {
-        draw_scaled(ctx, sprite->sprite_id, sprite_rect(*sprite), SDL2pp::Rect(pos.x, pos.y, icon, icon));
+        const int slot_size = SLOT_PX * u;
+        const int max_icon_size = ICON_PX * ICON_SCALE * u;
+
+        const float scale = std::min(
+            static_cast<float>(max_icon_size) / sprite->width,
+            static_cast<float>(max_icon_size) / sprite->height
+        );
+
+        const int width = std::max(1, static_cast<int>(sprite->width * scale));
+        const int height = std::max(1, static_cast<int>(sprite->height * scale));
+
+        const int x = pos.x + (slot_size - width) / 2;
+        const int y = pos.y + (slot_size - height) / 2;
+
+        draw_scaled(
+            ctx,
+            sprite->sprite_id,
+            sprite_rect_all_px(*sprite),
+            SDL2pp::Rect(x, y, width, height)
+        );
     }
 
     if (stack.quantity > 1) {

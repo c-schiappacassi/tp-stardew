@@ -1,8 +1,5 @@
 #include "player_view.h"
 
-#include <algorithm>
-#include <utility>
-
 PlayerView::PlayerView(const PlayerData& data) {
     update(data);
 

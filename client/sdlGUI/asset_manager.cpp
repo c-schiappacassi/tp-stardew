@@ -7,20 +7,15 @@
 #include "dtos.h"
 
 namespace Dimentions {
-constexpr uint16_t FARMER_COLS = uint16_t(6);
-constexpr uint16_t FARMER_CELL_W = uint16_t(16);
-constexpr uint16_t FARMER_CELL_H = uint16_t(32);
-constexpr uint16_t ORE_SIZE = uint16_t(16);
-constexpr uint16_t ORE_SHEET_COLS = uint16_t(24);
+    constexpr uint16_t FARMER_COLS = uint16_t(6);
+    constexpr uint16_t FARMER_CELL_W = uint16_t(16);
+    constexpr uint16_t FARMER_CELL_H = uint16_t(32);
+    constexpr uint16_t ORE_SIZE = uint16_t(16);
 }
 
 SDL2pp::Texture AssetManager::load_texture(SDL2pp::Renderer& renderer, const std::filesystem::path& path) {
     SDL_Surface* raw = IMG_Load(path.string().c_str());
-
-    if (!raw) {
-        throw std::runtime_error("Could not load: " + path.string() + ": " + IMG_GetError());
-    }
-
+    if (!raw) {throw std::runtime_error("Could not load: " + path.string() + ": " + IMG_GetError());}
     return SDL2pp::Texture(renderer, SDL2pp::Surface(raw));
 }
 
@@ -28,27 +23,39 @@ AssetManager::AssetManager(SDL2pp::Renderer& renderer, const std::filesystem::pa
     load_sprites_texture(renderer, assets_root / "Sprites" );
     load_farmer_clips();
     load_ore_sprites();
+    load_item_sprites();
 }
 
 void AssetManager::load_ore_sprites() {
     auto add = [this](ResourceType t, ResourceState s, uint16_t idx_row,  uint16_t idx_col) {
         ore_sprites.insert_or_assign(
             {t, s},
-            Sprite{SpriteId::Ores, Dimentions::ORE_SIZE, Dimentions::ORE_SIZE,
-                   static_cast<uint16_t>(idx_row / Dimentions::ORE_SHEET_COLS),
-                   static_cast<uint16_t>(idx_col % Dimentions::ORE_SHEET_COLS)});
+            Sprite{SpriteId::Ores, Dimentions::ORE_SIZE, Dimentions::ORE_SIZE, static_cast<uint16_t>(idx_row), static_cast<uint16_t>(idx_col)}
+        );
     };
 
-    add(ResourceType::StoneRock,  ResourceState::Intact, 1,0);
-    add(ResourceType::StoneRock,  ResourceState::Broken, 1,0);
+    add(ResourceType::StoneRock,  ResourceState::Intact, 1,14);
+    add(ResourceType::StoneRock,  ResourceState::Broken, 1,15);
     add(ResourceType::CoalRock,   ResourceState::Intact, 1,0);
-    add(ResourceType::CoalRock,   ResourceState::Broken, 1,0);
-    add(ResourceType::LapisRock,  ResourceState::Intact, 1,0);
-    add(ResourceType::LapisRock,  ResourceState::Broken, 1,0);
-    add(ResourceType::SilverRock, ResourceState::Intact, 1,0);
-    add(ResourceType::SilverRock, ResourceState::Broken, 1,0);
-    add(ResourceType::GoldRock,   ResourceState::Intact, 1,0);
-    add(ResourceType::GoldRock,   ResourceState::Broken, 1,0);
+    add(ResourceType::CoalRock,   ResourceState::Broken, 1,1);
+    add(ResourceType::LapisRock, ResourceState::Intact, 0,14);
+    add(ResourceType::LapisRock, ResourceState::Broken, 0,13);
+    add(ResourceType::SilverRock,  ResourceState::Intact, 0,12);
+    add(ResourceType::SilverRock,  ResourceState::Broken, 0,13);
+    add(ResourceType::GoldRock,   ResourceState::Intact, 0,8);
+    add(ResourceType::GoldRock,   ResourceState::Broken, 0,9);
+}
+
+void AssetManager::load_item_sprites() {
+    item_sprites.insert_or_assign( ItemId::Pickaxe , Sprite{ SpriteId::Tools , 16, 16 , 97,304} );
+    item_sprites.insert_or_assign( ItemId::Sword , Sprite{ SpriteId::Weapons , 16, 16 , 16, 48} );
+    item_sprites.insert_or_assign( ItemId::WateringCan , Sprite{ SpriteId::Tools , 16, 11 , 228 , 32} );
+    item_sprites.insert_or_assign( ItemId::Shovel , Sprite{ SpriteId::Tools , 16, 16 , 33, 304} );
+
+    item_sprites.insert_or_assign( ItemId::Coal , Sprite{ SpriteId::Ores , 16, 16 , 108, 16} );
+    item_sprites.insert_or_assign( ItemId::Lapis , Sprite{ SpriteId::Ores , 16, 16 , 108, 64} );
+    item_sprites.insert_or_assign( ItemId::Silver , Sprite{ SpriteId::Ores , 15, 15 , 68, 145} );
+    item_sprites.insert_or_assign( ItemId::Gold , Sprite{ SpriteId::Ores , 16, 16 , 108, 94} );
 }
 
 void AssetManager::load_sprites_texture(SDL2pp::Renderer& renderer, const std::filesystem::path& assets_root) { 
@@ -57,10 +64,14 @@ void AssetManager::load_sprites_texture(SDL2pp::Renderer& renderer, const std::f
     const auto menus = assets_root / "Menus";
 
     textures.emplace(SpriteId::MenuTiles, load_texture(renderer, menus / "MenuTiles..png"));
+
     textures.emplace(SpriteId::FarmerBase, load_texture(renderer, characters / "Farmer Base.png"));
     textures.emplace(SpriteId::Hairstyles, load_texture(renderer, characters / "Hairstyles.png"));
     textures.emplace(SpriteId::Pants, load_texture(renderer, characters / "Pants.png"));
     textures.emplace(SpriteId::Shirts, load_texture(renderer, characters / "Shirts.png"));
+    textures.emplace(SpriteId::Tools, load_texture(renderer, characters / "Tools.png"));
+    textures.emplace(SpriteId::Weapons, load_texture(renderer, characters / "Weapons.png"));
+    
     textures.emplace(SpriteId::Ores, load_texture(renderer, ores / "Mines.png"));
 }
 
