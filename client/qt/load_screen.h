@@ -19,7 +19,7 @@ public:
 
 signals:
     void backRequested();
-    void resumeRequested(uint16_t gameId);
+    void resumeRequested(const std::string& gameId);
 
 private:
     SpriteButton* makeRow(const GameInfoDTO& gameInfo);

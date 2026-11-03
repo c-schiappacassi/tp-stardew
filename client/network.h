@@ -65,4 +65,11 @@ public:
         protocolo.recv(status);
         return status;
     }
+    //para ListGames y Checkcode que no respondern con ServerStatus sino qtstatus
+    qtStatus handshakeQt(const CommandDTO& dto) {
+        protocolo.send(dto);
+        qtStatus status;
+        protocolo.recv(status);
+        return status;
+    }
 };

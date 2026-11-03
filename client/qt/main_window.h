@@ -18,6 +18,7 @@ public:
 
 private:
     ServerStatus send(const CommandDTO& dto);
+    qtStatus sendQt(const CommandDTO& dto);
 
     QStackedWidget *stack;
     NetworkManager& net;

@@ -177,7 +177,7 @@ SpriteButton* LoadScreen::makeRow(const GameInfoDTO& game) {
     rowLayout->addStretch(1);
     rowLayout->addLayout(rightColumn);
 
-    const uint16_t id = game.id;
+    const std::string id = game.id;
     connect(row, &QAbstractButton::clicked, this, [this, id]() { emit resumeRequested(id); });
     return row;
 }

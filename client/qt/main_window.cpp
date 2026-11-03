@@ -33,7 +33,7 @@ MainWindow::MainWindow(NetworkManager& net, QWidget *parent) : QMainWindow(paren
 
     connect(usernameScreen, &UsernameScreen::usernameConfirmed, this, [this, usernameScreen, startMenu](const QString& name) {
         const std::string user = name.toStdString();
-        const ServerStatus reply = send(RequestGameListDTO(user));
+        const qtStatus reply = sendQt(ListGamesDTO(user));
         if (reply.status == StatusCode::Ok) {
             username = user;
             games = reply.games;
@@ -54,7 +54,7 @@ MainWindow::MainWindow(NetworkManager& net, QWidget *parent) : QMainWindow(paren
         stack->setCurrentWidget(loadScreen);
     });
 
-    connect(loadScreen, &LoadScreen::resumeRequested, this, [this](uint16_t gameId) {
+    connect(loadScreen, &LoadScreen::resumeRequested, this, [this](const std::string& gameId) {
         ResumeGameDTO dto(username);
         dto.gameId = gameId;
         const ServerStatus reply = send(dto);
@@ -67,9 +67,10 @@ MainWindow::MainWindow(NetworkManager& net, QWidget *parent) : QMainWindow(paren
         stack->setCurrentWidget(newGameScreen);
     });
 
-    connect(joinScreen, &JoinScreen::joinRequested, this, [this, joinScreen, joinCharacterScreen](const QString& code) {        CheckCodeDTO dto(username);
+    connect(joinScreen, &JoinScreen::joinRequested, this, [this, joinScreen, joinCharacterScreen](const QString& code) {
+        CheckCodeDTO dto(username);
         dto.code = code.toStdString();
-        const ServerStatus reply = send(dto);
+        const qtStatus reply = sendQt(dto);
         if (reply.status == StatusCode::Ok) {
             joinCode = dto.code;
             stack->setCurrentWidget(joinCharacterScreen);
@@ -138,6 +139,17 @@ ServerStatus MainWindow::send(const CommandDTO& dto) {
         return net.handshake(dto);
     } catch (const std::exception&) {
         ServerStatus failed{};
+        failed.status = StatusCode::Error;
+        failed.errorMsg = "Could not connect to the server";
+        return failed;
+    }
+}
+
+qtStatus MainWindow::sendQt(const CommandDTO& dto) {
+    try {
+        return net.handshakeQt(dto);
+    } catch (const std::exception&) {
+        qtStatus failed{};
         failed.status = StatusCode::Error;
         failed.errorMsg = "Could not connect to the server";
         return failed;
