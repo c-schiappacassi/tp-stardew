@@ -22,7 +22,7 @@ public:
     bool configureDungeonEntrance(const DungeonEntrance& data);
     bool acceptsWorld(uint8_t worldId) const;
     bool canMove(const Player& player, const Position& next) const override;
-    void completeZoneData(const Player& player, PlayerDataLocal& data,bool includeBroken) const override;
-    void interact(Player& player, const InteractDTO& interaction) override;
+    void completeZoneData(const Player& player,PlayerDataLocal& data,bool includeBroken) const override;
+    void interact(Player& player, Direction direction) override;
     void afterStatusPublished();
 };

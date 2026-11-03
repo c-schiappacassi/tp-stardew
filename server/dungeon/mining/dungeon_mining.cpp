@@ -28,12 +28,11 @@ bool DungeonMining::mine(Player& player, DungeonRoom& room, EntityId id,MineralG
     return true;
 }
 
-EntityId DungeonMining::chooseMineral(const Player& player, const DungeonRoom& room) const {
+EntityId DungeonMining::chooseMineral(const Player& player,const DungeonRoom& room,Direction direction) const {
     EntityId chosen = 0;
     double nearest = std::numeric_limits<double>::max();
-    const auto direction = player.getPublicData().dir;
     for (const auto& [id, mineral] : room.getMinerals()) {
-        if (mineral.isDepleted() || !player.canReach(mineral.getPosition(), range) ||!room.hasClearLine(player.getPosition(), mineral.getPosition())) {
+        if (mineral.isDepleted() ||!player.canReach(mineral.getPosition(), range) ||!room.hasClearLine(player.getPosition(), mineral.getPosition())) {
             continue;
         }
         const double dx = static_cast<double>(mineral.getPosition().getX()) - player.getPosition().getX();
@@ -52,10 +51,10 @@ EntityId DungeonMining::chooseMineral(const Player& player, const DungeonRoom& r
     return chosen;
 }
 
-bool DungeonMining::useSelectedItem(Player& player, DungeonRoom& room,MineralGenerator& generator, std::chrono::steady_clock::time_point now) const {
+bool DungeonMining::useSelectedItem(Player& player,DungeonRoom& room,MineralGenerator& generator,Direction direction,std::chrono::steady_clock::time_point now) const {
     if (player.getZone() != Zone::Dungeon || !player.canUsePickaxe(now)) {
         return false;
     }
-    const EntityId chosen = chooseMineral(player, room);
+    const EntityId chosen = chooseMineral(player, room, direction);
     return chosen != 0 && mine(player, room, chosen, generator, now);
 }

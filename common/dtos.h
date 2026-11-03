@@ -134,9 +134,7 @@ struct MoveDTO : public CommandDTO {
 };
 
 struct InteractDTO : public CommandDTO {
-    TargetType targetType; // usemos un type para esto
-    uint32_t targetId;
-
+    Direction dir;
     MessageType type() const override { return MessageType::Interact; }
     explicit InteractDTO(const std::string& name) : CommandDTO(name) {}
 };

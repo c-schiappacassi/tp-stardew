@@ -5,7 +5,7 @@ struct InteractDTO;
 
 class PlayerInteractions {
 public:
-    virtual void interact(Player& player, const InteractDTO& interaction) = 0;
+    virtual void interact(Player& player, Direction direction) = 0;
 
     virtual ~PlayerInteractions() = default;
 };

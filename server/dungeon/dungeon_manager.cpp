@@ -31,14 +31,14 @@ std::optional<MineData> DungeonManager::getMineData(uint8_t number, bool include
     return room ? room->getMineData(includeBroken) : std::nullopt;
 }
 
-bool DungeonManager::mineMineral(Player& player, EntityId id,std::chrono::steady_clock::time_point now) {
+bool DungeonManager::mineMineral(Player& player,EntityId id,std::chrono::steady_clock::time_point now) {
     auto* room = findRoom(player.getDungeonLevel());
     return room && mining.mine(player, *room, id, generator, now);
 }
 
-bool DungeonManager::useSelectedItem(Player& player, std::chrono::steady_clock::time_point now) {
+bool DungeonManager::useSelectedItem(Player& player,Direction direction,std::chrono::steady_clock::time_point now) {
     auto* room = findRoom(player.getDungeonLevel());
-    return room && mining.useSelectedItem(player, *room, generator, now);
+    return room && mining.useSelectedItem(player, *room, generator, direction, now);
 }
 
 bool DungeonManager::enter(Player& player) {
