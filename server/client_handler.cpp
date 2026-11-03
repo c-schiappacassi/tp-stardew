@@ -28,6 +28,12 @@ void ClientHandler::run() {
                 case MessageType::Move:
                     handleMove();
                     break;
+                case MessageType::ListGames:
+                    handleListGames();
+                    break;
+                case MessageType::CheckCode:
+                    handleCheckCode();
+                    break;
                 case MessageType::ExitGame:
                     stop();
                     break;
@@ -70,6 +76,31 @@ void ClientHandler::handleMove() {
     session.input->push(PlayerCommand{session.playerId, std::make_shared<MoveDTO>(move)});
 }
 
+void ClientHandler::handleListGames() {
+    ListGamesDTO dto = protocol.receiveListGames();
+    if (inGame()) {
+        throw ProtocolError("ya estas en una partida");
+    }
+    qtStatus status;
+    status.status = StatusCode::Ok;
+    status.games = manager.listGames(dto.userName);
+    protocol.sendQtStatus(status);
+}
+
+void ClientHandler::handleCheckCode() {
+    CheckCodeDTO dto = protocol.receiveCheckCode();
+    if (inGame()) {
+        throw ProtocolError("ya estas en una partida");
+    }
+    qtStatus status;
+    status.status = StatusCode::Ok;
+    if (!manager.codeExists(dto.code)) {
+        status.status = StatusCode::Error;
+        status.errorMsg = "codigo invalido";
+    }
+    protocol.sendQtStatus(status);
+}
+
 void ClientHandler::answer(const GameSession& result) {
     protocol.sendStatus(result.status);
     if (result.input) {
@@ -90,11 +121,11 @@ void ClientHandler::disconnect() {
     stop();
     if (inGame()) {
         try {
-            session.input->push(PlayerCommand{session.playerId, std::make_shared<DisconnectDTO>(session.playerName)});
+            session.input->push(PlayerCommand{session.playerId, std::make_shared<DisconnectDTO>(session.userName)});
         } catch (const ClosedQueue&) {}
     }
     try {
-        outQueue->close(); // esto deberia desttrabar el sender
+        outQueue->close(); // esto deberia destranar el sender
     } catch (const std::exception&) {}
     if (sender) {
         sender->join();

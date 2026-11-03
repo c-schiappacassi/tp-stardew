@@ -23,6 +23,8 @@ private:
     void handleCreate();
     void handleJoin();
     void handleMove();
+    void handleListGames();
+    void handleCheckCode();
 
     void answer(const GameSession& result);
 
