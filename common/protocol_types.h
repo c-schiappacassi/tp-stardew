@@ -8,7 +8,8 @@ enum class MessageType : uint8_t {
     ListGames = 0x03,  // lo usamos para cuando hay que retomar una partida
     ResumeGame = 0x04, // llamamos a todas las partidas y vemos si entre ellas
                        // esta la aprtida a la que nos queremos reunir
-    ExitGame = 0x05,
+    CheckCode = 0x05,
+    ExitGame = 0x06,
 
     Move = 0x10,
     SelectItem = 0x11,   // cofre a inventario
@@ -19,6 +20,7 @@ enum class MessageType : uint8_t {
     DayOk = 0x16,
     Donate = 0x17,       // para completar las misiones
     ItemTransfer = 0x18, // inventario a cofre
+    SelectSlot = 0x19,
 
     Status = 0x80,
     GameList = 0x81,
@@ -56,6 +58,8 @@ enum class TargetType : uint8_t {
     Animal = 2,
     Chest = 3,
     Bed = 4,
+    Ore = 5,
+    DungeonPassage = 6
 };
 
 enum class PlayerState : uint8_t {
@@ -98,11 +102,12 @@ enum class CropState : uint8_t {
 };
 
 enum class Quality : uint8_t {
-    Base = 0,       // x1
-    Good = 1,       // x1.25
-    Excellent = 2,  // x2
-    Incredible = 3, // x4
-    Perfect = 4     // x8
+    None = 0,
+    Base = 1,       // x1
+    Good = 2,       // x1.25
+    Excellent = 3,  // x2
+    Incredible = 5, // x4
+    Perfect = 6     // x8
 };
 
 // ANIMALS
@@ -119,15 +124,25 @@ enum class AnimalState : uint8_t {
 
 // ROCKS
 enum class ResourceType : uint8_t {
-    CoalRock = 0,
-    LapisRock = 1,
-    SilverRock = 2,
-    GoldRock = 3
+    StoneRock,
+    CoalRock,
+    LapisRock,
+    SilverRock,
+    GoldRock
+};
+
+enum class ResourceState : uint8_t {
+    Intact = 0,
+    Broken = 1,
+};
+
+enum class MineralState : uint8_t {
+    Intact = 0,
+    Broken = 1
 };
 
 // ITEMS
 enum class ItemId : uint16_t {
-
     Pickaxe = 1,
     WateringCan = 2,
     Shovel = 3,

@@ -5,17 +5,37 @@
 #include <variant>
 #include <vector>
 #include <stdexcept>
+#include <unordered_map>
 #include <map>
+#include <optional>
+#include <memory>
 
 #include "protocol_types.h"
 #include "position.h"
 
 
-// TODO IMPORTANTE: cambio de variant a herencia porque todos los dtos mandan el id del usuario en la
-// partida para que la partida identifique a que clientHandler le tiene que responder
-// TBD: con que identificar al usuario(el apodo de la partida o un id?)
-
 // AUXILIARES
+
+struct MineralData {
+    uint32_t id = 0;
+    Position pos{0, 0};
+    ResourceType type = ResourceType::CoalRock;
+    MineralState state = MineralState::Intact;
+};
+
+struct LevelData {
+    Position entry{0, 0};
+    Position exit{0, 0};
+    std::vector<MineralData> minerals;
+    // TODO: enemys
+};
+
+struct MineData{
+    uint8_t current_level;
+    LevelData current_level_data;
+};
+
+using ZoneData = std::variant<MineData>;
 
 struct Color{
     uint8_t r;
@@ -23,25 +43,54 @@ struct Color{
     uint8_t b;
 };
 
+struct Stack {
+    ItemId item_id;
+    uint16_t quantity;
+    Quality qual;
+};
+
 struct PlayerData{
+    std::string characterName;
     Position pos{0,0};
     PlayerState state{PlayerState::Idle};
     Direction dir{Direction::None};
     uint16_t hairModel = 0;
     uint16_t shirtModel = 0;
     uint16_t pantsModel = 0;
-    Color hairColor{0,0,0};
-    Color pantsColor{0,0,0};
+    Color hairColor{0, 0, 0};
+    Color pantsColor{0, 0, 0};
+    Zone currentZone = Zone::Farm;
+};
+
+struct GameInfoDTO {
+    std::string id;
+    std::string farmName;
+    PlayerData playerData;
+    bool isMultiplayer = false;
+};
+
+struct PlayerDataLocal : public PlayerData {
+    std::map<uint8_t, Stack> items;
+    uint8_t current_slot = 0;
+    uint32_t gold = 0;
+    uint16_t health = 0;
+    uint16_t maxHealth = 0;
+    uint16_t energy = 0;
+    uint16_t maxEnergy = 0;
+    ZoneData zoneData;
+
+    PlayerDataLocal() = default;
+    explicit PlayerDataLocal(const PlayerData& publicData): PlayerData(publicData) {}
 };
 
 // COMMAND_DTO CON HERENCIA
 
 struct CommandDTO {
-    std::string playerName;
+    std::string userName;
 
-    explicit CommandDTO(std::string name) : playerName(std::move(name)) {
-        if (playerName.empty()) {
-            throw std::invalid_argument("playerName no puede estar vacio");
+    explicit CommandDTO(std::string name) : userName(std::move(name)) {
+        if (userName.empty()) {
+            throw std::invalid_argument("userName no puede estar vacio");
         }
     }
     virtual ~CommandDTO() = default;
@@ -51,6 +100,7 @@ struct CommandDTO {
 // CLIENTE -> SERVIDOR
 
 struct CreateGameDTO : public CommandDTO {
+    std::string characterName;
     std::string gameName;
     uint8_t worldId;
     uint16_t hairModel = 0;
@@ -64,6 +114,7 @@ struct CreateGameDTO : public CommandDTO {
 };
 
 struct JoinGameDTO : public CommandDTO {
+    std::string characterName;
     std::string code;
     uint16_t hairModel = 0;
     uint16_t shirtModel = 0;
@@ -76,7 +127,7 @@ struct JoinGameDTO : public CommandDTO {
 };
 
 struct ResumeGameDTO : public CommandDTO {
-    uint16_t gameId;
+    std::string gameId;
 
     MessageType type() const override { return MessageType::ResumeGame; }
     explicit ResumeGameDTO(const std::string& name) : CommandDTO(name) {}
@@ -92,7 +143,7 @@ struct MoveDTO : public CommandDTO {
 
 struct InteractDTO : public CommandDTO {
     TargetType targetType; // usemos un type para esto
-    uint16_t targetId;
+    uint32_t targetId;
 
     MessageType type() const override { return MessageType::Interact; }
     explicit InteractDTO(const std::string& name) : CommandDTO(name) {}
@@ -127,78 +178,49 @@ struct RequestMultiplayerCodeDTO : public CommandDTO {
 };
 
 struct DisconnectDTO : public CommandDTO {
+
     MessageType type() const override { return MessageType::ExitGame; }
     explicit DisconnectDTO(const std::string& name) : CommandDTO(name) {}
 };
 
-// DEBERIAMOS VOLARLOS:
-/*
+struct SelectSlotDTO : public CommandDTO {
+    uint8_t slot = 0;
 
-struct GameInfoDTO {
-    uint16_t id;
-    std::string gameName;
-    std::string playerName;
-    uint8_t skin;
-    bool isMultiplayer; // tal vez false deberia ser el default bool isMultiplayer{false};
+    MessageType type() const override { return MessageType::SelectSlot; }
+    explicit SelectSlotDTO(const std::string& name) : CommandDTO(name) {}
 };
 
-struct GameListDTO {
-    std::vector<GameInfoDTO> games;
+struct ListGamesDTO : public CommandDTO {
+
+    MessageType type() const override { return MessageType::ListGames; }
+    explicit ListGamesDTO(const std::string& name) : CommandDTO(name) {}
 };
 
-struct GameJoinedDTO {
-    std::string gameId;
-    uint16_t playerId;
-    uint8_t worldId;
-};
+struct CheckCodeDTO : public CommandDTO {
+    std::string code;
 
-struct StatusDTO {
-    StatusCode status;
-    std::string errorMsg;
-    std::string successMsg;
+    MessageType type() const override { return MessageType::CheckCode; }
+    explicit CheckCodeDTO(const std::string& name) : CommandDTO(name) {}
 };
-*/
 
 // SERVIDOR -> CLIENTE
 
-// TODO: seguir completando server status
+// seguir completando server status
+
 struct ServerStatus {
-    StatusCode status;
+    StatusCode status = StatusCode::Ok;
     std::string errorMsg;
     std::string successMsg;
     std::string gameId;
     uint16_t playerId = 0;
     uint8_t worldId = 0;
     std::map<std::string, PlayerData> players;
+    PlayerDataLocal localPlayer;
 };
 
-/*
-// aca dejo un compilado de los dtos que ya habia estado viendo antes para completar el serverstatus
-
-struct ServerStatus {
-    uint16_t gameId;
-    uint8_t worldId;
-
-    StatusCode status{};
+struct qtStatus {
+    StatusCode status;
     std::string errorMsg;
     std::string successMsg;
-
-    bool isFinished; // tal vez false deberia ser el default bool isFinished{false};
-
-    std::string MultiplayerCode;
-    std::vector<GameInfoDTO> currentGames; // ojo que aca pasamos vector de DTOs
-
-    // y esta es una idea para pasar todos los datos en vectores donde la posicion siempre corresponde a un mismo jugador
-    std::vector<uint16_t> playerIds;
-    std::vector<std::string> playerNames;
-    std::vector<uint8_t> playerSkins;
-    std::vector<Position> playerPositions;
-    std::vector<uint16_t> playerHealths;
-    std::vector<uint32_t> playerMoney;
-
-    // y que el chat sea emisor + mensaje pero creo que ciro necesitaria tambien un receivers por los mensajes privados
-    // la otra es usar lo mismo que arriba y hacer indice = jugador y se va pasando de a un solo mensaje (creo que esto es mas prolijo para leerlo despues porque sigue la misma logica que los vectores de arriba)
-    std::vector<std::string> chatSenders;
-    std::vector<std::string> chatTexts;
+    std::vector<GameInfoDTO> games;
 };
-*/

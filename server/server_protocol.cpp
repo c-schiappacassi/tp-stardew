@@ -33,7 +33,14 @@ void ServerProtocol::sendColor(const Color& color) {
     base.sendUint8(color.b);
 }
 
+void ServerProtocol::sendStack(const Stack& stack) {
+    base.sendUint16(static_cast<uint16_t>(stack.item_id));
+    base.sendUint16(stack.quantity);
+    base.sendUint8(static_cast<uint8_t>(stack.qual));
+}
+
 void ServerProtocol::sendPlayerData(const PlayerData& data) {
+    base.sendString(data.characterName);
     sendPosition(data.pos);
     base.sendUint8(static_cast<uint8_t>(data.state));
     base.sendUint8(static_cast<uint8_t>(data.dir));
@@ -42,12 +49,71 @@ void ServerProtocol::sendPlayerData(const PlayerData& data) {
     base.sendUint16(data.pantsModel);
     sendColor(data.hairColor);
     sendColor(data.pantsColor);
+    base.sendUint8(static_cast<uint8_t>(data.currentZone));
+}
+
+void ServerProtocol::sendGameInfo(const GameInfoDTO& info) {
+    base.sendString(info.id);
+    base.sendString(info.farmName);
+    sendPlayerData(info.playerData);
+    base.sendUint8(info.isMultiplayer ? 1 : 0);
+}
+
+SelectSlotDTO ServerProtocol::receiveSelectSlot() {
+    SelectSlotDTO dto(base.receiveString());
+    dto.slot = base.receiveUint8();
+    return dto;
+}
+
+void ServerProtocol::sendMineralData(const MineralData& mineral) {
+    base.sendUint32(mineral.id);
+    sendPosition(mineral.pos);
+    base.sendUint8(static_cast<uint8_t>(mineral.type));
+    base.sendUint8(static_cast<uint8_t>(mineral.state));
+}
+
+void ServerProtocol::sendLevelData(const LevelData& level) {
+    sendPosition(level.entry);
+    sendPosition(level.exit);
+
+    base.sendUint16(static_cast<uint16_t>(level.minerals.size()));
+    for (const MineralData& mineral : level.minerals) {
+        sendMineralData(mineral);
+    }
+}
+
+void ServerProtocol::sendMineData(const MineData& mine) {
+    base.sendUint8(mine.current_level);
+    sendLevelData(mine.current_level_data);
+}
+
+void ServerProtocol::sendZoneData(const ZoneData& zoneData) {
+    std::visit([this](const auto& zone) { sendMineData(zone); }, zoneData);
+}
+
+void ServerProtocol::sendPlayerDataLocal(const PlayerDataLocal& localData) {
+    sendPlayerData(localData);
+
+    base.sendUint8(static_cast<uint8_t>(localData.items.size()));
+    for (const auto& [slot, stack] : localData.items) {
+        base.sendUint8(slot);
+        sendStack(stack);
+    }
+
+    base.sendUint8(localData.current_slot);
+    base.sendUint32(localData.gold);
+    base.sendUint16(localData.health);
+    base.sendUint16(localData.maxHealth);
+    base.sendUint16(localData.energy);
+    base.sendUint16(localData.maxEnergy);
+    sendZoneData(localData.zoneData);
 }
 
 // RECEIVERS (the type byte was already consumed by receiveType())
 
 CreateGameDTO ServerProtocol::receiveCreateGame() {
     CreateGameDTO dto(base.receiveString());
+    dto.characterName = base.receiveString();
     dto.gameName = base.receiveString();
     dto.worldId = base.receiveUint8();
     dto.hairModel = base.receiveUint16();
@@ -60,6 +126,7 @@ CreateGameDTO ServerProtocol::receiveCreateGame() {
 
 JoinGameDTO ServerProtocol::receiveJoinGame() {
     JoinGameDTO dto(base.receiveString());
+    dto.characterName = base.receiveString();
     dto.code = base.receiveString();
     dto.hairModel = base.receiveUint16();
     dto.shirtModel = base.receiveUint16();
@@ -71,7 +138,7 @@ JoinGameDTO ServerProtocol::receiveJoinGame() {
 
 ResumeGameDTO ServerProtocol::receiveResumeGame() {
     ResumeGameDTO dto(base.receiveString());
-    dto.gameId = base.receiveUint16();
+    dto.gameId = base.receiveString();
     return dto;
 }
 
@@ -85,7 +152,7 @@ MoveDTO ServerProtocol::receiveMove() {
 InteractDTO ServerProtocol::receiveInteract() {
     InteractDTO dto(base.receiveString());
     dto.targetType = static_cast<TargetType>(base.receiveUint8());
-    dto.targetId = base.receiveUint16();
+    dto.targetId = base.receiveUint32();
     return dto;
 }
 
@@ -116,6 +183,16 @@ DisconnectDTO ServerProtocol::receiveDisconnect() {
     return DisconnectDTO(base.receiveString());
 }
 
+ListGamesDTO ServerProtocol::receiveListGames() {
+    return ListGamesDTO(base.receiveString());
+}
+
+CheckCodeDTO ServerProtocol::receiveCheckCode() {
+    CheckCodeDTO dto(base.receiveString());
+    dto.code = base.receiveString();
+    return dto;
+}
+
 // SENDERS
 
 void ServerProtocol::sendStatus(const ServerStatus& status) {
@@ -130,5 +207,18 @@ void ServerProtocol::sendStatus(const ServerStatus& status) {
     for (const auto& [name, data] : status.players) {
         base.sendString(name);
         sendPlayerData(data);
+    }
+
+    sendPlayerDataLocal(status.localPlayer);
+}
+
+void ServerProtocol::sendQtStatus(const qtStatus& status) {
+    base.sendUint8(static_cast<uint8_t>(status.status));
+    base.sendString(status.errorMsg);
+    base.sendString(status.successMsg);
+
+    base.sendUint16(static_cast<uint16_t>(status.games.size()));
+    for (const GameInfoDTO& info : status.games) {
+        sendGameInfo(info);
     }
 }

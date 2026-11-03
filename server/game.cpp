@@ -4,8 +4,10 @@
 #include "constants.h"
 #include "foo.h"
 
-Game::Game(const std::string& id, const std::string& name, uint8_t worldId, const char* servicename):
-    id(id),name(name),worldId(worldId),input(std::make_shared<CommandQueue>()),skt(servicename),acceptor(skt, *this) {}
+
+Game::Game(const std::string& id):
+        id(id), name(""), worldId(0), input(std::make_shared<CommandQueue>()) {}
+
 
 const std::string& Game::getId() const {
     return id;
@@ -49,7 +51,7 @@ GameSession Game::createGame(const CreateGameDTO& dto,const std::shared_ptr<OutQ
     data.hairColor = dto.hairColor;
     data.pantsColor = dto.pantsColor;
 
-    session = addPlayer(dto.playerName, data, output, "Partida creada");
+    session = addPlayer(dto.userName, data, output, "Partida creada");
 
     if (session.status.status == StatusCode::Ok) {
         configured = true;
@@ -80,17 +82,17 @@ void Game::advancePlayers() {
     }
 }
 
-GameSession Game::addPlayer(const std::string& playerName,const PlayerData& data,const std::shared_ptr<OutQueue>& output,const std::string& successMsg) {
+GameSession Game::addPlayer(const std::string& userName,const PlayerData& data,const std::shared_ptr<OutQueue>& output,const std::string& successMsg) {
     GameSession session{};
     session.status.status = StatusCode::Error;
-    session.playerName = playerName;
-    if (playerName.empty() || !output) {
+    session.userName = userName;
+    if (userName.empty() || !output) {
         session.status.errorMsg = "No se pudo registrar al jugador";
         return session;
     }
 
     for (const auto& entry : players) {
-        if (entry.second.name == playerName) {
+        if (entry.second.name == userName) {
             session.status.errorMsg = "Ya existe un jugador con ese nombre";
             return session;
         }
@@ -104,7 +106,7 @@ GameSession Game::addPlayer(const std::string& playerName,const PlayerData& data
     const uint16_t playerId = nextPlayerId;
     PlayerData spawn = data;
     spawn.pos = Position(SPAWN_X, SPAWN_Y);
-    players.emplace(playerId, PlayerRecord{playerId, playerName, output, true, spawn});
+    players.emplace(playerId, PlayerRecord{playerId, userName, output, true, spawn});
     ++nextPlayerId;
 
     session.status = buildStatus();
@@ -128,7 +130,47 @@ GameSession Game::joinGame(const JoinGameDTO& dto,const std::shared_ptr<OutQueue
         return session;
     }
 
-    return addPlayer(dto.playerName, PlayerData{}, output, "Te uniste a la partida");
+    return addPlayer(dto.userName, PlayerData{}, output, "Te uniste a la partida");
+}
+
+GameSession Game::resumeGame(const ResumeGameDTO& dto, const std::shared_ptr<OutQueue>& output) {
+    std::lock_guard<std::mutex> lock(mtx);
+
+    GameSession session{};
+    session.status.status = StatusCode::Error;
+    session.userName = dto.userName;
+
+    if (!configured || dto.gameId != id || !output) {
+        session.status.errorMsg = "No existe esa partida";
+        return session;
+    }
+
+    for (auto& entry : players) {
+        PlayerRecord& player = entry.second;
+        if (player.name != dto.userName) {
+            continue;
+        }
+        if (player.connected) {
+            session.status.errorMsg = "Ya estas conectado a esta partida";
+            return session;
+        }
+
+        player.connected = true;
+        player.output = output;
+        player.data.state = PlayerState::Idle;
+
+        session.status = buildStatus();
+        session.status.playerId = entry.first;
+        session.status.successMsg = "Partida retomada";
+        session.gameId = id;
+        session.playerId = entry.first;
+        session.worldId = worldId;
+        session.input = input;
+        return session;
+    }
+
+    session.status.errorMsg = "No tenes un jugador en esta partida";
+    return session;
 }
 
 void Game::disconnectPlayer(uint16_t playerId) {
@@ -221,8 +263,6 @@ void Game::run() {
     bool running = should_keep_running();
     const auto rate = std::chrono::milliseconds(1000 / FPS);
 
-    acceptor.start();
-
     try {
         Foo::constant_rate_loop(
             [this, &running](long long) {
@@ -237,14 +277,6 @@ void Game::run() {
             rate, running);
     } catch (const ClosedQueue&) {
         // Cola cerrada al frenar la partida.
-    } catch (...) {
-        acceptor.stop();
-        acceptor.join();
-        throw;
-    }
-
-    acceptor.stop();
-    acceptor.join();
 }
 
 void Game::stop() {

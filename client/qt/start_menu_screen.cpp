@@ -1,10 +1,10 @@
-#include "startmenuscreen.h"
+#include "start_menu_screen.h"
 
 #include <QHBoxLayout>
 #include <QLabel>
 #include <QVBoxLayout>
 
-#include "spritebutton.h"
+#include "sprite_button.h"
 
 namespace {
 const QRect logoRect(0, 0, 400, 187);

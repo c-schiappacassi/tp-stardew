@@ -1,4 +1,4 @@
-#include "spritebutton.h"
+#include "sprite_button.h"
 
 #include <QPainter>
 

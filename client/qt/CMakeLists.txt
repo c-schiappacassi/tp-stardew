@@ -1,26 +1,45 @@
 cmake_minimum_required(VERSION 3.19)
 project(stardew_client_qt LANGUAGES CXX)
 
+set(CMAKE_CXX_STANDARD 20)
+set(CMAKE_CXX_STANDARD_REQUIRED ON)
+
 find_package(Qt6 6.5 REQUIRED COMPONENTS Core Widgets)
+find_package(Threads REQUIRED)
 
 qt_standard_project_setup()
 
 qt_add_executable(stardew_client_qt
     WIN32 MACOSX_BUNDLE
     main.cpp
-    mainwindow.h mainwindow.cpp
-    usernamescreen.h usernamescreen.cpp
-    startmenuscreen.h startmenuscreen.cpp
-    newgamescreen.h newgamescreen.cpp
-    loadscreen.h loadscreen.cpp
-    joinscreen.h joinscreen.cpp
-    spritebutton.h spritebutton.cpp
+    main_window.h main_window.cpp
+    username_screen.h username_screen.cpp
+    start_menu_screen.h start_menu_screen.cpp
+    new_game_screen.h new_game_screen.cpp
+    load_screen.h load_screen.cpp
+    join_screen.h join_screen.cpp
+    join_character_screen.h join_character_screen.cpp
+    sprite_button.h sprite_button.cpp
+    ../client_protocol.cpp
+    ../../common/socket.cpp
+    ../../common/resolver.cpp
+    ../../common/resolvererror.cpp
+    ../../common/liberror.cpp
+    ../../common/protocol_base.cpp
+    ../../common/protocol_errors.cpp
+)
+
+target_include_directories(stardew_client_qt
+    PRIVATE
+        ${CMAKE_CURRENT_SOURCE_DIR}/..
+        ${CMAKE_CURRENT_SOURCE_DIR}/../../common
 )
 
 target_link_libraries(stardew_client_qt
     PRIVATE
         Qt::Core
         Qt::Widgets
+        Threads::Threads
 )
 
 target_compile_definitions(stardew_client_qt
