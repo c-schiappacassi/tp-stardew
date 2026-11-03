@@ -32,7 +32,7 @@ bool WorldManager::canMove(const Player& player, const Position& next) const {
     return !entrance || player.getZone() != entrance->zone || entrance->terrain.isWalkable(next);
 }
 
-void WorldManager::completeZoneData(const Player& player, PlayerDataLocal& data,bool includeBroken) const {
+void WorldManager::completeZoneData(const Player& player,PlayerDataLocal& data,bool includeBroken) const {
     if (player.getZone() == Zone::Dungeon) {
         if (const auto mine = dungeon.getMineData(player.getDungeonLevel(), includeBroken)) {
             data.zoneData = *mine;
@@ -40,12 +40,11 @@ void WorldManager::completeZoneData(const Player& player, PlayerDataLocal& data,
     }
 }
 
-void WorldManager::interact(Player& player, const InteractDTO& interaction) {
-    if (interaction.targetType == TargetType::Ore) {
-        dungeon.mineMineral(player, interaction.targetId);
-    } else if (interaction.targetType == TargetType::DungeonPassage && interaction.targetId == 0) {
-        usePassage(player);
+void WorldManager::interact(Player& player, Direction direction) {
+    if (usePassage(player) || player.getZone() != Zone::Dungeon) {
+        return;
     }
+    dungeon.useSelectedItem(player, direction, std::chrono::steady_clock::now());
 }
 
 bool WorldManager::usePassage(Player& player) {
