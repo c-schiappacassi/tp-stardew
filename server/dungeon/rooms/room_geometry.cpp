@@ -10,6 +10,17 @@ bool RoomGeometry::canWalk(const ZoneMap& map, const RoomMinerals& minerals,cons
     return !minerals.blocks(*map.cellAt(pos));
 }
 
+bool RoomGeometry::canWalk(const ZoneMap& map, const RoomMinerals& minerals,const CollisionBounds& bounds) const {
+    if (!map.isWalkable(bounds)) return false;
+    const auto cells = map.coveredCells(bounds);
+    for (int row = cells->first.first; row <= cells->last.first; ++row) {
+        for (int column = cells->first.second; column <= cells->last.second; ++column) {
+            if (minerals.blocks({row, column})) return false;
+        }
+    }
+    return true;
+}
+
 bool RoomGeometry::isPassageCell(const ZoneMap& map,const DungeonRoomPassages& data, const Position& pos) const {
     return map.sameCell(pos, data.entry) || map.sameCell(pos, data.exit) ||(data.nextRoom && map.sameCell(pos, *data.nextRoom));
 }

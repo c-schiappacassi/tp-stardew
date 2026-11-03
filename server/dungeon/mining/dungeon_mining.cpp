@@ -12,7 +12,7 @@ bool DungeonMining::mine(Player& player, DungeonRoom& room, EntityId id,MineralG
         return false;
     }
     auto* mineral = room.findMineral(id);
-    if (!mineral || mineral->isDepleted() ||!player.canReach(mineral->getPosition(), range) ||!room.hasClearLine(player.getPosition(), mineral->getPosition())) {
+    if (!mineral || mineral->isDepleted() ||!player.canReach(mineral->getPosition(), range) ||!room.hasClearLine(player.getCollisionCenter(), mineral->getPosition())) {
         return false;
     }
     player.faceTarget(mineral->getPosition());
@@ -32,7 +32,7 @@ EntityId DungeonMining::chooseMineral(const Player& player,const DungeonRoom& ro
     EntityId chosen = 0;
     double nearest = std::numeric_limits<double>::max();
     for (const auto& [id, mineral] : room.getMinerals()) {
-        if (mineral.isDepleted() ||!player.canReach(mineral.getPosition(), range) ||!room.hasClearLine(player.getPosition(), mineral.getPosition())) {
+        if (mineral.isDepleted() ||!player.canReach(mineral.getPosition(), range) ||!room.hasClearLine(player.getCollisionCenter(), mineral.getPosition())) {
             continue;
         }
         const double dx = static_cast<double>(mineral.getPosition().getX()) - player.getPosition().getX();

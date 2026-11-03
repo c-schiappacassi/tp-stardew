@@ -26,6 +26,11 @@ bool DungeonManager::canWalk(uint8_t number, const Position& pos) const {
     return room && room->canWalk(pos);
 }
 
+bool DungeonManager::canWalk(uint8_t number, const CollisionBounds& bounds) const {
+    const auto* room = findRoom(number);
+    return room && room->canWalk(bounds);
+}
+
 std::optional<MineData> DungeonManager::getMineData(uint8_t number, bool includeBroken) const {
     const auto* room = findRoom(number);
     return room ? room->getMineData(includeBroken) : std::nullopt;

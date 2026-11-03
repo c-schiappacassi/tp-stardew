@@ -3,6 +3,7 @@
 #include <cstdint>
 #include <map>
 #include "protocol_types.h"
+#include "entities/collision_box.h"
 
 struct ToolConfig {
     uint16_t energyCost;
@@ -16,4 +17,5 @@ struct PlayerConfig {
         {ItemId::Shovel,{2,500}},
         {ItemId::Sword,{2,500}}
     };
+    CollisionBox collision{2, 8, 12, 8};
 };

@@ -30,6 +30,7 @@ public:
     bool setMap(const ZoneMap& map);
     const ZoneMap& getMap() const;
     bool canWalk(const Position& pos) const;
+    bool canWalk(const CollisionBounds& bounds) const;
     void removeBrokenMinerals();
     bool setPassages(const DungeonRoomPassages& data);
     const std::optional<DungeonRoomPassages>& getPassages() const;

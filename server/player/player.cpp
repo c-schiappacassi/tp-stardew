@@ -3,6 +3,7 @@
 #include <algorithm>
 #include <stdexcept>
 #include <cmath>
+#include <limits>
 
 Player::Player(
     const PlayerData& initialData,
@@ -30,6 +31,9 @@ Player::Player(
         config(config) {
     if (maxHealth == 0 || maxEnergy == 0) {
         throw std::invalid_argument("Vida y energia maximas deben ser mayores a cero");
+    }
+    if (config.collision.width <= 0 || config.collision.height <= 0) {
+        throw std::invalid_argument("La caja de colision debe tener dimensiones positivas");
     }
     if (state == PlayerState::Walking) {
         movementDirection = dir;
@@ -120,6 +124,9 @@ PlayerData Player::getPublicData() const {
     data.state = state;
     data.dir = dir;
     data.currentZone = zone;    
+    if (const Stack* item = getSelectedItem()) {
+        data.heldItem = item->item_id;
+    }
     data.hairModel = hairModel;
     data.shirtModel = shirtModel;
     data.pantsModel = pantsModel;
@@ -221,6 +228,21 @@ uint8_t Player::getDungeonLevel() const {
 
 const Position& Player::getPosition() const {
     return pos;
+}
+
+CollisionBounds Player::getCollisionBounds(const Position& position) const {
+    return config.collision.at(position);
+}
+
+Position Player::getCollisionCenter() const {
+    const CollisionBounds bounds = getCollisionBounds(pos);
+    const int64_t x = bounds.left + (bounds.right - bounds.left) / 2;
+    const int64_t y = bounds.top + (bounds.bottom - bounds.top) / 2;
+    if (x < std::numeric_limits<int>::min() || x > std::numeric_limits<int>::max() ||
+        y < std::numeric_limits<int>::min() || y > std::numeric_limits<int>::max()) {
+        throw std::overflow_error("El centro de colision excede el rango de Position");
+    }
+    return Position(static_cast<int>(x), static_cast<int>(y));
 }
 
 bool Player::canAct() const {

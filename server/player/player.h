@@ -48,6 +48,8 @@ public:
     uint8_t getDungeonLevel() const;
     Position getNextPosition(int step) const;
     const Position& getPosition() const;
+    CollisionBounds getCollisionBounds(const Position& position) const;
+    Position getCollisionCenter() const;
     bool canAct() const;
     bool changeLocation(Zone destination,uint8_t level,const Position& target);
     void faceTarget(const Position& target);

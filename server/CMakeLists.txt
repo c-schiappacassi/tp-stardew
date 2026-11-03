@@ -46,6 +46,7 @@ target_sources(taller_server
         inventory/inventory.h
         player/player.h
         entities/entity_id.h
+        entities/collision_box.h
         dungeon/rooms/dungeon_room.h
         dungeon/mining/mineral.h
         dungeon/dungeon_manager.h

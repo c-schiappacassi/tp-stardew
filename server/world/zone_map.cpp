@@ -3,6 +3,7 @@
 #include <cstddef>
 #include <stdexcept>
 #include <queue>
+#include <limits>
 
 ZoneMap::ZoneMap(const std::vector<std::vector<bool>>& walkableTiles,int cellSize):walkableTiles(walkableTiles),cellSize(cellSize) {
     if (cellSize <= 0) {
@@ -41,6 +42,27 @@ bool ZoneMap::isWalkable(const Position& pos) const {
     const int row = pos.getY()/ cellSize;
 
     return walkableTiles[row][column];
+}
+
+std::optional<ZoneMap::CellRange> ZoneMap::coveredCells(const CollisionBounds& bounds) const {
+    if (bounds.left < 0 || bounds.top < 0 || bounds.right < bounds.left ||bounds.bottom < bounds.top || bounds.right > std::numeric_limits<int>::max() ||bounds.bottom > std::numeric_limits<int>::max()) {
+        return std::nullopt;
+    }
+    const auto first = cellAt(Position(static_cast<int>(bounds.left), static_cast<int>(bounds.top)));
+    const auto last = cellAt(Position(static_cast<int>(bounds.right), static_cast<int>(bounds.bottom)));
+    if (!first || !last) return std::nullopt;
+    return CellRange{*first, *last};
+}
+
+bool ZoneMap::isWalkable(const CollisionBounds& bounds) const {
+    const auto cells = coveredCells(bounds);
+    if (!cells) return false;
+    for (int row = cells->first.first; row <= cells->last.first; ++row) {
+        for (int column = cells->first.second; column <= cells->last.second; ++column) {
+            if (!walkableTiles[row][column]) return false;
+        }
+    }
+    return true;
 }
 
 bool ZoneMap::sameCell(const Position& first, const Position& second) const {

@@ -45,6 +45,10 @@ bool DungeonRoom::canWalk(const Position& pos) const {
     return geometry.canWalk(terrain, minerals, pos);
 }
 
+bool DungeonRoom::canWalk(const CollisionBounds& bounds) const {
+    return geometry.canWalk(terrain, minerals, bounds);
+}
+
 void DungeonRoom::removeBrokenMinerals() {
     minerals.removeBroken(terrain);
 }

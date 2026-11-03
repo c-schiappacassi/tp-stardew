@@ -13,7 +13,7 @@ bool DungeonTravel::enter(Player& player, const std::map<uint8_t, DungeonRoom>& 
 
     const auto* first = findRoom(rooms, 1);
     if (!first || !first->getPassages() ||
-        !first->canWalk(first->getPassages()->entry)) {
+        !first->canWalk(player.getCollisionBounds(first->getPassages()->entry))) {
         return false;
     }
 
@@ -37,7 +37,7 @@ bool DungeonTravel::advanceRoom(Player& player, const std::map<uint8_t, DungeonR
 
     const auto* next = findRoom(rooms, player.getDungeonLevel() + 1);
     if (!next || !next->getPassages() ||
-        !next->canWalk(next->getPassages()->entry)) {
+        !next->canWalk(player.getCollisionBounds(next->getPassages()->entry))) {
         return false;
     }
 
