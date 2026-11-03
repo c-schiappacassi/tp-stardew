@@ -23,6 +23,8 @@ private:
     void sendMineData(const MineData& mine);
     void sendZoneData(const ZoneData& zoneData);
 
+    void sendGameInfo(const GameInfoDTO& info);
+
     void sendPlayerData(const PlayerData& data);
     void sendPlayerDataLocal(const PlayerDataLocal& localData);
 
@@ -41,8 +43,11 @@ public:
     UseItemDTO receiveUseItem();
     RequestMultiplayerCodeDTO receiveRequestMultiplayerCode();
     DisconnectDTO receiveDisconnect();
+    ListGamesDTO receiveListGames();
+    CheckCodeDTO receiveCheckCode();
 
     void sendStatus(const ServerStatus& status);
+    void sendQtStatus(const qtStatus& status);
 };
 
 #endif

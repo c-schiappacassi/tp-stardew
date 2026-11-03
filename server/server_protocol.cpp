@@ -40,6 +40,7 @@ void ServerProtocol::sendStack(const Stack& stack) {
 }
 
 void ServerProtocol::sendPlayerData(const PlayerData& data) {
+    base.sendString(data.characterName);
     sendPosition(data.pos);
     base.sendUint8(static_cast<uint8_t>(data.state));
     base.sendUint8(static_cast<uint8_t>(data.dir));
@@ -49,6 +50,13 @@ void ServerProtocol::sendPlayerData(const PlayerData& data) {
     sendColor(data.hairColor);
     sendColor(data.pantsColor);
     base.sendUint8(static_cast<uint8_t>(data.currentZone));
+}
+
+void ServerProtocol::sendGameInfo(const GameInfoDTO& info) {
+    base.sendString(info.id);
+    base.sendString(info.farmName);
+    sendPlayerData(info.playerData);
+    base.sendUint8(info.isMultiplayer ? 1 : 0);
 }
 
 SelectSlotDTO ServerProtocol::receiveSelectSlot() {
@@ -105,6 +113,7 @@ void ServerProtocol::sendPlayerDataLocal(const PlayerDataLocal& localData) {
 
 CreateGameDTO ServerProtocol::receiveCreateGame() {
     CreateGameDTO dto(base.receiveString());
+    dto.characterName = base.receiveString();
     dto.gameName = base.receiveString();
     dto.worldId = base.receiveUint8();
     dto.hairModel = base.receiveUint16();
@@ -117,6 +126,7 @@ CreateGameDTO ServerProtocol::receiveCreateGame() {
 
 JoinGameDTO ServerProtocol::receiveJoinGame() {
     JoinGameDTO dto(base.receiveString());
+    dto.characterName = base.receiveString();
     dto.code = base.receiveString();
     dto.hairModel = base.receiveUint16();
     dto.shirtModel = base.receiveUint16();
@@ -173,6 +183,16 @@ DisconnectDTO ServerProtocol::receiveDisconnect() {
     return DisconnectDTO(base.receiveString());
 }
 
+ListGamesDTO ServerProtocol::receiveListGames() {
+    return ListGamesDTO(base.receiveString());
+}
+
+CheckCodeDTO ServerProtocol::receiveCheckCode() {
+    CheckCodeDTO dto(base.receiveString());
+    dto.code = base.receiveString();
+    return dto;
+}
+
 // SENDERS
 
 void ServerProtocol::sendStatus(const ServerStatus& status) {
@@ -190,4 +210,15 @@ void ServerProtocol::sendStatus(const ServerStatus& status) {
     }
 
     sendPlayerDataLocal(status.localPlayer);
+}
+
+void ServerProtocol::sendQtStatus(const qtStatus& status) {
+    base.sendUint8(static_cast<uint8_t>(status.status));
+    base.sendString(status.errorMsg);
+    base.sendString(status.successMsg);
+
+    base.sendUint16(static_cast<uint16_t>(status.games.size()));
+    for (const GameInfoDTO& info : status.games) {
+        sendGameInfo(info);
+    }
 }
