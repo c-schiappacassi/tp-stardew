@@ -1,116 +1,128 @@
 #pragma once
 
 #include <SDL2/SDL.h>
+
 #include <algorithm>
+#include <compare>
+#include <cstdint>
+#include <functional>
+#include <map>
+#include <memory>
 #include <string>
 #include <utility>
 #include <vector>
-#include <unordered_map>
-#include <memory>
-#include <optional>
-#include <functional>
-#include "state.h"
 
 #include "dtos.h"
+#include "state.h"
 
 struct EventKey {
     uint32_t event_type;
     int32_t code;
 
-    bool operator==(const EventKey& other) const {
-        return event_type == other.event_type && code == other.code;
-    }
-};
-
-struct EventKeyHash {
-    std::size_t operator()(const EventKey& k) const {
-        return (std::hash<uint32_t>()(k.event_type) ^ (std::hash<int32_t>()(k.code) << 1));
-    }
+    auto operator<=>(const EventKey&) const = default;
 };
 
 class InputTranslator {
 private:
-    using ActionHandler = std::function<std::shared_ptr<CommandDTO>(const SDL_Event&)>;
+    using Out = std::vector<std::shared_ptr<CommandDTO>>;
+    using Handler = std::function<void(const SDL_Event&, Out&)>;
 
     std::string player_name;
-    std::unordered_map<EventKey, ActionHandler, EventKeyHash> actions;
+    std::map<EventKey, Handler> bindings;
     std::vector<Direction> held;
     Direction last_sent = Direction::None;
     bool quit = false;
 
-    static Direction direction_from_key(SDL_Keycode key) {
-        static const std::unordered_map<SDL_Keycode, Direction> keys = {
+    static EventKey key_of(const SDL_Event& e) {
+        switch (e.type) {
+            case SDL_KEYDOWN:
+            case SDL_KEYUP: return {e.type, e.key.keysym.sym};
+            case SDL_MOUSEBUTTONDOWN:
+            case SDL_MOUSEBUTTONUP: return {e.type, e.button.button};
+            case SDL_WINDOWEVENT: return {e.type, e.window.event};
+            default: return {e.type, 0};
+        }
+    }
+
+    void bind(uint32_t type, int32_t code, Handler h) { bindings[{type, code}] = std::move(h); }
+
+    void release(Direction d) { held.erase(std::remove(held.begin(), held.end(), d), held.end()); }
+
+    void bind_system() {
+        bind(SDL_QUIT, 0, [this](const SDL_Event&, Out&) { quit = true; });
+        bind(SDL_WINDOWEVENT, SDL_WINDOWEVENT_FOCUS_LOST, [this](const SDL_Event&, Out&) { held.clear(); });
+    }
+
+    void bind_movement() {
+        const std::pair<SDL_Keycode, Direction> keys[] = {
             {SDLK_w, Direction::Up},    {SDLK_UP, Direction::Up},
             {SDLK_s, Direction::Down},  {SDLK_DOWN, Direction::Down},
             {SDLK_a, Direction::Left},  {SDLK_LEFT, Direction::Left},
             {SDLK_d, Direction::Right}, {SDLK_RIGHT, Direction::Right},
         };
-        auto it = keys.find(key);
-        return it == keys.end() ? Direction::None : it->second;
-    }
-
-    static EventKey key_of(const SDL_Event& e) {
-        switch (e.type) {
-            case SDL_KEYDOWN:
-            case SDL_KEYUP: return EventKey{e.type, e.key.keysym.sym};
-            case SDL_MOUSEBUTTONDOWN:
-            case SDL_MOUSEBUTTONUP: return EventKey{e.type, e.button.button};
-            default: return EventKey{e.type, 0};
+        for (const auto& [key, dir]: keys) {
+            bind(SDL_KEYDOWN, key, [this, dir](const SDL_Event&, Out&) {
+                release(dir);
+                held.push_back(dir);
+            });
+            bind(SDL_KEYUP, key, [this, dir](const SDL_Event&, Out&) { release(dir); });
         }
     }
 
-    void release(Direction d) { held.erase(std::remove(held.begin(), held.end(), d), held.end()); }
+    // TODO: por ahora hardcode la cant de slots que puede tener el el jugador a 9
+    void bind_hotbar() {
+        for (int i = 0; i < 9; ++i) {
+            bind(SDL_KEYDOWN, SDLK_1 + i, [this, i](const SDL_Event&, Out& out) {
+                auto dto = std::make_shared<SelectSlotDTO>(player_name);
+                dto->slot = static_cast<uint8_t>(i);
+                out.push_back(dto);
+            });
+        }
+    }
 
-    void handle_direction_key(const SDL_KeyboardEvent& key) {
-        const Direction d = direction_from_key(key.keysym.sym);
-        if (d == Direction::None) {
+    void bind_mouse() {
+        bind(SDL_MOUSEBUTTONDOWN, SDL_BUTTON_LEFT, [this](const SDL_Event& e, Out& out) {
+            const Direction current = held.empty() ? Direction::None : held.back();
+            auto dto = std::make_shared<InteractDTO>(player_name);
+            dto->dir = current;
+            out.push_back(dto);
+        });
+    }
+
+    void emit_move_if_changed(Out& out) {
+        const Direction current = held.empty() ? Direction::None : held.back();
+        if (current == last_sent) {
             return;
         }
-        release(d);
-        if (key.type == SDL_KEYDOWN) {
-            held.push_back(d);
-        }
-    }
-
-    std::shared_ptr<CommandDTO> make_move(Direction dir) const {
         auto dto = std::make_shared<MoveDTO>(player_name);
-        dto->dir = dir;
-        return dto;
+        dto->dir = current;
+        out.push_back(dto);
+        last_sent = current;
     }
 
 public:
-    explicit InputTranslator(std::string name) : player_name(std::move(name)) {
-        // TODO: cargar map actions[EventKey{SDL_KEYDOWN, SDLK_e}] = [this](const SDL_Event&) { ... };
+    InputTranslator(std::string name): player_name(std::move(name)) {
+        bind_system();
+        bind_movement();
+        bind_hotbar();
+        bind_mouse();
     }
 
     bool quit_requested() const { return quit; }
 
-    std::vector<std::shared_ptr<CommandDTO>> poll() {
-        std::vector<std::shared_ptr<CommandDTO>> out;
-
-        SDL_Event event;
-        while (SDL_PollEvent(&event)) {
-            if (event.type == SDL_QUIT) {
-                quit = true;
+    Out poll() {
+        Out out;
+        SDL_Event e;
+        while (SDL_PollEvent(&e)) {
+            if (e.type == SDL_KEYDOWN && e.key.repeat) {
                 continue;
             }
-            if (event.type == SDL_KEYDOWN && event.key.repeat) {
-                continue;
-            }
-            if (event.type == SDL_KEYDOWN || event.type == SDL_KEYUP) {
-                handle_direction_key(event.key);
-            }
-            auto it = actions.find(key_of(event));
-            if (it != actions.end()) {
-                out.push_back(it->second(event));
+            auto it = bindings.find(key_of(e));
+            if (it != bindings.end()) {
+                it->second(e, out);
             }
         }
-
-        const Direction current = held.empty() ? Direction::None : held.back();
-        if (current != last_sent) {
-            out.push_back(make_move(current));
-            last_sent = current;
-        }
+        emit_move_if_changed(out);
         return out;
     }
 };

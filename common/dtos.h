@@ -13,8 +13,40 @@
 #include "protocol_types.h"
 #include "position.h"
 
-
 // AUXILIARES
+
+// Farm
+struct CropData{
+    uint32_t id = 0;
+    Position pos{0,0};
+    CropType type;
+    CropState state;
+    bool wattered;
+};
+
+struct AnimalData{
+    uint32_t id = 0;
+    Position pos{0,0};
+    Direction dir{Direction::None};
+    AnimalType type;
+    AnimalState state;
+    // Age ? TBD si hacemos logica de que los animales llegan bebes y crecen
+};
+
+struct FarmData{
+    std::vector<CropData> crops;
+    std::vector<AnimalData> animals;
+};
+// FIN Farm
+
+// Mine
+struct EnemyData{
+    uint32_t id = 0;
+    Position pos{0,0};
+    Direction dir{Direction::None};
+    EnemyType type;
+    EnemyState state;
+};
 
 struct MineralData {
     uint32_t id = 0;
@@ -34,9 +66,12 @@ struct MineData{
     uint8_t current_level;
     LevelData current_level_data;
 };
+// Fin Mine
 
 using ZoneData = std::variant<MineData>;
 
+
+// Player
 struct Color{
     uint8_t r;
     uint8_t g;
@@ -59,14 +94,7 @@ struct PlayerData{
     uint16_t pantsModel = 0;
     Color hairColor{0, 0, 0};
     Color pantsColor{0, 0, 0};
-    Zone currentZone = Zone::Farm;
-};
-
-struct GameInfoDTO {
-    std::string id;
-    std::string farmName;
-    PlayerData playerData;
-    bool isMultiplayer = false;
+    Zone currentZone;
 };
 
 struct PlayerDataLocal : public PlayerData {
@@ -82,6 +110,8 @@ struct PlayerDataLocal : public PlayerData {
     PlayerDataLocal() = default;
     explicit PlayerDataLocal(const PlayerData& publicData): PlayerData(publicData) {}
 };
+// FIN Player
+
 
 // COMMAND_DTO CON HERENCIA
 
@@ -134,7 +164,6 @@ struct ResumeGameDTO : public CommandDTO {
 };
 
 struct MoveDTO : public CommandDTO {
-    Position position{0, 0};
     Direction dir{Direction::None};
 
     MessageType type() const override { return MessageType::Move; }
@@ -142,9 +171,13 @@ struct MoveDTO : public CommandDTO {
 };
 
 struct InteractDTO : public CommandDTO {
+<<<<<<< HEAD
     TargetType targetType; // usemos un type para esto
     uint32_t targetId;
 
+=======
+    Direction dir;
+>>>>>>> feat/mining
     MessageType type() const override { return MessageType::Interact; }
     explicit InteractDTO(const std::string& name) : CommandDTO(name) {}
 };
@@ -190,6 +223,7 @@ struct SelectSlotDTO : public CommandDTO {
     explicit SelectSlotDTO(const std::string& name) : CommandDTO(name) {}
 };
 
+<<<<<<< HEAD
 struct ListGamesDTO : public CommandDTO {
 
     MessageType type() const override { return MessageType::ListGames; }
@@ -203,10 +237,16 @@ struct CheckCodeDTO : public CommandDTO {
     explicit CheckCodeDTO(const std::string& name) : CommandDTO(name) {}
 };
 
+=======
+>>>>>>> feat/mining
 // SERVIDOR -> CLIENTE
 
 // seguir completando server status
 
+<<<<<<< HEAD
+=======
+
+>>>>>>> feat/mining
 struct ServerStatus {
     StatusCode status = StatusCode::Ok;
     std::string errorMsg;
@@ -216,6 +256,7 @@ struct ServerStatus {
     uint8_t worldId = 0;
     std::map<std::string, PlayerData> players;
     PlayerDataLocal localPlayer;
+<<<<<<< HEAD
 };
 
 struct qtStatus {
@@ -224,3 +265,6 @@ struct qtStatus {
     std::string successMsg;
     std::vector<GameInfoDTO> games;
 };
+=======
+};
+>>>>>>> feat/mining

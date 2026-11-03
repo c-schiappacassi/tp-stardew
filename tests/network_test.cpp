@@ -1,10 +1,10 @@
 #include "gtest/gtest.h"
 #include "socket.h"
 #include "../client/client_protocol.h"
-#include "../server/server_protocol.h"
+#include "../server/network/server_protocol.h"
 #include "dtos.h"
-#include "../server/game_manager.h"
-#include "../server/acceptor.h"
+#include "../server/game/game_manager.h"
+#include "../server/network/acceptor.h"
 #include <thread>
 #include <chrono>
 

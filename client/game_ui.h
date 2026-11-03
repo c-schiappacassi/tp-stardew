@@ -1,17 +1,17 @@
 #pragma once
 
-#include <SDL2pp/SDL2pp.hh>
-
-#include <algorithm>
-#include <map>
+#include <memory>
+#include <optional>
 #include <string>
-#include <utility>
 #include <vector>
 
+#include <SDL2pp/SDL2pp.hh>
+
+#include "dtos.h"
+#include "input_translator.h"
 #include "sdlGUI/asset_manager.h"
 #include "sdlGUI/camera.h"
-#include "sdlGUI/render_info.h"
-#include "sdlGUI/world/player_view.h"
+#include "sdlGUI/world/world_view.h"
 #include "state.h"
 
 class GameUI {
@@ -23,59 +23,18 @@ private:
     Camera cam;
     Zone currentZone = Zone::Farm;
     std::string local_player;
-    std::map<std::string, PlayerView> player_views;
+    WorldView world;
+    InputTranslator input;
 
-    void sync_views(const State& state) {
-        for (const auto& entry : state.get_players()) {
-            auto res = player_views.try_emplace(entry.first, entry.first, entry.second);
-            if (!res.second) {
-                res.first->second.update(entry.second);
-            }
-        }
-        for (auto it = player_views.begin(); it != player_views.end();) {
-            it = state.find_player(it->first) ? std::next(it) : player_views.erase(it);
-        }
-    }
-
+    void update_camera(const State& state);
 public:
-    explicit GameUI(const std::string& local_player)
-        : sdl(SDL_INIT_VIDEO),
-          window("Stardew Valley", SDL_WINDOWPOS_UNDEFINED, SDL_WINDOWPOS_UNDEFINED, 800, 600, SDL_WINDOW_RESIZABLE),
-          renderer(window, -1, SDL_RENDERER_ACCELERATED),
-          asset_manager(renderer, "common/assets"),
-          cam(800, 600, 3),
-          local_player(local_player) {}
+    explicit GameUI(const std::string& local_player);
 
-    void update(const State& state, long long it) {
-        sync_views(state);
+    GameUI(const GameUI&) = delete;
+    GameUI& operator=(const GameUI&) = delete;
 
-        if (const PlayerData* me = state.find_player(local_player)) {
-            const SDL2pp::Point size = renderer.GetOutputSize();
-            cam.set_viewport(size.x, size.y);
-            cam.center_on(me->pos.getX(), me->pos.getY());
-        }
+    std::vector<std::shared_ptr<CommandDTO>> poll_input();
+    bool quit_requested() const;
 
-        RenderInfo ctx{renderer, asset_manager, state, cam, currentZone, it};
-
-        renderer.SetDrawColor(55, 55, 55, 255);
-        renderer.Clear();
-        // TEMP grilla
-        const int z = cam.get_zoom();
-        const SDL2pp::Point p = cam.world_to_screen(950, 950);
-        renderer.SetDrawColor(200, 60, 60, 255);
-        renderer.FillRect(SDL2pp::Rect(p.x, p.y, 10 * z,10 * z));
-
-        std::vector<std::pair<float, PlayerView*>> visible;
-        for (auto& entry : player_views) {
-            if (auto depth = entry.second.depth(ctx)) {
-                visible.emplace_back(*depth, &entry.second);
-            }
-        }
-        std::sort(visible.begin(), visible.end(),
-                  [](const auto& a, const auto& b) { return a.first < b.first; });
-        for (auto& v : visible) {
-            v.second->draw(ctx);
-        }
-        renderer.Present();
-    }
+    void update(const State& state, long long it);
 };

@@ -2,19 +2,76 @@ target_sources(taller_server
     PRIVATE
     # .cpp files
         main.cpp
-        acceptor.cpp
-        client_handler.cpp
-        server_protocol.cpp
-        game.cpp
-        game_manager.cpp
-
+        network/acceptor.cpp
+        network/client_handler.cpp
+        network/client_sender.cpp
+        network/server_protocol.cpp
+        game/game.cpp
+        game/game_manager.cpp
+        inventory/inventory.cpp
+        player/player.cpp
+        dungeon/mining/mineral.cpp
+        dungeon/rooms/dungeon_room.cpp
+        dungeon/dungeon_manager.cpp
+        entities/entity_id_generator.cpp
+        world/zone_map.cpp
+        player/player_factory.cpp
+        player/player_manager.cpp
+        world/world_manager.cpp
+        player/player_updates.cpp
+        player/player_status.cpp
+        game/command_router.cpp
+        player/player_actions.cpp
+        game/game_session.cpp
+        game/game_loop.cpp
+        dungeon/mining/mineral_generator.cpp
+        dungeon/rooms/room_minerals.cpp
+        dungeon/rooms/dungeon_travel.cpp
+        dungeon/rooms/room_geometry.cpp
+        dungeon/mining/dungeon_mining.cpp
+        dungeon/loading/dungeon_loader.cpp
+        world/zone_map_positions.cpp
+        dungeon/mining/mineral_placement.cpp
     PUBLIC
     # .h files
-        acceptor.h
-        client_handler.h
-        server_protocol.h
-        game.h
-        game_manager.h
-        game_types.h
-        player_record.h
+        network/acceptor.h
+        network/client_handler.h
+        network/client_sender.h
+        network/server_protocol.h
+        game/game.h
+        game/game_manager.h
+        game/game_types.h
+        player/player_record.h
+        inventory/inventory.h
+        player/player.h
+        entities/entity_id.h
+        dungeon/rooms/dungeon_room.h
+        dungeon/mining/mineral.h
+        dungeon/dungeon_manager.h
+        entities/entity_id_generator.h
+        dungeon/dungeon_config.h
+        player/player_config.h
+        world/zone_map.h
+        player/player_factory.h
+        player/player_manager.h
+        world/world_manager.h
+        player/ports/movement_rules.h
+        player/ports/zone_data_source.h
+        player/ports/player_interactions.h
+        player/player_updates.h
+        player/player_status.h
+        game/command_router.h
+        player/player_actions.h
+        dungeon/mining/mineral_generator.h
+        dungeon/rooms/room_minerals.h
+        dungeon/rooms/dungeon_travel.h
+        dungeon/rooms/room_geometry.h
+        dungeon/rooms/dungeon_room_passages.h
+        dungeon/mining/dungeon_mining.h
+        dungeon/loading/dungeon_loader.h
+        dungeon/loading/dungeon_layout.h
+        dungeon/mining/mineral_placement.h
+        game/game_setup.h
 )
+
+target_include_directories(taller_server PRIVATE ${CMAKE_CURRENT_SOURCE_DIR})

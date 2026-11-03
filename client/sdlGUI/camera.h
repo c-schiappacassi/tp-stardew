@@ -16,9 +16,14 @@ private:
         return static_cast<int>(static_cast<float>(world_units) * TEXELS_PER_UNIT);
     }
 
+    // Division entera redondeando hacia -infinito (para coordenadas negativas).
+    static int floor_div(int a, int b) {
+        int q = a / b;
+        return (a % b != 0 && ((a < 0) != (b < 0))) ? q - 1 : q;
+    }
+
 public:
-    explicit Camera(int viewport_w, int viewport_h, int zoom)
-        : viewport_w(viewport_w), viewport_h(viewport_h), zoom(zoom) {}
+    explicit Camera(int viewport_w, int viewport_h, int zoom): viewport_w(viewport_w), viewport_h(viewport_h), zoom(zoom) {}
 
     void set_viewport(int w, int h) {
         viewport_w = w;
@@ -32,6 +37,10 @@ public:
 
     SDL2pp::Point world_to_screen(int world_x, int world_y) const {
         return SDL2pp::Point(viewport_w / 2 + (to_texels(world_x) - to_texels(center_x)) * zoom, viewport_h / 2 + (to_texels(world_y) - to_texels(center_y)) * zoom);
+    }
+
+    SDL2pp::Point screen_to_world(int screen_x, int screen_y) const {
+        return SDL2pp::Point(center_x + floor_div(screen_x - viewport_w / 2, zoom), center_y + floor_div(screen_y - viewport_h / 2, zoom));
     }
 
     bool is_visible(int world_x, int world_y, int radius_px) const {

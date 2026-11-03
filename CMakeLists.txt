@@ -13,7 +13,7 @@ set(CMAKE_CXX_EXTENSIONS ON)
 project(taller_tp
     VERSION 1.0
     HOMEPAGE_URL "https://github.com/URL-HERE"
-    LANGUAGES CXX
+    LANGUAGES C CXX
     )
 
 option(TALLER_TESTS "Enable / disable tests." ON)
@@ -71,7 +71,7 @@ if(TALLER_CLIENT OR TALLER_EDITOR)
     FetchContent_Declare(
         SDL2
         GIT_REPOSITORY https://github.com/libsdl-org/SDL.git
-        GIT_TAG release-2.30.8
+        GIT_TAG release-2.32.10
         GIT_SHALLOW TRUE
         GIT_PROGRESS TRUE
         OVERRIDE_FIND_PACKAGE

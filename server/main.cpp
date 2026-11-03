@@ -2,7 +2,7 @@
 #include <iostream>
 #include <string>
 
-#include "game_manager.h"
+#include "game/game_manager.h"
 
 int main(int argc, char* argv[]) {
     if (argc < 2) {

@@ -88,7 +88,7 @@ enum class EnemyState : uint8_t {
 };
 
 // PLANTS
-enum class PlantType : uint8_t {
+enum class CropType : uint8_t {
     Strawberry = 0,
     Scallion = 1,
     Potato = 2,
@@ -96,9 +96,10 @@ enum class PlantType : uint8_t {
 };
 
 enum class CropState : uint8_t {
-    Growing = 0,
-    NeedsWater = 1,
-    Ready = 2
+    JustPlanted,
+    Sprouting,
+    Growing,
+    Ready
 };
 
 enum class Quality : uint8_t {
@@ -112,8 +113,12 @@ enum class Quality : uint8_t {
 
 // ANIMALS
 enum class AnimalType : uint8_t {
-    Cow = 0,
-    Chicken = 1
+    BrownCow,
+    WhiteCow,
+    BrownChicken,
+    WhiteChicken,
+    BlueChicken,
+    VoidChicken,
 };
 
 enum class AnimalState : uint8_t {

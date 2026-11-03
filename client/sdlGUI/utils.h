@@ -1,35 +1,53 @@
 #pragma once
-#include <SDL2pp/SDL2pp.hh>
-#include <compare>
 #include <cstdint>
 #include <optional>
 #include <string>
 #include <variant>
 #include <vector>
+#include <tuple>
+
+#include <SDL2pp/SDL2pp.hh>
+
+#include "world/entity_view.h"
 
 #include "protocol_types.h"
 
 #define TILE_TO_PIXEL 16
 
+enum class SpriteId : uint16_t {
+    FarmerBase,
+    Hairstyles,
+    Pants,
+    Shirts,
+    Tools,
+    Clock,
+    InGameUI,
+    Ores,
+    MenuTiles,
+};
+
+
+struct Drawable {
+    float depth;
+    uint64_t tiebreak;
+    EntityView* view;
+};
+
 struct Sprite {
-    SDL2pp::Texture texture;
-    // TBD si poner unidad en pixels o en tiles
+    SpriteId sprite_id;
     uint16_t width;
-    uint16_t heigth;
+    uint16_t height;
+    uint16_t row;
+    uint16_t col;
 };
 
-struct Sound {
-};
-
-
-struct Frame {
-    int row;
-    int col;
-    bool flip_h;
+struct AnimatedFrame {
+    Sprite sprite;
+    bool flip_h = false;
 };
 
 struct ClipFrame {
-    Frame frame;
+    AnimatedFrame frame;
     int duration_ms;
 };
 
@@ -38,26 +56,30 @@ struct Clip {
     bool loop = false;
 };
 
-enum class SpriteId : uint16_t {
-    FarmerBase = 1,
-    Hairstyles = 2,
-    Pants = 3,
-    Shirts = 4,
-    Tools = 5,
-};
-
-enum class SoundId : uint16_t{
-
-};
 
 using Action = std::variant<PlayerState, AnimalState, EnemyState>;
 
 struct ClipId {
-    SpriteId sprite;
-    Action currentAction;
-    Direction dir;
-    std::optional<uint16_t> model;
+    SpriteId sprite_id;
+    Action action;
+    Direction direction;
 
-    auto operator<=>(const ClipId&) const = default;
-    bool operator!=(const ClipId&) const = default;
+    bool operator<(const ClipId& other) const {
+        return std::tie(sprite_id, action, direction) <
+               std::tie(other.sprite_id, other.action, other.direction);
+    }
+
+    bool operator==(const ClipId& other) const {
+        return sprite_id == other.sprite_id &&
+               action == other.action &&
+               direction == other.direction;
+    }
+};
+
+struct Sound{
+
+};
+
+enum class SoundId : uint16_t {
+
 };
