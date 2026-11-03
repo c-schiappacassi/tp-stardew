@@ -6,7 +6,7 @@
 
 #include <sys/socket.h>
 
-#include "../common/liberror.h"
+#include "liberror.h"
 
 Acceptor::Acceptor(Socket& listenSocket, Game& game):listenSocket(listenSocket), game(game) {}
 

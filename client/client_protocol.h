@@ -1,5 +1,7 @@
 #pragma once
 
+#include <optional>
+
 #include "dtos.h"
 #include "protocol_base.h"
 #include "protocol_types.h"
@@ -16,9 +18,24 @@ private:
     void sendColor(const Color& color);
     Color receiveColor();
 
+    Stack receiveStack();
+
+    MineralData receiveMineralData();
+    LevelData receiveLevelData();
+    MineData receiveMineData();
+    ZoneData receiveZoneData(Zone currentZone);
+
+    GameInfoDTO receiveGameInfo();
+
     PlayerData receivePlayerData();
+    PlayerDataLocal receivePlayerDataLocal();
 
+public:
+    explicit ClientProtocol(Socket& socket);
 
+    void send(const CommandDTO& dto);
+    void send(const SelectSlotDTO& dto);
+    void send(const CreateGameDTO& dto);
     void send(const JoinGameDTO& dto);
     void send(const ResumeGameDTO& dto);
     void send(const MoveDTO& dto);
@@ -28,13 +45,9 @@ private:
     void send(const UseItemDTO& dto);
     void send(const RequestMultiplayerCodeDTO& dto);
     void send(const DisconnectDTO& dto);
-
-public:
-    explicit ClientProtocol(Socket& socket);
-    void send(const CommandDTO& dto);
-    void send(const CreateGameDTO& dto);
-
+    void send(const ListGamesDTO& dto);
+    void send(const CheckCodeDTO& dto);
 
     void recv(ServerStatus& status);
+    void recv(qtStatus& status);
 };
-
