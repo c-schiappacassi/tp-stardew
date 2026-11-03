@@ -5,7 +5,7 @@
 #include <memory>
 #include <string>
 
-#include "game_types.h"
+#include "game/game_types.h"
 #include "player/player.h"
 
 struct PlayerRecord {

@@ -1,22 +1,20 @@
-#ifndef GAME_H
-#define GAME_H
+#pragma once
 
 #include <cstdint>
+#include <map>
 #include <memory>
 #include <mutex>
+#include <optional>
 #include <string>
-#include <map>
 
 #include "game_types.h"
-#include "player_record.h"
 #include "thread.h"
-#include "network/acceptor.h"
 #include "socket.h"
+#include "network/acceptor.h"
 #include "entities/entity_id_generator.h"
-#include "dungeon/dungeon.h"
-#include "dungeon/dungeon_entrance.h"
+#include "dungeon/dungeon_player_context.h"
+#include "player/player_manager.h"
 #include "player/player_config.h"
-#include <optional>
 
 class Game:public Thread {
 
@@ -27,30 +25,21 @@ class Game:public Thread {
         std::shared_ptr<CommandQueue> input;
         mutable std::mutex mtx;
         bool configured = false;
-        std::map<uint16_t, PlayerRecord> players;
-        uint16_t nextPlayerId = 1;
         Socket skt;
         Acceptor acceptor;
         Dungeon dungeon;
         EntityIdGenerator entityIds;
         std::optional<uint8_t> dungeonWorldId;
-        PlayerConfig playerConfig;
         std::optional<DungeonEntrance> dungeonEntrance;
+        DungeonPlayerContext playerContext;
+        PlayerManager playerManager;
 
-        void selectSlot(uint16_t playerId, uint8_t slot);
-        void disconnectPlayer(uint16_t playerId);
-        void movePlayer(uint16_t playerId, const MoveDTO& move);
         void processCommands();
         void sendStatus();
         void advancePlayers();
-        ServerStatus buildStatus() const;
-        void completePlayerStatus(ServerStatus& status,const PlayerRecord& record,bool includeBroken = false) const;
-        GameSession addPlayer(const std::string& playerName,const PlayerData& data,const std::shared_ptr<OutQueue>& output,const std::string& successMsg);
         void updateToolStates();
-        void selectPlayerSlot(uint16_t playerId,uint8_t slot);
-        void usePlayerItem(uint16_t playerId,uint8_t slot);
-        void interactPlayer(uint16_t playerId,const InteractDTO& interaction);
-        bool useDungeonPassage(Player& player);
+        ServerStatus buildStatus() const;
+        GameSession addPlayer(const std::string& playerName,const PlayerData& data,const std::shared_ptr<OutQueue>& output,const std::string& successMsg);
     public:
         Game(const std::string& id,const std::string& name,uint8_t worldId,const char* servicename,const PlayerConfig& playerConfig = {});
 
@@ -66,5 +55,3 @@ class Game:public Thread {
         void run() override;
         void stop() override;
 };
-
-#endif

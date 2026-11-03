@@ -15,6 +15,15 @@ target_sources(taller_server
         dungeon/dungeon.cpp
         entities/entity_id_generator.cpp
         world/zone_map.cpp
+        player/player_factory.cpp
+        player/player_manager.cpp
+        dungeon/dungeon_player_context.cpp
+        player/player_updates.cpp
+        player/player_status.cpp
+        game/command_router.cpp
+        player/player_actions.cpp
+        game/game_session.cpp
+        game/game_loop.cpp
     PUBLIC
     # .h files
         network/acceptor.h
@@ -24,7 +33,7 @@ target_sources(taller_server
         game/game.h
         game/game_manager.h
         game/game_types.h
-        game/player_record.h
+        player/player_record.h
         inventory/inventory.h
         player/player.h
         entities/entity_id.h
@@ -35,6 +44,17 @@ target_sources(taller_server
         dungeon/dungeon_config.h
         player/player_config.h
         world/zone_map.h
+        player/player_factory.h
+        player/player_manager.h
+        dungeon/dungeon_player_context.h
+        player/ports/movement_rules.h
+        player/ports/zone_data_source.h
+        player/ports/player_interactions.h
+        player/player_updates.h
+        player/player_status.h
+        game/command_router.h
+        player/player_actions.h
+        
 )
 
 target_include_directories(taller_server PRIVATE ${CMAKE_CURRENT_SOURCE_DIR})

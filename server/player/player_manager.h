@@ -1,0 +1,34 @@
+#pragma once
+
+#include <chrono>
+#include <cstdint>
+#include <map>
+#include <memory>
+#include <string>
+
+#include "player/player_record.h"
+#include "player_factory.h"
+#include "player_updates.h"
+#include "player_status.h"
+#include "player_actions.h"
+
+class PlayerManager {
+private:
+    std::map<uint16_t, PlayerRecord> players;
+    uint16_t nextPlayerId = 1;
+    uint8_t maxPlayers;
+    PlayerFactory factory;
+    PlayerUpdates updates;
+    PlayerStatus playerStatus;
+    PlayerActions actions;
+
+public:
+    explicit PlayerManager(const PlayerConfig& config,const MovementRules& movement,const ZoneDataSource& zones,PlayerInteractions& interactions,uint8_t maxPlayers = 4);
+    
+    ServerStatus addPlayer(const std::string& name,const PlayerData& appearance,const std::shared_ptr<OutQueue>& output);
+    void disconnectPlayer(uint16_t playerId);
+    void updateToolStates(std::chrono::steady_clock::time_point now);
+    void advancePlayers(int normalStep);
+    void publishStatus(const ServerStatus& base) const;
+    void handleCommand(const PlayerCommand& command);
+};
