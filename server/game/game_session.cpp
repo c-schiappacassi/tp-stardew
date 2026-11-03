@@ -13,7 +13,7 @@ GameSession Game::createGame(const CreateGameDTO& dto,const std::shared_ptr<OutQ
         session.status.errorMsg = "El nombre de la partida es obligatorio";
         return session;
     }
-    if (dungeonWorldId && *dungeonWorldId != dto.worldId) {
+    if (!world.acceptsWorld(dto.worldId)) {
         session.status.errorMsg ="La mazmorra cargada corresponde a otro mundo";
         return session;
     }

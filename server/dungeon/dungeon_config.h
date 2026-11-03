@@ -3,6 +3,7 @@
 #include <cstdint>
 #include <vector>
 #include "dtos.h"
+#include <map>
 
 inline constexpr uint8_t DUNGEON_ROOM_COUNT = 10;
 
@@ -23,4 +24,6 @@ struct DungeonConfig {
         {ResourceType::GoldRock, 8, 5, 5,{ItemId::Gold, 1, Quality::None}, 100}
     };
     uint16_t miningRange = 64;
+    uint8_t mineralDensityPercent = 10;
+    std::map<uint8_t, uint8_t> mineralDensityByRoom;
 };

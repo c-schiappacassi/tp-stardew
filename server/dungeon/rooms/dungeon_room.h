@@ -2,27 +2,21 @@
 
 #include <cstdint>
 #include <map>
-#include "mineral.h"
+#include "room_minerals.h"
 #include "world/zone_map.h"
+#include "dungeon_room_passages.h"
+#include "room_geometry.h"
 #include <optional>
 
-struct DungeonRoomPassages {
-    Position entry{0, 0};
-    Position exit{0, 0};
-    std::optional<Position> nextRoom;
-};
+
 
 class DungeonRoom {
 private:
     uint8_t number;
-    //de esta manera tenemos separado el mapa en si de lo q serian los minerales
     ZoneMap terrain;
-    std::map<EntityId, Mineral> minerals;
-    std::map<ZoneMap::Cell, EntityId> mineralsByCell;
+    RoomMinerals minerals;
+    RoomGeometry geometry;
     std::optional<DungeonRoomPassages> passages;
-    //esto es para que puedas avanzar en la mazmorra
-    bool arePassagesValid(const ZoneMap& map,const DungeonRoomPassages& data) const;
-    static bool isPassageCell(const ZoneMap& map,const DungeonRoomPassages& data,const Position& pos);
 
 public:
     explicit DungeonRoom(uint8_t number);
@@ -40,4 +34,5 @@ public:
     bool setPassages(const DungeonRoomPassages& data);
     const std::optional<DungeonRoomPassages>& getPassages() const;
     bool hasClearLine(const Position& from,const Position& target) const;
+    std::optional<MineData> getMineData(bool includeBroken = false) const;
 };

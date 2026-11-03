@@ -4,12 +4,21 @@
 #include <mutex>
 #include <string>
 #include <utility>
+#include <stdexcept>
 
-std::string GameManager::createGame(const char* servicename) {
+std::string GameManager::createGame(const char* servicename,const GameSetup& setup) {
     std::lock_guard<std::mutex> lock(mtx);
-
     const std::string id = "game-" + std::to_string(nextId);
-    auto game = std::make_unique<Game>(id, "", 0, servicename);
+
+    auto game = std::make_unique<Game>(id,"",setup.worldId,servicename,setup.playerConfig,setup.dungeonConfig);
+    if (!game->loadDungeon(setup.worldId, setup.layout)) {
+        throw std::invalid_argument("No se pudo cargar la mazmorra de la partida");
+    }
+
+    if (!game->configureDungeonEntrance(setup.entrance)) {
+        throw std::invalid_argument("La entrada de la mazmorra es invalida");
+    }
+
     games.push_back(std::move(game));
 
     try {

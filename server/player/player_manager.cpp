@@ -35,14 +35,9 @@ ServerStatus PlayerManager::addPlayer(const std::string& name,const PlayerData& 
 
     return playerStatus.buildForPlayer(players, it->second);
 }
-
+//por ahora lo dejo asi porq de la otra forma si te volvias a conectar te toma como otra persona
 void PlayerManager::disconnectPlayer(uint16_t playerId) {
-    auto it = players.find(playerId);
-    if (it == players.end()) {
-        return;
-    }
-    it->second.connected = false;
-    it->second.output.reset();
+    players.erase(playerId);
 }
 
 void PlayerManager::updateToolStates(
@@ -66,7 +61,7 @@ void PlayerManager::handleCommand(const PlayerCommand& command) {
         disconnectPlayer(command.playerId);
         return;
     }
-    
+
     auto it = players.find(command.playerId);
     if (it == players.end() || !it->second.connected) {
         return;

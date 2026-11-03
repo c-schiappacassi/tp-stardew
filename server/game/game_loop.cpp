@@ -19,7 +19,7 @@ void Game::advancePlayers() {
 void Game::sendStatus() {
     std::lock_guard<std::mutex> lock(mtx);
     playerManager.publishStatus(buildStatus());
-    dungeon.removeBrokenMinerals();
+    world.afterStatusPublished();
 }
 
 void Game::processCommands() {

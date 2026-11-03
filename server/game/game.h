@@ -4,15 +4,13 @@
 #include <map>
 #include <memory>
 #include <mutex>
-#include <optional>
 #include <string>
 
 #include "game_types.h"
 #include "thread.h"
 #include "socket.h"
 #include "network/acceptor.h"
-#include "entities/entity_id_generator.h"
-#include "dungeon/dungeon_player_context.h"
+#include "world/world_manager.h"
 #include "player/player_manager.h"
 #include "player/player_config.h"
 
@@ -27,11 +25,7 @@ class Game:public Thread {
         bool configured = false;
         Socket skt;
         Acceptor acceptor;
-        Dungeon dungeon;
-        EntityIdGenerator entityIds;
-        std::optional<uint8_t> dungeonWorldId;
-        std::optional<DungeonEntrance> dungeonEntrance;
-        DungeonPlayerContext playerContext;
+        WorldManager world;
         PlayerManager playerManager;
 
         void processCommands();
@@ -41,7 +35,7 @@ class Game:public Thread {
         ServerStatus buildStatus() const;
         GameSession addPlayer(const std::string& playerName,const PlayerData& data,const std::shared_ptr<OutQueue>& output,const std::string& successMsg);
     public:
-        Game(const std::string& id,const std::string& name,uint8_t worldId,const char* servicename,const PlayerConfig& playerConfig = {});
+        Game(const std::string& id,const std::string& name,uint8_t worldId,const char* servicename,const PlayerConfig& playerConfig = {},const DungeonConfig& dungeonConfig = {});
 
         const std::string& getId() const;
         std::string getName() const;

@@ -11,20 +11,28 @@ target_sources(taller_tests
     ../server/game/game_manager.cpp
     ../server/player/player.cpp
     ../server/inventory/inventory.cpp
-    ../server/dungeon/mineral.cpp
-    ../server/dungeon/dungeon_room.cpp
-    ../server/dungeon/dungeon.cpp
+    ../server/dungeon/mining/mineral.cpp
+    ../server/dungeon/rooms/dungeon_room.cpp
+    ../server/dungeon/dungeon_manager.cpp
     ../server/entities/entity_id_generator.cpp
     ../server/world/zone_map.cpp
     ../server/player/player_factory.cpp
     ../server/player/player_manager.cpp
-    ../server/dungeon/dungeon_player_context.cpp
     ../server/player/player_updates.cpp
     ../server/player/player_status.cpp
     ../server/game/command_router.cpp
     ../server/player/player_actions.cpp
     ../server/game/game_session.cpp
     ../server/game/game_loop.cpp
+    ../server/dungeon/mining/mineral_generator.cpp
+    ../server/dungeon/rooms/dungeon_travel.cpp
+    ../server/dungeon/rooms/room_minerals.cpp
+    ../server/dungeon/rooms/room_geometry.cpp
+    ../server/dungeon/mining/dungeon_mining.cpp
+    ../server/dungeon/loading/dungeon_loader.cpp
+    ../server/world/zone_map_positions.cpp
+    ../server/dungeon/mining/mineral_placement.cpp
+    ../server/world/world_manager.cpp
     PUBLIC
     # .h files
 )
