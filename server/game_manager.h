@@ -22,6 +22,7 @@ public:
 
     GameSession createGame(const CreateGameDTO& dto, const std::shared_ptr<OutQueue>& output);
     GameSession joinGame(const JoinGameDTO& dto, const std::shared_ptr<OutQueue>& output);
+    GameSession resumeGame(const ResumeGameDTO& dto, const std::shared_ptr<OutQueue>& output);
     bool codeExists(const std::string& code);
     std::vector<GameInfoDTO> listGames(const std::string& userName);
     void stopAll();

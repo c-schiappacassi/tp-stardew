@@ -138,7 +138,7 @@ JoinGameDTO ServerProtocol::receiveJoinGame() {
 
 ResumeGameDTO ServerProtocol::receiveResumeGame() {
     ResumeGameDTO dto(base.receiveString());
-    dto.gameId = base.receiveUint16();
+    dto.gameId = base.receiveString();
     return dto;
 }
 

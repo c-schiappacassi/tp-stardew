@@ -39,8 +39,10 @@ class Game:public Thread {
         std::string getName() const;
         uint8_t getWorldId() const;
         std::shared_ptr<CommandQueue> getInputQueue() const;
+
         GameSession createGame(const CreateGameDTO& dto,const std::shared_ptr<OutQueue>& output);
         GameSession joinGame(const JoinGameDTO& dto,const std::shared_ptr<OutQueue>& output);
+        GameSession resumeGame(const ResumeGameDTO& dto, const std::shared_ptr<OutQueue>& output);
 
         void run() override;
         void stop() override;

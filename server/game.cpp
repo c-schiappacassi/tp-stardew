@@ -133,6 +133,46 @@ GameSession Game::joinGame(const JoinGameDTO& dto,const std::shared_ptr<OutQueue
     return addPlayer(dto.userName, PlayerData{}, output, "Te uniste a la partida");
 }
 
+GameSession Game::resumeGame(const ResumeGameDTO& dto, const std::shared_ptr<OutQueue>& output) {
+    std::lock_guard<std::mutex> lock(mtx);
+
+    GameSession session{};
+    session.status.status = StatusCode::Error;
+    session.userName = dto.userName;
+
+    if (!configured || dto.gameId != id || !output) {
+        session.status.errorMsg = "No existe esa partida";
+        return session;
+    }
+
+    for (auto& entry : players) {
+        PlayerRecord& player = entry.second;
+        if (player.name != dto.userName) {
+            continue;
+        }
+        if (player.connected) {
+            session.status.errorMsg = "Ya estas conectado a esta partida";
+            return session;
+        }
+
+        player.connected = true;
+        player.output = output;
+        player.data.state = PlayerState::Idle;
+
+        session.status = buildStatus();
+        session.status.playerId = entry.first;
+        session.status.successMsg = "Partida retomada";
+        session.gameId = id;
+        session.playerId = entry.first;
+        session.worldId = worldId;
+        session.input = input;
+        return session;
+    }
+
+    session.status.errorMsg = "No tenes un jugador en esta partida";
+    return session;
+}
+
 void Game::disconnectPlayer(uint16_t playerId) {
     std::lock_guard<std::mutex> lock(mtx);
 

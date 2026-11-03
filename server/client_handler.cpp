@@ -25,6 +25,9 @@ void ClientHandler::run() {
                 case MessageType::JoinGame:
                     handleJoin();
                     break;
+                case MessageType::ResumeGame:
+                    handleResume();
+                    break;
                 case MessageType::Move:
                     handleMove();
                     break;
@@ -66,6 +69,14 @@ void ClientHandler::handleJoin() {
         throw ProtocolError("ya estas en una partida");
     }
     answer(manager.joinGame(dto, outQueue));
+}
+
+void ClientHandler::handleResume() {
+    ResumeGameDTO dto = protocol.receiveResumeGame();
+    if (inGame()) {
+        throw ProtocolError("ya estas en una partida");
+    }
+    answer(manager.resumeGame(dto, outQueue));
 }
 
 void ClientHandler::handleMove() {

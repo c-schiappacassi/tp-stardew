@@ -37,6 +37,19 @@ GameSession GameManager::joinGame(const JoinGameDTO& dto,
     return it->second->joinGame(dto, output);
 }
 
+GameSession GameManager::resumeGame(const ResumeGameDTO& dto, const std::shared_ptr<OutQueue>& output) {
+    std::lock_guard<std::mutex> lock(mtx);
+
+    auto it = games.find(dto.gameId);
+    if (it == games.end()) {
+        GameSession session{};
+        session.status.status = StatusCode::Error;
+        session.status.errorMsg = "No existe esa partida";
+        return session;
+    }
+    return it->second->resumeGame(dto, output);
+}
+
 bool GameManager::codeExists(const std::string& code) {
     std::lock_guard<std::mutex> lock(mtx);
     return games.find(code) != games.end();

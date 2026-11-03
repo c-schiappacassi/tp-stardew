@@ -178,7 +178,7 @@ void ClientProtocol::send(const JoinGameDTO& dto) {
 void ClientProtocol::send(const ResumeGameDTO& dto) {
     base.sendUint8(static_cast<uint8_t>(MessageType::ResumeGame));
     base.sendString(dto.userName);
-    base.sendUint16(dto.gameId);
+    base.sendString(dto.gameId);
 }
 
 void ClientProtocol::send(const MoveDTO& dto) {

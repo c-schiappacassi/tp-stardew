@@ -127,7 +127,7 @@ struct JoinGameDTO : public CommandDTO {
 };
 
 struct ResumeGameDTO : public CommandDTO {
-    uint16_t gameId;
+    std::string gameId;
 
     MessageType type() const override { return MessageType::ResumeGame; }
     explicit ResumeGameDTO(const std::string& name) : CommandDTO(name) {}

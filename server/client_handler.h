@@ -22,6 +22,7 @@ private:
 
     void handleCreate();
     void handleJoin();
+    void handleResume();
     void handleMove();
     void handleListGames();
     void handleCheckCode();
