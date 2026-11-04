@@ -11,7 +11,7 @@ class FarmView : public ZoneView {
 private:
     std::unordered_map<uint32_t, CropView> crops;
     std::unordered_map<uint32_t, AnimalView> animals;
-    // std::unordered_map<uint32_t, FurnitureView> Furniture; TODO: TBD si los muebles pueden ir donde sea en la granja o solo adentro de la casa
+    // std::unordered_map<uint32_t, FurnitureView> furniture; TODO: TBD si los muebles pueden ir donde sea en la granja o solo adentro de la casa
 public:
     void update(const FarmData& data);
     void draw_background(const RenderInfo& ctx) override;
@@ -32,5 +32,5 @@ void FarmView::collect_drawables(const RenderInfo& ctx, std::vector<Drawable>& o
     uint64_t tie = static_cast<uint64_t>(1ull) << 32;
     collect_from(ctx, crops, out, tie);
     collect_from(ctx, animals, out, tie);
-    // collect_from(ctx, decor, out, tie);
+    // collect_from(ctx, furniture, out, tie);
 }

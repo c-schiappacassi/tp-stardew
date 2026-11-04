@@ -32,8 +32,8 @@ public:
         }
     }
 
-    void draw_background(const RenderInfo& ctx) override {
-        if (ZoneView* view = current_view()) view->draw_background(ctx);
+    void draw_background(const RenderInfo&) override {
+        // if (ZoneView* view = current_view()) view->draw_background(ctx);
     }
 
     void collect_drawables(const RenderInfo& ctx, std::vector<Drawable>& out) override {

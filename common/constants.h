@@ -34,7 +34,7 @@ const uint8_t PLAYER_INVENTORY_CAPACITY = 9;
 const uint16_t PLAYER_INITIAL_HEALTH = 100;
 const uint16_t PLAYER_INITIAL_ENERGY = 100;
 
-const int FPS = 30;
+const float TICK_MS = 1000.0f / 30.0f;
 const int SPAWN_X = 1000;
 const int SPAWN_Y = 1000;
 const int PLAYER_STEP = 4;

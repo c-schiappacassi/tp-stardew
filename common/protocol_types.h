@@ -124,7 +124,6 @@ enum class AnimalType : uint8_t {
 enum class AnimalState : uint8_t {
     Idle = 0,
     Walking = 1,
-    ReadyToMilk = 2
 };
 
 // ROCKS

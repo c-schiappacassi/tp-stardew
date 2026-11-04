@@ -11,6 +11,9 @@ target_sources(taller_client
     sdlGUI/world/mines/ore_view.cpp
     sdlGUI/world/mines/level_view.cpp
     sdlGUI/world/mines/mine_view.cpp
+
+    sdlGUI/world/farm/crop_view.cpp
+    sdlGUI/world/farm/animal_view.cpp
     PUBLIC
     # .h files
     game.h

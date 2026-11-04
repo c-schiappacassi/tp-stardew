@@ -25,6 +25,9 @@ enum class SpriteId : uint16_t {
     InGameUI,
     Ores,
     MenuTiles,
+    Crops,
+    BronwCow,
+    BronwChicken
 };
 
 

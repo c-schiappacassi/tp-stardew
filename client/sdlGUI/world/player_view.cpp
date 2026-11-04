@@ -92,7 +92,7 @@ void PlayerView::draw(const RenderInfo& ctx) {
     }
     
     const long long delta_frames = ctx.it - last_it;
-    const float delta_ms =  static_cast<float>(delta_frames) * 1000.0f / static_cast<float>(FPS);
+    const float delta_ms =  static_cast<float>(delta_frames) * TICK_MS;
 
     anim.update(delta_ms);
     last_it = ctx.it;
