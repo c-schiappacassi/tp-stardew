@@ -161,6 +161,43 @@
 - Concurrencia Completa
 - la idea era que tuvieramos regalos y enemigos
 
+# 4ra Reunión 03-11-2026
 
+- Desmayo/dormir es todo SDL
+- Json para el formato del mapa o toml. el que sea mas comodo 
+- World le pregunta a farm si hay crops ready y este le avisa a HUD (patron publish subscriber es medio overkill)
+- Cultivos NO como el jeugo - Chrono interno
+    -   15min = un dia de juego - se puede calcular con librerias
+    -   06am a 2am(sino se desmaya) - el cliente solo recibe hora falsa, pasar la hora hora de a 10-15 min al final del proyecto
+- Constantes en un archivo
+- Editar sprites solo si tenes el tiempo
+- InsideBuildingXXX como zona
+- Comerciatenas fijos en edif(editor valida que esten todos)
+- Inical Status para crear lo fijo del mapa y no estar mandando siempre mucha info 
 
+#### lo que es para la proxima:
+- QT:
+    -   Comenzar Editor (mario maker) (2 o maybe 3 semanas)
+        -   granja con casa
+        -   town con comerciantes
+        -   geo de niveles de la mina (geo fija pero aleatoreo el orden) -> cambio en el client
+        -   para todos, walkable tile o no
+        -   validacion de mapa
+        -   deco (individual y bloques predeterminados para hacer mas rápido, onda rompecabezas)
+        -   mapa: si hay tres casas se pueden unir max 3 personas - MAX POSIBLE SIEMPRE ES 4 (como en el juego)
+    -   Fin de juego
 
+- Feat:
+    - terminar granja
+    - mapa
+    - barra de energia
+    - regalos - 1 semana
+    - enemigos - comienzo enemigos - uno completo y extendemos
+    - vida player + consecuencias de desmayarse
+    - cama + ok irse a dormir 
+        - cama fija
+
+- Client:
+    - sound manager
+
+- Server: ayuda C pero no descuida el protocolo y el testing.

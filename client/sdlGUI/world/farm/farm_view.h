@@ -11,7 +11,6 @@ class FarmView : public ZoneView {
 private:
     std::unordered_map<uint32_t, CropView> crops;
     std::unordered_map<uint32_t, AnimalView> animals;
-    // std::unordered_map<uint32_t, DecorView> decor;
     // std::unordered_map<uint32_t, FurnitureView> Furniture; TODO: TBD si los muebles pueden ir donde sea en la granja o solo adentro de la casa
 public:
     void update(const FarmData& data);

@@ -18,7 +18,7 @@ int main(int argc, char* argv[]) {
         const int result = QApplication::exec();
         if (menu.gameStatus()) {
             std::cout << "Partida: " << menu.gameStatus()->gameId << '\n';
-            Game game(net, menu.userName(), *menu.gameStatus());
+            Game game(net, menu.userName(), *menu.gameStatus() /*, status inicial unico */); 
             game.exe();
         }
         return result;
