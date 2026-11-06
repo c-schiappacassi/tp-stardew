@@ -28,7 +28,7 @@ SDL2pp::Texture AssetManager::load_texture(SDL2pp::Renderer& renderer, const std
 }
 
 AssetManager::AssetManager(SDL2pp::Renderer& renderer, const std::filesystem::path& assets_root) {
-    load_sprites_texture(renderer, assets_root / "Sprites" );
+    load_sprites_texture(renderer, assets_root / "sprites" );
     load_farmer_clips();
     load_ore_sprites();
     load_item_sprites();
@@ -98,22 +98,22 @@ void AssetManager::load_item_sprites() {
 }
 
 void AssetManager::load_sprites_texture(SDL2pp::Renderer& renderer, const std::filesystem::path& assets_root) { 
-    const auto characters = assets_root / "Characters";
-    const auto ores = assets_root / "Caverns";
-    const auto menus = assets_root / "Menus";
-    const auto farm = assets_root / "Farm";
+    const auto characters = assets_root / "characters";
+    const auto ores = assets_root / "caverns";
+    const auto menus = assets_root / "menus";
+    const auto farm = assets_root / "farm";
 
-    textures.emplace(SpriteId::MenuTiles, load_texture(renderer, menus / "MenuTiles..png"));
-    textures.emplace(SpriteId::FarmerBase, load_texture(renderer, characters / "Farmer Base.png"));
-    textures.emplace(SpriteId::Hairstyles, load_texture(renderer, characters / "Hairstyles.png"));
-    textures.emplace(SpriteId::Pants, load_texture(renderer, characters / "Pants.png"));
-    textures.emplace(SpriteId::Shirts, load_texture(renderer, characters / "Shirts.png"));
-    textures.emplace(SpriteId::Tools, load_texture(renderer, characters / "Tools.png"));
-    textures.emplace(SpriteId::Weapons, load_texture(renderer, characters / "Weapons.png"));
-    textures.emplace(SpriteId::Ores, load_texture(renderer, ores / "Mines.png"));
-    textures.emplace(SpriteId::Crops, load_texture(renderer, farm / "Crops" / "Crops.png"));
-    textures.emplace(SpriteId::BronwCow, load_texture(renderer, farm / "Animals" / "Cow (Brown).png"));
-    textures.emplace(SpriteId::BronwChicken, load_texture(renderer, farm / "Animals" / "Chicken (Brown).png"));
+    textures.emplace(SpriteId::MenuTiles, load_texture(renderer, menus / "menutiles..png"));
+    textures.emplace(SpriteId::FarmerBase, load_texture(renderer, characters / "farmer_base.png"));
+    textures.emplace(SpriteId::Hairstyles, load_texture(renderer, characters / "hairstyles.png"));
+    textures.emplace(SpriteId::Pants, load_texture(renderer, characters / "pants.png"));
+    textures.emplace(SpriteId::Shirts, load_texture(renderer, characters / "shirts.png"));
+    textures.emplace(SpriteId::Tools, load_texture(renderer, characters / "tools.png"));
+    textures.emplace(SpriteId::Weapons, load_texture(renderer, characters / "weapons.png"));
+    textures.emplace(SpriteId::Ores, load_texture(renderer, ores / "mines.png"));
+    textures.emplace(SpriteId::Crops, load_texture(renderer, farm / "crops" / "crops.png"));
+    textures.emplace(SpriteId::BronwCow, load_texture(renderer, farm / "animals" / "cow_brown.png"));
+    textures.emplace(SpriteId::BronwChicken, load_texture(renderer, farm / "animals" / "chicken_brown.png"));
 }
 
 void AssetManager::load_farmer_clips() {

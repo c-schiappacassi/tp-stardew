@@ -29,4 +29,5 @@ std::optional<CropType> CropView::is_ready(){
     if (this->state == CropState::Ready){
         return this->type;
     }
+    return std::nullopt;
 }

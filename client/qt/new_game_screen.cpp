@@ -153,18 +153,18 @@ SpriteButton* makeArrowButton(const QPixmap& arrow, QWidget* parent) {
 
 NewGameScreen::NewGameScreen(QWidget* parent): QWidget(parent) {
     QLabel* panel = new QLabel(this);
-    const QPixmap frames(QString(ASSETS_DIR) + "/Sprites/Menus/Frames.png");
+    const QPixmap frames(QString(ASSETS_DIR) + "/sprites/menus/frames.png");
     panel->setPixmap(frames.copy(panelRect));
     panel->setScaledContents(true);
     panel->setFixedSize(panelSize);
 
-    background = QPixmap(QString(ASSETS_DIR) + "/Sprites/Menus/DayBG.png");
-    const QPixmap farmerSheet(QString(ASSETS_DIR) + "/Sprites/Characters/Farmer Base.png");
+    background = QPixmap(QString(ASSETS_DIR) + "/sprites/menus/day_bg.png");
+    const QPixmap farmerSheet(QString(ASSETS_DIR) + "/sprites/characters/farmer_base.png");
     body = farmerSheet.copy(bodyRect);
     arms = farmerSheet.copy(armsRect);
-    hairSheet = QPixmap(QString(ASSETS_DIR) + "/Sprites/Characters/Hairstyles.png");
-    shirtSheet = QPixmap(QString(ASSETS_DIR) + "/Sprites/Characters/Shirts.png");
-    pantsSheet = QPixmap(QString(ASSETS_DIR) + "/Sprites/Characters/Pants.png");
+    hairSheet = QPixmap(QString(ASSETS_DIR) + "/sprites/characters/hairstyles.png");
+    shirtSheet = QPixmap(QString(ASSETS_DIR) + "/sprites/characters/shirts.png");
+    pantsSheet = QPixmap(QString(ASSETS_DIR) + "/sprites/characters/pants.png");
     hairModels = validModels(hairSheet, hairLayout);
     hairModels.erase(std::remove_if(hairModels.begin(), hairModels.end(),
             [](int model) { return model >= firstBackHair && model <= lastBackHair; }),
@@ -214,7 +214,7 @@ NewGameScreen::NewGameScreen(QWidget* parent): QWidget(parent) {
     connect(hairColorSlider, &QSlider::valueChanged, this, &NewGameScreen::updatePreview);
     connect(pantsColorSlider, &QSlider::valueChanged, this, &NewGameScreen::updatePreview);
 
-    const QPixmap cursors(QString(ASSETS_DIR) + "/Sprites/Menus/Cursors.png");
+    const QPixmap cursors(QString(ASSETS_DIR) + "/sprites/menus/cursors.png");
     SpriteButton* okButton = new SpriteButton(cursors.copy(okRect), cursors.copy(okRect), panel);
     okButton->setFixedSize(okSize);
 
@@ -226,7 +226,7 @@ NewGameScreen::NewGameScreen(QWidget* parent): QWidget(parent) {
     panelLayout->addStretch(1);
     panelLayout->addWidget(okButton, 0, Qt::AlignRight);
 
-    const QPixmap titleSheet(QString(ASSETS_DIR) + "/Sprites/Menus/Title Screen.png");
+    const QPixmap titleSheet(QString(ASSETS_DIR) + "/sprites/menus/title_screen.png");
     SpriteButton* backButton = new SpriteButton(titleSheet.copy(backNormalRect), titleSheet.copy(backHoverRect), this);
     backButton->setFixedSize(backSize);
 
@@ -243,7 +243,7 @@ NewGameScreen::NewGameScreen(QWidget* parent): QWidget(parent) {
 }
 
 QSlider* NewGameScreen::addSelectorRow(QGridLayout* layout, int row, const QString& title, const std::vector<int>& models, int& index, bool withColor) {
-    const QPixmap cursors(QString(ASSETS_DIR) + "/Sprites/Menus/Cursors.png");
+    const QPixmap cursors(QString(ASSETS_DIR) + "/sprites/menus/cursors.png");
     SpriteButton* leftButton = makeArrowButton(cursors.copy(leftArrowRect), this);
     SpriteButton* rightButton = makeArrowButton(cursors.copy(rightArrowRect), this);
 

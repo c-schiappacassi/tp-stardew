@@ -24,13 +24,13 @@ const QString errorColor = "#4a2a0a";
 }
 
 UsernameScreen::UsernameScreen(QWidget* parent): QWidget(parent), input(new QLineEdit(this)) {
-    const QPixmap sheet(QString(ASSETS_DIR) + "/Sprites/Menus/Title Screen.png");
+    const QPixmap sheet(QString(ASSETS_DIR) + "/sprites/menus/title_screen.png");
     QLabel* logo = new QLabel(this);
     logo->setPixmap(sheet.copy(logoRect));
     logo->setScaledContents(true);
     logo->setFixedSize(logoSize);
 
-    const QPixmap frames = QPixmap(QString(ASSETS_DIR) + "/Sprites/Menus/Frames.png");
+    const QPixmap frames = QPixmap(QString(ASSETS_DIR) + "/sprites/menus/frames.png");
 
     QLabel* panel = new QLabel(this);
     panel->setPixmap(frames.copy(panelRect));

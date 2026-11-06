@@ -61,11 +61,11 @@ QPixmap tinted(const QPixmap& sprite, const QColor& color) {
 }
 
 QPixmap makeFarmer(const PlayerData& data) {
-    const QString characters = QString(ASSETS_DIR) + "/Sprites/Characters/";
-    const QPixmap farmerSheet(characters + "Farmer Base.png");
-    const QPixmap hairSheet(characters + "Hairstyles.png");
-    const QPixmap shirtSheet(characters + "Shirts.png");
-    const QPixmap pantsSheet(characters + "Pants.png");
+    const QString characters = QString(ASSETS_DIR) + "/sprites/characters/";
+    const QPixmap farmerSheet(characters + "farmer Base.png");
+    const QPixmap hairSheet(characters + "hairstyles.png");
+    const QPixmap shirtSheet(characters + "shirts.png");
+    const QPixmap pantsSheet(characters + "pants.png");
 
     QPixmap farmer(bodyRect.size());
     farmer.fill(Qt::transparent);
@@ -88,7 +88,7 @@ QLabel* makeLabel(const QString& text, int size, const QString& color, QWidget* 
 }
 }
 
-LoadScreen::LoadScreen(QWidget* parent): QWidget(parent), frames(QString(ASSETS_DIR) + "/Sprites/Menus/Frames.png") {
+LoadScreen::LoadScreen(QWidget* parent): QWidget(parent), frames(QString(ASSETS_DIR) + "/sprites/menus/frames.png") {
     QLabel* panel = new QLabel(this);
     panel->setPixmap(frames.copy(panelRect));
     panel->setScaledContents(true);
@@ -101,7 +101,7 @@ LoadScreen::LoadScreen(QWidget* parent): QWidget(parent), frames(QString(ASSETS_
     panelLayout->setContentsMargins(30, 30, 30, 30);
     panelLayout->addLayout(rowsLayout);
 
-    const QPixmap chatBox(QString(ASSETS_DIR) + "/Sprites/Menus/Chat Box.png");
+    const QPixmap chatBox(QString(ASSETS_DIR) + "/sprites/menus/chat_box.png");
     SpriteButton* upButton = new SpriteButton(chatBox.copy(upArrowRect), chatBox.copy(upArrowRect), this);
     upButton->setFixedSize(arrowSize);
     SpriteButton* downButton = new SpriteButton(chatBox.copy(downArrowRect), chatBox.copy(downArrowRect), this);
@@ -120,7 +120,7 @@ LoadScreen::LoadScreen(QWidget* parent): QWidget(parent), frames(QString(ASSETS_
     panelRow->addLayout(arrowsLayout);
     panelRow->addStretch(1);
 
-    const QPixmap titleSheet(QString(ASSETS_DIR) + "/Sprites/Menus/Title Screen.png");
+    const QPixmap titleSheet(QString(ASSETS_DIR) + "/sprites/menus/title_screen.png");
     SpriteButton* backButton = new SpriteButton(titleSheet.copy(backNormalRect), titleSheet.copy(backHoverRect), this);
     backButton->setFixedSize(backSize);
 

@@ -16,7 +16,7 @@ MainWindow::MainWindow(NetworkManager& net, QWidget *parent) : QMainWindow(paren
     setWindowTitle("Stardew Valley");
     setMinimumSize(1600, 900);
     resize(1920, 1200);
-    setStyleSheet(QString("MainWindow { border-image: url(\"%1/Sprites/Menus/DaySky.png\") 0 0 0 0 stretch stretch; }").arg(ASSETS_DIR));
+    setStyleSheet(QString("MainWindow { border-image: url(\"%1/sprites/menus/day_sky.png\") 0 0 0 0 stretch stretch; }").arg(ASSETS_DIR));
     setCentralWidget(stack);
 
     UsernameScreen* usernameScreen = new UsernameScreen(this);

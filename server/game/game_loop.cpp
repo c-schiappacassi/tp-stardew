@@ -32,7 +32,7 @@ void Game::processCommands() {
 
 void Game::run() {
     bool running = should_keep_running();
-    const auto rate = std::chrono::milliseconds(1000 / FPS);
+    const auto rate = std::chrono::milliseconds(int(TICK_MS));
     try {
         Foo::constant_rate_loop(
             [this, &running](long long) {

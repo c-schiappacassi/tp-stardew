@@ -4,7 +4,11 @@ namespace {
     SpriteId sprite_for(AnimalType type) {
         switch (type) {
             case AnimalType::BrownCow:     return SpriteId::BronwCow;
+            case AnimalType::WhiteCow:     return SpriteId::BronwCow;
             case AnimalType::BrownChicken: return SpriteId::BronwChicken;
+            case AnimalType::WhiteChicken: return SpriteId::BronwChicken;
+            case AnimalType::BlueChicken: return SpriteId::BronwChicken;
+            case AnimalType::VoidChicken: return SpriteId::BronwChicken;
         }
         throw std::invalid_argument("AnimalView: AnimalType desconocido");
     }

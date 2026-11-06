@@ -26,7 +26,7 @@ SpriteButton* makeButton(const QPixmap& source, int column, QWidget* parent) {
 }
 
 StartMenuScreen::StartMenuScreen(QWidget* parent): QWidget(parent) {
-    const QPixmap sheet(QString(ASSETS_DIR) + "/Sprites/Menus/Title Screen.png");
+    const QPixmap sheet(QString(ASSETS_DIR) + "/sprites/menus/title_screen.png");
     QLabel* logo = new QLabel(this);
     logo->setPixmap(sheet.copy(logoRect));
     logo->setScaledContents(true);

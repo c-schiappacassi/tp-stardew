@@ -26,7 +26,7 @@ const QString errorColor = "#a01010";
 }
 
 JoinScreen::JoinScreen(QWidget* parent): QWidget(parent), input(new QLineEdit(this)) {
-    const QPixmap frames(QString(ASSETS_DIR) + "/Sprites/Menus/Frames.png");
+    const QPixmap frames(QString(ASSETS_DIR) + "/sprites/menus/frames.png");
 
     QLabel* panel = new QLabel(this);
     panel->setPixmap(frames.copy(panelRect));
@@ -73,7 +73,7 @@ JoinScreen::JoinScreen(QWidget* parent): QWidget(parent), input(new QLineEdit(th
     joinText->setAlignment(Qt::AlignCenter);
     joinText->setStyleSheet(QString("font: bold 34px; color: %1;").arg(textColor));
 
-    const QPixmap titleSheet(QString(ASSETS_DIR) + "/Sprites/Menus/Title Screen.png");
+    const QPixmap titleSheet(QString(ASSETS_DIR) + "/sprites/menus/title_screen.png");
     SpriteButton* backButton = new SpriteButton(titleSheet.copy(backNormalRect), titleSheet.copy(backHoverRect), this);
     backButton->setFixedSize(backSize);
 
