@@ -57,6 +57,7 @@ void PlayerView::update(const PlayerData& data) {
     shirt_model = data.shirtModel;
     pant_model = data.pantsModel;
     pant_color = to_sdl(data.pantsColor);
+    held_item = data.heldItem;
 }
 
 std::optional<float> PlayerView::depth(const RenderInfo& ctx) const {
@@ -103,4 +104,15 @@ void PlayerView::draw(const RenderInfo& ctx) {
     if (!arms_behind){
         draw_layer(ctx.r, ctx.assets.get_texture(SpriteId::FarmerBase), arms_src(frame.sprite), origin, Offset{}, frame.flip, cell_w, zoom);
     }
+
+    // TODO: 
+    /*
+    IMPORTANTE la animacion del farmer cambia con la herramienta que esta usando -> 
+            IDEA A: cambiar UsingTool por UsingPickaxe, UsingHoe, etc..
+            IDEA B: usar usingtool + held item y que las tools tengan su propio animator?
+
+    if PlayerStatus == UsingTool{
+        animar held_item que va a ser una tool(pick, watteringcan, sword, hoe) 
+    }
+    */
 }

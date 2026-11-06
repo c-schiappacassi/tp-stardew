@@ -48,6 +48,7 @@ private:
     Position pos{0, 0};
     Direction facing = Direction::Down;
     PlayerState state = PlayerState::Idle;
+    std::optional<ItemId> held_item;
 
     uint16_t shirt_model = 0;
     uint16_t pant_model = 0;
