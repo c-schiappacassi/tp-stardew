@@ -3,43 +3,33 @@
 #include <algorithm>
 #include <cmath>
 
-bool RoomGeometry::canWalk(const ZoneMap& map, const RoomMinerals& minerals,const Position& pos) const {
-    if (!map.isWalkable(pos)) {
-        return false;
-    }
-    return !minerals.blocks(*map.cellAt(pos));
+bool RoomGeometry::isPointClear(const ZoneMap& map, const RoomMinerals& minerals,const Position& pos) const {
+    return canWalk(map, minerals,CollisionBounds{pos.getX(), pos.getY(), pos.getX(), pos.getY()});
 }
 
 bool RoomGeometry::canWalk(const ZoneMap& map, const RoomMinerals& minerals,const CollisionBounds& bounds) const {
-    if (!map.isWalkable(bounds)) return false;
-    const auto cells = map.coveredCells(bounds);
-    for (int row = cells->first.first; row <= cells->last.first; ++row) {
-        for (int column = cells->first.second; column <= cells->last.second; ++column) {
-            if (minerals.blocks({row, column})) return false;
-        }
-    }
-    return true;
+    return map.isWalkable(bounds) && !minerals.blocks(bounds);
 }
 
 bool RoomGeometry::isPassageCell(const ZoneMap& map,const DungeonRoomPassages& data, const Position& pos) const {
-    return map.sameCell(pos, data.entry) || map.sameCell(pos, data.exit) ||(data.nextRoom && map.sameCell(pos, *data.nextRoom));
+    return map.sameBaseCell(pos, data.entry) || map.sameBaseCell(pos, data.exit) ||(data.nextRoom && map.sameBaseCell(pos, *data.nextRoom));
 }
 
 bool RoomGeometry::arePassagesValid(uint8_t number, const ZoneMap& map,const DungeonRoomPassages& data) const {
-    if (!map.isWalkable(data.entry) || !map.isWalkable(data.exit)) {
+    if (!map.isWalkableBase(data.entry) || !map.isWalkableBase(data.exit)) {
         return false;
     }
     if ((number < DUNGEON_ROOM_COUNT && !data.nextRoom)||(number == DUNGEON_ROOM_COUNT && data.nextRoom)) {
         return false;
     }
-    if (data.nextRoom && (!map.isWalkable(*data.nextRoom) ||map.sameCell(data.entry, *data.nextRoom) ||map.sameCell(data.exit, *data.nextRoom))) {
+    if (data.nextRoom && (!map.isWalkableBase(*data.nextRoom) ||map.sameBaseCell(data.entry, *data.nextRoom) ||map.sameBaseCell(data.exit, *data.nextRoom))) {
         return false;
     }
-    return map.hasPath(data.entry, data.exit) &&(!data.nextRoom || map.hasPath(data.entry, *data.nextRoom));
+    return map.hasBasePath(data.entry, data.exit) &&(!data.nextRoom || map.hasBasePath(data.entry, *data.nextRoom));
 }
 
 bool RoomGeometry::hasClearLine(const ZoneMap& map, const RoomMinerals& minerals,const Position& from, const Position& target) const {
-    if (!canWalk(map, minerals, from) || !map.isWalkable(target)) {
+    if (!isPointClear(map, minerals, from) || !map.isWalkable(target)) {
         return false;
     }
     const double dx = static_cast<double>(target.getX()) - from.getX();
@@ -62,15 +52,15 @@ bool RoomGeometry::hasClearLine(const ZoneMap& map, const RoomMinerals& minerals
         if (crossesCorner) {
             const Position horizontal(sample.getX(), previous.getY());
             const Position vertical(previous.getX(), sample.getY());
-            if (!canWalk(map, minerals, horizontal) ||
-                !canWalk(map, minerals, vertical)) {
+            if (!isPointClear(map, minerals, horizontal) ||
+                !isPointClear(map, minerals, vertical)) {
                 return false;
             }
         }
         if (map.sameCell(sample, target)) {
             return true;
         }
-        if (!canWalk(map, minerals, sample)) {
+        if (!isPointClear(map, minerals, sample)) {
             return false;
         }
         previous = sample;

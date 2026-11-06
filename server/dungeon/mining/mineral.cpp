@@ -1,4 +1,5 @@
 #include "mineral.h"
+#include "entities/collision_box.h"
 
 #include <stdexcept>
 
@@ -47,4 +48,11 @@ MineralState Mineral::getState() const {
 
 MineralData Mineral::getPublicData() const {
     return MineralData{id, pos, type, getState()};
+}
+CollisionBounds Mineral::getCollisionBounds() const {
+    return CollisionBox{entity_dimensions::MINERAL}.at(pos);
+}
+
+Position Mineral::getCollisionCenter() const {
+    return getCollisionBounds().center();
 }

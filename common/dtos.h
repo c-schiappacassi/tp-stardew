@@ -30,7 +30,7 @@ struct AnimalData{
     Direction dir{Direction::None};
     AnimalType type;
     AnimalState state;
-    bool needs_interaction;
+    bool needs_interaction=false;
     // Age ? TBD si hacemos logica de que los animales llegan bebes y crecen
 };
 

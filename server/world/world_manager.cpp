@@ -14,7 +14,7 @@ bool WorldManager::loadDungeon(uint8_t worldId,const std::map<uint8_t, DungeonRo
 }
 
 bool WorldManager::configureDungeonEntrance(const DungeonEntrance& data) {
-    if (!loadedWorld || (data.zone != Zone::Farm && data.zone != Zone::Town) ||!data.terrain.isWalkable(data.position) || !data.terrain.isWalkable(data.returnPosition)) {
+    if (!loadedWorld || (data.zone != Zone::Farm && data.zone != Zone::Town) ||!data.terrain.isWalkableBase(data.position) || !data.terrain.isWalkableBase(data.returnPosition)) {
         return false;
     }
     entrance = data;
@@ -61,7 +61,7 @@ bool WorldManager::usePassage(Player& player) {
         }
         return dungeon.advanceRoom(player);
     }
-    if (player.getZone() != entrance->zone ||!entrance->terrain.sameCell(player.getPosition(), entrance->position)) {
+    if (player.getZone() != entrance->zone ||!entrance->terrain.sameBaseCell(player.getPosition(), entrance->position)) {
         return false;
     }
     return dungeon.enter(player);

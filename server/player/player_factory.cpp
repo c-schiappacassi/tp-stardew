@@ -3,6 +3,7 @@
 #include <initializer_list>
 #include <random>
 #include "constants.h"
+#include "entities/entity_dimensions.h"
 
 PlayerFactory::PlayerFactory(const PlayerConfig& config):config(config) {}
 
@@ -10,7 +11,8 @@ Player PlayerFactory::create(const PlayerData& appearance) const {
     PlayerData spawn = appearance;
 
     //por ahora lo spawneo en la mina
-    spawn.pos = Position(48, 48);
+    const int tileSize = entity_dimensions::TILE_SIZE;
+    spawn.pos = Position{3 * tileSize + tileSize / 2, 4 * tileSize};
     spawn.currentZone = Zone::Dungeon;
 
     std::mt19937 generator(std::random_device{}());

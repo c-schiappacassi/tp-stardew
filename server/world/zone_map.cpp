@@ -45,11 +45,11 @@ bool ZoneMap::isWalkable(const Position& pos) const {
 }
 
 std::optional<ZoneMap::CellRange> ZoneMap::coveredCells(const CollisionBounds& bounds) const {
-    if (bounds.left < 0 || bounds.top < 0 || bounds.right < bounds.left ||bounds.bottom < bounds.top || bounds.right > std::numeric_limits<int>::max() ||bounds.bottom > std::numeric_limits<int>::max()) {
+    if (!bounds.isValid() || bounds.getLeft() < 0 || bounds.getTop() < 0 || bounds.getRight() > std::numeric_limits<int>::max() || bounds.getBottom() > std::numeric_limits<int>::max()) {
         return std::nullopt;
     }
-    const auto first = cellAt(Position(static_cast<int>(bounds.left), static_cast<int>(bounds.top)));
-    const auto last = cellAt(Position(static_cast<int>(bounds.right), static_cast<int>(bounds.bottom)));
+    const auto first = cellAt(Position(static_cast<int>(bounds.getLeft()), static_cast<int>(bounds.getTop())));
+    const auto last = cellAt(Position(static_cast<int>(bounds.getRight()), static_cast<int>(bounds.getBottom())));
     if (!first || !last) return std::nullopt;
     return CellRange{*first, *last};
 }

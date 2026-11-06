@@ -41,10 +41,6 @@ const ZoneMap& DungeonRoom::getMap() const {
     return terrain;
 }
 
-bool DungeonRoom::canWalk(const Position& pos) const {
-    return geometry.canWalk(terrain, minerals, pos);
-}
-
 bool DungeonRoom::canWalk(const CollisionBounds& bounds) const {
     return geometry.canWalk(terrain, minerals, bounds);
 }

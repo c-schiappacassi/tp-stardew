@@ -17,5 +17,5 @@ struct PlayerConfig {
         {ItemId::Shovel,{2,500}},
         {ItemId::Sword,{2,500}}
     };
-    CollisionBox collision{2, 8, 12, 8};
+    CollisionBox collision{entity_dimensions::PLAYER};
 };

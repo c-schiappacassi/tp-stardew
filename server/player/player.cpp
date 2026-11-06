@@ -32,7 +32,7 @@ Player::Player(
     if (maxHealth == 0 || maxEnergy == 0) {
         throw std::invalid_argument("Vida y energia maximas deben ser mayores a cero");
     }
-    if (config.collision.width <= 0 || config.collision.height <= 0) {
+    if (!config.collision.isValid()) {
         throw std::invalid_argument("La caja de colision debe tener dimensiones positivas");
     }
     if (state == PlayerState::Walking) {
@@ -235,14 +235,7 @@ CollisionBounds Player::getCollisionBounds(const Position& position) const {
 }
 
 Position Player::getCollisionCenter() const {
-    const CollisionBounds bounds = getCollisionBounds(pos);
-    const int64_t x = bounds.left + (bounds.right - bounds.left) / 2;
-    const int64_t y = bounds.top + (bounds.bottom - bounds.top) / 2;
-    if (x < std::numeric_limits<int>::min() || x > std::numeric_limits<int>::max() ||
-        y < std::numeric_limits<int>::min() || y > std::numeric_limits<int>::max()) {
-        throw std::overflow_error("El centro de colision excede el rango de Position");
-    }
-    return Position(static_cast<int>(x), static_cast<int>(y));
+    return getCollisionBounds(pos).center();
 }
 
 bool Player::canAct() const {

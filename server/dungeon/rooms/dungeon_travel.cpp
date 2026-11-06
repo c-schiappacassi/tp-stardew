@@ -31,7 +31,7 @@ bool DungeonTravel::advanceRoom(Player& player, const std::map<uint8_t, DungeonR
     }
 
     const auto& passages = *room->getPassages();
-    if (!room->getMap().sameCell(player.getPosition(), *passages.nextRoom)) {
+    if (!room->getMap().sameBaseCell(player.getPosition(), *passages.nextRoom)) {
         return false;
     }
 
@@ -50,5 +50,5 @@ bool DungeonTravel::canExit(const Player& player, const std::map<uint8_t, Dungeo
     }
 
     const auto* room = findRoom(rooms, player.getDungeonLevel());
-    return room && room->getPassages() && room->getMap().sameCell(player.getPosition(), room->getPassages()->exit);
+    return room && room->getPassages() && room->getMap().sameBaseCell(player.getPosition(), room->getPassages()->exit);
 }

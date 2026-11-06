@@ -1,25 +1,18 @@
 #pragma once
 
-#include <cstdint>
-
+#include "collision_bounds.h"
+#include "entities/entity_dimensions.h"
 #include "position.h"
 
-struct CollisionBounds {
-    int64_t left;
-    int64_t top;
-    int64_t right;
-    int64_t bottom;
-};
-
-struct CollisionBox {
-    int offsetX;
-    int offsetY;
+class CollisionBox {
+private:
     int width;
     int height;
 
-    CollisionBounds at(const Position& position) const {
-        const int64_t left = static_cast<int64_t>(position.getX()) + offsetX;
-        const int64_t top = static_cast<int64_t>(position.getY()) + offsetY;
-        return {left, top, left + width - 1, top + height - 1};
-    }
+public:
+    CollisionBox(int width, int height);
+    explicit CollisionBox(entity_dimensions::Size size);
+
+    bool isValid() const;
+    CollisionBounds at(const Position& base) const;
 };
