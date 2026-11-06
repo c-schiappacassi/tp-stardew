@@ -19,21 +19,27 @@
 namespace farmer {
 constexpr int CELL_W = 16;
 constexpr int CELL_H = 32;
+
 constexpr int COLS = 6;
 constexpr int BODY_REGION_W = 96;
 constexpr int FEET_Y = 30;
+
 constexpr int HAIR_PER_ROW = 16;
 constexpr int HAIR_BLOCK_H = 96;
-constexpr int HAIR_ABOVE_HEAD = 1;
+constexpr Offset HAIR_BASE{0, 1};
+
 constexpr int SHIRT_SIZE = 8;
 constexpr int SHIRTS_PER_ROW = 16;
 constexpr int SHIRT_BLOCK_H = 32;
-constexpr int SHIRT_X = 4;
-constexpr int SHIRT_BELOW_HEAD = 15;
+constexpr Offset SHIRT_BASE{4, 15};
+
+
 constexpr int PANTS_BLOCK_W = 192;
 constexpr int PANTS_BLOCK_H = 688;
 constexpr int PANTS_PER_ROW = 10;
+
 constexpr int WALK_BOB = 1;
+
 }
 
 
@@ -49,19 +55,9 @@ private:
     SDL_Color pant_color{255, 255, 255, 255};
     SDL_Color hair_color{255, 255, 255, 255};
 
-    std::map<Direction, int> dir_offset_shirt;
-    std::map<Direction, int> dir_offset_hair;
-
     Animator anim;
     std::optional<ClipId> current_clip;
     long long last_it = -1;
-
-    void draw_body(const RenderInfo& ctx, const AnimatedFrame& frame, const SDL2pp::Point& origin);
-    void draw_pants(const RenderInfo& ctx, const AnimatedFrame& frame, const SDL2pp::Point& origin);
-    void draw_shirt(const RenderInfo& ctx, const SDL2pp::Point& origin);
-    void draw_hair(const RenderInfo& ctx, const SDL2pp::Point& origin);
-    void draw_arms(const RenderInfo& ctx, const AnimatedFrame& frame, const SDL2pp::Point& origin);
-    void draw_tool(const RenderInfo& ctx, const SDL2pp::Point& origin);
 
 public:
     explicit PlayerView(const PlayerData& data);

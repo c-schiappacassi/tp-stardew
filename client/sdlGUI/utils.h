@@ -45,9 +45,13 @@ struct Sprite {
     uint16_t col;
 };
 
+struct Offset { int8_t x = 0; int8_t y = 0; }; 
+struct LayerOffsets { Offset hair, shirt, pants; };
+
 struct AnimatedFrame {
     Sprite sprite;
-    bool flip_h = false;
+    bool flip;
+    LayerOffsets offsets{};
 };
 
 struct ClipFrame {

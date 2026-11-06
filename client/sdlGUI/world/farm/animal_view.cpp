@@ -1,6 +1,7 @@
 #include "animal_view.h"
 
 namespace {
+    // TODO: cambiar sprite dependiendo del color de vaca y pollo
     SpriteId sprite_for(AnimalType type) {
         switch (type) {
             case AnimalType::BrownCow:     return SpriteId::BronwCow;
@@ -13,7 +14,6 @@ namespace {
         throw std::invalid_argument("AnimalView: AnimalType desconocido");
     }
 }  
-
 
 std::optional<float> AnimalView::depth(const RenderInfo& ctx) const {
     int heigt = this->type == AnimalType::BrownCow ? dimentions::COW_H : dimentions::CHICKEN_H;
@@ -58,7 +58,7 @@ void AnimalView::draw(const RenderInfo& ctx) {
 
     const SDL2pp::Point origin = ctx.cam.world_to_screen(pos.getX(), pos.getY());
 
-    draw_region(ctx, sprite_id, src, origin, -frame.sprite.width / 2, -frame.sprite.height, frame.flip_h);
+    draw_region(ctx, sprite_id, src, origin, -frame.sprite.width / 2, -frame.sprite.height, frame.flip);
 
-    // TODO: if (needs_interaction) dibujar el indicador (burbuja/exclamación) arriba del animal
+    // TODO: if (needs_interaction) dibujar el indicador
 }

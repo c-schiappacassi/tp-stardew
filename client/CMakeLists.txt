@@ -31,6 +31,7 @@ target_sources(taller_client
     sdlGUI/camera.h
     sdlGUI/sync_views.h
     sdlGUI/draw_region.h
+    sdlGUI/sprite_defs.h
 
     sdlGUI/world/player_view.h
     sdlGUI/world/world_view.h
