@@ -1,6 +1,31 @@
 #include "server_protocol.h"
 
 #include <cstdint>
+#include <limits>
+
+#include "protocol_errors.h"
+
+namespace {
+void validateFarmCounts(const FarmData& farm) {
+    const auto limit = std::numeric_limits<uint16_t>::max();
+    if (farm.crops.size() > limit || farm.animals.size() > limit ||
+        farm.tilledSoil.size() > limit || farm.decorations.size() > limit) {
+        throw ProtocolError("Demasiadas entidades de granja para el protocolo");
+    }
+}
+
+bool hasMatchingZoneData(const PlayerDataLocal& data) {
+    switch (data.currentZone) {
+        case Zone::Farm:
+            return std::holds_alternative<FarmData>(data.zoneData);
+        case Zone::Dungeon:
+            return std::holds_alternative<MineData>(data.zoneData);
+        case Zone::Town:
+            return std::holds_alternative<std::monostate>(data.zoneData);
+    }
+    return false;
+}
+}
 
 ServerProtocol::ServerProtocol(Socket& socket) : base(socket) {}
 
@@ -88,8 +113,71 @@ void ServerProtocol::sendMineData(const MineData& mine) {
     sendLevelData(mine.current_level_data);
 }
 
-void ServerProtocol::sendZoneData(const ZoneData& zoneData) {
-    std::visit([this](const auto& zone) { sendMineData(zone); }, zoneData);
+void ServerProtocol::sendCropData(const CropData& crop) {
+    base.sendUint32(crop.id);
+    sendPosition(crop.pos);
+    base.sendUint8(static_cast<uint8_t>(crop.type));
+    base.sendUint8(static_cast<uint8_t>(crop.state));
+    base.sendUint8(crop.wattered ? 1 : 0);
+}
+
+void ServerProtocol::sendAnimalData(const AnimalData& animal) {
+    base.sendUint32(animal.id);
+    sendPosition(animal.pos);
+    base.sendUint8(static_cast<uint8_t>(animal.dir));
+    base.sendUint8(static_cast<uint8_t>(animal.type));
+    base.sendUint8(static_cast<uint8_t>(animal.state));
+    base.sendUint8(animal.needs_interaction ? 1 : 0);
+}
+
+void ServerProtocol::sendDecorationData(const DecorationData& decoration) {
+    base.sendUint32(decoration.id);
+    sendPosition(decoration.pos);
+    base.sendUint16(static_cast<uint16_t>(decoration.item));
+}
+
+void ServerProtocol::sendFarmData(const FarmData& farm) {
+    base.sendUint16(static_cast<uint16_t>(farm.crops.size()));
+    for (const auto& crop : farm.crops) {
+        sendCropData(crop);
+    }
+    base.sendUint16(static_cast<uint16_t>(farm.animals.size()));
+    for (const auto& animal : farm.animals) {
+        sendAnimalData(animal);
+    }
+    base.sendUint16(static_cast<uint16_t>(farm.tilledSoil.size()));
+    for (const auto& position : farm.tilledSoil) {
+        sendPosition(position);
+    }
+    base.sendUint16(static_cast<uint16_t>(farm.decorations.size()));
+    for (const auto& decoration : farm.decorations) {
+        sendDecorationData(decoration);
+    }
+}
+
+void ServerProtocol::sendZoneData(Zone currentZone, const ZoneData& zoneData) {
+    switch (currentZone) {
+        case Zone::Farm: {
+            const auto* farm = std::get_if<FarmData>(&zoneData);
+            if (farm) {
+                sendFarmData(*farm);
+            } else {
+                sendFarmData(FarmData{});
+            }
+            return;
+        }
+        case Zone::Dungeon: {
+            const auto* mine = std::get_if<MineData>(&zoneData);
+            if (mine) {
+                sendMineData(*mine);
+            } else {
+                sendMineData(MineData{});
+            }
+            return;
+        }
+        case Zone::Town:
+            return;
+    }
 }
 
 void ServerProtocol::sendPlayerDataLocal(const PlayerDataLocal& localData) {
@@ -107,7 +195,7 @@ void ServerProtocol::sendPlayerDataLocal(const PlayerDataLocal& localData) {
     base.sendUint16(localData.maxHealth);
     base.sendUint16(localData.energy);
     base.sendUint16(localData.maxEnergy);
-    sendZoneData(localData.zoneData);
+    sendZoneData(localData.currentZone, localData.zoneData);
 }
 
 // RECEIVERS (the type byte was already consumed by receiveType())
@@ -195,6 +283,16 @@ CheckCodeDTO ServerProtocol::receiveCheckCode() {
 // SENDERS
 
 void ServerProtocol::sendStatus(const ServerStatus& status) {
+    const auto& local = status.localPlayer;
+    const bool emptyEntryError = status.status == StatusCode::Error &&std::holds_alternative<std::monostate>(local.zoneData) &&(local.currentZone == Zone::Farm || local.currentZone == Zone::Dungeon);
+    if (!hasMatchingZoneData(local) && !emptyEntryError) {
+        throw ProtocolError("Los datos locales no corresponden a la zona del jugador");
+    }
+    const auto* farm = std::get_if<FarmData>(&local.zoneData);
+    if (farm) {
+        validateFarmCounts(*farm);
+    }
+
     base.sendUint8(static_cast<uint8_t>(status.status));
     base.sendString(status.errorMsg);
     base.sendString(status.successMsg);

@@ -15,6 +15,8 @@ target_sources(taller_tests
     ../server/dungeon/rooms/dungeon_room.cpp
     ../server/dungeon/dungeon_manager.cpp
     ../server/entities/entity_id_generator.cpp
+    ../server/entities/collision_box.cpp
+    ../server/entities/collision_bounds.cpp
     ../server/world/zone_map.cpp
     ../server/player/player_factory.cpp
     ../server/player/player_manager.cpp
@@ -33,6 +35,31 @@ target_sources(taller_tests
     ../server/world/zone_map_positions.cpp
     ../server/dungeon/mining/mineral_placement.cpp
     ../server/world/world_manager.cpp
+    ../server/farm/farm_config.cpp
+    ../server/farm/animals/animal.cpp
+    ../server/farm/animals/cow.cpp
+    ../server/farm/animals/chicken.cpp
+    ../server/farm/animals/animal_factory.cpp
+    ../server/farm/animals/animal_manager.cpp
+    ../server/farm/animals/animal_movement.cpp
+    ../server/farm/animals/animal_movement_config.cpp
+    ../server/farm/animals/animal_species.cpp
+    ../server/farm/ports/farm_placement.cpp
+    ../server/farm/spatial/farm_space.cpp
+    ../server/farm/spatial/farm_reservation.cpp
+    ../server/farm/farm_manager.cpp
+    ../server/farm/farm_status.cpp
+    ../server/farm/interactions/farm_interactions.cpp
+    ../server/farm/interactions/farm_targeting.cpp
+    ../server/farm/loading/farm_loader.cpp
+    ../server/farm/crops/crop.cpp
+    ../server/farm/crops/crop_manager.cpp
+    ../server/farm/crops/crop_quality.cpp
+    ../server/farm/decorations/decoration.cpp
+    ../server/farm/decorations/decoration_manager.cpp
+    ../server/game/time/game_clock.cpp
+    ../server/world/world_farm.cpp
+    ../server/player/ports/player_spawn_source.cpp
     PUBLIC
     # .h files
 )

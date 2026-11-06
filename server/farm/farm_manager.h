@@ -2,51 +2,63 @@
 
 #include <map>
 #include <optional>
-
-#include "crops/crop_manager.h"
+#include <random>
+#include <vector>
 #include "animals/animal_manager.h"
+#include "crops/crop_manager.h"
 #include "decorations/decoration_manager.h"
 #include "farm_config.h"
+#include "interactions/farm_interactions.h"
 #include "spatial/farm_space.h"
+
+class Player;
+class EntityIdGenerator;
+struct FarmLayout;
 
 class FarmManager {
 private:
-private:
     FarmConfig config;
+    uint32_t seed;
+    bool initialized = false;
+    Position spawnPosition{0, 0};
     FarmSpace space;
     CropManager cropManager;
     AnimalManager animalManager;
     DecorationManager decorationManager;
+    FarmInteractions interactions;
 
 public:
-    explicit Farm(const FarmConfig& config = FarmConfig{});
+    explicit FarmManager(const FarmConfig& config = FarmConfig{},
+        uint32_t seed = std::random_device{}());
 
-    // Sin mapa, las posiciones representan celdas unitarias no negativas.
-    // El mapa debe configurarse antes de tratar suelo o colocar entidades.
+    bool initialize(const FarmLayout& layout, EntityIdGenerator& entityIds);
+    bool isInitialized() const;
+    bool spawnPlayer(Player& player) const;
+    bool useSelectedItem(Player& player, Direction direction, EntityIdGenerator& entityIds,std::chrono::steady_clock::time_point now);
     bool setMap(const ZoneMap& map);
+    bool setReservedPositions(const std::vector<Position>& positions);
+    void setObstacles(const std::vector<CollisionBounds>& bounds);
     const ZoneMap& getMap() const;
-    bool canWalk(const Position& pos) const;
-    bool tillSoil(const Position& pos);
-    bool isTilled(const Position& pos) const;
-
-    bool plant(EntityId id, const Position& pos, PlantType type);
-    bool addAnimal(EntityId id, const Position& pos, AnimalType type);
-    bool moveAnimal(EntityId id, const Position& pos);
+    bool canWalk(const CollisionBounds& bounds) const;
+    bool tillSoil(const Position& position);
+    bool isTilled(const Position& position) const;
+    bool plant(EntityId id, const Position& position, CropType type);
+    bool addAnimal(EntityId id, const Position& position, AnimalType type);
+    bool moveAnimal(EntityId id, const Position& position);
     bool removeAnimal(EntityId id);
-    bool placeDecoration(EntityId id, const Position& pos, ItemId item);
+    bool placeDecoration(EntityId id, const Position& position, ItemId item);
     std::optional<ItemId> removeDecoration(EntityId id);
-
     bool waterCrop(EntityId id);
     std::optional<FarmProduct> harvestCrop(EntityId id, double luck = 1.0);
     std::optional<FarmProduct> collectFromAnimal(EntityId id);
-    void update();
-
-    // Las consultas no permiten modificar entidades saltandose las reglas de Farm.
+    void update(std::chrono::milliseconds elapsed);
+    FarmData getPublicData() const;
+    std::vector<Position> getTilledPositions() const;
     const Crop* findCrop(EntityId id) const;
     const Animal* findAnimal(EntityId id) const;
     const Decoration* findDecoration(EntityId id) const;
     const std::map<EntityId, Crop>& getCrops() const;
-    const std::map<EntityId, Animal>& getAnimals() const;
+    std::vector<const Animal*> getAnimals() const;
     const std::map<EntityId, Decoration>& getDecorations() const;
     const FarmConfig& getConfig() const;
 };

@@ -1,57 +1,101 @@
 #include "crop.h"
 
+#include <algorithm>
+#include <limits>
 #include <stdexcept>
 
-Crop::Crop(EntityId id, const Position& pos, const PlantDefinition& definition, uint32_t ticksPerDay):id(id),pos(pos),definition(definition),quality(ticksPerDay, definition.wateringInterval),targetGrowthTicks(definition.ticksToGrow),toleratedDryTicks(uint64_t{definition.toleratedMissedWaterings} * definition.wateringInterval) {
-    if (id == 0 || pos.getX() < 0 || pos.getY() < 0 || ticksPerDay == 0 ||
-        definition.ticksToGrow == 0 || definition.wateringInterval == 0) {
+Crop::Crop(EntityId id, const Position& position, const CropDefinition& definition,
+    std::chrono::milliseconds dayLength):
+    id(id), position(position), definition(definition),
+    quality(dayLength, definition.wateringInterval), growthDuration(definition.growthTime),
+    remainingDryTolerance(0) {
+    const bool invalidTolerance = definition.toleratedMissedWaterings != 0 &&definition.wateringInterval.count() >std::numeric_limits<int64_t>::max() / definition.toleratedMissedWaterings;
+    if (id == 0 || position.getX() < 0 || position.getY() <= 0 ||
+        definition.growthTime.count() <= 0 || definition.regrowthTime.count() < 0 ||invalidTolerance) {
         throw std::invalid_argument("Identificador, posicion o tiempos de cultivo invalidos");
     }
+    remainingDryTolerance = definition.wateringInterval * definition.toleratedMissedWaterings;
     getProduct();
+}
+
+EntityId Crop::getId() const { return id; }
+const Position& Crop::getPosition() const { return position; }
+CropType Crop::getType() const { return definition.type; }
+bool Crop::isReady() const { return !harvested && growthElapsed >= growthDuration; }
+bool Crop::isHarvested() const { return harvested; }
+bool Crop::isWatered() const { return remainingWaterTime.count() > 0 && !isReady() && !harvested; }
+std::chrono::milliseconds Crop::getGrowthElapsed() const { return growthElapsed; }
+
+CropState Crop::getState() const {
+    if (isReady()) {
+        return CropState::Ready;
+    }
+    const double progress = static_cast<double>(growthElapsed.count()) / growthDuration.count();
+    if (progress < 1.0 / 3.0) {
+        return CropState::JustPlanted;
+    } else if (progress < 2.0 / 3.0) {
+        return CropState::Sprouting;
+    } else {
+        return CropState::Growing;
+    }
+}
+
+CropData Crop::getPublicData() const {
+    return CropData{id, position, getType(), getState(), isWatered()};
 }
 
 ItemId Crop::getProduct() const {
     switch (definition.type) {
-        case PlantType::Strawberry: return ItemId::Strawberry;
-        case PlantType::Scallion: return ItemId::Scallion;
-        case PlantType::Potato: return ItemId::Potato;
-        case PlantType::Pumpkin: return ItemId::Pumpkin;
+        case CropType::Strawberry:
+            return ItemId::Strawberry;
+        case CropType::Scallion:
+            return ItemId::Scallion;
+        case CropType::Potato:
+            return ItemId::Potato;
+        case CropType::Pumpkin:
+            return ItemId::Pumpkin;
     }
     throw std::invalid_argument("Tipo de cultivo desconocido");
 }
 
-void Crop::tick() {
+void Crop::update(std::chrono::milliseconds elapsed) {
+    if (elapsed.count() < 0) {
+        throw std::invalid_argument("Tiempo negativo");
+    }
     if (harvested) {
         return;
     }
-    if (isReady()) {
-        quality.waitForHarvest();
-        return;
-    }
-    if (state == CropState::NeedsWater) {
-        if (toleratedDryTicks == 0) {
-            quality.waitForWater();
+    while (elapsed.count() > 0) {
+        if (isReady()) {
+            quality.addHarvestDelay(elapsed);
             return;
         }
-        --toleratedDryTicks;
-    } else {
-        ++ticksSinceWater;
-    }
-    ++growthTicks;
-    if (growthTicks == targetGrowthTicks) {
-        state = CropState::Ready;
-    } else if (state == CropState::Growing && ticksSinceWater >= definition.wateringInterval) {
-        state = CropState::NeedsWater;
-        quality.requestWater();
+        const bool watered = remainingWaterTime.count() > 0;
+        const auto availableGrowthTime = watered ? remainingWaterTime : remainingDryTolerance;
+        if (availableGrowthTime.count() == 0) {
+            quality.addWateringDelay(elapsed);
+            return;
+        }
+        const auto remainingGrowth = growthDuration - growthElapsed;
+        const auto growthStep = std::min({elapsed, availableGrowthTime, remainingGrowth});
+        if (watered) {
+            remainingWaterTime -= growthStep;
+        } else {
+            remainingDryTolerance -= growthStep;
+        }
+        growthElapsed += growthStep;
+        elapsed -= growthStep;
+        if (watered && remainingWaterTime.count() == 0 && !isReady()) {
+            quality.recordWaterRequest();
+        }
     }
 }
 
 bool Crop::water() {
-    if (harvested || state != CropState::NeedsWater) {
+    if (harvested || isReady() || isWatered()) {
         return false;
     }
-    state = CropState::Growing;
-    ticksSinceWater = 0;
+    remainingWaterTime = definition.wateringInterval;
     return true;
 }
 
@@ -64,18 +108,17 @@ std::optional<FarmProduct> Crop::getHarvest(double luck) const {
 }
 
 void Crop::resetCycle() {
-    state = CropState::NeedsWater;
-    growthTicks = 0;
-    targetGrowthTicks = definition.regrowthTicks;
-    ticksSinceWater = 0;
+    growthElapsed = std::chrono::milliseconds{0};
+    growthDuration = definition.regrowthTime;
+    remainingWaterTime = std::chrono::milliseconds{0};
+    remainingDryTolerance = definition.wateringInterval * definition.toleratedMissedWaterings;
     quality.reset();
-    toleratedDryTicks = uint64_t{definition.toleratedMissedWaterings} * definition.wateringInterval;
 }
 
 std::optional<FarmProduct> Crop::harvest(double luck) {
     auto product = getHarvest(luck);
     if (product) {
-        if (definition.regrowthTicks > 0) {
+        if (definition.regrowthTime.count() > 0) {
             resetCycle();
         } else {
             harvested = true;

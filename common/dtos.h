@@ -19,24 +19,32 @@
 struct CropData{
     uint32_t id = 0;
     Position pos{0,0};
-    CropType type;
-    CropState state;
-    bool wattered;
+    CropType type = CropType::Strawberry;
+    CropState state = CropState::JustPlanted;
+    bool wattered = false;
 };
 
 struct AnimalData{
     uint32_t id = 0;
     Position pos{0,0};
     Direction dir{Direction::None};
-    AnimalType type;
-    AnimalState state;
+    AnimalType type = AnimalType::BrownCow;
+    AnimalState state = AnimalState::Idle;
     bool needs_interaction=false;
     // Age ? TBD si hacemos logica de que los animales llegan bebes y crecen
+};
+
+struct DecorationData {
+    uint32_t id = 0;
+    Position pos{0, 0};
+    ItemId item = ItemId::Table;
 };
 
 struct FarmData{
     std::vector<CropData> crops;
     std::vector<AnimalData> animals;
+    std::vector<Position> tilledSoil;
+    std::vector<DecorationData> decorations;
 };
 // FIN Farm
 
@@ -69,7 +77,7 @@ struct MineData{
 };
 // Fin Mine
 
-using ZoneData = std::variant<MineData>;
+using ZoneData = std::variant<MineData, FarmData, std::monostate>;
 
 
 // Player
@@ -114,7 +122,7 @@ struct PlayerDataLocal : public PlayerData {
     uint16_t maxHealth = 0;
     uint16_t energy = 0;
     uint16_t maxEnergy = 0;
-    ZoneData zoneData;
+    ZoneData zoneData{std::monostate{}};
 
     PlayerDataLocal() = default;
     explicit PlayerDataLocal(const PlayerData& publicData): PlayerData(publicData) {}

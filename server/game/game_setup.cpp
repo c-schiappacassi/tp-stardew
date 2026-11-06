@@ -20,5 +20,8 @@ GameSetup makeDefaultGameSetup(uint8_t worldId) {
     setup.entrance.terrain = terrain;
     setup.entrance.position = terrain.baseAt({3, 3}).value();
     setup.entrance.returnPosition = terrain.baseAt({4, 3}).value();
+    setup.farm.terrain = terrain;
+    setup.farm.spawn = setup.entrance.returnPosition;
+    setup.farm.reservedPositions = {setup.farm.spawn, setup.entrance.position};
     return setup;
 }

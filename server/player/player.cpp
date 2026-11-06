@@ -124,7 +124,8 @@ PlayerData Player::getPublicData() const {
     data.state = state;
     data.dir = dir;
     data.currentZone = zone;    
-    if (const Stack* item = getSelectedItem()) {
+    const Stack* item = getSelectedItem();
+    if (item != nullptr) {
         data.heldItem = item->item_id;
     }
     data.hairModel = hairModel;
@@ -148,10 +149,7 @@ PlayerDataLocal Player::getLocalData() const {
 }
 
 bool Player::canUseTool(std::chrono::steady_clock::time_point now) const {
-    if (!canAct()) {
-        return false;
-    }
-    if (now < nextToolUseTime) {
+    if (!canPerformAction(now)) {
         return false;
     }
 
@@ -178,14 +176,28 @@ bool Player::useTool(std::chrono::steady_clock::time_point now) {
     }
 
     const ToolConfig& tool =config.tools.at(getSelectedItem()->item_id);
+    return performAction(tool.energyCost, std::chrono::milliseconds{tool.intervalMs}, now);
+}
 
-    if (tool.energyCost >= energy) {
-        energy = 0;
-    } else {
-        energy -= tool.energyCost;
+uint8_t Player::getSelectedSlot() const { return currentSlot; }
+
+bool Player::canPerformAction(std::chrono::steady_clock::time_point now) const {
+    return canAct() && now >= nextActionTime;
+}
+
+bool Player::performAction(uint16_t energyCost, std::chrono::milliseconds interval,
+                           std::chrono::steady_clock::time_point now) {
+    if (!canPerformAction(now) || interval.count() < 0) {
+        return false;
     }
 
-    nextToolUseTime =now + std::chrono::milliseconds(tool.intervalMs);
+    if (energyCost >= energy) {
+        energy = 0;
+    } else {
+        energy -= energyCost;
+    }
+
+    nextActionTime = now + interval;
     if (energy == 0) {
         state = PlayerState::Unconscious;
         movementDirection = Direction::None;
@@ -202,7 +214,7 @@ void Player::updateToolState(
         return;
     }
 
-    if (now >= nextToolUseTime) {
+    if (now >= nextActionTime) {
         state = PlayerState::Idle;
         setMovement(movementDirection);
     }
@@ -283,17 +295,25 @@ void Player::faceTarget(const Position& target) {
     }
 
     if (std::abs(dx) >= std::abs(dy)) {
-        if (dx > 0) {
-            dir = Direction::Right;
-        } else {
-            dir = Direction::Left;
-        }
+        faceDirection(dx > 0 ? Direction::Right : Direction::Left);
     } else {
-        if (dy > 0) {
-            dir = Direction::Down;
-        } else {
-            dir = Direction::Up;
-        }
+        faceDirection(dy > 0 ? Direction::Down : Direction::Up);
+    }
+}
+
+void Player::faceDirection(Direction direction) {
+    if (!canAct()) {
+        return;
+    }
+    switch (direction) {
+        case Direction::Up:
+        case Direction::Down:
+        case Direction::Left:
+        case Direction::Right:
+            dir = direction;
+            break;
+        default:
+            break;
     }
 }
 
