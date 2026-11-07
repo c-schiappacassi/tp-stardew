@@ -21,8 +21,8 @@ class LevelView: public ZoneView {
     std::unordered_map<uint32_t, OreView> ores;
     // TODO:
     // std::unordered_map<uint32_t, EnemyView> enemies;
-    // std::unordered_map<uint32_t, TrapView> decor;
-    // std::unordered_map<uint32_t, ChestView> decor;
+    // std::unordered_map<uint32_t, TrapView> traps;
+    // std::unordered_map<uint32_t, ChestView> chest; // para animar que se abre, pero ver lo de adentro va a ser cosa de hud
     // std::unordered_map<uint32_t, DecorView> decor;
 public:
     // TODO:

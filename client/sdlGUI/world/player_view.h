@@ -38,8 +38,15 @@ constexpr int PANTS_BLOCK_W = 192;
 constexpr int PANTS_BLOCK_H = 688;
 constexpr int PANTS_PER_ROW = 10;
 
-constexpr int WALK_BOB = 1;
-
+struct DrawPlayerData {
+    SDL2pp::Point origin;
+    SDL2pp::Rect body_src;
+    SDL2pp::Rect arms;
+    LayerOffsets offsets;
+    size_t frame_index;
+    int cell_w;
+    bool flip;
+};
 }
 
 
@@ -49,6 +56,7 @@ private:
     Direction facing = Direction::Down;
     PlayerState state = PlayerState::Idle;
     std::optional<ItemId> held_item;
+    std::optional<ItemId> current_tool;
 
     uint16_t shirt_model = 0;
     uint16_t pant_model = 0;
@@ -60,6 +68,8 @@ private:
     std::optional<ClipId> current_clip;
     long long last_it = -1;
 
+    void tick(const RenderInfo& ctx, const ClipId& clip_id);
+    void draw_layers_in_order(const RenderInfo& ctx, const farmer::DrawPlayerData& d);
 public:
     explicit PlayerView(const PlayerData& data);
 

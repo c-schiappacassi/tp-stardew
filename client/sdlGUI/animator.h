@@ -58,6 +58,10 @@ public:
         }
     }
 
+    std::size_t get_current_frame_index(const Clip& clip) {
+        return current_frame_index(clip);
+    }
+
     bool is_finished() const { return finished; }
 
     const AnimatedFrame& get_current_frame(const Clip& clip) {

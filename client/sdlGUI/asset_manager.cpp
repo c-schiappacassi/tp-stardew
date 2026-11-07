@@ -45,6 +45,7 @@ AssetManager::AssetManager(SDL2pp::Renderer& renderer, const std::filesystem::pa
     load_crop_sprites();
     load_cow_clips();
     load_chicken_clips();
+    load_tool_frames();
 }
 
 void AssetManager::load_sprites_texture(SDL2pp::Renderer& renderer, const std::filesystem::path& sprites_root) {
@@ -83,6 +84,19 @@ void AssetManager::load_chicken_clips() {
     register_clips(clips, SpriteDefs::CHICKEN_SET, SpriteDefs::CHICKEN_CLIPS, false);
 }
 
+void AssetManager::load_tool_frames() {
+    for (const auto& d : SpriteDefs::TOOL_ANIMS) {
+        std::vector<ToolFrame> frames;
+        for (const auto& s : d.steps) {
+            const auto& r = d.sprites[s.sprite];
+            frames.push_back(ToolFrame{
+                Sprite{SpriteId::Tools, r.w, r.h, r.y, r.x},
+                s.off, s.angle, SDL2pp::Point(d.pivot_x, d.pivot_y)});
+        }
+        tool_frames.insert_or_assign({d.item, d.dir}, std::move(frames));
+    }
+}
+
 SDL2pp::Texture& AssetManager::get_texture(SpriteId id) { return textures.at(id); }
 
 const Clip& AssetManager::get_clip(const ClipId& id) const { return clips.at(id); }
@@ -98,4 +112,11 @@ const Sprite& AssetManager::get_sprite(ResourceType type, ResourceState state) c
 const Sprite* AssetManager::find_sprite(ItemId id) const {
     const auto it = item_sprites.find(id);
     return it == item_sprites.end() ? nullptr : &it->second;
+}
+
+const ToolFrame* AssetManager::find_tool_frame(ItemId item, Direction dir, std::size_t i) const {
+    if (dir == Direction::Left) dir = Direction::Right;
+    const auto it = tool_frames.find({item, dir});
+    if (it == tool_frames.end() || it->second.empty()) return nullptr;
+    return &it->second[std::min(i, it->second.size() - 1)];
 }

@@ -74,3 +74,26 @@ SDL_Color to_sdl(const Color& color) {
 }
 
    
+inline void draw_scaled_rotated(const RenderInfo& ctx, SpriteId sprite_id, const SDL2pp::Rect& src, const SDL2pp::Rect& dst, double angle, const SDL2pp::Point& pivot_px, bool flip = false, std::optional<SDL_Color> tint = std::nullopt) {
+    SDL2pp::Texture& texture = ctx.assets.get_texture(sprite_id);
+    const int z = dst.w / src.w;
+
+    const int px = flip ? src.w - pivot_px.x : pivot_px.x;
+    const SDL2pp::Point center(px * z, pivot_px.y * z);
+
+    if (tint) {
+        texture.SetColorMod(tint->r, tint->g, tint->b);
+    }
+
+    ctx.r.Copy(texture, src, dst, flip ? -angle : angle, center, flip ? SDL_FLIP_HORIZONTAL : SDL_FLIP_NONE);
+
+    if (tint) {
+        texture.SetColorMod(255, 255, 255);
+    }
+}
+
+inline void draw_region_rotated(const RenderInfo& ctx, SpriteId sprite_id, const SDL2pp::Rect& src, const SDL2pp::Point& origin, int dx, int dy, double angle, const SDL2pp::Point& pivot_px, bool flip = false, std::optional<SDL_Color> tint = std::nullopt) {
+    const int z = ctx.cam.get_zoom();
+    const SDL2pp::Rect dst(origin.x + dx * z, origin.y + dy * z, src.w * z, src.h * z);
+    draw_scaled_rotated(ctx, sprite_id, src, dst, angle, pivot_px, flip, tint);
+}

@@ -27,21 +27,10 @@ namespace {
         return flip ? (cell_w - layer_w - x) : x;
     }
 
-    void draw_layer(SDL2pp::Renderer& r, SDL2pp::Texture& tex, const SDL2pp::Rect& src, SDL2pp::Point farmer_pos,  Offset off, bool flip, int cell_w, int scale, std::optional<SDL_Color> tint = std::nullopt) {
-        const int dx = layer_x(off.x, flip, cell_w, src.GetW());
-        SDL2pp::Rect dst(farmer_pos.GetX() + dx * scale, farmer_pos.GetY() + off.y * scale, src.GetW() * scale, src.GetH() * scale);
-
-        if (tint) {
-            tex.SetColorMod(tint->r, tint->g, tint->b);
-        }
-
-        r.Copy(tex, src, dst, 0.0, SDL2pp::NullOpt, flip ? SDL_FLIP_HORIZONTAL : SDL_FLIP_NONE);
-
-        if (tint) {
-            tex.SetColorMod(255, 255, 255);
-        }
+    void draw_tool_layer(const RenderInfo& ctx, const ToolFrame& tf, const SDL2pp::Point& origin, bool flip, int cell_w) {
+        const SDL2pp::Rect src = sprite_rect_all_px(tf.sprite);
+        draw_region_rotated(ctx, tf.sprite.sprite_id, src, origin, layer_x(tf.offset.x, flip, cell_w, src.w), tf.offset.y, tf.angle, tf.pivot, flip);
     }
-
 }
 
 PlayerView::PlayerView(const PlayerData& data) {
@@ -51,7 +40,7 @@ PlayerView::PlayerView(const PlayerData& data) {
 void PlayerView::update(const PlayerData& data) {
     pos = data.pos;
     state = data.state;
-    if (data.dir != Direction::None) { facing = data.dir;  }
+    if (data.dir != Direction::None) { facing = data.dir; }
     hair_model = data.hairModel;
     hair_color = to_sdl(data.hairColor);
     shirt_model = data.shirtModel;
@@ -68,10 +57,10 @@ std::optional<float> PlayerView::depth(const RenderInfo& ctx) const {
     return static_cast<float>(pos.getY());
 }
 
-void PlayerView::draw(const RenderInfo& ctx) {
-    const ClipId clip_id{SpriteId::FarmerBase, Action{state}, facing};
-    if (!current_clip || !(*current_clip == clip_id)) {
+void PlayerView::tick(const RenderInfo& ctx, const ClipId& clip_id) {
+    if (!current_clip || !(*current_clip == clip_id) || current_tool != held_item) {
         current_clip = clip_id;
+        current_tool = held_item;
         anim.reset();
     }
 
@@ -79,40 +68,55 @@ void PlayerView::draw(const RenderInfo& ctx) {
         anim.update(static_cast<float>(ctx.it - last_it) * TICK_MS);
     }
     last_it = ctx.it;
+}
 
-    const AnimatedFrame& frame = anim.get_current_frame(ctx.assets.get_clip(clip_id));
+void PlayerView::draw_layers_in_order(const RenderInfo& ctx, const farmer::DrawPlayerData& d) {
+    auto layer = [&](SpriteId id, const SDL2pp::Rect& src, Offset off = {}, std::optional<SDL_Color> tint = std::nullopt) {
+        draw_region(ctx, id, src, d.origin, layer_x(off.x, d.flip, d.cell_w, src.w), off.y, d.flip, tint);
+    };
 
-    const int zoom   = ctx.cam.get_zoom();
+    auto tool = [&]() {
+        if (state != PlayerState::UsingTool || !held_item) return;
+        if (const ToolFrame* tf = ctx.assets.find_tool_frame(*held_item, facing, d.frame_index)) {
+            draw_tool_layer(ctx, *tf, d.origin, d.flip, d.cell_w);
+        }
+    };
+
+    const bool arms_behind = (facing == Direction::Up);
+    if (arms_behind) {
+        layer(SpriteId::FarmerBase, d.arms);
+        tool();
+    }
+
+    layer(SpriteId::FarmerBase, d.body_src);
+    layer(SpriteId::Pants,      pants_src(pant_model, d.body_src), d.offsets.pants, pant_color);
+    layer(SpriteId::Shirts,     shirt_src(shirt_model, facing),    add(farmer::SHIRT_BASE, d.offsets.shirt));
+    layer(SpriteId::Hairstyles, hair_src(hair_model, facing),      add(farmer::HAIR_BASE, d.offsets.hair), hair_color);
+
+    if (!arms_behind) {
+        layer(SpriteId::FarmerBase, d.arms);
+        tool();
+    }
+}
+
+void PlayerView::draw(const RenderInfo& ctx) {
+    const ClipId clip_id{SpriteId::FarmerBase, Action{state}, facing};
+    tick(ctx, clip_id);
+
+    const Clip& clip = ctx.assets.get_clip(clip_id);
+    const AnimatedFrame& frame = anim.get_current_frame(clip);
+
+    const int zoom = ctx.cam.get_zoom();
     const int cell_w = frame.sprite.width;
-
     const SDL2pp::Point screen = ctx.cam.world_to_screen(pos.getX(), pos.getY());
-    const SDL2pp::Point origin(screen.GetX() - (cell_w * zoom) / 2, screen.GetY() - farmer::FEET_Y * zoom);
 
-    const SDL2pp::Rect body_src = sprite_rect(frame.sprite);
-    const LayerOffsets& lo = frame.offsets;
-
-    bool arms_behind = (this->facing == Direction::Up);
-    if (arms_behind){
-        draw_layer(ctx.r, ctx.assets.get_texture(SpriteId::FarmerBase), arms_src(frame.sprite), origin, Offset{}, frame.flip, cell_w, zoom);
-    }
-
-    draw_layer(ctx.r, ctx.assets.get_texture(SpriteId::FarmerBase), body_src, origin, Offset{}, frame.flip, cell_w, zoom);
-    draw_layer(ctx.r, ctx.assets.get_texture(SpriteId::Pants), pants_src(pant_model, body_src), origin, lo.pants, frame.flip, cell_w, zoom, pant_color);
-    draw_layer(ctx.r, ctx.assets.get_texture(SpriteId::Shirts), shirt_src(shirt_model, facing), origin, add(farmer::SHIRT_BASE, lo.shirt), frame.flip, cell_w, zoom);
-    draw_layer(ctx.r, ctx.assets.get_texture(SpriteId::Hairstyles), hair_src(hair_model, facing), origin, add(farmer::HAIR_BASE, lo.hair), frame.flip, cell_w, zoom, hair_color);
-    
-    if (!arms_behind){
-        draw_layer(ctx.r, ctx.assets.get_texture(SpriteId::FarmerBase), arms_src(frame.sprite), origin, Offset{}, frame.flip, cell_w, zoom);
-    }
-
-    // TODO: 
-    /*
-    IMPORTANTE la animacion del farmer cambia con la herramienta que esta usando -> 
-            IDEA A: cambiar UsingTool por UsingPickaxe, UsingHoe, etc..
-            IDEA B: usar usingtool + held item y que las tools tengan su propio animator?
-
-    if PlayerStatus == UsingTool{
-        animar held_item que va a ser una tool(pick, watteringcan, sword, hoe) 
-    }
-    */
+    draw_layers_in_order(ctx, farmer::DrawPlayerData{
+        SDL2pp::Point(screen.GetX() - (cell_w * zoom) / 2, screen.GetY() - farmer::FEET_Y * zoom),
+        sprite_rect(frame.sprite),
+        arms_src(frame.sprite),
+        frame.offsets,
+        anim.get_current_frame_index(clip),
+        cell_w,
+        frame.flip
+    });
 }

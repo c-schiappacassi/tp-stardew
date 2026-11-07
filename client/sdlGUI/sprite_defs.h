@@ -189,6 +189,33 @@ namespace SpriteDefs {
         { 70, {{  0,  0}, {  0,  0}, {0, 0}} },
     };
 
+    // Tools
+    struct ToolRect { uint16_t x, y, w, h; };
+    struct ToolStep { int sprite; Offset off; double angle; };
+
+    struct ToolAnimDef {
+        ItemId item;
+        Direction dir;
+        ToolRect sprites[2];
+        int pivot_x, pivot_y;
+        ToolStep steps[5];
+    };
+
+    // TODO: agregar las otras herramientas
+    inline const ToolAnimDef TOOL_ANIMS[] = {
+        { ItemId::Pickaxe, Direction::Down,
+        {{224, 89, 16, 23}, {240, 89, 16, 23}}, 0, 0,
+        {{0, {0, -6}, 0}, {0, {0, -8}, 0}, {0, {0, -7}, 0}, {1, {0, 8}, 0}, {1, {0, 8}, 0}} },
+
+        { ItemId::Pickaxe, Direction::Up,
+        {{272, 89, 16, 23}, {288, 89, 16, 23}}, 0, 0,
+        {{0, {0, -10}, 0}, {0, {0, -12}, 0}, {0, {0, -12}, 0}, {1, {0, -6}, 0}, {1, {0, -4}, 0}} },
+
+        { ItemId::Pickaxe, Direction::Right,
+        {{256, 93, 16, 19}, {0, 0, 0, 0}}, 2, 17,
+        {{0, {3, -5},  -110}, {0, {6, -7},  -60}, {0, {10, -5}, -10}, {0, {10, -4},   40},  {0, {10, -4},   80}} },
+    };
+
     constexpr LayerOffsets farmer_offsets(int frame) {
         for (const auto& o : FARMER_OFFSETS)
             if (o.frame == frame) return o.off;

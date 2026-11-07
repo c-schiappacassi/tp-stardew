@@ -7,6 +7,7 @@
 
 #include <SDL2pp/SDL2pp.hh>
 #include <SDL_image.h>
+#include <vector>
 
 #include "protocol_types.h"
 #include "utils.h"
@@ -19,6 +20,7 @@ private:
     std::map<std::pair<CropType, CropState>, Sprite> crop_sprites;
     std::map<std::pair<ResourceType, ResourceState>, Sprite> ore_sprites;
     std::map<SoundId, Sound> sounds;
+    std::map<std::pair<ItemId, Direction>, std::vector<ToolFrame>> tool_frames;
 
     SDL2pp::Texture load_texture(SDL2pp::Renderer& renderer, const std::filesystem::path& path);
     void load_sprites_texture(SDL2pp::Renderer& renderer, const std::filesystem::path& assets_root);
@@ -28,6 +30,7 @@ private:
     void load_crop_sprites();
     void load_cow_clips();
     void load_chicken_clips();
+    void load_tool_frames();
 
 public:
     AssetManager(SDL2pp::Renderer& renderer, const std::filesystem::path& assets_root);
@@ -41,6 +44,9 @@ public:
     const Sprite& get_sprite(CropType type, CropState state) const;
     const Sprite& get_sprite(ResourceType type, ResourceState state) const;
     const Sound& get_sound(SoundId id) const;
+
+    const ToolFrame* find_tool_frame(ItemId item, Direction dir, std::size_t frame_index) const;
+
 
     AssetManager(const AssetManager&) = delete;
     AssetManager& operator=(const AssetManager&) = delete;

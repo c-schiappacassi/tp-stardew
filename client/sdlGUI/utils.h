@@ -48,6 +48,13 @@ struct Sprite {
 struct Offset { int8_t x = 0; int8_t y = 0; }; 
 struct LayerOffsets { Offset hair, shirt, pants; };
 
+struct ToolFrame {
+    Sprite sprite;
+    Offset offset;
+    double angle;
+    SDL2pp::Point pivot;
+};
+
 struct AnimatedFrame {
     Sprite sprite;
     bool flip;
@@ -71,16 +78,18 @@ struct ClipId {
     SpriteId sprite_id;
     Action action;
     Direction direction;
+    std::optional<ItemId> item_id = std::nullopt;
 
     bool operator<(const ClipId& other) const {
-        return std::tie(sprite_id, action, direction) <
-               std::tie(other.sprite_id, other.action, other.direction);
+        return std::tie(sprite_id, action, direction, item_id) <
+               std::tie(other.sprite_id, other.action, other.direction, other.item_id);
     }
 
     bool operator==(const ClipId& other) const {
         return sprite_id == other.sprite_id &&
                action == other.action &&
-               direction == other.direction;
+               direction == other.direction &&
+               item_id == other.item_id;
     }
 };
 

@@ -12,6 +12,7 @@ private:
     std::unordered_map<uint32_t, CropView> crops;
     std::unordered_map<uint32_t, AnimalView> animals;
     // std::unordered_map<uint32_t, FurnitureView> furniture; TODO: TBD si los muebles pueden ir donde sea en la granja o solo adentro de la casa
+    // std::unordered_map<uint32_t, ChestView> para animar que se abre, pero ver lo de adentro va a ser cosa de hud
 public:
     void update(const FarmData& data);
     void draw_background(const RenderInfo& ctx) override;
