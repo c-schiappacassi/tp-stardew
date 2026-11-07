@@ -9,7 +9,6 @@
 #include <QPainter>
 #include <QSlider>
 #include <QVBoxLayout>
-#include <algorithm>
 
 #include "sprite_button.h"
 
@@ -31,8 +30,6 @@ const QSize backSize(200, 85);
 
 constexpr int labelWidth = 110;
 constexpr int counterWidth = 130;
-constexpr int firstBackHair = 40;
-constexpr int lastBackHair = 47;
 
 const QString textColor = "#4a2a0a";
 const QString errorColor = "#a01010";
@@ -166,9 +163,6 @@ NewGameScreen::NewGameScreen(QWidget* parent): QWidget(parent) {
     shirtSheet = QPixmap(QString(ASSETS_DIR) + "/sprites/characters/shirts.png");
     pantsSheet = QPixmap(QString(ASSETS_DIR) + "/sprites/characters/pants.png");
     hairModels = validModels(hairSheet, hairLayout);
-    hairModels.erase(std::remove_if(hairModels.begin(), hairModels.end(),
-            [](int model) { return model >= firstBackHair && model <= lastBackHair; }),
-            hairModels.end());
     shirtModels = validModels(shirtSheet, shirtLayout);
     pantsModels = validModels(pantsSheet, pantsLayout);
 

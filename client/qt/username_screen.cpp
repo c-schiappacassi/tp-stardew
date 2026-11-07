@@ -20,7 +20,7 @@ const QSize fieldSize(480, 100);
 const QSize buttonSize(320, 80);
 const QSize errorSize(640, 80);
 const QString textColor = "#4a2a0a";
-const QString errorColor = "#4a2a0a";
+const QString errorColor = "#a01010";
 }
 
 UsernameScreen::UsernameScreen(QWidget* parent): QWidget(parent), input(new QLineEdit(this)) {

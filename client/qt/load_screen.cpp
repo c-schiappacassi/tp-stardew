@@ -62,7 +62,7 @@ QPixmap tinted(const QPixmap& sprite, const QColor& color) {
 
 QPixmap makeFarmer(const PlayerData& data) {
     const QString characters = QString(ASSETS_DIR) + "/sprites/characters/";
-    const QPixmap farmerSheet(characters + "farmer Base.png");
+    const QPixmap farmerSheet(characters + "farmer_base.png");
     const QPixmap hairSheet(characters + "hairstyles.png");
     const QPixmap shirtSheet(characters + "shirts.png");
     const QPixmap pantsSheet(characters + "pants.png");
