@@ -175,8 +175,16 @@ bool Player::useTool(std::chrono::steady_clock::time_point now) {
         return false;
     }
 
-    const ToolConfig& tool =config.tools.at(getSelectedItem()->item_id);
-    return performAction(tool.energyCost, std::chrono::milliseconds{tool.intervalMs}, now);
+    const ToolConfig& tool = config.tools.at(getSelectedItem()->item_id);
+    const Direction toolDirection = dir;
+    if (!performAction(tool.energyCost, std::chrono::milliseconds{tool.intervalMs}, now)) {
+        return false;
+    }
+    if (state != PlayerState::Unconscious) {
+        dir = toolDirection;
+        state = PlayerState::UsingTool;
+    }
+    return true;
 }
 
 uint8_t Player::getSelectedSlot() const { return currentSlot; }
@@ -202,7 +210,7 @@ bool Player::performAction(uint16_t energyCost, std::chrono::milliseconds interv
         state = PlayerState::Unconscious;
         movementDirection = Direction::None;
     } else {
-        state = PlayerState::UsingTool;
+        setMovement(movementDirection);
     }
 
     return true;
