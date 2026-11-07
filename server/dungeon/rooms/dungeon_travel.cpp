@@ -6,8 +6,8 @@ const DungeonRoom* DungeonTravel::findRoom(const std::map<uint8_t, DungeonRoom>&
     return it == rooms.end() ? nullptr : &it->second;
 }
 
-bool DungeonTravel::enter(Player& player, const std::map<uint8_t, DungeonRoom>& rooms) const {
-    if (player.getZone() == Zone::Dungeon || !player.canAct()) {
+bool DungeonTravel::spawnPlayer(Player& player, const std::map<uint8_t, DungeonRoom>& rooms) const {
+    if (!player.canAct()) {
         return false;
     }
 
@@ -18,6 +18,10 @@ bool DungeonTravel::enter(Player& player, const std::map<uint8_t, DungeonRoom>& 
     }
 
     return player.changeLocation(Zone::Dungeon, 1, first->getPassages()->entry);
+}
+
+bool DungeonTravel::enter(Player& player, const std::map<uint8_t, DungeonRoom>& rooms) const {
+    return player.getZone() != Zone::Dungeon && spawnPlayer(player, rooms);
 }
 
 bool DungeonTravel::advanceRoom(Player& player, const std::map<uint8_t, DungeonRoom>& rooms) const {

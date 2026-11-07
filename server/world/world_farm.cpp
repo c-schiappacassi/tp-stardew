@@ -10,10 +10,9 @@ bool WorldManager::loadFarm(uint8_t worldId, const FarmLayout& layout) {
     loadedWorld = worldId;
     return true;
 }
-
-bool WorldManager::spawnPlayer(Player& player) const {
-    return farm.spawnPlayer(player);
-}
+//bool WorldManager::spawnPlayer(Player& player) const {
+  //  return farm.spawnPlayer(player);
+//}
 
 const FarmManager& WorldManager::getFarm() const { return farm; }
 

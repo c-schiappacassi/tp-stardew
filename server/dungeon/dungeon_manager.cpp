@@ -21,6 +21,10 @@ bool DungeonManager::initialize(const std::map<uint8_t, DungeonRoomLayout>& layo
     return loader.load(layout, rooms, generator, entityIds, placementRandom);
 }
 
+bool DungeonManager::spawnPlayer(Player& player) const {
+    return travel.spawnPlayer(player, rooms);
+}
+
 bool DungeonManager::canWalk(uint8_t number, const CollisionBounds& bounds) const {
     const auto* room = findRoom(number);
     return room && room->canWalk(bounds);
