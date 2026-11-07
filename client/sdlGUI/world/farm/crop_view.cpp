@@ -1,5 +1,10 @@
 #include "crop_view.h"
 
+
+CropView::CropView(const CropData& data) {
+    update(data);
+}
+
 std::optional<float> CropView::depth(const RenderInfo& ctx) const {
     const int radius = crop::HEIGHT * ctx.cam.get_zoom();
 
@@ -15,7 +20,7 @@ void CropView::draw(const RenderInfo& ctx){
 
     const Sprite& sprite = ctx.assets.get_sprite(this->type, this->state );
     const SDL2pp::Point origin = ctx.cam.world_to_screen(pos.getX(), pos.getY());
-    draw_region(ctx, sprite.sprite_id, sprite_rect_all_px(sprite), origin);
+    draw_region(ctx, sprite.sprite_id, sprite_rect_all_px(sprite), origin, -sprite.width / 2, -sprite.height);
 };
 
 void CropView::update(const CropData& data){

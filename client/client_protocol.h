@@ -30,6 +30,10 @@ private:
     PlayerData receivePlayerData();
     PlayerDataLocal receivePlayerDataLocal();
 
+    CropData receiveCropData();
+    AnimalData receiveAnimalData();
+    DecorationData receiveDecorationData();
+    FarmData receiveFarmData();
 public:
     explicit ClientProtocol(Socket& socket);
 

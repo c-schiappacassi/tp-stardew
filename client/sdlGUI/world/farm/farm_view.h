@@ -18,17 +18,17 @@ public:
     void collect_drawables(const RenderInfo& ctx, std::vector<Drawable>& out) override;
 };
 
-void FarmView::update(const FarmData& farm) {
+inline void FarmView::update(const FarmData& farm) {
     auto id_of = [](const auto& d) { return d.id; };
     sync_views(crops, farm.crops, id_of);
     sync_views(animals, farm.animals, id_of);
 }
 
-void FarmView::draw_background(const RenderInfo&) {
+inline void FarmView::draw_background(const RenderInfo&) {
     // TODO: implementar background
 }
 
-void FarmView::collect_drawables(const RenderInfo& ctx, std::vector<Drawable>& out) {
+inline void FarmView::collect_drawables(const RenderInfo& ctx, std::vector<Drawable>& out) {
     uint64_t tie = static_cast<uint64_t>(1ull) << 32;
     collect_from(ctx, crops, out, tie);
     collect_from(ctx, animals, out, tie);

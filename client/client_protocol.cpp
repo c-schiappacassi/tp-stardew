@@ -72,17 +72,6 @@ MineData ClientProtocol::receiveMineData() {
 }
 
 
-// TODO:
-ZoneData ClientProtocol::receiveZoneData(Zone currentZone) {
-    switch (currentZone) {
-        case Zone::Dungeon : return ZoneData{receiveMineData()};
-        case Zone::Farm : return ZoneData{receiveMineData()};
-        case Zone::Town : return ZoneData{receiveMineData()};
-    }
-
-    throw ProtocolError("ZoneData desconocida");
-}
-
 PlayerData ClientProtocol::receivePlayerData() {
     PlayerData data;
     data.characterName = base.receiveString();
@@ -129,6 +118,57 @@ PlayerDataLocal ClientProtocol::receivePlayerDataLocal() {
     localData.zoneData = receiveZoneData(baseData.currentZone);
 
     return localData;
+}
+
+CropData ClientProtocol::receiveCropData() {
+    CropData c;
+    c.id = base.receiveUint32();
+    c.pos = receivePosition();
+    c.type = static_cast<CropType>(base.receiveUint8());
+    c.state = static_cast<CropState>(base.receiveUint8());
+    c.wattered = base.receiveUint8() != 0;
+    return c;
+}
+
+AnimalData ClientProtocol::receiveAnimalData() {
+    AnimalData a;
+    a.id = base.receiveUint32();
+    a.pos = receivePosition();
+    a.dir = static_cast<Direction>(base.receiveUint8());
+    a.type = static_cast<AnimalType>(base.receiveUint8());
+    a.state = static_cast<AnimalState>(base.receiveUint8());
+    a.needs_interaction = base.receiveUint8() != 0;
+    return a;
+}
+
+DecorationData ClientProtocol::receiveDecorationData() {
+    DecorationData d;
+    d.id = base.receiveUint32();
+    d.pos = receivePosition();
+    d.item = static_cast<ItemId>(base.receiveUint16());
+    return d;
+}
+
+FarmData ClientProtocol::receiveFarmData() {
+    FarmData farm;
+    uint16_t n = base.receiveUint16();
+    for (uint16_t i = 0; i < n; ++i) farm.crops.push_back(receiveCropData());
+    n = base.receiveUint16();
+    for (uint16_t i = 0; i < n; ++i) farm.animals.push_back(receiveAnimalData());
+    n = base.receiveUint16();
+    for (uint16_t i = 0; i < n; ++i) farm.tilledSoil.push_back(receivePosition());
+    n = base.receiveUint16();
+    for (uint16_t i = 0; i < n; ++i) farm.decorations.push_back(receiveDecorationData());
+    return farm;
+}
+
+ZoneData ClientProtocol::receiveZoneData(Zone currentZone) {
+    switch (currentZone) {
+        case Zone::Dungeon: return ZoneData{receiveMineData()};
+        case Zone::Farm:    return ZoneData{receiveFarmData()};
+        case Zone::Town:    return ZoneData{std::monostate{}};
+    }
+    throw ProtocolError("ZoneData desconocida");
 }
 
 // SENDERS
