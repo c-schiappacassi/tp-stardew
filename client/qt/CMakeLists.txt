@@ -18,6 +18,8 @@ target_sources(taller_client PRIVATE
     main_window.h main_window.cpp
     username_screen.h username_screen.cpp
     start_menu_screen.h start_menu_screen.cpp
+    farmer_sprites.h farmer_sprites.cpp
+    character_screen.h character_screen.cpp
     new_game_screen.h new_game_screen.cpp
     load_screen.h load_screen.cpp
     join_screen.h join_screen.cpp

@@ -4,8 +4,6 @@
 #include <QLabel>
 #include <QPixmap>
 #include <QVBoxLayout>
-#include <QImage>
-#include <QPainter>
 #include <algorithm>
 
 #include "sprite_button.h"
@@ -22,53 +20,9 @@ const QSize farmerSize(48, 96);
 
 constexpr int rowsPerPage = 3;
 
-struct SheetLayout {
-    int perRow;
-    int stepX;
-    int stepY;
-    int cellWidth;
-    int cellHeight;
-
-    QRect cell(int model) const {
-        return QRect((model % perRow) * stepX, (model / perRow) * stepY, cellWidth, cellHeight);
-    }
-};
-
-const SheetLayout hairLayout{16, 16, 96, 16, 32};
-const SheetLayout shirtLayout{16, 8, 32, 8, 8};
-const SheetLayout pantsLayout{10, 192, 688, 16, 32};
-const QRect bodyRect(0, 0, 16, 32);
-const QRect armsRect(96, 0, 16, 32);
-const QPoint shirtOffset(4, 15);
-const QPoint hairOffset(0, 1);
-
-QPixmap tinted(const QPixmap& sprite, const QColor& color) {
-    QImage image = sprite.toImage().convertToFormat(QImage::Format_ARGB32_Premultiplied);
-    QPainter painter(&image);
-    painter.setCompositionMode(QPainter::CompositionMode_Multiply);
-    painter.fillRect(image.rect(), color);
-    painter.setCompositionMode(QPainter::CompositionMode_DestinationIn);
-    painter.drawPixmap(0, 0, sprite);
-    painter.end();
-    return QPixmap::fromImage(image);
-}
-
-QPixmap makeFarmer(const PlayerData& data) {
-    const QPixmap farmerSheet(CHARACTERS_PATH + "farmer_base.png");
-    const QPixmap hairSheet(CHARACTERS_PATH + "hairstyles.png");
-    const QPixmap shirtSheet(CHARACTERS_PATH + "shirts.png");
-    const QPixmap pantsSheet(CHARACTERS_PATH + "pants.png");
-
-    QPixmap farmer(bodyRect.size());
-    farmer.fill(Qt::transparent);
-    QPainter painter(&farmer);
-    painter.drawPixmap(0, 0, farmerSheet.copy(bodyRect));
-    painter.drawPixmap(0, 0, tinted(pantsSheet.copy(pantsLayout.cell(data.pantsModel)),
-            QColor(data.pantsColor.r, data.pantsColor.g, data.pantsColor.b)));
-    painter.drawPixmap(shirtOffset, shirtSheet.copy(shirtLayout.cell(data.shirtModel)));
-    painter.drawPixmap(hairOffset, tinted(hairSheet.copy(hairLayout.cell(data.hairModel)),
-            QColor(data.hairColor.r, data.hairColor.g, data.hairColor.b)));
-    painter.drawPixmap(0, 0, farmerSheet.copy(armsRect));
+QPixmap makeFarmer(const FarmerSprites& sprites, const PlayerData& data) {
+    const QPixmap farmer = sprites.drawCharacter(data.hairModel, QColor(data.hairColor.r, data.hairColor.g, data.hairColor.b),
+            data.shirtModel, data.pantsModel, QColor(data.pantsColor.r, data.pantsColor.g, data.pantsColor.b));
     return farmer.scaled(farmerSize, Qt::IgnoreAspectRatio, Qt::FastTransformation);
 }
 
@@ -85,10 +39,7 @@ LoadScreen::LoadScreen(QWidget* parent): QWidget(parent), frames(MENUS_PATH + "f
 
     QLabel* panel = menu.makePanel(PANEL_RECT, panelSize, this);
 
-    rowsLayout = new QVBoxLayout();new QLabel(this);
-    panel->setPixmap(frames.copy(PANEL_RECT));
-    panel->setScaledContents(true);
-    panel->setFixedSize(panelSize);
+    rowsLayout = new QVBoxLayout();
     rowsLayout->setSpacing(10);
 
     QVBoxLayout* panelLayout = new QVBoxLayout(panel);
@@ -146,7 +97,7 @@ SpriteButton* LoadScreen::makeRow(const GameInfoDTO& game) {
     row->setFixedSize(rowSize);
 
     QLabel* farmer = new QLabel(row);
-    farmer->setPixmap(makeFarmer(game.playerData));
+    farmer->setPixmap(makeFarmer(sprites, game.playerData));
     farmer->setAttribute(Qt::WA_TransparentForMouseEvents);
 
     QLabel* characterName = makeLabel(QString::fromStdString(game.playerData.characterName), 36, TEXT_COLOR, row);

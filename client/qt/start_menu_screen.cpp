@@ -33,7 +33,7 @@ StartMenuScreen::StartMenuScreen(QWidget* parent): QWidget(parent) {
     SpriteButton* newButton = makeButton(sheet, 0, this);
     SpriteButton* loadButton = makeButton(sheet, 1, this);
     SpriteButton* joinButton = makeButton(sheet, 2, this);
-    SpriteButton* exitButton = makeButton(sheet, 3, this);    
+    SpriteButton* exitButton = makeButton(sheet, 3, this);
 
     auto* buttonsRow = new QHBoxLayout();
     buttonsRow->setSpacing(24);

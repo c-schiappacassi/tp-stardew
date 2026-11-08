@@ -11,7 +11,6 @@
 namespace {
 const QSize panelSize(768, 304);
 const QSize fieldSize(480, 100);
-const QSize buttonSize(320, 80);
 const QSize errorSize(640, 80);
 }
 
@@ -48,12 +47,6 @@ UsernameScreen::UsernameScreen(QWidget* parent): QWidget(parent), input(new QLin
     panelLayout->addStretch(1);
 
     SpriteButton* continueButton = menu.makePushButton("Continue", this);
-    continueButton->setFixedSize(buttonSize);
-
-    QLabel* continueText = new QLabel("Continue", continueButton);
-    continueText->setGeometry(continueButton->rect());
-    continueText->setAlignment(Qt::AlignCenter);
-    continueText->setStyleSheet(QString("font: bold 34px; color: %1;").arg(TEXT_COLOR));
 
     QVBoxLayout* layout = new QVBoxLayout(this);
     layout->addStretch(1);

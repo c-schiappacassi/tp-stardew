@@ -1,4 +1,5 @@
-#pragma once
+#ifndef QTCONSTANTS_H
+#define QTCONSTANTS_H
 
 #include <QRect>
 #include <QSize>
@@ -26,3 +27,5 @@ const QSize OK_SIZE(100, 100);
 const int LABEL_WIDTH = 110;
 const int COUNTER_WIDTH = 130;
 const int SLIDER_MAX = 1000;
+
+#endif // QTCONSTANTS_H
