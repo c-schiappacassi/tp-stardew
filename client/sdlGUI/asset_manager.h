@@ -17,6 +17,7 @@ private:
     std::map<SpriteId, SDL2pp::Texture> textures;
     std::map<ClipId, Clip> clips;
     std::map<ItemId, Sprite> item_sprites;
+    std::map<UiSpriteId, Sprite> ui_sprites;
     std::map<std::pair<CropType, CropState>, Sprite> crop_sprites;
     std::map<std::pair<ResourceType, ResourceState>, Sprite> ore_sprites;
     std::map<SoundId, Sound> sounds;
@@ -27,6 +28,7 @@ private:
     void load_farmer_clips();
     void load_ore_sprites();
     void load_item_sprites();
+    void load_ui_sprites();
     void load_crop_sprites();
     void load_cow_clips();
     void load_chicken_clips();
@@ -40,6 +42,8 @@ public:
 
     const Sprite& get_sprite(ItemId id) const;
     const Sprite* find_sprite(ItemId id) const;
+
+    const Sprite& get_sprite(UiSpriteId id) const;
 
     const Sprite& get_sprite(CropType type, CropState state) const;
     const Sprite& get_sprite(ResourceType type, ResourceState state) const;

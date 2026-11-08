@@ -15,7 +15,6 @@
 
 
 class LevelView: public ZoneView {
-    Background map;
     uint8_t number;
     Position stairs_up, stairs_down;
     std::unordered_map<uint32_t, OreView> ores;

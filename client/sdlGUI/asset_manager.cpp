@@ -17,10 +17,12 @@ namespace {
 
             for (int i = 0; i < d.count; ++i) {
                 const auto& f = d.frames[i];
+                const int col = f.index % set.cols;
+                const int row = f.index / set.cols;
                 AnimatedFrame frame{
-                    Sprite{set.sprite, set.cell_w, set.cell_h,
-                        static_cast<uint16_t>(f.index / set.cols),
-                        static_cast<uint16_t>(f.index % set.cols)},
+                    Sprite{set.sprite,
+                        static_cast<uint16_t>(col * set.cell_w), static_cast<uint16_t>(row * set.cell_h),
+                        set.cell_w, set.cell_h, set.off_x, set.off_y},
                     flip,
                     offsets_of ? offsets_of(f.index) : LayerOffsets{}
                 };
@@ -42,6 +44,7 @@ AssetManager::AssetManager(SDL2pp::Renderer& renderer, const std::filesystem::pa
     load_farmer_clips();
     load_ore_sprites();
     load_item_sprites();
+    load_ui_sprites();
     load_crop_sprites();
     load_cow_clips();
     load_chicken_clips();
@@ -57,19 +60,26 @@ void AssetManager::load_ore_sprites() {
     for (const auto& d : SpriteDefs::ORES)
         ore_sprites.insert_or_assign(
             {d.type, d.state},
-            Sprite{SpriteId::Ores, Dimentions::ORE_SIZE, Dimentions::ORE_SIZE, d.row, d.col});
+            Sprite{SpriteId::Ores, d.x, d.y, Dimentions::ORE_SIZE, Dimentions::ORE_SIZE,
+                   -Dimentions::ORE_SIZE / 2, -Dimentions::ORE_SIZE});
 }
 
 void AssetManager::load_crop_sprites() {
     for (const auto& d : SpriteDefs::CROPS)
         crop_sprites.insert_or_assign(
             {d.type, d.state},
-            Sprite{SpriteId::Crops, Dimentions::CROP_CELL_W, Dimentions::CROP_CELL_H, d.row, d.col});
+            Sprite{SpriteId::Crops, d.x, d.y, Dimentions::CROP_CELL_W, Dimentions::CROP_CELL_H,
+                   -Dimentions::CROP_CELL_W / 2, -Dimentions::CROP_CELL_H});
 }
 
 void AssetManager::load_item_sprites() {
     for (const auto& d : SpriteDefs::ITEMS)
-        item_sprites.insert_or_assign(d.id, Sprite{d.sprite, d.w, d.h, d.row, d.col});
+        item_sprites.insert_or_assign(d.id, Sprite{d.sprite, d.x, d.y, d.w, d.h});
+}
+
+void AssetManager::load_ui_sprites() {
+    for (const auto& d : SpriteDefs::UI)
+        ui_sprites.insert_or_assign(d.id, Sprite{SpriteId::MenuTiles, d.x, d.y, d.w, d.h});
 }
 
 void AssetManager::load_farmer_clips() {
@@ -89,9 +99,11 @@ void AssetManager::load_tool_frames() {
         std::vector<ToolFrame> frames;
         for (const auto& s : d.steps) {
             const auto& r = d.sprites[s.sprite];
+            const int16_t off_x = s.off.x - Dimentions::FARMER_CELL_W / 2;
+            const int16_t off_y = s.off.y - Dimentions::FARMER_FEET_Y;
             frames.push_back(ToolFrame{
-                Sprite{SpriteId::Tools, r.w, r.h, r.y, r.x},
-                s.off, s.angle, SDL2pp::Point(d.pivot_x, d.pivot_y)});
+                Sprite{SpriteId::Tools, r.x, r.y, r.w, r.h, off_x, off_y},
+                s.angle, SDL2pp::Point(d.pivot_x, d.pivot_y)});
         }
         tool_frames.insert_or_assign({d.item, d.dir}, std::move(frames));
     }
@@ -102,6 +114,8 @@ SDL2pp::Texture& AssetManager::get_texture(SpriteId id) { return textures.at(id)
 const Clip& AssetManager::get_clip(const ClipId& id) const { return clips.at(id); }
 
 const Sprite& AssetManager::get_sprite(ItemId id) const { return item_sprites.at(id); }
+
+const Sprite& AssetManager::get_sprite(UiSpriteId id) const { return ui_sprites.at(id); }
 
 const Sprite& AssetManager::get_sprite(CropType type, CropState state) const { return crop_sprites.at({type, state}); }
 

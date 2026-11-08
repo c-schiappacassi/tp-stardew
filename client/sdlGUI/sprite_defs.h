@@ -6,10 +6,13 @@
 #include "protocol_types.h"
 #include "utils.h"
 
+// TODO: organizar mejor este archivo
+
 namespace Dimentions {
     constexpr uint16_t FARMER_COLS    = 6;
     constexpr uint16_t FARMER_CELL_W  = 16;
     constexpr uint16_t FARMER_CELL_H  = 32;
+    constexpr uint16_t FARMER_FEET_Y  = 30;
 
     constexpr uint16_t COW_COLS       = 4;
     constexpr uint16_t COW_CELL_W     = 32;
@@ -43,55 +46,64 @@ namespace SpriteDefs {
     };
 
     // Ores
-    struct OreDef { ResourceType type; ResourceState state; uint16_t row, col; };
+    struct OreDef { ResourceType type; ResourceState state; uint16_t x, y; };
     inline constexpr OreDef ORES[] = {
-        {ResourceType::StoneRock,  ResourceState::Intact, 1, 14},
-        {ResourceType::StoneRock,  ResourceState::Broken, 1, 15},
-        {ResourceType::CoalRock,   ResourceState::Intact, 1, 0},
-        {ResourceType::CoalRock,   ResourceState::Broken, 1, 1},
-        {ResourceType::LapisRock,  ResourceState::Intact, 0, 14},
-        {ResourceType::LapisRock,  ResourceState::Broken, 0, 13},
-        {ResourceType::SilverRock, ResourceState::Intact, 0, 12},
-        {ResourceType::SilverRock, ResourceState::Broken, 0, 13},
-        {ResourceType::GoldRock,   ResourceState::Intact, 0, 8},
-        {ResourceType::GoldRock,   ResourceState::Broken, 0, 9},
+        {ResourceType::StoneRock,  ResourceState::Intact, 224, 16},
+        {ResourceType::StoneRock,  ResourceState::Broken, 240, 16},
+        {ResourceType::CoalRock,   ResourceState::Intact,   0, 16},
+        {ResourceType::CoalRock,   ResourceState::Broken,  16, 16},
+        {ResourceType::LapisRock,  ResourceState::Intact, 224,  0},
+        {ResourceType::LapisRock,  ResourceState::Broken, 208,  0},
+        {ResourceType::SilverRock, ResourceState::Intact, 192,  0},
+        {ResourceType::SilverRock, ResourceState::Broken, 208,  0},
+        {ResourceType::GoldRock,   ResourceState::Intact, 128,  0},
+        {ResourceType::GoldRock,   ResourceState::Broken, 144,  0},
     };
 
     // Crops
-    struct CropDef { CropType type; CropState state; uint16_t row, col; };
+    struct CropDef { CropType type; CropState state; uint16_t x, y; };
     inline constexpr CropDef CROPS[] = {
-        {CropType::Potato,     CropState::JustPlanted, 29, 160},
-        {CropType::Potato,     CropState::Sprouting,   29, 176},
-        {CropType::Potato,     CropState::Growing,     29, 208},
-        {CropType::Potato,     CropState::Ready,       29, 224},
+        {CropType::Potato,     CropState::JustPlanted, 160,  29},
+        {CropType::Potato,     CropState::Sprouting,   176,  29},
+        {CropType::Potato,     CropState::Growing,     208,  29},
+        {CropType::Potato,     CropState::Ready,       224,  29},
 
-        {CropType::Pumpkin,    CropState::JustPlanted, 285, 0},
-        {CropType::Pumpkin,    CropState::Sprouting,   285, 48},
-        {CropType::Pumpkin,    CropState::Growing,     285, 80},
+        {CropType::Pumpkin,    CropState::JustPlanted,   0, 285},
+        {CropType::Pumpkin,    CropState::Sprouting,    48, 285},
+        {CropType::Pumpkin,    CropState::Growing,      80, 285},
         {CropType::Pumpkin,    CropState::Ready,       285, 285},
 
-        {CropType::Strawberry, CropState::JustPlanted, 318, 144},
-        {CropType::Strawberry, CropState::Sprouting,   318, 192},
-        {CropType::Strawberry, CropState::Growing,     318, 240},
-        {CropType::Strawberry, CropState::Ready,       318, 224},
+        {CropType::Strawberry, CropState::JustPlanted, 144, 318},
+        {CropType::Strawberry, CropState::Sprouting,   192, 318},
+        {CropType::Strawberry, CropState::Growing,     240, 318},
+        {CropType::Strawberry, CropState::Ready,       224, 318},
 
-        {CropType::Scallion,   CropState::JustPlanted, 61, 16},
-        {CropType::Scallion,   CropState::Sprouting,   61, 48},
-        {CropType::Scallion,   CropState::Growing,     61, 64},
-        {CropType::Scallion,   CropState::Ready,       61, 80},
+        {CropType::Scallion,   CropState::JustPlanted,  16,  61},
+        {CropType::Scallion,   CropState::Sprouting,    48,  61},
+        {CropType::Scallion,   CropState::Growing,      64,  61},
+        {CropType::Scallion,   CropState::Ready,        80,  61},
     };
 
     // Items
-    struct ItemDef { ItemId id; SpriteId sprite; uint16_t w, h, row, col; };
+    struct ItemDef { ItemId id; SpriteId sprite; uint16_t x, y, w, h; };
     inline constexpr ItemDef ITEMS[] = {
-        {ItemId::Pickaxe,     SpriteId::Tools,   16, 16,  97, 304},
-        {ItemId::Sword,       SpriteId::Weapons, 16, 16,  16,  48},
-        {ItemId::WateringCan, SpriteId::Tools,   16, 11, 228,  32},
-        {ItemId::Shovel,      SpriteId::Tools,   16, 16,  33, 304},
-        {ItemId::Coal,        SpriteId::Ores,    16, 16, 108,  16},
-        {ItemId::Lapis,       SpriteId::Ores,    16, 16, 108,  64},
-        {ItemId::Silver,      SpriteId::Ores,    15, 15,  68, 145},
-        {ItemId::Gold,        SpriteId::Ores,    16, 16, 108,  94},
+        {ItemId::Pickaxe,     SpriteId::Tools,   304,  97, 16, 16},
+        {ItemId::Sword,       SpriteId::Weapons,  48,  16, 16, 16},
+        {ItemId::WateringCan, SpriteId::Tools,    32, 228, 16, 11},
+        {ItemId::Shovel,      SpriteId::Tools,   304,  33, 16, 16},
+        {ItemId::Coal,        SpriteId::Ores,     16, 108, 16, 16},
+        {ItemId::Lapis,       SpriteId::Ores,     64, 108, 16, 16},
+        {ItemId::Silver,      SpriteId::Ores,    145,  68, 15, 15},
+        {ItemId::Gold,        SpriteId::Ores,     94, 108, 16, 16},
+    };
+
+    // UI
+    struct UiDef { UiSpriteId id; uint16_t x, y, w, h; };
+    inline constexpr UiDef UI[] = {
+        {UiSpriteId::HotbarBar,          0, 256, 60, 60},
+        {UiSpriteId::HotbarSlot,        64, 128, 64, 64},
+        {UiSpriteId::HotbarSlotOutline, 128, 128, 64, 64},
+        {UiSpriteId::HotbarSlotSelected,  0, 896, 64, 64},
     };
 
     // Clips
@@ -125,10 +137,12 @@ namespace SpriteDefs {
     struct ClipSetInfo {
         SpriteId sprite;
         uint16_t cols, cell_w, cell_h;
+        int16_t off_x, off_y;
     };
 
     // Farmer
-    inline constexpr ClipSetInfo FARMER_SET{ SpriteId::FarmerBase, Dimentions::FARMER_COLS, Dimentions::FARMER_CELL_W, Dimentions::FARMER_CELL_H};
+    inline constexpr ClipSetInfo FARMER_SET{ SpriteId::FarmerBase, Dimentions::FARMER_COLS, Dimentions::FARMER_CELL_W, Dimentions::FARMER_CELL_H,
+                                             -Dimentions::FARMER_CELL_W / 2, -Dimentions::FARMER_FEET_Y};
     inline constexpr bool FARMER_MIRROR_LEFT = true;
 
     inline constexpr ClipDef<PlayerState> FARMER_CLIPS[] = {
@@ -224,7 +238,8 @@ namespace SpriteDefs {
 
     // TODO: cambiar sprite dependiendo del color de vaca y pollo
     // Cow
-    inline constexpr ClipSetInfo COW_SET{SpriteId::BronwCow, Dimentions::COW_COLS,Dimentions::COW_CELL_W, Dimentions::COW_CELL_H};
+    inline constexpr ClipSetInfo COW_SET{SpriteId::BronwCow, Dimentions::COW_COLS, Dimentions::COW_CELL_W, Dimentions::COW_CELL_H,
+                                         -Dimentions::COW_CELL_W / 2, -Dimentions::COW_CELL_H};
     inline constexpr int COW_IDLE_MS = 400;
     inline constexpr int COW_WALK_MS = 150;
 
@@ -241,7 +256,8 @@ namespace SpriteDefs {
     };
 
     // Chicken
-    inline constexpr ClipSetInfo CHICKEN_SET{ SpriteId::BronwChicken, Dimentions::CHICKEN_COLS, Dimentions::CHICKEN_CELL_W, Dimentions::CHICKEN_CELL_H};
+    inline constexpr ClipSetInfo CHICKEN_SET{ SpriteId::BronwChicken, Dimentions::CHICKEN_COLS, Dimentions::CHICKEN_CELL_W, Dimentions::CHICKEN_CELL_H,
+                                              -Dimentions::CHICKEN_CELL_W / 2, -Dimentions::CHICKEN_CELL_H};
 
     inline constexpr int CHICKEN_IDLE_MS = 400;
     inline constexpr int CHICKEN_WALK_MS = 120;

@@ -54,11 +54,10 @@ void AnimalView::draw(const RenderInfo& ctx) {
 
     const Clip& clip = ctx.assets.get_clip(id);
     const AnimatedFrame& frame = anim.get_current_frame(clip);
-    const SDL2pp::Rect src = sprite_rect(frame.sprite);
 
     const SDL2pp::Point origin = ctx.cam.world_to_screen(pos.getX(), pos.getY());
 
-    draw_region(ctx, sprite_id, src, origin, -frame.sprite.width / 2, -frame.sprite.height, frame.flip);
+    draw_sprite(ctx, frame.sprite, origin, frame.flip);
 
     // TODO: if (needs_interaction) dibujar el indicador
 }

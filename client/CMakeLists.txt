@@ -42,6 +42,7 @@ target_sources(taller_client
 
     sdlGUI/world/hud/hud_view.h
     sdlGUI/world/hud/hotbar_view.h
+    sdlGUI/world/hud/pixel_font.h
 
     sdlGUI/world/mines/level_view.h
     sdlGUI/world/mines/mine_view.h

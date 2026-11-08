@@ -1,6 +1,7 @@
 #pragma once
 #include <unordered_set>
 #include "utils.h"
+#include "render_info.h"
 
 template <typename Views, typename Datas, typename KeyOf>
 void sync_views(Views& views, const Datas& datas, KeyOf key_of) {

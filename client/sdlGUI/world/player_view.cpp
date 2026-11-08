@@ -16,7 +16,7 @@ namespace {
     }
 
     SDL2pp::Rect arms_src(const Sprite& body) {
-        return SDL2pp::Rect((body.col + farmer::COLS) * body.width, body.row * body.height, body.width, body.height);
+        return SDL2pp::Rect(body.x + farmer::BODY_REGION_W, body.y, body.width, body.height);
     }
 
     Offset add(Offset a, Offset b) {
@@ -27,9 +27,8 @@ namespace {
         return flip ? (cell_w - layer_w - x) : x;
     }
 
-    void draw_tool_layer(const RenderInfo& ctx, const ToolFrame& tf, const SDL2pp::Point& origin, bool flip, int cell_w) {
-        const SDL2pp::Rect src = sprite_rect_all_px(tf.sprite);
-        draw_region_rotated(ctx, tf.sprite.sprite_id, src, origin, layer_x(tf.offset.x, flip, cell_w, src.w), tf.offset.y, tf.angle, tf.pivot, flip);
+    void draw_tool_layer(const RenderInfo& ctx, const ToolFrame& tf, const SDL2pp::Point& anchor, bool flip) {
+        draw_sprite_rotated(ctx, tf.sprite, anchor, tf.angle, tf.pivot, flip);
     }
 }
 
@@ -78,7 +77,7 @@ void PlayerView::draw_layers_in_order(const RenderInfo& ctx, const farmer::DrawP
     auto tool = [&]() {
         if (state != PlayerState::UsingTool || !held_item) return;
         if (const ToolFrame* tf = ctx.assets.find_tool_frame(*held_item, facing, d.frame_index)) {
-            draw_tool_layer(ctx, *tf, d.origin, d.flip, d.cell_w);
+            draw_tool_layer(ctx, *tf, d.anchor, d.flip);
         }
     };
 
@@ -106,17 +105,19 @@ void PlayerView::draw(const RenderInfo& ctx) {
     const Clip& clip = ctx.assets.get_clip(clip_id);
     const AnimatedFrame& frame = anim.get_current_frame(clip);
 
+    const Sprite& body = frame.sprite;
     const int zoom = ctx.cam.get_zoom();
-    const int cell_w = frame.sprite.width;
-    const SDL2pp::Point screen = ctx.cam.world_to_screen(pos.getX(), pos.getY());
+    const SDL2pp::Point anchor = ctx.cam.world_to_screen(pos.getX(), pos.getY());
+    const SDL2pp::Point origin(anchor.GetX() + body.dx(frame.flip) * zoom, anchor.GetY() + body.offset_y * zoom);
 
     draw_layers_in_order(ctx, farmer::DrawPlayerData{
-        SDL2pp::Point(screen.GetX() - (cell_w * zoom) / 2, screen.GetY() - farmer::FEET_Y * zoom),
-        sprite_rect(frame.sprite),
-        arms_src(frame.sprite),
+        anchor,
+        origin,
+        body.src(),
+        arms_src(body),
         frame.offsets,
         anim.get_current_frame_index(clip),
-        cell_w,
+        body.width,
         frame.flip
     });
 }

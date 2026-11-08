@@ -20,7 +20,7 @@ void CropView::draw(const RenderInfo& ctx){
 
     const Sprite& sprite = ctx.assets.get_sprite(this->type, this->state );
     const SDL2pp::Point origin = ctx.cam.world_to_screen(pos.getX(), pos.getY());
-    draw_region(ctx, sprite.sprite_id, sprite_rect_all_px(sprite), origin, -sprite.width / 2, -sprite.height);
+    draw_sprite(ctx, sprite, origin);
 };
 
 void CropView::update(const CropData& data){

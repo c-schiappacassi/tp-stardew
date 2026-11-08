@@ -20,9 +20,7 @@ namespace farmer {
 constexpr int CELL_W = 16;
 constexpr int CELL_H = 32;
 
-constexpr int COLS = 6;
 constexpr int BODY_REGION_W = 96;
-constexpr int FEET_Y = 30;
 
 constexpr int HAIR_PER_ROW = 16;
 constexpr int HAIR_BLOCK_H = 96;
@@ -39,6 +37,7 @@ constexpr int PANTS_BLOCK_H = 688;
 constexpr int PANTS_PER_ROW = 10;
 
 struct DrawPlayerData {
+    SDL2pp::Point anchor;
     SDL2pp::Point origin;
     SDL2pp::Rect body_src;
     SDL2pp::Rect arms;
