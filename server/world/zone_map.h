@@ -23,6 +23,7 @@ public:
     };
     std::optional<CellRange> coveredCells(const CollisionBounds& bounds) const;
     bool isEmpty() const;
+    int getCellSize() const { return cellSize; }
     std::optional<Cell> cellAt(const Position& pos) const;
     bool contains(const Position& pos) const;
     bool isWalkable(const Position& pos) const;

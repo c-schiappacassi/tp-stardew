@@ -1,6 +1,8 @@
 target_sources(taller_tests
     PRIVATE
     # .cpp files
+    farm_toml_test.cpp
+    farm_protocol_test.cpp
     ../client/client_protocol.cpp
     ../server/network/acceptor.cpp
     ../server/network/client_handler.cpp
@@ -52,6 +54,7 @@ target_sources(taller_tests
     ../server/farm/interactions/farm_interactions.cpp
     ../server/farm/interactions/farm_targeting.cpp
     ../server/farm/loading/farm_loader.cpp
+    ../server/farm/loading/farm_toml_reader.cpp
     ../server/farm/crops/crop.cpp
     ../server/farm/crops/crop_manager.cpp
     ../server/farm/crops/crop_quality.cpp
@@ -69,3 +72,5 @@ target_include_directories(taller_tests
     ../client
     ../server
 )
+
+target_compile_definitions(taller_tests PRIVATE FARM_EXAMPLE_PATH="${PROJECT_SOURCE_DIR}/server/config/farm.toml")

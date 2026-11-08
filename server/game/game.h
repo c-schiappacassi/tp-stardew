@@ -33,7 +33,7 @@ class Game:public Thread {
         ServerStatus buildStatus() const;
         GameSession addPlayer(const std::string& playerName,const PlayerData& data,const std::shared_ptr<OutQueue>& output,const std::string& successMsg);
     public:
-        Game(const std::string& id,const std::string& name,uint8_t worldId,const PlayerConfig& playerConfig = {},const DungeonConfig& dungeonConfig = {},const FarmConfig& farmConfig = FarmConfig{});
+        Game(const std::string& id,const std::string& name,uint8_t worldId,const PlayerConfig& playerConfig = {},const DungeonConfig& dungeonConfig = {},const FarmConfig& farmConfig = FarmConfig{},uint8_t maxPlayers = 4);
 
         const std::string& getId() const;
         std::string getName() const;

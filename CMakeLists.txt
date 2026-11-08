@@ -129,6 +129,17 @@ if(TALLER_CLIENT OR TALLER_EDITOR)
     FetchContent_MakeAvailable(libSDL2pp)
 endif()
 
+if(TALLER_SERVER OR TALLER_TESTS)
+    include(FetchContent)
+    find_package(tomlplusplus 3.4 QUIET)
+    if(NOT TARGET tomlplusplus::tomlplusplus)
+        FetchContent_Declare(tomlplusplus
+            URL https://github.com/marzer/tomlplusplus/archive/refs/tags/v3.4.0.zip
+        )
+        FetchContent_MakeAvailable(tomlplusplus)
+    endif()
+endif()
+
 # Program section
 # ---------------
 if(TALLER_CLIENT)
@@ -165,7 +176,7 @@ if(TALLER_SERVER)
     set_project_warnings(taller_server ${TALLER_MAKE_WARNINGS_AS_ERRORS} FALSE)
 
     # Link the taller_common lib target
-    target_link_libraries(taller_server taller_common)
+    target_link_libraries(taller_server taller_common tomlplusplus::tomlplusplus)
 endif()
 
 if(TALLER_EDITOR)
@@ -238,6 +249,7 @@ if(TALLER_TESTS)
     target_link_libraries(taller_tests
         taller_common
         GTest::gtest_main
+        tomlplusplus::tomlplusplus
     )
 endif()
 

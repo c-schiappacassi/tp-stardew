@@ -17,11 +17,25 @@ GameSetup makeDefaultGameSetup(uint8_t worldId) {
         }
         setup.layout.emplace(level, std::move(room));
     }
-    setup.entrance.terrain = terrain;
-    setup.entrance.position = terrain.baseAt({3, 3}).value();
-    setup.entrance.returnPosition = terrain.baseAt({4, 3}).value();
+    setup.entrance.emplace();
+    setup.entrance->terrain = terrain;
+    setup.entrance->position = terrain.baseAt({3, 3}).value();
+    setup.entrance->returnPosition = terrain.baseAt({4, 3}).value();
     setup.farm.terrain = terrain;
-    setup.farm.spawn = setup.entrance.returnPosition;
-    setup.farm.reservedPositions = {setup.farm.spawn, setup.entrance.position};
+    setup.farm.spawn = setup.entrance->returnPosition;
+    setup.farm.reservedPositions = {setup.farm.spawn, setup.entrance->position};
+    return setup;
+}
+
+GameSetup makeFarmGameSetup(uint8_t worldId, const FarmLayout& farm) {
+    auto setup = makeDefaultGameSetup(worldId);
+    setup.farm = farm;
+    setup.entrance.reset();
+    if (farm.mineDoor) {
+        setup.entrance.emplace();
+        setup.entrance->terrain = farm.terrain;
+        setup.entrance->position = *farm.mineDoor;
+        setup.entrance->returnPosition = farm.mineReturn.value_or(farm.spawn);
+    }
     return setup;
 }

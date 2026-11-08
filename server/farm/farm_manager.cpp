@@ -17,6 +17,7 @@ bool FarmManager::initialize(const FarmLayout& layout, EntityIdGenerator& entity
         return false;
     }
     prepared.spawnPosition = layout.spawn;
+    prepared.background = layout.background;
     prepared.initialized = true;
     *this = std::move(prepared);
     entityIds = preparedIds;
@@ -78,6 +79,10 @@ bool FarmManager::setMap(const ZoneMap& map) {
 }
 
 const ZoneMap& FarmManager::getMap() const { return space.getMap(); }
+
+const std::vector<FarmBackgroundTile>& FarmManager::getBackground() const {
+    return background;
+}
 
 bool FarmManager::canWalk(const CollisionBounds& bounds) const { return space.canWalk(bounds); }
 

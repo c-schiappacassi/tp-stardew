@@ -4,6 +4,7 @@
 #include <map>
 #include <memory>
 #include <mutex>
+#include <optional>
 #include <string>
 #include <vector>
 
@@ -17,8 +18,12 @@ private:
     std::mutex mtx;
     std::size_t nextId = 1;
     std::map<std::string, std::unique_ptr<Game>> games;
+    DungeonConfig dungeonConfig;
+    PlayerConfig playerConfig;
+    std::optional<FarmLayout> farmLayout;
 
 public:
+    explicit GameManager(const DungeonConfig& dungeonConfig = {}, const PlayerConfig& playerConfig = {},const std::optional<FarmLayout>& farmLayout = std::nullopt):dungeonConfig(dungeonConfig), playerConfig(playerConfig), farmLayout(farmLayout) {}
     ~GameManager();
 
     GameSession createGame(const CreateGameDTO& dto, const std::shared_ptr<OutQueue>& output);

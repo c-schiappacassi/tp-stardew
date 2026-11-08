@@ -1,8 +1,14 @@
 #pragma once
 
+#include <optional>
 #include <vector>
 #include "protocol_types.h"
 #include "world/zone_map.h"
+
+struct FarmBackgroundTile {
+    Position tile{0, 0};
+    uint16_t textureId = 0;
+};
 
 struct FarmAnimalSpawn {
     Position base;
@@ -28,4 +34,8 @@ struct FarmLayout {
     std::vector<FarmAnimalSpawn> animals;
     std::vector<FarmCropSpawn> crops;
     std::vector<FarmDecorationSpawn> decorations;
+    std::vector<FarmBackgroundTile> background;
+    std::optional<Position> mineDoor;
+    std::optional<Position> mineReturn;
+    uint8_t playerHouses = 4;
 };

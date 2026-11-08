@@ -5,7 +5,7 @@ WorldManager::WorldManager(const DungeonConfig& config, uint32_t seed, const Far
     : dungeon(config, seed), farm(farmConfig, seed) {}
 
 bool WorldManager::spawnPlayer(Player& player) const {
-    return dungeon.spawnPlayer(player);
+    return farm.isInitialized() ? farm.spawnPlayer(player) : dungeon.spawnPlayer(player);
 }
 
 bool WorldManager::loadDungeon(uint8_t worldId,const std::map<uint8_t, DungeonRoomLayout>& layout) {

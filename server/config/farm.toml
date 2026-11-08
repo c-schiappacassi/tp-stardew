@@ -1,0 +1,179 @@
+# Escenario inicial de farm. Coordenadas en tiles de 16x16.
+# Ejecutar desde la raiz del repositorio:
+#   ./build/taller_server 8080 --farm server/config/farm.toml
+# Void: los tiles (6,5) y (7,5) se omiten y quedan bloqueados.
+# Las paredes tambien quedan bloqueadas. Catalogo visual de prueba:
+# texture_id = 1: pasto; texture_id = 2: piedra.
+
+[farm]
+width = 12
+height = 10
+player_houses = 2
+spawn = { x = 2, y = 2 }
+door_mines = { x = 10, y = 2 }
+mine_return = { x = 9, y = 2 }
+
+background = [
+  # Fila 0
+  { x = 0, y = 0, texture_id = 2, state = "unwalkable" },
+  { x = 1, y = 0, texture_id = 2, state = "unwalkable" },
+  { x = 2, y = 0, texture_id = 2, state = "unwalkable" },
+  { x = 3, y = 0, texture_id = 2, state = "unwalkable" },
+  { x = 4, y = 0, texture_id = 2, state = "unwalkable" },
+  { x = 5, y = 0, texture_id = 2, state = "unwalkable" },
+  { x = 6, y = 0, texture_id = 2, state = "unwalkable" },
+  { x = 7, y = 0, texture_id = 2, state = "unwalkable" },
+  { x = 8, y = 0, texture_id = 2, state = "unwalkable" },
+  { x = 9, y = 0, texture_id = 2, state = "unwalkable" },
+  { x = 10, y = 0, texture_id = 2, state = "unwalkable" },
+  { x = 11, y = 0, texture_id = 2, state = "unwalkable" },
+  # Fila 1
+  { x = 0, y = 1, texture_id = 2, state = "unwalkable" },
+  { x = 1, y = 1, texture_id = 1, state = "walkable" },
+  { x = 2, y = 1, texture_id = 1, state = "walkable" },
+  { x = 3, y = 1, texture_id = 1, state = "walkable" },
+  { x = 4, y = 1, texture_id = 1, state = "walkable" },
+  { x = 5, y = 1, texture_id = 1, state = "walkable" },
+  { x = 6, y = 1, texture_id = 1, state = "walkable" },
+  { x = 7, y = 1, texture_id = 1, state = "walkable" },
+  { x = 8, y = 1, texture_id = 1, state = "walkable" },
+  { x = 9, y = 1, texture_id = 1, state = "walkable" },
+  { x = 10, y = 1, texture_id = 1, state = "walkable" },
+  { x = 11, y = 1, texture_id = 2, state = "unwalkable" },
+  # Fila 2
+  { x = 0, y = 2, texture_id = 2, state = "unwalkable" },
+  { x = 1, y = 2, texture_id = 1, state = "walkable" },
+  { x = 2, y = 2, texture_id = 1, state = "walkable" },
+  { x = 3, y = 2, texture_id = 1, state = "walkable" },
+  { x = 4, y = 2, texture_id = 1, state = "walkable" },
+  { x = 5, y = 2, texture_id = 1, state = "walkable" },
+  { x = 6, y = 2, texture_id = 1, state = "walkable" },
+  { x = 7, y = 2, texture_id = 1, state = "walkable" },
+  { x = 8, y = 2, texture_id = 1, state = "walkable" },
+  { x = 9, y = 2, texture_id = 1, state = "walkable" },
+  { x = 10, y = 2, texture_id = 1, state = "walkable" },
+  { x = 11, y = 2, texture_id = 2, state = "unwalkable" },
+  # Fila 3
+  { x = 0, y = 3, texture_id = 2, state = "unwalkable" },
+  { x = 1, y = 3, texture_id = 1, state = "walkable" },
+  { x = 2, y = 3, texture_id = 1, state = "walkable" },
+  { x = 3, y = 3, texture_id = 1, state = "walkable" },
+  { x = 4, y = 3, texture_id = 1, state = "walkable" },
+  { x = 5, y = 3, texture_id = 2, state = "unwalkable" },
+  { x = 6, y = 3, texture_id = 1, state = "walkable" },
+  { x = 7, y = 3, texture_id = 1, state = "walkable" },
+  { x = 8, y = 3, texture_id = 1, state = "walkable" },
+  { x = 9, y = 3, texture_id = 1, state = "walkable" },
+  { x = 10, y = 3, texture_id = 1, state = "walkable" },
+  { x = 11, y = 3, texture_id = 2, state = "unwalkable" },
+  # Fila 4
+  { x = 0, y = 4, texture_id = 2, state = "unwalkable" },
+  { x = 1, y = 4, texture_id = 1, state = "walkable" },
+  { x = 2, y = 4, texture_id = 1, state = "walkable" },
+  { x = 3, y = 4, texture_id = 1, state = "walkable" },
+  { x = 4, y = 4, texture_id = 1, state = "walkable" },
+  { x = 5, y = 4, texture_id = 2, state = "unwalkable" },
+  { x = 6, y = 4, texture_id = 1, state = "walkable" },
+  { x = 7, y = 4, texture_id = 1, state = "walkable" },
+  { x = 8, y = 4, texture_id = 1, state = "walkable" },
+  { x = 9, y = 4, texture_id = 1, state = "walkable" },
+  { x = 10, y = 4, texture_id = 1, state = "walkable" },
+  { x = 11, y = 4, texture_id = 2, state = "unwalkable" },
+  # Fila 5
+  { x = 0, y = 5, texture_id = 2, state = "unwalkable" },
+  { x = 1, y = 5, texture_id = 1, state = "walkable" },
+  { x = 2, y = 5, texture_id = 1, state = "walkable" },
+  { x = 3, y = 5, texture_id = 1, state = "walkable" },
+  { x = 4, y = 5, texture_id = 1, state = "walkable" },
+  { x = 5, y = 5, texture_id = 1, state = "walkable" },
+  { x = 8, y = 5, texture_id = 1, state = "walkable" },
+  { x = 9, y = 5, texture_id = 1, state = "walkable" },
+  { x = 10, y = 5, texture_id = 1, state = "walkable" },
+  { x = 11, y = 5, texture_id = 2, state = "unwalkable" },
+  # Fila 6
+  { x = 0, y = 6, texture_id = 2, state = "unwalkable" },
+  { x = 1, y = 6, texture_id = 1, state = "walkable" },
+  { x = 2, y = 6, texture_id = 1, state = "walkable" },
+  { x = 3, y = 6, texture_id = 1, state = "walkable" },
+  { x = 4, y = 6, texture_id = 1, state = "walkable" },
+  { x = 5, y = 6, texture_id = 2, state = "unwalkable" },
+  { x = 6, y = 6, texture_id = 1, state = "walkable" },
+  { x = 7, y = 6, texture_id = 1, state = "walkable" },
+  { x = 8, y = 6, texture_id = 1, state = "walkable" },
+  { x = 9, y = 6, texture_id = 1, state = "walkable" },
+  { x = 10, y = 6, texture_id = 1, state = "walkable" },
+  { x = 11, y = 6, texture_id = 2, state = "unwalkable" },
+  # Fila 7
+  { x = 0, y = 7, texture_id = 2, state = "unwalkable" },
+  { x = 1, y = 7, texture_id = 1, state = "walkable" },
+  { x = 2, y = 7, texture_id = 1, state = "walkable" },
+  { x = 3, y = 7, texture_id = 1, state = "walkable" },
+  { x = 4, y = 7, texture_id = 1, state = "walkable" },
+  { x = 5, y = 7, texture_id = 1, state = "walkable" },
+  { x = 6, y = 7, texture_id = 1, state = "walkable" },
+  { x = 7, y = 7, texture_id = 1, state = "walkable" },
+  { x = 8, y = 7, texture_id = 1, state = "walkable" },
+  { x = 9, y = 7, texture_id = 1, state = "walkable" },
+  { x = 10, y = 7, texture_id = 1, state = "walkable" },
+  { x = 11, y = 7, texture_id = 2, state = "unwalkable" },
+  # Fila 8
+  { x = 0, y = 8, texture_id = 2, state = "unwalkable" },
+  { x = 1, y = 8, texture_id = 1, state = "walkable" },
+  { x = 2, y = 8, texture_id = 1, state = "walkable" },
+  { x = 3, y = 8, texture_id = 1, state = "walkable" },
+  { x = 4, y = 8, texture_id = 1, state = "walkable" },
+  { x = 5, y = 8, texture_id = 1, state = "walkable" },
+  { x = 6, y = 8, texture_id = 1, state = "walkable" },
+  { x = 7, y = 8, texture_id = 1, state = "walkable" },
+  { x = 8, y = 8, texture_id = 1, state = "walkable" },
+  { x = 9, y = 8, texture_id = 1, state = "walkable" },
+  { x = 10, y = 8, texture_id = 1, state = "walkable" },
+  { x = 11, y = 8, texture_id = 2, state = "unwalkable" },
+  # Fila 9
+  { x = 0, y = 9, texture_id = 2, state = "unwalkable" },
+  { x = 1, y = 9, texture_id = 2, state = "unwalkable" },
+  { x = 2, y = 9, texture_id = 2, state = "unwalkable" },
+  { x = 3, y = 9, texture_id = 2, state = "unwalkable" },
+  { x = 4, y = 9, texture_id = 2, state = "unwalkable" },
+  { x = 5, y = 9, texture_id = 2, state = "unwalkable" },
+  { x = 6, y = 9, texture_id = 2, state = "unwalkable" },
+  { x = 7, y = 9, texture_id = 2, state = "unwalkable" },
+  { x = 8, y = 9, texture_id = 2, state = "unwalkable" },
+  { x = 9, y = 9, texture_id = 2, state = "unwalkable" },
+  { x = 10, y = 9, texture_id = 2, state = "unwalkable" },
+  { x = 11, y = 9, texture_id = 2, state = "unwalkable" },
+]
+
+# El spawn y los accesos se reservan automaticamente.
+# Los cultivos de la lista tambien preparan su propio suelo.
+tilled_soil = [
+  { x = 3, y = 7 },
+  { x = 4, y = 7 },
+]
+
+# Tipos: strawberry, scallion, potato, pumpkin.
+# Son cultivos nuevos; no se restaura growth_stage.
+crops = [
+  { type = "strawberry", position = { x = 3, y = 4 }, watered = true },
+  { type = "scallion",   position = { x = 4, y = 4 }, watered = false },
+  { type = "potato",     position = { x = 3, y = 6 }, watered = true },
+  { type = "pumpkin",    position = { x = 4, y = 6 }, watered = false },
+]
+
+# Tipos: brown_cow, white_cow, brown_chicken, white_chicken,
+#        blue_chicken, void_chicken.
+# La vaca ocupa mas de un tile: dejar espacio alrededor.
+animals = [
+  { type = "brown_cow",     position = { x = 8, y = 7 } },
+  { type = "brown_chicken", position = { x = 9, y = 8 } },
+]
+
+# item_id usa ItemId del proyecto:
+# 51 mesa, 52 silla, 53 lampara, 54 alfombra, 55 planta, 56 cuadro.
+# La alfombra no bloquea el movimiento.
+furniture = [
+  { item_id = 51, position = { x = 8, y = 3 } },
+  { item_id = 52, position = { x = 9, y = 3 } },
+  { item_id = 54, position = { x = 9, y = 6 } },
+]
+

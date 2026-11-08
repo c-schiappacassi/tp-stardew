@@ -52,6 +52,7 @@ target_sources(taller_server
         farm/interactions/farm_interactions.cpp
         farm/interactions/farm_targeting.cpp
         farm/loading/farm_loader.cpp
+        farm/loading/farm_toml_reader.cpp
         farm/crops/crop.cpp
         farm/crops/crop_manager.cpp
         farm/crops/crop_quality.cpp
@@ -124,6 +125,7 @@ target_sources(taller_server
         farm/interactions/farm_interactions.h
         farm/interactions/farm_targeting.h
         farm/loading/farm_loader.h
+        farm/loading/farm_toml_reader.h
         farm/crops/crop.h
         farm/crops/crop_manager.h
         farm/crops/crop_quality.h

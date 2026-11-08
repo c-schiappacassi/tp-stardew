@@ -9,11 +9,11 @@
 #include "decorations/decoration_manager.h"
 #include "farm_config.h"
 #include "interactions/farm_interactions.h"
+#include "loading/farm_layout.h"
 #include "spatial/farm_space.h"
 
 class Player;
 class EntityIdGenerator;
-struct FarmLayout;
 
 class FarmManager {
 private:
@@ -21,6 +21,7 @@ private:
     uint32_t seed;
     bool initialized = false;
     Position spawnPosition{0, 0};
+    std::vector<FarmBackgroundTile> background;
     FarmSpace space;
     CropManager cropManager;
     AnimalManager animalManager;
@@ -39,6 +40,7 @@ public:
     bool setReservedPositions(const std::vector<Position>& positions);
     void setObstacles(const std::vector<CollisionBounds>& bounds);
     const ZoneMap& getMap() const;
+    const std::vector<FarmBackgroundTile>& getBackground() const;
     bool canWalk(const CollisionBounds& bounds) const;
     bool tillSoil(const Position& position);
     bool isTilled(const Position& position) const;
