@@ -9,25 +9,18 @@
 #include <algorithm>
 
 #include "sprite_button.h"
+#include "menu_helpers.h"
+#include "qt_constants.h"
 
 namespace {
-const QRect panelRect(0, 0, 440, 260);
-const QRect rowRect(0, 620, 440, 100);
-const QRect rowHoverRect(0, 760, 440, 100);
 const QRect upArrowRect(39, 75, 8, 5);
 const QRect downArrowRect(48, 75, 8, 5);
-const QRect backNormalRect(296, 252, 66, 28);
-const QRect backHoverRect(296, 280, 66, 26);
 const QSize panelSize(1300, 560);
 const QSize rowSize(1240, 160);
 const QSize arrowSize(64, 40);
-const QSize backSize(200, 85);
 const QSize farmerSize(48, 96);
 
 constexpr int rowsPerPage = 3;
-
-const QString textColor = "#4a2a0a";
-const QString lighterTextColor = "#8a5a2a";
 
 struct SheetLayout {
     int perRow;
@@ -61,11 +54,10 @@ QPixmap tinted(const QPixmap& sprite, const QColor& color) {
 }
 
 QPixmap makeFarmer(const PlayerData& data) {
-    const QString characters = QString(ASSETS_DIR) + "/sprites/characters/";
-    const QPixmap farmerSheet(characters + "farmer_base.png");
-    const QPixmap hairSheet(characters + "hairstyles.png");
-    const QPixmap shirtSheet(characters + "shirts.png");
-    const QPixmap pantsSheet(characters + "pants.png");
+    const QPixmap farmerSheet(CHARACTERS_PATH + "farmer_base.png");
+    const QPixmap hairSheet(CHARACTERS_PATH + "hairstyles.png");
+    const QPixmap shirtSheet(CHARACTERS_PATH + "shirts.png");
+    const QPixmap pantsSheet(CHARACTERS_PATH + "pants.png");
 
     QPixmap farmer(bodyRect.size());
     farmer.fill(Qt::transparent);
@@ -88,20 +80,22 @@ QLabel* makeLabel(const QString& text, int size, const QString& color, QWidget* 
 }
 }
 
-LoadScreen::LoadScreen(QWidget* parent): QWidget(parent), frames(QString(ASSETS_DIR) + "/sprites/menus/frames.png") {
-    QLabel* panel = new QLabel(this);
-    panel->setPixmap(frames.copy(panelRect));
+LoadScreen::LoadScreen(QWidget* parent): QWidget(parent), frames(MENUS_PATH + "frames.png") {
+    const MenuHelpers menu;
+
+    QLabel* panel = menu.makePanel(PANEL_RECT, panelSize, this);
+
+    rowsLayout = new QVBoxLayout();new QLabel(this);
+    panel->setPixmap(frames.copy(PANEL_RECT));
     panel->setScaledContents(true);
     panel->setFixedSize(panelSize);
-
-    rowsLayout = new QVBoxLayout();
     rowsLayout->setSpacing(10);
 
     QVBoxLayout* panelLayout = new QVBoxLayout(panel);
     panelLayout->setContentsMargins(30, 30, 30, 30);
     panelLayout->addLayout(rowsLayout);
 
-    const QPixmap chatBox(QString(ASSETS_DIR) + "/sprites/menus/chat_box.png");
+    const QPixmap chatBox(MENUS_PATH + "chat_box.png");
     SpriteButton* upButton = new SpriteButton(chatBox.copy(upArrowRect), chatBox.copy(upArrowRect), this);
     upButton->setFixedSize(arrowSize);
     SpriteButton* downButton = new SpriteButton(chatBox.copy(downArrowRect), chatBox.copy(downArrowRect), this);
@@ -120,9 +114,7 @@ LoadScreen::LoadScreen(QWidget* parent): QWidget(parent), frames(QString(ASSETS_
     panelRow->addLayout(arrowsLayout);
     panelRow->addStretch(1);
 
-    const QPixmap titleSheet(QString(ASSETS_DIR) + "/sprites/menus/title_screen.png");
-    SpriteButton* backButton = new SpriteButton(titleSheet.copy(backNormalRect), titleSheet.copy(backHoverRect), this);
-    backButton->setFixedSize(backSize);
+    SpriteButton* backButton = menu.makeBackButton(this);
 
     QVBoxLayout* layout = new QVBoxLayout(this);
     layout->addStretch(2);
@@ -150,16 +142,16 @@ void LoadScreen::setGames(const std::vector<GameInfoDTO>& newGames) {
 }
 
 SpriteButton* LoadScreen::makeRow(const GameInfoDTO& game) {
-    SpriteButton* row = new SpriteButton(frames.copy(rowRect), frames.copy(rowHoverRect), this);
+    SpriteButton* row = new SpriteButton(frames.copy(FIELD_RECT), frames.copy(ROW_HOVER_RECT), this);
     row->setFixedSize(rowSize);
 
     QLabel* farmer = new QLabel(row);
     farmer->setPixmap(makeFarmer(game.playerData));
     farmer->setAttribute(Qt::WA_TransparentForMouseEvents);
 
-    QLabel* characterName = makeLabel(QString::fromStdString(game.playerData.characterName), 36, textColor, row);
-    QLabel* farmName = makeLabel(QString::fromStdString(game.farmName), 34, textColor, row);
-    QLabel* mode = makeLabel(game.isMultiplayer ? "Multiplayer" : "Singleplayer", 26, lighterTextColor, row);
+    QLabel* characterName = makeLabel(QString::fromStdString(game.playerData.characterName), 36, TEXT_COLOR, row);
+    QLabel* farmName = makeLabel(QString::fromStdString(game.farmName), 34, TEXT_COLOR, row);
+    QLabel* mode = makeLabel(game.isMultiplayer ? "Multiplayer" : "Singleplayer", 26, LIGHTER_TEXT_COLOR, row);
 
     QVBoxLayout* rightColumn = new QVBoxLayout();
     rightColumn->setContentsMargins(0, 25, 0, 30);
@@ -191,7 +183,7 @@ void LoadScreen::showRows() {
     if (games.empty()) {
         QLabel* empty = new QLabel("No saved games", this);
         empty->setAlignment(Qt::AlignCenter);
-        empty->setStyleSheet(QString("font: bold 40px; color: %1;").arg(textColor));
+        empty->setStyleSheet(QString("font: bold 40px; color: %1;").arg(TEXT_COLOR));
         rowsLayout->addWidget(empty);
         return;
     }

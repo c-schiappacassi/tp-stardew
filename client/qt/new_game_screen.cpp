@@ -11,28 +11,12 @@
 #include <QVBoxLayout>
 
 #include "sprite_button.h"
+#include "menu_helpers.h"
+#include "qt_constants.h"
 
 namespace {
-const QRect panelRect(0, 0, 440, 260);
-const QRect fieldRect(0, 620, 440, 100);
-const QRect characterRect(40, 60, 80, 160);
-const QRect leftArrowRect(352, 495, 13, 13);
-const QRect rightArrowRect(365, 495, 14, 13);
-const QRect okRect(128, 256, 64, 64);
-const QRect backNormalRect(296, 252, 66, 28);
-const QRect backHoverRect(296, 280, 66, 26);
 const QSize panelSize(900, 840);
-const QSize portraitSize(160, 240);
 const QSize fieldSize(400, 90);
-const QSize arrowSize(56, 52);
-const QSize okSize(100, 100);
-const QSize backSize(200, 85);
-
-constexpr int labelWidth = 110;
-constexpr int counterWidth = 130;
-
-const QString textColor = "#4a2a0a";
-const QString errorColor = "#a01010";
 
 struct SheetLayout {
     int perRow;
@@ -54,16 +38,15 @@ const QRect armsRect(96, 0, 16, 32);
 const QPoint shirtOffset(4, 15);
 const QPoint hairOffset(0, 1);
 
-constexpr int sliderMax = 1000;
 const QList<QColor> colorStops = {
         QColor(0, 0, 0),      QColor(60, 35, 15),  QColor(110, 70, 30),  QColor(170, 120, 60), QColor(230, 200, 120),
         QColor(230, 120, 30), QColor(200, 30, 30), QColor(230, 100, 160), QColor(130, 50, 170), QColor(40, 80, 210),
         QColor(40, 190, 210), QColor(50, 170, 60), QColor(255, 255, 255)};
-constexpr int defaultHairColor = sliderMax * 2 / 12;
-constexpr int defaultPantsColor = sliderMax * 9 / 12;
+constexpr int defaultHairColor = SLIDER_MAX * 2 / 12;
+constexpr int defaultPantsColor = SLIDER_MAX * 9 / 12;
 
 QColor colorAt(int value) {
-    const double position = static_cast<double>(value) / sliderMax * (colorStops.size() - 1);
+    const double position = static_cast<double>(value) / SLIDER_MAX * (colorStops.size() - 1);
     const int i = qMin(static_cast<int>(position), static_cast<int>(colorStops.size()) - 2);
     const double t = position - i;
     const QColor& a = colorStops[i];
@@ -122,46 +105,29 @@ std::vector<int> validModels(const QPixmap& sheet, const SheetLayout& layout) {
 
 QLabel* makeLabel(const QString& text, QWidget* parent) {
     QLabel* label = new QLabel(text, parent);
-    label->setStyleSheet(QString("font: bold 30px; color: %1;").arg(textColor));
+    label->setStyleSheet(QString("font: bold 30px; color: %1;").arg(TEXT_COLOR));
     return label;
-}
-
-QLabel* makeField(QLineEdit* input, const QPixmap& frame, QWidget* parent) {
-    input->setMaxLength(16);
-    input->setStyleSheet(QString("QLineEdit { background: transparent; border: none; font: bold 32px; color: %1; }")
-        .arg(textColor));
-
-    QLabel* field = new QLabel(parent);
-    field->setPixmap(frame);
-    field->setScaledContents(true);
-    field->setFixedSize(fieldSize);
-    QHBoxLayout* fieldLayout = new QHBoxLayout(field);
-    fieldLayout->setContentsMargins(20, 0, 20, 0);
-    fieldLayout->addWidget(input);
-    return field;
 }
 
 SpriteButton* makeArrowButton(const QPixmap& arrow, QWidget* parent) {
     SpriteButton* button = new SpriteButton(arrow, arrow, parent);
-    button->setFixedSize(arrowSize);
+    button->setFixedSize(ARROW_SIZE);
     return button;
 }
 }
 
 NewGameScreen::NewGameScreen(QWidget* parent): QWidget(parent) {
-    QLabel* panel = new QLabel(this);
-    const QPixmap frames(QString(ASSETS_DIR) + "/sprites/menus/frames.png");
-    panel->setPixmap(frames.copy(panelRect));
-    panel->setScaledContents(true);
-    panel->setFixedSize(panelSize);
+    const MenuHelpers menu;
 
-    background = QPixmap(QString(ASSETS_DIR) + "/sprites/menus/day_bg.png");
-    const QPixmap farmerSheet(QString(ASSETS_DIR) + "/sprites/characters/farmer_base.png");
+    QLabel* panel = menu.makePanel(PANEL_RECT, panelSize, this);
+
+    background = QPixmap(MENUS_PATH + "day_bg.png");
+    const QPixmap farmerSheet(CHARACTERS_PATH + "farmer_base.png");
     body = farmerSheet.copy(bodyRect);
     arms = farmerSheet.copy(armsRect);
-    hairSheet = QPixmap(QString(ASSETS_DIR) + "/sprites/characters/hairstyles.png");
-    shirtSheet = QPixmap(QString(ASSETS_DIR) + "/sprites/characters/shirts.png");
-    pantsSheet = QPixmap(QString(ASSETS_DIR) + "/sprites/characters/pants.png");
+    hairSheet = QPixmap(CHARACTERS_PATH + "hairstyles.png");
+    shirtSheet = QPixmap(CHARACTERS_PATH + "shirts.png");
+    pantsSheet = QPixmap(CHARACTERS_PATH + "pants.png");
     hairModels = validModels(hairSheet, hairLayout);
     shirtModels = validModels(shirtSheet, shirtLayout);
     pantsModels = validModels(pantsSheet, pantsLayout);
@@ -169,22 +135,22 @@ NewGameScreen::NewGameScreen(QWidget* parent): QWidget(parent) {
     nameInput = new QLineEdit(panel);
     farmNameInput = new QLineEdit(panel);
     errorLabel = new QLabel(panel);
-    errorLabel->setStyleSheet(QString("font: bold 26px; color: %1;").arg(errorColor));
+    errorLabel->setStyleSheet(QString("font: bold 26px; color: %1;").arg(ERROR_COLOR));
 
     portrait = new QLabel(panel);
-    portrait->setFixedSize(portraitSize);
+    portrait->setFixedSize(PORTRAIT_SIZE);
 
     QGridLayout* fieldsLayout = new QGridLayout();
     fieldsLayout->setHorizontalSpacing(10);
     fieldsLayout->setVerticalSpacing(40);
     QLabel* nameLabel = makeLabel("Name", panel);
-    nameLabel->setFixedWidth(labelWidth);
+    nameLabel->setFixedWidth(LABEL_WIDTH);
     QLabel* farmLabel = makeLabel("Farm\nname", panel);
-    farmLabel->setFixedWidth(labelWidth);
+    farmLabel->setFixedWidth(LABEL_WIDTH);
     fieldsLayout->addWidget(nameLabel, 0, 0);
-    fieldsLayout->addWidget(makeField(nameInput, frames.copy(fieldRect), panel), 0, 1);
+    fieldsLayout->addWidget(menu.makeInputFrame(nameInput, FIELD_RECT, fieldSize, panel), 0, 1);
     fieldsLayout->addWidget(farmLabel, 1, 0);
-    fieldsLayout->addWidget(makeField(farmNameInput, frames.copy(fieldRect), panel), 1, 1);
+    fieldsLayout->addWidget(menu.makeInputFrame(farmNameInput, FIELD_RECT, fieldSize, panel), 1, 1);
     fieldsLayout->addWidget(errorLabel, 2, 1);
 
     QVBoxLayout* rightColumn = new QVBoxLayout();
@@ -208,9 +174,9 @@ NewGameScreen::NewGameScreen(QWidget* parent): QWidget(parent) {
     connect(hairColorSlider, &QSlider::valueChanged, this, &NewGameScreen::updatePreview);
     connect(pantsColorSlider, &QSlider::valueChanged, this, &NewGameScreen::updatePreview);
 
-    const QPixmap cursors(QString(ASSETS_DIR) + "/sprites/menus/cursors.png");
-    SpriteButton* okButton = new SpriteButton(cursors.copy(okRect), cursors.copy(okRect), panel);
-    okButton->setFixedSize(okSize);
+    const QPixmap cursors(MENUS_PATH + "cursors.png");
+    SpriteButton* okButton = new SpriteButton(cursors.copy(OK_RECT), cursors.copy(OK_RECT), panel);
+    okButton->setFixedSize(OK_SIZE);
 
     QVBoxLayout* panelLayout = new QVBoxLayout(panel);
     panelLayout->setContentsMargins(80, 80, 80, 80);
@@ -220,9 +186,7 @@ NewGameScreen::NewGameScreen(QWidget* parent): QWidget(parent) {
     panelLayout->addStretch(1);
     panelLayout->addWidget(okButton, 0, Qt::AlignRight);
 
-    const QPixmap titleSheet(QString(ASSETS_DIR) + "/sprites/menus/title_screen.png");
-    SpriteButton* backButton = new SpriteButton(titleSheet.copy(backNormalRect), titleSheet.copy(backHoverRect), this);
-    backButton->setFixedSize(backSize);
+    SpriteButton* backButton = menu.makeBackButton(this);
 
     QGridLayout* layout = new QGridLayout(this);
     layout->addWidget(panel, 0, 0, Qt::AlignCenter);
@@ -237,14 +201,14 @@ NewGameScreen::NewGameScreen(QWidget* parent): QWidget(parent) {
 }
 
 QSlider* NewGameScreen::addSelectorRow(QGridLayout* layout, int row, const QString& title, const std::vector<int>& models, int& index, bool withColor) {
-    const QPixmap cursors(QString(ASSETS_DIR) + "/sprites/menus/cursors.png");
-    SpriteButton* leftButton = makeArrowButton(cursors.copy(leftArrowRect), this);
-    SpriteButton* rightButton = makeArrowButton(cursors.copy(rightArrowRect), this);
+    const QPixmap cursors(MENUS_PATH + "cursors.png");
+    SpriteButton* leftButton = makeArrowButton(cursors.copy(LEFT_ARROW_RECT), this);
+    SpriteButton* rightButton = makeArrowButton(cursors.copy(RIGHT_ARROW_RECT), this);
 
     QLabel* nameLabel = makeLabel(title, this);
-    nameLabel->setFixedWidth(labelWidth);
+    nameLabel->setFixedWidth(LABEL_WIDTH);
     QLabel* counter = makeLabel("", this);
-    counter->setFixedWidth(counterWidth);
+    counter->setFixedWidth(COUNTER_WIDTH);
     counter->setAlignment(Qt::AlignCenter);
 
     const int count = static_cast<int>(models.size());
@@ -273,7 +237,7 @@ QSlider* NewGameScreen::addSelectorRow(QGridLayout* layout, int row, const QStri
         return nullptr;
     }
     QSlider* slider = new QSlider(Qt::Horizontal, this);
-    slider->setRange(0, sliderMax);
+    slider->setRange(0, SLIDER_MAX);
     slider->setFixedHeight(50);
     slider->setStyleSheet(sliderStyle());
     layout->addWidget(slider, row, 4);
@@ -292,11 +256,11 @@ void NewGameScreen::updatePreview() {
         painter.drawPixmap(0, 0, arms);
     }
 
-    QPixmap canvas(portraitSize);
+    QPixmap canvas(PORTRAIT_SIZE);
     {
         QPainter painter(&canvas);
         painter.drawPixmap(canvas.rect(), background);
-        painter.drawPixmap(characterRect, character);
+        painter.drawPixmap(CHARACTER_RECT, character);
     }
     portrait->setPixmap(canvas);
 }
