@@ -2,6 +2,7 @@
 
 #include <chrono>
 #include <thread>
+#include <iostream>
 
 #include "constants.h"
 #include "foo.h"
@@ -55,9 +56,26 @@ void Game::run() {
             },
             rate, running);
     } catch (const ClosedQueue&) {
-        // Cola cerrada al frenar la partida.
+        // cola cerrada.
+    } catch (const atd::exception& e) {
+        std:cerr << "Error en Game: " << e.what() << "\n";
+    } catch (...) {
+        std:cerr << "Error desconocido en Game\n";
     }
 
+    closeAll();
+}
+
+void Game::closeAll() {
+    {
+        std::lock_guard<std::mutex> lock(mtx);
+        playerManager.closeOutputs();
+    }
+    try {
+        input->close();
+    } catch (const std::runtime_error&) {
+        // cola cerrada
+    }
 }
 
 void Game::stop() {

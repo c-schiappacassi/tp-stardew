@@ -35,6 +35,7 @@ public:
     bool isMultiplayer() const;
     std::vector<CollisionBounds> getCollisionBounds(Zone zone) const;
     void disconnectPlayer(uint16_t playerId);
+    void closeOutputs();
     void updateToolStates(std::chrono::steady_clock::time_point now);
     void advancePlayers(int normalStep);
     void publishStatus(const ServerStatus& base) const;

@@ -49,6 +49,15 @@ void PlayerManager::disconnectPlayer(uint16_t playerId) {
     }
 }
 
+void PlayerManager::closeOutputs() {
+    for (auto& [id, record] : players) {
+        if (!record.output) continue;
+        try {
+            record.output->close();
+        } catch (const std::runtime_error&) {}
+    }
+}
+
 ServerStatus PlayerManager::resumePlayer(const std::string& name,const std::shared_ptr<OutQueue>& output) {
     ServerStatus result{};
     result.status = StatusCode::Error;

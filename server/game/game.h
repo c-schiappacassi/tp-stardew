@@ -30,6 +30,7 @@ class Game:public Thread {
         void advancePlayers();
         void advanceWorld(std::chrono::milliseconds elapsed);
         void updateToolStates();
+        void closeAll();
         ServerStatus buildStatus() const;
         GameSession addPlayer(const std::string& playerName,const PlayerData& data,const std::shared_ptr<OutQueue>& output,const std::string& successMsg);
     public:

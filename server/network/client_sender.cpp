@@ -13,11 +13,9 @@ void ClientSender::run() {
             protocol.sendStatus(output->pop());
         }
     } catch (const ClosedQueue&) {
-    } catch (const std::exception&) {
-        // Wake the receiver so it can unregister a client that stopped reading.
-        try {
-            socket.shutdown(SHUT_RDWR);
-        } catch (const std::exception&) {
-        }
-    }
+    } catch (const std::exception&) {}
+        // Wake the receiver so it can unregister a client that stopped reading --> vole esto porque sino solo se cerraba por error de socket ahora cierra por error de socket y por cerrar una queue
+    try {
+        socket.shutdown(SHUT_RDWR);
+    } catch (const std::exception&) {}
 }
