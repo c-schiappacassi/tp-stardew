@@ -57,10 +57,10 @@ void Game::run() {
             rate, running);
     } catch (const ClosedQueue&) {
         // cola cerrada.
-    } catch (const atd::exception& e) {
-        std:cerr << "Error en Game: " << e.what() << "\n";
+    } catch (const std::exception& e) {
+        std::cerr << "Error en Game: " << e.what() << "\n";
     } catch (...) {
-        std:cerr << "Error desconocido en Game\n";
+        std::cerr << "Error desconocido en Game\n";
     }
 
     closeAll();

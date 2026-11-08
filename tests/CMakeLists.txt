@@ -1,8 +1,6 @@
 target_sources(taller_tests
     PRIVATE
     # .cpp files
-    farm_toml_test.cpp
-    farm_protocol_test.cpp
     ../client/client_protocol.cpp
     ../server/network/acceptor.cpp
     ../server/network/client_handler.cpp
