@@ -3,9 +3,8 @@
 #include <sys/socket.h>
 #include <utility>
 
-ClientSender::ClientSender(ServerProtocol& protocol, std::shared_ptr<OutQueue> output,
-                           Socket& socket):
-        protocol(protocol), output(std::move(output)), socket(socket) {}
+ClientSender::ClientSender(ServerProtocol& protocol, std::shared_ptr<OutQueue> output):
+        protocol(protocol), output(std::move(output)) {}
 
 void ClientSender::run() {
     try {
@@ -14,8 +13,8 @@ void ClientSender::run() {
         }
     } catch (const ClosedQueue&) {
     } catch (const std::exception&) {}
-        // Wake the receiver so it can unregister a client that stopped reading --> vole esto porque sino solo se cerraba por error de socket ahora cierra por error de socket y por cerrar una queue
+
     try {
-        socket.shutdown(SHUT_RDWR);
+        protocol.shutdown();
     } catch (const std::exception&) {}
 }

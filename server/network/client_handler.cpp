@@ -18,8 +18,7 @@ ClientHandler::Receiver ClientHandler::receiver(DTO (ServerProtocol::*recv)()) {
 }
 
 ClientHandler::ClientHandler(Socket&& socket, GameManager& manager):
-        socket(std::move(socket)),
-        protocol(this->socket),
+        protocol(std::move(socket)),
         manager(manager),
         outQueue(std::make_shared<OutQueue>()),
         session(),
@@ -98,7 +97,7 @@ bool ClientHandler::runMenu() {
 }
 
 void ClientHandler::runGame() {
-    sender = std::make_unique<ClientSender>(protocol, outQueue, socket);
+    sender = std::make_unique<ClientSender>(protocol, outQueue);
     sender->start();
 
     while (should_keep_running()) {
@@ -126,7 +125,7 @@ bool ClientHandler::answerEntry() {
 void ClientHandler::stop() {
     Thread::stop();
     try {
-        socket.shutdown(SHUT_RDWR);
+        protocol.shutdown();
     } catch (const std::exception&) {
     }
 }
