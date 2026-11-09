@@ -3,10 +3,18 @@
 
 #include "../../utils.h"
 #include "../entity_view.h"
+#include "../../render_info.h"
+#include "../../draw_region.h"
 
 #include "position.h"
 #include "protocol_types.h"
 #include "dtos.h"
+
+
+namespace crop {
+    const int HEIGHT = 32;
+}
+
 
 class CropView: public EntityView {
 private:
@@ -14,7 +22,6 @@ private:
     CropType type;
     CropState state;
     bool wattered;
-    // TODO: TDB: puntero a un campo del HUD? para que se active el cartel de "ready" para cada tipo de crop
 
 public:
     explicit CropView(const CropData& data);
@@ -22,5 +29,9 @@ public:
     void update(const CropData& data);
 
     std::optional<float> depth(const RenderInfo& ctx) const override;
+
     void draw(const RenderInfo& ctx) override;
+
+    std::optional<CropType> is_ready();
 };
+

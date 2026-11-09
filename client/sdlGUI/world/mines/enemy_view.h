@@ -21,8 +21,6 @@ private:
     std::optional<ClipId> current_clip;
     long long last_it = -1;
 
-    // age ? TBD
-
 public:
     explicit EnemyView(const EnemyData& data);
 

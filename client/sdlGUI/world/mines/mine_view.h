@@ -12,7 +12,13 @@ private:
     uint8_t current_level = 0;
 
 public:
-    // TODO: arreglar para que use level data
+    MinesView(const std::vector<BackgroundData>& level_backgrounds, AssetManager& assets) {
+        for (std::size_t i = 0; i < level_backgrounds.size(); ++i) {
+            const auto number = static_cast<uint8_t>(i + 1);
+            levels.try_emplace(number, number, level_backgrounds[i], assets);
+        }
+    }
+
     void update(const MineData& data);
     void draw_background(const RenderInfo& ctx) override;
     void collect_drawables(const RenderInfo& ctx, std::vector<Drawable>& out) override;

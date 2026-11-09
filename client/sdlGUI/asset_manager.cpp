@@ -2,116 +2,150 @@
 #include "asset_manager.h"
 
 #include <initializer_list>
-#include <string>
 #include <utility>
+#include <string>
 #include "dtos.h"
+#include "sprite_defs.h"
 
-namespace Dimentions {
-    constexpr uint16_t FARMER_COLS = uint16_t(6);
-    constexpr uint16_t FARMER_CELL_W = uint16_t(16);
-    constexpr uint16_t FARMER_CELL_H = uint16_t(32);
-    constexpr uint16_t ORE_SIZE = uint16_t(16);
+namespace {
+    template <class Map, class State, std::size_t N>
+    void register_clips(Map& clips, const SpriteDefs::ClipSetInfo& set, const SpriteDefs::ClipDef<State> (&defs)[N], bool mirror_left, LayerOffsets (*offsets_of)(int) = nullptr) {
+        for (const auto& d : defs) {
+            Clip clip;
+            clip.loop = d.loop;
+            const bool flip = mirror_left && d.dir == Direction::Left;
+
+            for (int i = 0; i < d.count; ++i) {
+                const auto& f = d.frames[i];
+                const int col = f.index % set.cols;
+                const int row = f.index / set.cols;
+                AnimatedFrame frame{
+                    Sprite{set.sprite,
+                        static_cast<uint16_t>(col * set.cell_w), static_cast<uint16_t>(row * set.cell_h),
+                        set.cell_w, set.cell_h, set.off_x, set.off_y},
+                    flip,
+                    offsets_of ? offsets_of(f.index) : LayerOffsets{}
+                };
+                clip.sequence.push_back({frame, f.ms});
+            }
+            clips.insert_or_assign(ClipId{set.sprite, Action{d.state}, d.dir}, std::move(clip));
+        }
+    }
+
+    Sprite make_tile_sprite(const SpriteDefs::SpriteRect& r) {
+        return Sprite{r.sprite, r.x, r.y, r.w, r.h};
+    }
+
+    Sprite make_standing_sprite(const SpriteDefs::SpriteRect& r) {
+        return Sprite{r.sprite, r.x, r.y, r.w, r.h, static_cast<int16_t>(-r.w / 2), static_cast<int16_t>(-r.h)};
+    }
 }
 
 SDL2pp::Texture AssetManager::load_texture(SDL2pp::Renderer& renderer, const std::filesystem::path& path) {
     SDL_Surface* raw = IMG_Load(path.string().c_str());
-    if (!raw) {throw std::runtime_error("Could not load: " + path.string() + ": " + IMG_GetError());}
+    if (!raw) { throw std::runtime_error("Could not load: " + path.string() + ": " + IMG_GetError()); }
     return SDL2pp::Texture(renderer, SDL2pp::Surface(raw));
 }
 
 AssetManager::AssetManager(SDL2pp::Renderer& renderer, const std::filesystem::path& assets_root) {
-    load_sprites_texture(renderer, assets_root / "Sprites" );
+    load_sprites_texture(renderer, assets_root / "sprites");
     load_farmer_clips();
     load_ore_sprites();
     load_item_sprites();
+    load_ui_sprites();
+    load_crop_sprites();
+    load_cow_clips();
+    load_chicken_clips();
+    load_tool_frames();
+    load_tile_sprites();
+    load_decor_sprites();
+    load_building_sprites();
+    load_furniture_sprites();
+}
+
+void AssetManager::load_sprites_texture(SDL2pp::Renderer& renderer, const std::filesystem::path& sprites_root) {
+    for (const auto& t : SpriteDefs::TEXTURES)
+        textures.emplace(t.id, load_texture(renderer, sprites_root / t.path));
 }
 
 void AssetManager::load_ore_sprites() {
-    auto add = [this](ResourceType t, ResourceState s, uint16_t idx_row,  uint16_t idx_col) {
+    for (const auto& d : SpriteDefs::ORES)
         ore_sprites.insert_or_assign(
-            {t, s},
-            Sprite{SpriteId::Ores, Dimentions::ORE_SIZE, Dimentions::ORE_SIZE, static_cast<uint16_t>(idx_row), static_cast<uint16_t>(idx_col)}
-        );
-    };
+            {d.type, d.state},
+            Sprite{SpriteId::Ores, d.x, d.y, Dimentions::ORE_SIZE, Dimentions::ORE_SIZE,
+                   -Dimentions::ORE_SIZE / 2, -Dimentions::ORE_SIZE});
+}
 
-    add(ResourceType::StoneRock,  ResourceState::Intact, 1,14);
-    add(ResourceType::StoneRock,  ResourceState::Broken, 1,15);
-    add(ResourceType::CoalRock,   ResourceState::Intact, 1,0);
-    add(ResourceType::CoalRock,   ResourceState::Broken, 1,1);
-    add(ResourceType::LapisRock, ResourceState::Intact, 0,14);
-    add(ResourceType::LapisRock, ResourceState::Broken, 0,13);
-    add(ResourceType::SilverRock,  ResourceState::Intact, 0,12);
-    add(ResourceType::SilverRock,  ResourceState::Broken, 0,13);
-    add(ResourceType::GoldRock,   ResourceState::Intact, 0,8);
-    add(ResourceType::GoldRock,   ResourceState::Broken, 0,9);
+void AssetManager::load_crop_sprites() {
+    for (const auto& d : SpriteDefs::CROPS)
+        crop_sprites.insert_or_assign(
+            {d.type, d.state},
+            Sprite{SpriteId::Crops, d.x, d.y, Dimentions::CROP_CELL_W, Dimentions::CROP_CELL_H,
+                   -Dimentions::CROP_CELL_W / 2, -Dimentions::CROP_CELL_H});
 }
 
 void AssetManager::load_item_sprites() {
-    item_sprites.insert_or_assign( ItemId::Pickaxe , Sprite{ SpriteId::Tools , 16, 16 , 97,304} );
-    item_sprites.insert_or_assign( ItemId::Sword , Sprite{ SpriteId::Weapons , 16, 16 , 16, 48} );
-    item_sprites.insert_or_assign( ItemId::WateringCan , Sprite{ SpriteId::Tools , 16, 11 , 228 , 32} );
-    item_sprites.insert_or_assign( ItemId::Shovel , Sprite{ SpriteId::Tools , 16, 16 , 33, 304} );
-
-    item_sprites.insert_or_assign( ItemId::Coal , Sprite{ SpriteId::Ores , 16, 16 , 108, 16} );
-    item_sprites.insert_or_assign( ItemId::Lapis , Sprite{ SpriteId::Ores , 16, 16 , 108, 64} );
-    item_sprites.insert_or_assign( ItemId::Silver , Sprite{ SpriteId::Ores , 15, 15 , 68, 145} );
-    item_sprites.insert_or_assign( ItemId::Gold , Sprite{ SpriteId::Ores , 16, 16 , 108, 94} );
+    for (const auto& d : SpriteDefs::ITEMS)
+        item_sprites.insert_or_assign(d.id, Sprite{d.sprite, d.x, d.y, d.w, d.h});
 }
 
-void AssetManager::load_sprites_texture(SDL2pp::Renderer& renderer, const std::filesystem::path& assets_root) { 
-    const auto characters = assets_root / "Characters";
-    const auto ores = assets_root / "Caverns";
-    const auto menus = assets_root / "Menus";
+void AssetManager::load_ui_sprites() {
+    for (const auto& d : SpriteDefs::UI)
+        ui_sprites.insert_or_assign(d.id, Sprite{SpriteId::MenuTiles, d.x, d.y, d.w, d.h});
+}
 
-    textures.emplace(SpriteId::MenuTiles, load_texture(renderer, menus / "MenuTiles..png"));
+void AssetManager::load_tile_sprites() {
+    for (const auto& d : SpriteDefs::TILES)
+        tile_sprites.insert_or_assign(d.id, make_tile_sprite(d.rect));
+}
 
-    textures.emplace(SpriteId::FarmerBase, load_texture(renderer, characters / "Farmer Base.png"));
-    textures.emplace(SpriteId::Hairstyles, load_texture(renderer, characters / "Hairstyles.png"));
-    textures.emplace(SpriteId::Pants, load_texture(renderer, characters / "Pants.png"));
-    textures.emplace(SpriteId::Shirts, load_texture(renderer, characters / "Shirts.png"));
-    textures.emplace(SpriteId::Tools, load_texture(renderer, characters / "Tools.png"));
-    textures.emplace(SpriteId::Weapons, load_texture(renderer, characters / "Weapons.png"));
-    
-    textures.emplace(SpriteId::Ores, load_texture(renderer, ores / "Mines.png"));
+void AssetManager::load_decor_sprites() {
+    for (const auto& d : SpriteDefs::DECOR)
+        decor_sprites.insert_or_assign(d.id, make_standing_sprite(d.rect));
+}
+
+void AssetManager::load_building_sprites() {
+    for (const auto& d : SpriteDefs::BUILDINGS)
+        building_sprites.insert_or_assign(d.id, make_standing_sprite(d.rect));
+}
+
+void AssetManager::load_furniture_sprites() {
+    constexpr Direction ALL[] = {Direction::None, Direction::Up, Direction::Down, Direction::Left, Direction::Right};
+    for (const auto& d : SpriteDefs::FURNITURE) {
+        const Sprite s = make_standing_sprite(d.rect);
+        if (d.dir == Direction::None) {
+            for (const Direction dir : ALL) furniture_sprites.emplace(std::pair{d.id, dir}, s);
+        } else {
+            furniture_sprites.insert_or_assign({d.id, d.dir}, s);
+        }
+    }
 }
 
 void AssetManager::load_farmer_clips() {
-    auto add = [this](PlayerState state, Direction dir,  std::initializer_list<std::pair<int, int>> frames, bool loop, bool mirror_left) {
-        Clip clip;
-        clip.loop = loop;
-        const bool flip = mirror_left && dir == Direction::Left;
+    register_clips(clips, SpriteDefs::FARMER_SET, SpriteDefs::FARMER_CLIPS, SpriteDefs::FARMER_MIRROR_LEFT, SpriteDefs::farmer_offsets);
+}
 
-        for (const auto& [index, duration_ms]: frames) {
-            AnimatedFrame frame{
-                Sprite{
-                    SpriteId::FarmerBase, 
-                    Dimentions::FARMER_CELL_W, Dimentions::FARMER_CELL_H, 
-                    static_cast<uint16_t>(index / Dimentions::FARMER_COLS), 
-                    static_cast<uint16_t>(index % Dimentions::FARMER_COLS)
-                },
-                flip
-            };
-            clip.sequence.push_back({frame, duration_ms});
+void AssetManager::load_cow_clips() {
+    register_clips(clips, SpriteDefs::COW_SET, SpriteDefs::COW_CLIPS, false);
+}
+
+void AssetManager::load_chicken_clips() {
+    register_clips(clips, SpriteDefs::CHICKEN_SET, SpriteDefs::CHICKEN_CLIPS, false);
+}
+
+void AssetManager::load_tool_frames() {
+    for (const auto& d : SpriteDefs::TOOL_ANIMS) {
+        std::vector<ToolFrame> frames;
+        for (const auto& s : d.steps) {
+            const auto& r = d.sprites[s.sprite];
+            const int16_t off_x = s.off.x - Dimentions::FARMER_CELL_W / 2;
+            const int16_t off_y = s.off.y - Dimentions::FARMER_FEET_Y;
+            frames.push_back(ToolFrame{
+                Sprite{SpriteId::Tools, r.x, r.y, r.w, r.h, off_x, off_y},
+                s.angle, SDL2pp::Point(d.pivot_x, d.pivot_y)});
         }
-
-        ClipId id{SpriteId::FarmerBase, Action{state}, dir};
-        clips.insert_or_assign(std::move(id), std::move(clip));
-    };
-
-    add(PlayerState::Idle, Direction::Down, {{0, 200}}, false, true);
-    add(PlayerState::Idle, Direction::Left, {{6, 200}}, false, true);
-    add(PlayerState::Idle, Direction::Right, {{6, 200}}, false, true);
-    add(PlayerState::Idle, Direction::Up, {{12, 200}}, false, true);
-
-    add(PlayerState::Walking, Direction::Down, {{0, 200}, {1, 200}, {0, 200}, {2, 200}}, true, true);
-    add(PlayerState::Walking, Direction::Left, {{6, 200}, {7, 200}, {6, 200}, {8, 200}}, true, true);
-    add(PlayerState::Walking, Direction::Right, {{6, 200}, {7, 200}, {6, 200}, {8, 200}}, true, true);
-    add(PlayerState::Walking, Direction::Up, {{12, 200}, {13, 200}, {12, 200}, {14, 200}}, true, true);
-
-    add(PlayerState::UsingTool, Direction::Down,  {{66, 100}, {67, 100}, {68, 100}, {69, 100}, {70, 100}}, false, true);
-    add(PlayerState::UsingTool, Direction::Right, {{48, 100}, {49, 100}, {50, 100}, {51, 100}, {52, 100}}, false, true);
-    add(PlayerState::UsingTool, Direction::Left,  {{48, 100}, {49, 100}, {50, 100}, {51, 100}, {52, 100}}, false, true);
-    add(PlayerState::UsingTool, Direction::Up,    {{36, 100}, {37, 100}, {38, 100}, {39, 100}, {40, 100}}, false, true);
+        tool_frames.insert_or_assign({d.item, d.dir}, std::move(frames));
+    }
 }
 
 SDL2pp::Texture& AssetManager::get_texture(SpriteId id) { return textures.at(id); }
@@ -120,11 +154,28 @@ const Clip& AssetManager::get_clip(const ClipId& id) const { return clips.at(id)
 
 const Sprite& AssetManager::get_sprite(ItemId id) const { return item_sprites.at(id); }
 
+const Sprite& AssetManager::get_sprite(UiSpriteId id) const { return ui_sprites.at(id); }
+
+const Sprite& AssetManager::get_sprite(CropType type, CropState state) const { return crop_sprites.at({type, state}); }
+
 const Sound& AssetManager::get_sound(SoundId id) const { return sounds.at(id); }
 
 const Sprite& AssetManager::get_sprite(ResourceType type, ResourceState state) const { return ore_sprites.at({type, state});}
+
+const Sprite& AssetManager::get_sprite(TileTextureId id) const { return tile_sprites.at(id); }
+const Sprite& AssetManager::get_sprite(DecorId id) const { return decor_sprites.at(id); }
+const Sprite& AssetManager::get_sprite(BuildingId id) const { return building_sprites.at(id); }
+const Sprite& AssetManager::get_sprite(FurnitureId id, Direction dir) const {  return furniture_sprites.at({id, dir});}
 
 const Sprite* AssetManager::find_sprite(ItemId id) const {
     const auto it = item_sprites.find(id);
     return it == item_sprites.end() ? nullptr : &it->second;
 }
+
+const ToolFrame* AssetManager::find_tool_frame(ItemId item, Direction dir, std::size_t i) const {
+    if (dir == Direction::Left) dir = Direction::Right;
+    const auto it = tool_frames.find({item, dir});
+    if (it == tool_frames.end() || it->second.empty()) return nullptr;
+    return &it->second[std::min(i, it->second.size() - 1)];
+}
+

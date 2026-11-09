@@ -1,10 +1,9 @@
 #pragma once
 
-#include <map>
-#include <memory>
 #include <vector>
 
 #include "zone_view.h"
+#include "farm/farm_view.h"
 #include "protocol_types.h"
 #include "mines/mine_view.h"
 
@@ -13,22 +12,25 @@ private:
     Zone current = Zone::Farm;
     // TODO: mover las Views al map cuando tenga todo para el constructor(Background incluido)
     MinesView mines;
-    std::map<Zone, std::unique_ptr<ZoneView>> zones;
+    FarmView farm;
 
     ZoneView* current_view() {
         if (current == Zone::Dungeon) return &mines;
-        const auto it = zones.find(current);
-        return it == zones.end() ? nullptr : it->second.get();
+        if (current == Zone::Farm) return &farm;
+        return nullptr;
     }
+
 public:
+    MapView(const ConstMapData& data, AssetManager& assets) : mines(data.levels, assets), farm(data.farm, assets) {}
+
     void update(const State& data) {
         const PlayerDataLocal& local = data.get_local();
         current = local.currentZone ;
 
-        if (current == Zone::Dungeon) {
-            if (const auto* mine = std::get_if<MineData>(&local.zoneData)) {
-                mines.update(*mine);
-            }
+        if (const auto* mine = std::get_if<MineData>(&local.zoneData)) {
+            mines.update(*mine);
+        } else if (const auto* f = std::get_if<FarmData>(&local.zoneData)) {
+            farm.update(*f);
         }
     }
 

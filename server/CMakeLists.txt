@@ -7,7 +7,7 @@ target_sources(taller_server
         network/client_sender.cpp
         network/server_protocol.cpp
         game/game.cpp
-    game/game_setup.cpp
+        game/game_setup.cpp
         game/game_manager.cpp
         inventory/inventory.cpp
         player/player.cpp
@@ -15,6 +15,8 @@ target_sources(taller_server
         dungeon/rooms/dungeon_room.cpp
         dungeon/dungeon_manager.cpp
         entities/entity_id_generator.cpp
+        entities/collision_box.cpp
+        entities/collision_bounds.cpp
         world/zone_map.cpp
         player/player_factory.cpp
         player/player_manager.cpp
@@ -33,6 +35,32 @@ target_sources(taller_server
         dungeon/loading/dungeon_loader.cpp
         world/zone_map_positions.cpp
         dungeon/mining/mineral_placement.cpp
+        farm/farm_config.cpp
+        farm/animals/animal.cpp
+        farm/animals/cow.cpp
+        farm/animals/chicken.cpp
+        farm/animals/animal_factory.cpp
+        farm/animals/animal_manager.cpp
+        farm/animals/animal_movement.cpp
+        farm/animals/animal_movement_config.cpp
+        farm/animals/animal_species.cpp
+        farm/ports/farm_placement.cpp
+        farm/spatial/farm_space.cpp
+        farm/spatial/farm_reservation.cpp
+        farm/farm_manager.cpp
+        farm/farm_status.cpp
+        farm/interactions/farm_interactions.cpp
+        farm/interactions/farm_targeting.cpp
+        farm/loading/farm_loader.cpp
+        farm/loading/farm_toml_reader.cpp
+        farm/crops/crop.cpp
+        farm/crops/crop_manager.cpp
+        farm/crops/crop_quality.cpp
+        farm/decorations/decoration.cpp
+        farm/decorations/decoration_manager.cpp
+        game/time/game_clock.cpp
+        world/world_farm.cpp
+        player/ports/player_spawn_source.cpp
     PUBLIC
     # .h files
         network/acceptor.h
@@ -47,6 +75,8 @@ target_sources(taller_server
         player/player.h
         entities/entity_id.h
         entities/collision_box.h
+        entities/collision_bounds.h
+        entities/entity_dimensions.h
         dungeon/rooms/dungeon_room.h
         dungeon/mining/mineral.h
         dungeon/dungeon_manager.h
@@ -74,6 +104,36 @@ target_sources(taller_server
         dungeon/loading/dungeon_layout.h
         dungeon/mining/mineral_placement.h
         game/game_setup.h
+        farm/farm_config.h
+        farm/farm_constants.h
+        farm/crops/crop_definition.h
+        farm/animals/animal_definition.h
+        farm/farm_product.h
+        farm/animals/animal_species.h
+        farm/animals/animal.h
+        farm/animals/cow.h
+        farm/animals/chicken.h
+        farm/animals/animal_factory.h
+        farm/animals/animal_manager.h
+        farm/ports/farm_placement.h
+        farm/spatial/farm_reservation.h
+        farm/animals/animal_movement_config.h
+        farm/animals/animal_movement.h
+        farm/spatial/farm_space.h
+        farm/farm_manager.h
+        farm/farm_status.h
+        farm/interactions/farm_interactions.h
+        farm/interactions/farm_targeting.h
+        farm/loading/farm_loader.h
+        farm/loading/farm_toml_reader.h
+        farm/crops/crop.h
+        farm/crops/crop_manager.h
+        farm/crops/crop_quality.h
+        farm/decorations/decoration.h
+        farm/decorations/decoration_manager.h
+        game/time/game_clock.h
+        player/ports/player_spawn_source.h
+        farm/loading/farm_layout.h
 )
 
 target_include_directories(taller_server PRIVATE ${CMAKE_CURRENT_SOURCE_DIR})

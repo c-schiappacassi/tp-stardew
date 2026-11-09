@@ -2,10 +2,11 @@
 
 void MinesView::update(const MineData& data) {
     current_level = data.current_level;
-    auto [it, _] = levels.try_emplace(current_level, current_level);
-    it->second.update(data.current_level_data);
+    const auto it = levels.find(current_level);
+    if (it != levels.end()) {
+        it->second.update(data.current_level_data);
+    }
 }
-
 void MinesView::draw_background(const RenderInfo& ctx) {
     const auto it = levels.find(current_level);
     if (it != levels.end()) {

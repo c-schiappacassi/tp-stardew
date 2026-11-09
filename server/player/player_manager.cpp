@@ -1,11 +1,11 @@
 #include "player_manager.h"
 
-PlayerManager::PlayerManager(const PlayerConfig& config,const MovementRules& movement,const ZoneDataSource& zones,PlayerInteractions& interactions,uint8_t maxPlayers):
+PlayerManager::PlayerManager(const PlayerConfig& config,const MovementRules& movement,const ZoneDataSource& zones,PlayerInteractions& interactions,const PlayerSpawnSource& spawns,uint8_t maxPlayers):
     maxPlayers(maxPlayers),
     factory(config),
     updates(movement),
     playerStatus(zones),
-    actions(interactions) {}
+    actions(interactions), spawns(spawns), movement(movement) {}
 
     
 ServerStatus PlayerManager::addPlayer(const std::string& name,const PlayerData& appearance,const std::shared_ptr<OutQueue>& output) {
@@ -30,7 +30,12 @@ ServerStatus PlayerManager::addPlayer(const std::string& name,const PlayerData& 
     }
 
     const uint16_t playerId = nextPlayerId;
-    auto it = players.emplace(playerId, PlayerRecord{playerId, name, output, true, factory.create(appearance)}).first;
+    auto player = factory.create(appearance);
+    if (!spawns.spawnPlayer(player)) {
+        result.errorMsg = "No hay una posicion disponible para el jugador";
+        return result;
+    }
+    auto it = players.emplace(playerId, PlayerRecord{playerId, name, output, true, std::move(player)}).first;
     ++nextPlayerId;
 
     return playerStatus.buildForPlayer(players, it->second);
@@ -44,14 +49,29 @@ void PlayerManager::disconnectPlayer(uint16_t playerId) {
     }
 }
 
-ServerStatus PlayerManager::resumePlayer(const std::string& name,
-                                        const std::shared_ptr<OutQueue>& output) {
+void PlayerManager::closeOutputs() {
+    for (auto& [id, record] : players) {
+        if (!record.output) continue;
+        try {
+            record.output->close();
+        } catch (const std::runtime_error&) {}
+    }
+}
+
+ServerStatus PlayerManager::resumePlayer(const std::string& name,const std::shared_ptr<OutQueue>& output) {
     ServerStatus result{};
     result.status = StatusCode::Error;
     for (auto& [id, record] : players) {
-        if (record.name != name) continue;
+        if (record.name != name) {
+            continue;
+        }
         if (record.connected || !output) {
             result.errorMsg = "Ya estas conectado a esta partida";
+            return result;
+        }
+        if (!movement.canMove(record.player, record.player.getPosition()) &&
+            !spawns.spawnPlayer(record.player)) {
+            result.errorMsg = "No hay una posicion disponible para retomar la partida";
             return result;
         }
         record.connected = true;
@@ -65,12 +85,24 @@ ServerStatus PlayerManager::resumePlayer(const std::string& name,
 
 std::optional<PlayerData> PlayerManager::dataFor(const std::string& name) const {
     for (const auto& [id, record] : players) {
-        if (record.name == name) return record.player.getPublicData();
+        if (record.name == name) {
+            return record.player.getPublicData();
+        }
     }
     return std::nullopt;
 }
 
 bool PlayerManager::isMultiplayer() const { return players.size() > 1; }
+
+std::vector<CollisionBounds> PlayerManager::getCollisionBounds(Zone zone) const {
+    std::vector<CollisionBounds> result;
+    for (const auto& [id, record] : players) {
+        if (record.connected && record.player.getZone() == zone) {
+            result.push_back(record.player.getCollisionBounds(record.player.getPosition()));
+        }
+    }
+    return result;
+}
 
 void PlayerManager::updateToolStates(
     std::chrono::steady_clock::time_point now) {

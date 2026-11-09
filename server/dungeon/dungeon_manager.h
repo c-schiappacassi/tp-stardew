@@ -23,7 +23,7 @@ private:
 public:
     explicit DungeonManager(const DungeonConfig& config = {},uint32_t seed = std::random_device{}());
     bool initialize(const std::map<uint8_t, DungeonRoomLayout>& layout,EntityIdGenerator& entityIds);
-    bool canWalk(uint8_t number, const Position& pos) const;
+    bool spawnPlayer(Player& player) const;
     bool canWalk(uint8_t number, const CollisionBounds& bounds) const;
     std::optional<MineData> getMineData(uint8_t number, bool includeBroken = false) const;
     bool mineMineral(Player& player,EntityId id,std::chrono::steady_clock::time_point now = std::chrono::steady_clock::now());

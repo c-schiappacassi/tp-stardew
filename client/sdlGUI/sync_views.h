@@ -1,6 +1,7 @@
 #pragma once
 #include <unordered_set>
 #include "utils.h"
+#include "render_info.h"
 
 template <typename Views, typename Datas, typename KeyOf>
 void sync_views(Views& views, const Datas& datas, KeyOf key_of) {
@@ -34,8 +35,7 @@ void sync_views_map(Views& views, const DataMap& datas) {
 }
 
 template <typename Views>
-void collect_from(const RenderInfo& ctx, Views& views,
-                  std::vector<Drawable>& out, uint64_t& tie) {
+void collect_from(const RenderInfo& ctx, Views& views, std::vector<Drawable>& out, uint64_t& tie) {
     for (auto& [key, view] : views) {
         if (const auto depth = view.depth(ctx)) {
             out.push_back(Drawable{*depth, tie++, &view});

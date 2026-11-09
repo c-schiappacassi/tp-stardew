@@ -29,7 +29,7 @@ private:
     uint16_t energy;
     uint16_t maxEnergy;
     PlayerConfig config;
-    std::chrono::steady_clock::time_point nextToolUseTime{};
+    std::chrono::steady_clock::time_point nextActionTime{};
 
 public:
     Player(const PlayerData& initialData,uint8_t inventoryCapacity,uint16_t maxHealth,uint16_t maxEnergy,uint32_t initialGold,const PlayerConfig& config = {});
@@ -40,8 +40,12 @@ public:
     bool addItem(const Stack& stack);
     bool removeItem(uint8_t slot, uint16_t quantity);
     const Stack* getSelectedItem() const;
+    uint8_t getSelectedSlot() const;
+    bool canPerformAction(std::chrono::steady_clock::time_point now) const;
+    bool performAction(uint16_t energyCost, std::chrono::milliseconds interval,std::chrono::steady_clock::time_point now);
     bool canUsePickaxe(std::chrono::steady_clock::time_point now =std::chrono::steady_clock::now()) const;
-    bool canUseTool(std::chrono::steady_clock::time_point now =std::chrono::steady_clock::now()) const;bool useTool(std::chrono::steady_clock::time_point now =std::chrono::steady_clock::now());
+    bool canUseTool(std::chrono::steady_clock::time_point now = std::chrono::steady_clock::now()) const;
+    bool useTool(std::chrono::steady_clock::time_point now = std::chrono::steady_clock::now());
     void updateToolState(std::chrono::steady_clock::time_point now =std::chrono::steady_clock::now());
     bool canReach(const Position& target, uint16_t range) const;
     Zone getZone() const;
@@ -53,6 +57,7 @@ public:
     bool canAct() const;
     bool changeLocation(Zone destination,uint8_t level,const Position& target);
     void faceTarget(const Position& target);
+    void faceDirection(Direction direction);
     int getMovementStep(int normalStep) const;
 
     PlayerData getPublicData() const;

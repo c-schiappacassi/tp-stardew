@@ -3,23 +3,21 @@
 #include "sdlGUI/render_info.h"
 
 namespace {
-constexpr int WINDOW_W = 1280;
-constexpr int WINDOW_H = 720;
-constexpr int CAMERA_ZOOM = 3;
-constexpr const char* WINDOW_TITLE = "Stardew Valley";
-constexpr const char* ASSETS_ROOT = ASSETS_DIR;
+    constexpr int WINDOW_W = 1280;
+    constexpr int WINDOW_H = 720;
+    constexpr int CAMERA_ZOOM = 3;
+    constexpr const char* WINDOW_TITLE = "Stardew Valley";
+    constexpr const char* ASSETS_ROOT = ASSETS_DIR;
 }
 
-GameUI::GameUI(const std::string& local_player, const std::string& gameId):
+GameUI::GameUI(const std::string& local_player, const std::string& gameId, const ConstMapData& map_data):
         sdl(SDL_INIT_VIDEO),
-        window(std::string(WINDOW_TITLE) + " | Codigo: " + gameId,
-               SDL_WINDOWPOS_UNDEFINED, SDL_WINDOWPOS_UNDEFINED, WINDOW_W, WINDOW_H,
-               SDL_WINDOW_RESIZABLE),
+        window(std::string(WINDOW_TITLE) + " | Codigo: " + gameId,   SDL_WINDOWPOS_UNDEFINED, SDL_WINDOWPOS_UNDEFINED, WINDOW_W, WINDOW_H,  SDL_WINDOW_RESIZABLE),
         renderer(window, -1, SDL_RENDERER_ACCELERATED),
         asset_manager(renderer, ASSETS_ROOT),
         cam(WINDOW_W, WINDOW_H, CAMERA_ZOOM),
         local_player(local_player),
-        world(local_player),
+        world(local_player, map_data, asset_manager),
         input(local_player) {}
 
 std::vector<std::shared_ptr<CommandDTO>> GameUI::poll_input() { return input.poll(); }

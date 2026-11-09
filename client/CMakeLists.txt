@@ -11,6 +11,9 @@ target_sources(taller_client
     sdlGUI/world/mines/ore_view.cpp
     sdlGUI/world/mines/level_view.cpp
     sdlGUI/world/mines/mine_view.cpp
+
+    sdlGUI/world/farm/crop_view.cpp
+    sdlGUI/world/farm/animal_view.cpp
     PUBLIC
     # .h files
     game.h
@@ -28,6 +31,7 @@ target_sources(taller_client
     sdlGUI/camera.h
     sdlGUI/sync_views.h
     sdlGUI/draw_region.h
+    sdlGUI/sprite_defs.h
 
     sdlGUI/world/player_view.h
     sdlGUI/world/world_view.h
@@ -35,9 +39,11 @@ target_sources(taller_client
     sdlGUI/world/zone_view.h
     sdlGUI/world/entity_view.h
     sdlGUI/world/background.h
+    sdlGUI/world/background_zone_view.h
 
     sdlGUI/world/hud/hud_view.h
     sdlGUI/world/hud/hotbar_view.h
+    sdlGUI/world/hud/pixel_font.h
 
     sdlGUI/world/mines/level_view.h
     sdlGUI/world/mines/mine_view.h

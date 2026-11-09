@@ -124,7 +124,6 @@ enum class AnimalType : uint8_t {
 enum class AnimalState : uint8_t {
     Idle = 0,
     Walking = 1,
-    ReadyToMilk = 2
 };
 
 // ROCKS
@@ -188,4 +187,33 @@ enum class CheatType : uint8_t {
     RemoveGold = 3,
     CompleteSet = 4,
     NextLevel = 5,
+};
+
+// TODO: completar
+enum class TileTextureId{
+    Grass,
+    Dirt,
+};
+
+enum class DecorId{
+    MapleTree,
+    PineTree,
+};
+
+
+enum class FurnitureId{
+    Chair,
+    Table,
+};
+
+enum class BuildingId{
+    FarmHouse,
+    StoneCabin,
+    WoodCabin,
+    BrickCabin,
+    MarniesShop,
+    PierresShop,
+    RobinsShop,
+    ClintsShop,
+    ComunityCenter
 };

@@ -21,7 +21,9 @@ public:
             while (should_keep_running()) {
                 ServerStatus status;
                 protocolo.recv(status);
-                recv_queue.push(status);
+                while (should_keep_running() && !recv_queue.try_push(status)) {
+                    std::this_thread::sleep_for(std::chrono::milliseconds(5));
+                }
             }
         } catch (const std::exception&) {
         }

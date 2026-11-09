@@ -28,11 +28,13 @@ class Game:public Thread {
         void processCommands();
         void sendStatus();
         void advancePlayers();
+        void advanceWorld(std::chrono::milliseconds elapsed);
         void updateToolStates();
+        void closeAll();
         ServerStatus buildStatus() const;
         GameSession addPlayer(const std::string& playerName,const PlayerData& data,const std::shared_ptr<OutQueue>& output,const std::string& successMsg);
     public:
-        Game(const std::string& id,const std::string& name,uint8_t worldId,const PlayerConfig& playerConfig = {},const DungeonConfig& dungeonConfig = {});
+        Game(const std::string& id,const std::string& name,uint8_t worldId,const PlayerConfig& playerConfig = {},const DungeonConfig& dungeonConfig = {},const FarmConfig& farmConfig = FarmConfig{},uint8_t maxPlayers = 4);
 
         const std::string& getId() const;
         std::string getName() const;
@@ -44,6 +46,7 @@ class Game:public Thread {
         GameSession resumeGame(const ResumeGameDTO& dto, const std::shared_ptr<OutQueue>& output);
         std::optional<GameInfoDTO> infoFor(const std::string& userName) const;
         bool loadDungeon(uint8_t selectedWorldId,const std::map<uint8_t, DungeonRoomLayout>& layout);
+        bool loadFarm(uint8_t selectedWorldId, const FarmLayout& layout);
         bool configureDungeonEntrance(const DungeonEntrance& entrance);
 
         void run() override;

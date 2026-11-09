@@ -32,7 +32,7 @@ Player::Player(
     if (maxHealth == 0 || maxEnergy == 0) {
         throw std::invalid_argument("Vida y energia maximas deben ser mayores a cero");
     }
-    if (config.collision.width <= 0 || config.collision.height <= 0) {
+    if (!config.collision.isValid()) {
         throw std::invalid_argument("La caja de colision debe tener dimensiones positivas");
     }
     if (state == PlayerState::Walking) {
@@ -124,7 +124,8 @@ PlayerData Player::getPublicData() const {
     data.state = state;
     data.dir = dir;
     data.currentZone = zone;    
-    if (const Stack* item = getSelectedItem()) {
+    const Stack* item = getSelectedItem();
+    if (item != nullptr) {
         data.heldItem = item->item_id;
     }
     data.hairModel = hairModel;
@@ -148,10 +149,7 @@ PlayerDataLocal Player::getLocalData() const {
 }
 
 bool Player::canUseTool(std::chrono::steady_clock::time_point now) const {
-    if (!canAct()) {
-        return false;
-    }
-    if (now < nextToolUseTime) {
+    if (!canPerformAction(now)) {
         return false;
     }
 
@@ -177,20 +175,42 @@ bool Player::useTool(std::chrono::steady_clock::time_point now) {
         return false;
     }
 
-    const ToolConfig& tool =config.tools.at(getSelectedItem()->item_id);
+    const ToolConfig& tool = config.tools.at(getSelectedItem()->item_id);
+    const Direction toolDirection = dir;
+    if (!performAction(tool.energyCost, std::chrono::milliseconds{tool.intervalMs}, now)) {
+        return false;
+    }
+    if (state != PlayerState::Unconscious) {
+        dir = toolDirection;
+        state = PlayerState::UsingTool;
+    }
+    return true;
+}
 
-    if (tool.energyCost >= energy) {
-        energy = 0;
-    } else {
-        energy -= tool.energyCost;
+uint8_t Player::getSelectedSlot() const { return currentSlot; }
+
+bool Player::canPerformAction(std::chrono::steady_clock::time_point now) const {
+    return canAct() && now >= nextActionTime;
+}
+
+bool Player::performAction(uint16_t energyCost, std::chrono::milliseconds interval,
+                           std::chrono::steady_clock::time_point now) {
+    if (!canPerformAction(now) || interval.count() < 0) {
+        return false;
     }
 
-    nextToolUseTime =now + std::chrono::milliseconds(tool.intervalMs);
+    if (energyCost >= energy) {
+        energy = 0;
+    } else {
+        energy -= energyCost;
+    }
+
+    nextActionTime = now + interval;
     if (energy == 0) {
         state = PlayerState::Unconscious;
         movementDirection = Direction::None;
     } else {
-        state = PlayerState::UsingTool;
+        setMovement(movementDirection);
     }
 
     return true;
@@ -202,7 +222,7 @@ void Player::updateToolState(
         return;
     }
 
-    if (now >= nextToolUseTime) {
+    if (now >= nextActionTime) {
         state = PlayerState::Idle;
         setMovement(movementDirection);
     }
@@ -235,14 +255,7 @@ CollisionBounds Player::getCollisionBounds(const Position& position) const {
 }
 
 Position Player::getCollisionCenter() const {
-    const CollisionBounds bounds = getCollisionBounds(pos);
-    const int64_t x = bounds.left + (bounds.right - bounds.left) / 2;
-    const int64_t y = bounds.top + (bounds.bottom - bounds.top) / 2;
-    if (x < std::numeric_limits<int>::min() || x > std::numeric_limits<int>::max() ||
-        y < std::numeric_limits<int>::min() || y > std::numeric_limits<int>::max()) {
-        throw std::overflow_error("El centro de colision excede el rango de Position");
-    }
-    return Position(static_cast<int>(x), static_cast<int>(y));
+    return getCollisionBounds(pos).center();
 }
 
 bool Player::canAct() const {
@@ -290,17 +303,25 @@ void Player::faceTarget(const Position& target) {
     }
 
     if (std::abs(dx) >= std::abs(dy)) {
-        if (dx > 0) {
-            dir = Direction::Right;
-        } else {
-            dir = Direction::Left;
-        }
+        faceDirection(dx > 0 ? Direction::Right : Direction::Left);
     } else {
-        if (dy > 0) {
-            dir = Direction::Down;
-        } else {
-            dir = Direction::Up;
-        }
+        faceDirection(dy > 0 ? Direction::Down : Direction::Up);
+    }
+}
+
+void Player::faceDirection(Direction direction) {
+    if (!canAct()) {
+        return;
+    }
+    switch (direction) {
+        case Direction::Up:
+        case Direction::Down:
+        case Direction::Left:
+        case Direction::Right:
+            dir = direction;
+            break;
+        default:
+            break;
     }
 }
 

@@ -21,7 +21,11 @@ private:
     void sendMineralData(const MineralData& mineral);
     void sendLevelData(const LevelData& level);
     void sendMineData(const MineData& mine);
-    void sendZoneData(const ZoneData& zoneData);
+    void sendCropData(const CropData& crop);
+    void sendAnimalData(const AnimalData& animal);
+    void sendDecorationData(const DecorationData& decoration);
+    void sendFarmData(const FarmData& farm);
+    void sendZoneData(Zone currentZone, const ZoneData& zoneData);
 
     void sendGameInfo(const GameInfoDTO& info);
 

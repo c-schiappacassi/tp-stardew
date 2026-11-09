@@ -7,6 +7,7 @@
 
 #include <SDL2pp/SDL2pp.hh>
 #include <SDL_image.h>
+#include <vector>
 
 #include "protocol_types.h"
 #include "utils.h"
@@ -16,14 +17,30 @@ private:
     std::map<SpriteId, SDL2pp::Texture> textures;
     std::map<ClipId, Clip> clips;
     std::map<ItemId, Sprite> item_sprites;
+    std::map<UiSpriteId, Sprite> ui_sprites;
+    std::map<std::pair<CropType, CropState>, Sprite> crop_sprites;
     std::map<std::pair<ResourceType, ResourceState>, Sprite> ore_sprites;
     std::map<SoundId, Sound> sounds;
+    std::map<std::pair<ItemId, Direction>, std::vector<ToolFrame>> tool_frames;
+    std::map<TileTextureId, Sprite> tile_sprites;
+    std::map<DecorId, Sprite> decor_sprites;
+    std::map<BuildingId, Sprite> building_sprites;
+    std::map<std::pair<FurnitureId, Direction>, Sprite> furniture_sprites;
 
     SDL2pp::Texture load_texture(SDL2pp::Renderer& renderer, const std::filesystem::path& path);
     void load_sprites_texture(SDL2pp::Renderer& renderer, const std::filesystem::path& assets_root);
     void load_farmer_clips();
     void load_ore_sprites();
     void load_item_sprites();
+    void load_ui_sprites();
+    void load_crop_sprites();
+    void load_cow_clips();
+    void load_chicken_clips();
+    void load_tool_frames();
+    void load_decor_sprites();
+    void load_tile_sprites();
+    void load_furniture_sprites();
+    void load_building_sprites();
 
 public:
     AssetManager(SDL2pp::Renderer& renderer, const std::filesystem::path& assets_root);
@@ -34,7 +51,18 @@ public:
     const Sprite& get_sprite(ItemId id) const;
     const Sprite* find_sprite(ItemId id) const;
 
+    const Sprite& get_sprite(UiSpriteId id) const;
+    const Sprite& get_sprite(TileTextureId id) const;
+    const Sprite& get_sprite(DecorId id) const;
+    const Sprite& get_sprite(BuildingId id) const;
+    const Sprite& get_sprite(FurnitureId id, Direction dir) const;
+
+    const Sprite& get_sprite(CropType type, CropState state) const;
     const Sprite& get_sprite(ResourceType type, ResourceState state) const;
+
+    const ToolFrame* find_tool_frame(ItemId item, Direction dir, std::size_t frame_index) const;
+
+    // TODO: Sounds
     const Sound& get_sound(SoundId id) const;
 
     AssetManager(const AssetManager&) = delete;
