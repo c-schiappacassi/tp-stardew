@@ -1,7 +1,5 @@
 #include "server_protocol.h"
 
-#include <sys/socket.h>
-
 #include <cstdint>
 #include <limits>
 #include <utility>
@@ -62,7 +60,7 @@ void validateStatus(const ServerStatus& status) {
 
 ServerProtocol::ServerProtocol(Socket&& socket) : base(std::move(socket)) {}
 
-void ServerProtocol::shutdown() { base.shutdown(SHUT_RDWR); }
+void ServerProtocol::shutdown() { base.shutdown(); }
 
 MessageType ServerProtocol::receiveType() {
     return static_cast<MessageType>(base.receiveUint8());

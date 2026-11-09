@@ -22,7 +22,7 @@ public:
     ProtocolBase& operator=(ProtocolBase&&) = default;
 
     void send(const MessageBuffer& message);
-    void shutdown(int how);
+    void shutdown();
 
     uint8_t receiveUint8();
     uint16_t receiveUint16();

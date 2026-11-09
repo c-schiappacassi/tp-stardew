@@ -1,6 +1,7 @@
 #include "protocol_base.h"
 
 #include <arpa/inet.h>
+#include <sys/socket.h>
 
 #include <cstdint>
 #include <limits>
@@ -24,7 +25,7 @@ void ProtocolBase::send(const MessageBuffer& message) {
     }
 }
 
-void ProtocolBase::shutdown(int how) { socket.shutdown(how); }
+void ProtocolBase::shutdown() { socket.shutdown(SHUT_RDWR); }
 
 void ProtocolBase::receiveBytes(void* data, unsigned int size) {
     if (socket.recvall(data, size) == 0) {

@@ -1,7 +1,5 @@
 #include "client_protocol.h"
 
-#include <sys/socket.h>
-
 #include <cstdint>
 #include <stdexcept>
 #include <utility>
@@ -12,7 +10,7 @@
 ClientProtocol::ClientProtocol(Socket&& socket) : base(std::move(socket)) {}
 
 
-void ClientProtocol::shutdown() { base.shutdown(SHUT_RDWR); }
+void ClientProtocol::shutdown() { base.shutdown(); }
 
 Position ClientProtocol::receivePosition() {
     int x = static_cast<int>(base.receiveUint16());
