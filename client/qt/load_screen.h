@@ -5,6 +5,7 @@
 #include <vector>
 
 #include "dtos.h"
+#include "farmer_sprites.h"
 
 class QLabel;
 class QVBoxLayout;
@@ -28,6 +29,7 @@ private:
     int firstRow = 0;
     QVBoxLayout* rowsLayout;
     QPixmap frames;
+    FarmerSprites sprites;
 };
 
 #endif  // LOADSCREEN_H

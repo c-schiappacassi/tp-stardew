@@ -2,18 +2,18 @@
 
 #include <QHBoxLayout>
 #include <QLabel>
+#include <QPixmap>
 #include <QVBoxLayout>
 
 #include "sprite_button.h"
+#include "menu_helpers.h"
+#include "qt_constants.h"
 
 namespace {
-const QRect logoRect(0, 0, 400, 187);
 const QSize buttonSize(74, 55);
-const QSize logoSize(960, 449);
 const QSize scaledButtonSize(190, 141);
 constexpr int normalRow = 188;
 constexpr int hoverRow = 246;
-
 
 SpriteButton* makeButton(const QPixmap& source, int column, QWidget* parent) {
     const int x = column * buttonSize.width();
@@ -26,16 +26,14 @@ SpriteButton* makeButton(const QPixmap& source, int column, QWidget* parent) {
 }
 
 StartMenuScreen::StartMenuScreen(QWidget* parent): QWidget(parent) {
-    const QPixmap sheet(QString(ASSETS_DIR) + "/sprites/menus/title_screen.png");
-    QLabel* logo = new QLabel(this);
-    logo->setPixmap(sheet.copy(logoRect));
-    logo->setScaledContents(true);
-    logo->setFixedSize(logoSize);
+    const MenuHelpers menu;
+    const QPixmap sheet(MENUS_PATH + "title_screen.png");
+    QLabel* logo = menu.makeLogo(this);
 
     SpriteButton* newButton = makeButton(sheet, 0, this);
     SpriteButton* loadButton = makeButton(sheet, 1, this);
     SpriteButton* joinButton = makeButton(sheet, 2, this);
-    SpriteButton* exitButton = makeButton(sheet, 3, this);    
+    SpriteButton* exitButton = makeButton(sheet, 3, this);
 
     auto* buttonsRow = new QHBoxLayout();
     buttonsRow->setSpacing(24);
