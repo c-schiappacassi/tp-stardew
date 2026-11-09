@@ -31,6 +31,14 @@ namespace {
             clips.insert_or_assign(ClipId{set.sprite, Action{d.state}, d.dir}, std::move(clip));
         }
     }
+
+    Sprite make_tile_sprite(const SpriteDefs::SpriteRect& r) {
+        return Sprite{r.sprite, r.x, r.y, r.w, r.h};
+    }
+
+    Sprite make_standing_sprite(const SpriteDefs::SpriteRect& r) {
+        return Sprite{r.sprite, r.x, r.y, r.w, r.h, static_cast<int16_t>(-r.w / 2), static_cast<int16_t>(-r.h)};
+    }
 }
 
 SDL2pp::Texture AssetManager::load_texture(SDL2pp::Renderer& renderer, const std::filesystem::path& path) {
@@ -49,6 +57,10 @@ AssetManager::AssetManager(SDL2pp::Renderer& renderer, const std::filesystem::pa
     load_cow_clips();
     load_chicken_clips();
     load_tool_frames();
+    load_tile_sprites();
+    load_decor_sprites();
+    load_building_sprites();
+    load_furniture_sprites();
 }
 
 void AssetManager::load_sprites_texture(SDL2pp::Renderer& renderer, const std::filesystem::path& sprites_root) {
@@ -80,6 +92,33 @@ void AssetManager::load_item_sprites() {
 void AssetManager::load_ui_sprites() {
     for (const auto& d : SpriteDefs::UI)
         ui_sprites.insert_or_assign(d.id, Sprite{SpriteId::MenuTiles, d.x, d.y, d.w, d.h});
+}
+
+void AssetManager::load_tile_sprites() {
+    for (const auto& d : SpriteDefs::TILES)
+        tile_sprites.insert_or_assign(d.id, make_tile_sprite(d.rect));
+}
+
+void AssetManager::load_decor_sprites() {
+    for (const auto& d : SpriteDefs::DECOR)
+        decor_sprites.insert_or_assign(d.id, make_standing_sprite(d.rect));
+}
+
+void AssetManager::load_building_sprites() {
+    for (const auto& d : SpriteDefs::BUILDINGS)
+        building_sprites.insert_or_assign(d.id, make_standing_sprite(d.rect));
+}
+
+void AssetManager::load_furniture_sprites() {
+    constexpr Direction ALL[] = {Direction::None, Direction::Up, Direction::Down, Direction::Left, Direction::Right};
+    for (const auto& d : SpriteDefs::FURNITURE) {
+        const Sprite s = make_standing_sprite(d.rect);
+        if (d.dir == Direction::None) {
+            for (const Direction dir : ALL) furniture_sprites.emplace(std::pair{d.id, dir}, s);
+        } else {
+            furniture_sprites.insert_or_assign({d.id, d.dir}, s);
+        }
+    }
 }
 
 void AssetManager::load_farmer_clips() {

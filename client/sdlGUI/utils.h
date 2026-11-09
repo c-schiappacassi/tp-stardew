@@ -27,7 +27,12 @@ enum class SpriteId : uint16_t {
     MenuTiles,
     Crops,
     BronwCow,
-    BronwChicken
+    BronwChicken,
+    OutdoorsSpring,
+    Trees,
+    MarketBuildings,
+    FarmBuildings,
+    Cabins
 };
 
 enum class UiSpriteId : uint8_t {

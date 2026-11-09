@@ -43,6 +43,11 @@ namespace SpriteDefs {
         {SpriteId::Crops,        "farm/crops/crops.png"},
         {SpriteId::BronwCow,     "farm/animals/cow_brown.png"},
         {SpriteId::BronwChicken, "farm/animals/chicken_brown.png"},
+        {SpriteId::OutdoorsSpring,  "enviroment/outdoors_spring.png"},
+        {SpriteId::Trees,           "enviroment/trees.png"},
+        {SpriteId::MarketBuildings, "market/world/buildings.png"},
+        {SpriteId::FarmBuildings,   "farm/environment/farm_buildings.png"},
+        {SpriteId::Cabins,          "farm/environment/cabins.png"},
     };
 
     // Ores
@@ -82,6 +87,45 @@ namespace SpriteDefs {
         {CropType::Scallion,   CropState::Sprouting,    48,  61},
         {CropType::Scallion,   CropState::Growing,      64,  61},
         {CropType::Scallion,   CropState::Ready,        80,  61},
+    };
+
+    // Map background
+    struct SpriteRect { SpriteId sprite; uint16_t x, y, w, h; };
+
+    struct TileDef      { TileTextureId id; SpriteRect rect; };
+    struct DecorDef     { DecorId id;       SpriteRect rect; };
+    struct BuildingDef  { BuildingId id;    SpriteRect rect; };
+    struct FurnitureDef { FurnitureId id; Direction dir; SpriteRect rect; };
+
+    inline constexpr TileDef TILES[] = {
+        {TileTextureId::Grass, {SpriteId::OutdoorsSpring,  0, 112, 16, 16}},
+        {TileTextureId::Dirt,  {SpriteId::OutdoorsSpring, 16, 112, 16, 16}},
+    };
+
+    inline constexpr DecorDef DECOR[] = {
+        {DecorId::MapleTree, {SpriteId::Trees, 0,   0, 48, 97}},
+        {DecorId::PineTree,  {SpriteId::Trees, 0, 320, 48, 97}},
+    };
+
+    inline constexpr BuildingDef BUILDINGS[] = {
+        {BuildingId::ComunityCenter, {SpriteId::MarketBuildings,   0, 160, 192, 160}},
+        {BuildingId::PierresShop,    {SpriteId::MarketBuildings,   0,   0, 161, 160}},
+        {BuildingId::ClintsShop,     {SpriteId::MarketBuildings, 161,   0, 130, 127}},
+        {BuildingId::MarniesShop,    {SpriteId::MarketBuildings, 291,   0, 128, 112}},
+        {BuildingId::RobinsShop,     {SpriteId::MarketBuildings, 192, 127, 157, 193}},
+        {BuildingId::FarmHouse,      {SpriteId::FarmBuildings,   157, 268, 144, 145}},
+        {BuildingId::StoneCabin,     {SpriteId::Cabins,           80, 336,  80, 112}},
+        {BuildingId::WoodCabin,      {SpriteId::Cabins,           80,   0,  80, 112}},
+        {BuildingId::BrickCabin,     {SpriteId::Cabins,           80, 112,  80, 112}},
+    };
+
+    inline constexpr FurnitureDef FURNITURE[] = {
+        {FurnitureId::Chair, Direction::Down,  {SpriteId::OutdoorsSpring,  0,   0, 16, 32}},
+        {FurnitureId::Chair, Direction::Up,    {SpriteId::OutdoorsSpring, 32,   0, 16, 32}},
+        {FurnitureId::Chair, Direction::Right, {SpriteId::OutdoorsSpring, 16,   0, 16, 32}},
+        {FurnitureId::Chair, Direction::Left,  {SpriteId::OutdoorsSpring, 16,   0, 16, 32}},
+        {FurnitureId::Chair, Direction::None,  {SpriteId::OutdoorsSpring,  0,   0, 16, 32}},
+        {FurnitureId::Table, Direction::None,  {SpriteId::OutdoorsSpring,  0, 569, 32, 39}},
     };
 
     // Items
