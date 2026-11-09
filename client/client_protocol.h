@@ -32,7 +32,7 @@ private:
 
     CropData receiveCropData();
     AnimalData receiveAnimalData();
-    DecorationData receiveDecorationData();
+    DecorData receiveDecorationData();
     FarmData receiveFarmData();
 
 public:

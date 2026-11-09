@@ -144,7 +144,7 @@ AnimalData ClientProtocol::receiveAnimalData() {
     return a;
 }
 
-DecorationData ClientProtocol::receiveDecorationData() {
+DecorData ClientProtocol::receiveDecorationData() {
     DecorationData d;
     d.id = base.receiveUint32();
     d.pos = receivePosition();
