@@ -6,34 +6,42 @@
 #include "protocol_types.h"
 #include "socket.h"
 
+
 class ServerProtocol {
 private:
     ProtocolBase base;
 
     Position receivePosition();
-    void sendPosition(const Position& pos);
+    void writePosition(MessageBuffer& out, const Position& pos);
 
     Color receiveColor();
-    void sendColor(const Color& color);
+    void writeColor(MessageBuffer& out, const Color& color);
 
-    void sendStack(const Stack& stack);
+    Direction receiveDirection();
 
-    void sendMineralData(const MineralData& mineral);
-    void sendLevelData(const LevelData& level);
-    void sendMineData(const MineData& mine);
-    void sendCropData(const CropData& crop);
-    void sendAnimalData(const AnimalData& animal);
-    void sendDecorationData(const DecorationData& decoration);
-    void sendFarmData(const FarmData& farm);
-    void sendZoneData(Zone currentZone, const ZoneData& zoneData);
+    void writeStack(MessageBuffer& out, const Stack& stack);
+    void writeMineralData(MessageBuffer& out, const MineralData& mineral);
+    void writeLevelData(MessageBuffer& out, const LevelData& level);
+    void writeMineData(MessageBuffer& out, const MineData& mine);
+    void writeCropData(MessageBuffer& out, const CropData& crop);
+    void writeAnimalData(MessageBuffer& out, const AnimalData& animal);
+    void writeDecorationData(MessageBuffer& out, const DecorationData& decoration);
+    void writeFarmData(MessageBuffer& out, const FarmData& farm);
+    void writeZoneData(MessageBuffer& out, Zone currentZone, const ZoneData& zoneData);
+    void writeGameInfo(MessageBuffer& out, const GameInfoDTO& info);
 
-    void sendGameInfo(const GameInfoDTO& info);
-
-    void sendPlayerData(const PlayerData& data);
-    void sendPlayerDataLocal(const PlayerDataLocal& localData);
+    void writePlayerData(MessageBuffer& out, const PlayerData& data);
+    void writePlayerDataLocal(MessageBuffer& out, const PlayerDataLocal& localData);
 
 public:
-    explicit ServerProtocol(Socket& socket);
+    explicit ServerProtocol(Socket&& socket);
+
+    ServerProtocol(const ServerProtocol&) = delete;
+    ServerProtocol& operator=(const ServerProtocol&) = delete;
+    ServerProtocol(ServerProtocol&&) = default;
+    ServerProtocol& operator=(ServerProtocol&&) = default;
+    
+    void shutdown();
 
     MessageType receiveType();
     SelectSlotDTO receiveSelectSlot();

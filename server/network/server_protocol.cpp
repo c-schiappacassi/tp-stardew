@@ -1,17 +1,30 @@
 #include "server_protocol.h"
 
+#include <sys/socket.h>
+
 #include <cstdint>
 #include <limits>
+#include <utility>
 
 #include "protocol_errors.h"
 
 namespace {
-void validateFarmCounts(const FarmData& farm) {
-    const auto limit = std::numeric_limits<uint16_t>::max();
-    if (farm.crops.size() > limit || farm.animals.size() > limit ||
-        farm.tilledSoil.size() > limit || farm.decorations.size() > limit) {
-        throw ProtocolError("Demasiadas entidades de granja para el protocolo");
+constexpr size_t MAX_U8 = std::numeric_limits<uint8_t>::max();
+constexpr size_t MAX_U16 = std::numeric_limits<uint16_t>::max();
+
+// Los contadores viajan en 1 o 2 bytes: si no entran, se rechaza el mensaje
+// ANTES de armarlo (si no, el contador se truncaba y el cliente se desincronizaba).
+void validateCount(size_t count, size_t limit, const char* what) {
+    if (count > limit) {
+        throw ProtocolError(std::string("Demasiados elementos para el protocolo: ") + what);
     }
+}
+
+void validateFarmCounts(const FarmData& farm) {
+    validateCount(farm.crops.size(), MAX_U16, "cultivos");
+    validateCount(farm.animals.size(), MAX_U16, "animales");
+    validateCount(farm.tilledSoil.size(), MAX_U16, "tierra arada");
+    validateCount(farm.decorations.size(), MAX_U16, "decoraciones");
 }
 
 bool hasMatchingZoneData(const PlayerDataLocal& data) {
@@ -25,9 +38,31 @@ bool hasMatchingZoneData(const PlayerDataLocal& data) {
     }
     return false;
 }
-}
 
-ServerProtocol::ServerProtocol(Socket& socket) : base(socket) {}
+void validateStatus(const ServerStatus& status) {
+    const auto& local = status.localPlayer;
+    const bool emptyEntryError =
+            status.status == StatusCode::Error &&
+            std::holds_alternative<std::monostate>(local.zoneData) &&
+            (local.currentZone == Zone::Farm || local.currentZone == Zone::Dungeon);
+    if (!hasMatchingZoneData(local) && !emptyEntryError) {
+        throw ProtocolError("Los datos locales no corresponden a la zona del jugador");
+    }
+
+    validateCount(status.players.size(), MAX_U16, "jugadores");
+    validateCount(local.items.size(), MAX_U8, "items");
+    if (const auto* farm = std::get_if<FarmData>(&local.zoneData)) {
+        validateFarmCounts(*farm);
+    }
+    if (const auto* mine = std::get_if<MineData>(&local.zoneData)) {
+        validateCount(mine->current_level_data.minerals.size(), MAX_U16, "minerales");
+    }
+}
+}  // namespace
+
+ServerProtocol::ServerProtocol(Socket&& socket) : base(std::move(socket)) {}
+
+void ServerProtocol::shutdown() { base.shutdown(SHUT_RDWR); }
 
 MessageType ServerProtocol::receiveType() {
     return static_cast<MessageType>(base.receiveUint8());
@@ -39,9 +74,9 @@ Position ServerProtocol::receivePosition() {
     return Position(x, y);
 }
 
-void ServerProtocol::sendPosition(const Position& pos) {
-    base.sendUint16(static_cast<uint16_t>(pos.getX()));
-    base.sendUint16(static_cast<uint16_t>(pos.getY()));
+void ServerProtocol::writePosition(MessageBuffer& out, const Position& pos) {
+    out.putUint16(static_cast<uint16_t>(pos.getX()));
+    out.putUint16(static_cast<uint16_t>(pos.getY()));
 }
 
 Color ServerProtocol::receiveColor() {
@@ -52,127 +87,122 @@ Color ServerProtocol::receiveColor() {
     return color;
 }
 
-void ServerProtocol::sendColor(const Color& color) {
-    base.sendUint8(color.r);
-    base.sendUint8(color.g);
-    base.sendUint8(color.b);
+void ServerProtocol::writeColor(MessageBuffer& out, const Color& color) {
+    out.putUint8(color.r);
+    out.putUint8(color.g);
+    out.putUint8(color.b);
 }
 
-void ServerProtocol::sendStack(const Stack& stack) {
-    base.sendUint16(static_cast<uint16_t>(stack.item_id));
-    base.sendUint16(stack.quantity);
-    base.sendUint8(static_cast<uint8_t>(stack.qual));
+Direction ServerProtocol::receiveDirection() {
+    const uint8_t raw = base.receiveUint8();
+    if (raw > static_cast<uint8_t>(Direction::Right)) {
+        throw ProtocolError("direccion invalida"); // dir fuera de rango corta conexion?
+    }
+    return static_cast<Direction>(raw);
 }
 
-void ServerProtocol::sendPlayerData(const PlayerData& data) {
-    base.sendString(data.characterName);
-    sendPosition(data.pos);
-    base.sendUint8(static_cast<uint8_t>(data.state));
-    base.sendUint8(static_cast<uint8_t>(data.dir));
-    base.sendUint16(data.hairModel);
-    base.sendUint16(data.shirtModel);
-    base.sendUint16(data.pantsModel);
-    sendColor(data.hairColor);
-    sendColor(data.pantsColor);
-    base.sendUint8(static_cast<uint8_t>(data.currentZone));
-    base.sendUint16(data.heldItem ? static_cast<uint16_t>(*data.heldItem) : 0);
+void ServerProtocol::writeStack(MessageBuffer& out, const Stack& stack) {
+    out.putUint16(static_cast<uint16_t>(stack.item_id));
+    out.putUint16(stack.quantity);
+    out.putUint8(static_cast<uint8_t>(stack.qual));
 }
 
-void ServerProtocol::sendGameInfo(const GameInfoDTO& info) {
-    base.sendString(info.id);
-    base.sendString(info.farmName);
-    sendPlayerData(info.playerData);
-    base.sendUint8(info.isMultiplayer ? 1 : 0);
+void ServerProtocol::writePlayerData(MessageBuffer& out, const PlayerData& data) {
+    out.putString(data.characterName);
+    writePosition(out, data.pos);
+    out.putUint8(static_cast<uint8_t>(data.state));
+    out.putUint8(static_cast<uint8_t>(data.dir));
+    out.putUint16(data.hairModel);
+    out.putUint16(data.shirtModel);
+    out.putUint16(data.pantsModel);
+    writeColor(out, data.hairColor);
+    writeColor(out, data.pantsColor);
+    out.putUint8(static_cast<uint8_t>(data.currentZone));
+    out.putUint16(data.heldItem ? static_cast<uint16_t>(*data.heldItem) : 0);
 }
 
-SelectSlotDTO ServerProtocol::receiveSelectSlot() {
-    SelectSlotDTO dto(base.receiveString());
-    dto.slot = base.receiveUint8();
-    return dto;
+void ServerProtocol::writeGameInfo(MessageBuffer& out, const GameInfoDTO& info) {
+    out.putString(info.id);
+    out.putString(info.farmName);
+    writePlayerData(out, info.playerData);
+    out.putUint8(info.isMultiplayer ? 1 : 0);
 }
 
-void ServerProtocol::sendMineralData(const MineralData& mineral) {
-    base.sendUint32(mineral.id);
-    sendPosition(mineral.pos);
-    base.sendUint8(static_cast<uint8_t>(mineral.type));
-    base.sendUint8(static_cast<uint8_t>(mineral.state));
+void ServerProtocol::writeMineralData(MessageBuffer& out, const MineralData& mineral) {
+    out.putUint32(mineral.id);
+    writePosition(out, mineral.pos);
+    out.putUint8(static_cast<uint8_t>(mineral.type));
+    out.putUint8(static_cast<uint8_t>(mineral.state));
 }
 
-void ServerProtocol::sendLevelData(const LevelData& level) {
-    sendPosition(level.entry);
-    sendPosition(level.exit);
+void ServerProtocol::writeLevelData(MessageBuffer& out, const LevelData& level) {
+    writePosition(out, level.entry);
+    writePosition(out, level.exit);
 
-    base.sendUint16(static_cast<uint16_t>(level.minerals.size()));
+    out.putUint16(static_cast<uint16_t>(level.minerals.size()));
     for (const MineralData& mineral : level.minerals) {
-        sendMineralData(mineral);
+        writeMineralData(out, mineral);
     }
 }
 
-void ServerProtocol::sendMineData(const MineData& mine) {
-    base.sendUint8(mine.current_level);
-    sendLevelData(mine.current_level_data);
+void ServerProtocol::writeMineData(MessageBuffer& out, const MineData& mine) {
+    out.putUint8(mine.current_level);
+    writeLevelData(out, mine.current_level_data);
 }
 
-void ServerProtocol::sendCropData(const CropData& crop) {
-    base.sendUint32(crop.id);
-    sendPosition(crop.pos);
-    base.sendUint8(static_cast<uint8_t>(crop.type));
-    base.sendUint8(static_cast<uint8_t>(crop.state));
-    base.sendUint8(crop.wattered ? 1 : 0);
+void ServerProtocol::writeCropData(MessageBuffer& out, const CropData& crop) {
+    out.putUint32(crop.id);
+    writePosition(out, crop.pos);
+    out.putUint8(static_cast<uint8_t>(crop.type));
+    out.putUint8(static_cast<uint8_t>(crop.state));
+    out.putUint8(crop.wattered ? 1 : 0);
 }
 
-void ServerProtocol::sendAnimalData(const AnimalData& animal) {
-    base.sendUint32(animal.id);
-    sendPosition(animal.pos);
-    base.sendUint8(static_cast<uint8_t>(animal.dir));
-    base.sendUint8(static_cast<uint8_t>(animal.type));
-    base.sendUint8(static_cast<uint8_t>(animal.state));
-    base.sendUint8(animal.needs_interaction ? 1 : 0);
+void ServerProtocol::writeAnimalData(MessageBuffer& out, const AnimalData& animal) {
+    out.putUint32(animal.id);
+    writePosition(out, animal.pos);
+    out.putUint8(static_cast<uint8_t>(animal.dir));
+    out.putUint8(static_cast<uint8_t>(animal.type));
+    out.putUint8(static_cast<uint8_t>(animal.state));
+    out.putUint8(animal.needs_interaction ? 1 : 0);
 }
 
-void ServerProtocol::sendDecorationData(const DecorationData& decoration) {
-    base.sendUint32(decoration.id);
-    sendPosition(decoration.pos);
-    base.sendUint16(static_cast<uint16_t>(decoration.item));
+void ServerProtocol::writeDecorationData(MessageBuffer& out, const DecorationData& decoration) {
+    out.putUint32(decoration.id);
+    writePosition(out, decoration.pos);
+    out.putUint16(static_cast<uint16_t>(decoration.item));
 }
 
-void ServerProtocol::sendFarmData(const FarmData& farm) {
-    base.sendUint16(static_cast<uint16_t>(farm.crops.size()));
+void ServerProtocol::writeFarmData(MessageBuffer& out, const FarmData& farm) {
+    out.putUint16(static_cast<uint16_t>(farm.crops.size()));
     for (const auto& crop : farm.crops) {
-        sendCropData(crop);
+        writeCropData(out, crop);
     }
-    base.sendUint16(static_cast<uint16_t>(farm.animals.size()));
+    out.putUint16(static_cast<uint16_t>(farm.animals.size()));
     for (const auto& animal : farm.animals) {
-        sendAnimalData(animal);
+        writeAnimalData(out, animal);
     }
-    base.sendUint16(static_cast<uint16_t>(farm.tilledSoil.size()));
+    out.putUint16(static_cast<uint16_t>(farm.tilledSoil.size()));
     for (const auto& position : farm.tilledSoil) {
-        sendPosition(position);
+        writePosition(out, position);
     }
-    base.sendUint16(static_cast<uint16_t>(farm.decorations.size()));
+    out.putUint16(static_cast<uint16_t>(farm.decorations.size()));
     for (const auto& decoration : farm.decorations) {
-        sendDecorationData(decoration);
+        writeDecorationData(out, decoration);
     }
 }
 
-void ServerProtocol::sendZoneData(Zone currentZone, const ZoneData& zoneData) {
+void ServerProtocol::writeZoneData(MessageBuffer& out, Zone currentZone,
+                                   const ZoneData& zoneData) {
     switch (currentZone) {
         case Zone::Farm: {
             const auto* farm = std::get_if<FarmData>(&zoneData);
-            if (farm) {
-                sendFarmData(*farm);
-            } else {
-                sendFarmData(FarmData{});
-            }
+            writeFarmData(out, farm ? *farm : FarmData{});
             return;
         }
         case Zone::Dungeon: {
             const auto* mine = std::get_if<MineData>(&zoneData);
-            if (mine) {
-                sendMineData(*mine);
-            } else {
-                sendMineData(MineData{});
-            }
+            writeMineData(out, mine ? *mine : MineData{});
             return;
         }
         case Zone::Town:
@@ -180,25 +210,31 @@ void ServerProtocol::sendZoneData(Zone currentZone, const ZoneData& zoneData) {
     }
 }
 
-void ServerProtocol::sendPlayerDataLocal(const PlayerDataLocal& localData) {
-    sendPlayerData(localData);
+void ServerProtocol::writePlayerDataLocal(MessageBuffer& out, const PlayerDataLocal& localData) {
+    writePlayerData(out, localData);
 
-    base.sendUint8(static_cast<uint8_t>(localData.items.size()));
+    out.putUint8(static_cast<uint8_t>(localData.items.size()));
     for (const auto& [slot, stack] : localData.items) {
-        base.sendUint8(slot);
-        sendStack(stack);
+        out.putUint8(slot);
+        writeStack(out, stack);
     }
 
-    base.sendUint8(localData.current_slot);
-    base.sendUint32(localData.gold);
-    base.sendUint16(localData.health);
-    base.sendUint16(localData.maxHealth);
-    base.sendUint16(localData.energy);
-    base.sendUint16(localData.maxEnergy);
-    sendZoneData(localData.currentZone, localData.zoneData);
+    out.putUint8(localData.current_slot);
+    out.putUint32(localData.gold);
+    out.putUint16(localData.health);
+    out.putUint16(localData.maxHealth);
+    out.putUint16(localData.energy);
+    out.putUint16(localData.maxEnergy);
+    writeZoneData(out, localData.currentZone, localData.zoneData);
 }
 
-// RECEIVERS (the type byte was already consumed by receiveType())
+// RECEIVERS (the type byte --> consumed by receiveType())
+
+SelectSlotDTO ServerProtocol::receiveSelectSlot() {
+    SelectSlotDTO dto(base.receiveString());
+    dto.slot = base.receiveUint8();
+    return dto;
+}
 
 CreateGameDTO ServerProtocol::receiveCreateGame() {
     CreateGameDTO dto(base.receiveString());
@@ -233,13 +269,13 @@ ResumeGameDTO ServerProtocol::receiveResumeGame() {
 
 MoveDTO ServerProtocol::receiveMove() {
     MoveDTO dto(base.receiveString());
-    dto.dir = static_cast<Direction>(base.receiveUint8());
+    dto.dir = receiveDirection();
     return dto;
 }
 
 InteractDTO ServerProtocol::receiveInteract() {
     InteractDTO dto(base.receiveString());
-    dto.dir = static_cast<Direction>(base.receiveUint8());
+    dto.dir = receiveDirection();
     return dto;
 }
 
@@ -280,42 +316,40 @@ CheckCodeDTO ServerProtocol::receiveCheckCode() {
     return dto;
 }
 
-// SENDERS
+// SENDERS (cada uno arma el mensaje entero y hace UN solo send)
 
 void ServerProtocol::sendStatus(const ServerStatus& status) {
-    const auto& local = status.localPlayer;
-    const bool emptyEntryError = status.status == StatusCode::Error &&std::holds_alternative<std::monostate>(local.zoneData) &&(local.currentZone == Zone::Farm || local.currentZone == Zone::Dungeon);
-    if (!hasMatchingZoneData(local) && !emptyEntryError) {
-        throw ProtocolError("Los datos locales no corresponden a la zona del jugador");
-    }
-    const auto* farm = std::get_if<FarmData>(&local.zoneData);
-    if (farm) {
-        validateFarmCounts(*farm);
-    }
+    validateStatus(status);
 
-    base.sendUint8(static_cast<uint8_t>(status.status));
-    base.sendString(status.errorMsg);
-    base.sendString(status.successMsg);
-    base.sendString(status.gameId);
-    base.sendUint16(status.playerId);
-    base.sendUint8(status.worldId);
+    MessageBuffer out(4096);
+    out.putUint8(static_cast<uint8_t>(status.status));
+    out.putString(status.errorMsg);
+    out.putString(status.successMsg);
+    out.putString(status.gameId);
+    out.putUint16(status.playerId);
+    out.putUint8(status.worldId);
 
-    base.sendUint16(static_cast<uint16_t>(status.players.size()));
+    out.putUint16(static_cast<uint16_t>(status.players.size()));
     for (const auto& [name, data] : status.players) {
-        base.sendString(name);
-        sendPlayerData(data);
+        out.putString(name);
+        writePlayerData(out, data);
     }
 
-    sendPlayerDataLocal(status.localPlayer);
+    writePlayerDataLocal(out, status.localPlayer);
+    base.send(out);
 }
 
 void ServerProtocol::sendQtStatus(const qtStatus& status) {
-    base.sendUint8(static_cast<uint8_t>(status.status));
-    base.sendString(status.errorMsg);
-    base.sendString(status.successMsg);
+    validateCount(status.games.size(), MAX_U16, "partidas");
 
-    base.sendUint16(static_cast<uint16_t>(status.games.size()));
+    MessageBuffer out(1024);
+    out.putUint8(static_cast<uint8_t>(status.status));
+    out.putString(status.errorMsg);
+    out.putString(status.successMsg);
+
+    out.putUint16(static_cast<uint16_t>(status.games.size()));
     for (const GameInfoDTO& info : status.games) {
-        sendGameInfo(info);
+        writeGameInfo(out, info);
     }
+    base.send(out);
 }
