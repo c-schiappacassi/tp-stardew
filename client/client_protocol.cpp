@@ -1,13 +1,18 @@
 #include "client_protocol.h"
 
+#include <sys/socket.h>
+
 #include <cstdint>
 #include <stdexcept>
+#include <utility>
 
 #include "protocol_errors.h"
 
 
-ClientProtocol::ClientProtocol(Socket& socket) : base(socket) {}
+ClientProtocol::ClientProtocol(Socket&& socket) : base(std::move(socket)) {}
 
+
+void ClientProtocol::shutdown() { base.shutdown(SHUT_RDWR); }
 
 Position ClientProtocol::receivePosition() {
     int x = static_cast<int>(base.receiveUint16());
@@ -15,15 +20,15 @@ Position ClientProtocol::receivePosition() {
     return Position(x, y);
 }
 
-void ClientProtocol::sendPosition(const Position& pos) {
-    base.sendUint16(static_cast<uint16_t>(pos.getX()));
-    base.sendUint16(static_cast<uint16_t>(pos.getY()));
+void ClientProtocol::writePosition(MessageBuffer& out, const Position& pos) {
+    out.putUint16(static_cast<uint16_t>(pos.getX()));
+    out.putUint16(static_cast<uint16_t>(pos.getY()));
 }
 
-void ClientProtocol::sendColor(const Color& color) {
-    base.sendUint8(color.r);
-    base.sendUint8(color.g);
-    base.sendUint8(color.b);
+void ClientProtocol::writeColor(MessageBuffer& out, const Color& color) {
+    out.putUint8(color.r);
+    out.putUint8(color.g);
+    out.putUint8(color.b);
 }
 
 Color ClientProtocol::receiveColor() {
@@ -193,93 +198,120 @@ void ClientProtocol::send(const CommandDTO& dto) {
 }
 
 void ClientProtocol::send(const CreateGameDTO& dto) {
-    base.sendUint8(static_cast<uint8_t>(MessageType::CreateGame));
-    base.sendString(dto.userName);
-    base.sendString(dto.characterName);
-    base.sendString(dto.gameName);
-    base.sendUint8(dto.worldId);
-    base.sendUint16(dto.hairModel);
-    base.sendUint16(dto.shirtModel);
-    base.sendUint16(dto.pantsModel);
-    sendColor(dto.hairColor);
-    sendColor(dto.pantsColor);
+    MessageBuffer out;
+    out.putUint8(static_cast<uint8_t>(MessageType::CreateGame));
+    out.putString(dto.userName);
+    out.putString(dto.characterName);
+    out.putString(dto.gameName);
+    out.putUint8(dto.worldId);
+    out.putUint16(dto.hairModel);
+    out.putUint16(dto.shirtModel);
+    out.putUint16(dto.pantsModel);
+    writeColor(out, dto.hairColor);
+    writeColor(out, dto.pantsColor);
+    base.send(out);
 }
 
 void ClientProtocol::send(const JoinGameDTO& dto) {
-    base.sendUint8(static_cast<uint8_t>(MessageType::JoinGame));
-    base.sendString(dto.userName);
-    base.sendString(dto.characterName);
-    base.sendString(dto.code);
-    base.sendUint16(dto.hairModel);
-    base.sendUint16(dto.shirtModel);
-    base.sendUint16(dto.pantsModel);
-    sendColor(dto.hairColor);
-    sendColor(dto.pantsColor);
+    MessageBuffer out;
+    out.putUint8(static_cast<uint8_t>(MessageType::JoinGame));
+    out.putString(dto.userName);
+    out.putString(dto.characterName);
+    out.putString(dto.code);
+    out.putUint16(dto.hairModel);
+    out.putUint16(dto.shirtModel);
+    out.putUint16(dto.pantsModel);
+    writeColor(out, dto.hairColor);
+    writeColor(out, dto.pantsColor);
+    base.send(out);
 }
 
 void ClientProtocol::send(const ResumeGameDTO& dto) {
-    base.sendUint8(static_cast<uint8_t>(MessageType::ResumeGame));
-    base.sendString(dto.userName);
-    base.sendString(dto.gameId);
+    MessageBuffer out;
+    out.putUint8(static_cast<uint8_t>(MessageType::ResumeGame));
+    out.putString(dto.userName);
+    out.putString(dto.gameId);
+    base.send(out);
 }
 
 void ClientProtocol::send(const MoveDTO& dto) {
-    base.sendUint8(static_cast<uint8_t>(MessageType::Move));
-    base.sendString(dto.userName);
-    base.sendUint8(static_cast<uint8_t>(dto.dir));
+    MessageBuffer out;
+    out.putUint8(static_cast<uint8_t>(MessageType::Move));
+    out.putString(dto.userName);
+    out.putUint8(static_cast<uint8_t>(dto.dir));
+    base.send(out);
 }
 
 void ClientProtocol::send(const InteractDTO& dto) {
-    base.sendUint8(static_cast<uint8_t>(MessageType::Interact));
-    base.sendString(dto.userName);
-    base.sendUint8(static_cast<uint8_t>(dto.dir));
+    MessageBuffer out;
+    out.putUint8(static_cast<uint8_t>(MessageType::Interact));
+    out.putString(dto.userName);
+    out.putUint8(static_cast<uint8_t>(dto.dir));
+    base.send(out);
 }
 
 void ClientProtocol::send(const DonateDTO& dto) {
-    base.sendUint8(static_cast<uint8_t>(MessageType::Donate));
-    base.sendString(dto.userName);
-    base.sendUint8(dto.slot);
-    base.sendUint32(dto.quantity);
+    MessageBuffer out;
+    out.putUint8(static_cast<uint8_t>(MessageType::Donate));
+    out.putString(dto.userName);
+    out.putUint8(dto.slot);
+    out.putUint32(dto.quantity);
+    base.send(out);
 }
 
 void ClientProtocol::send(const ChatDTO& dto) {
-    base.sendUint8(static_cast<uint8_t>(MessageType::Chat));
-    base.sendString(dto.userName);
-    base.sendString(dto.text);
+    MessageBuffer out;
+    out.putUint8(static_cast<uint8_t>(MessageType::Chat));
+    out.putString(dto.userName);
+    out.putString(dto.text);
+    base.send(out);
 }
 
 void ClientProtocol::send(const UseItemDTO& dto) {
-    base.sendUint8(static_cast<uint8_t>(MessageType::UseItem));
-    base.sendString(dto.userName);
-    base.sendUint8(dto.itemSlot);
+    MessageBuffer out;
+    out.putUint8(static_cast<uint8_t>(MessageType::UseItem));
+    out.putString(dto.userName);
+    out.putUint8(dto.itemSlot);
+    base.send(out);
 }
 
 void ClientProtocol::send(const RequestMultiplayerCodeDTO& dto) {
-    base.sendUint8(static_cast<uint8_t>(MessageType::MultiplayerCode));
-    base.sendString(dto.userName);
+    MessageBuffer out;
+    out.putUint8(static_cast<uint8_t>(MessageType::MultiplayerCode));
+    out.putString(dto.userName);
+    base.send(out);
 }
 
 void ClientProtocol::send(const DisconnectDTO& dto) {
-    base.sendUint8(static_cast<uint8_t>(MessageType::ExitGame));
-    base.sendString(dto.userName);
+    MessageBuffer out;
+    out.putUint8(static_cast<uint8_t>(MessageType::ExitGame));
+    out.putString(dto.userName);
+    base.send(out);
 }
 
 void ClientProtocol::send(const SelectSlotDTO& dto) {
-    base.sendUint8(static_cast<uint8_t>(MessageType::SelectSlot));
-    base.sendString(dto.userName);
-    base.sendUint8(dto.slot);
+    MessageBuffer out;
+    out.putUint8(static_cast<uint8_t>(MessageType::SelectSlot));
+    out.putString(dto.userName);
+    out.putUint8(dto.slot);
+    base.send(out);
 }
 
 void ClientProtocol::send(const ListGamesDTO& dto) {
-    base.sendUint8(static_cast<uint8_t>(MessageType::ListGames));
-    base.sendString(dto.userName);
+    MessageBuffer out;
+    out.putUint8(static_cast<uint8_t>(MessageType::ListGames));
+    out.putString(dto.userName);
+    base.send(out);
 }
 
 void ClientProtocol::send(const CheckCodeDTO& dto) {
-    base.sendUint8(static_cast<uint8_t>(MessageType::CheckCode));
-    base.sendString(dto.userName);
-    base.sendString(dto.code);
+    MessageBuffer out;
+    out.putUint8(static_cast<uint8_t>(MessageType::CheckCode));
+    out.putString(dto.userName);
+    out.putString(dto.code);
+    base.send(out);
 }
+
 // RECEIVERS
 
 // ServerStatus { status, errorMsg, successMsg, gameId, playerId, worldId,

@@ -13,9 +13,9 @@ private:
     ProtocolBase base;
 
     Position receivePosition();
-    void sendPosition(const Position& pos);
+    void writePosition(MessageBuffer& out, const Position& pos);
 
-    void sendColor(const Color& color);
+    void writeColor(MessageBuffer& out, const Color& color);
     Color receiveColor();
 
     Stack receiveStack();
@@ -34,8 +34,16 @@ private:
     AnimalData receiveAnimalData();
     DecorationData receiveDecorationData();
     FarmData receiveFarmData();
+
 public:
-    explicit ClientProtocol(Socket& socket);
+    explicit ClientProtocol(Socket&& socket);
+
+    ClientProtocol(const ClientProtocol&) = delete;
+    ClientProtocol& operator=(const ClientProtocol&) = delete;
+    ClientProtocol(ClientProtocol&&) = default;
+    ClientProtocol& operator=(ClientProtocol&&) = default;
+
+    void shutdown();
 
     void send(const CommandDTO& dto);
     void send(const SelectSlotDTO& dto);
