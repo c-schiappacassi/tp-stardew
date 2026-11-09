@@ -35,8 +35,7 @@ void sync_views_map(Views& views, const DataMap& datas) {
 }
 
 template <typename Views>
-void collect_from(const RenderInfo& ctx, Views& views,
-                  std::vector<Drawable>& out, uint64_t& tie) {
+void collect_from(const RenderInfo& ctx, Views& views, std::vector<Drawable>& out, uint64_t& tie) {
     for (auto& [key, view] : views) {
         if (const auto depth = view.depth(ctx)) {
             out.push_back(Drawable{*depth, tie++, &view});

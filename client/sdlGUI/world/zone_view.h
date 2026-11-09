@@ -4,11 +4,11 @@
 
 #include "../../state.h"
 #include "../utils.h"
+#include "../render_info.h"
 
-struct RenderInfo;
+inline constexpr uint64_t ZONE_TIEBREAK_BASE = 1ull << 32;
 
 class ZoneView {
-    // Background back;
 public:
     virtual void draw_background(const RenderInfo& ctx) = 0;
     virtual void collect_drawables(const RenderInfo& ctx, std::vector<Drawable>& out) = 0;

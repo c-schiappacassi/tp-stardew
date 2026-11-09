@@ -39,6 +39,7 @@ target_sources(taller_client
     sdlGUI/world/zone_view.h
     sdlGUI/world/entity_view.h
     sdlGUI/world/background.h
+    sdlGUI/world/background_zone_view.h
 
     sdlGUI/world/hud/hud_view.h
     sdlGUI/world/hud/hotbar_view.h

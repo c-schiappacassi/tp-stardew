@@ -16,7 +16,6 @@ private:
         return static_cast<int>(static_cast<float>(world_units) * TEXELS_PER_UNIT);
     }
 
-    // Division entera redondeando hacia -infinito (para coordenadas negativas).
     static int floor_div(int a, int b) {
         int q = a / b;
         return (a % b != 0 && ((a < 0) != (b < 0))) ? q - 1 : q;

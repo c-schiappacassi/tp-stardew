@@ -22,7 +22,6 @@ inline void draw_scaled(const RenderInfo& ctx, SpriteId sprite_id, const SDL2pp:
     }
 }
 
-// Estira el recorte del sprite a `dst` (ignora sus offsets): iconos de UI, hotbar, etc.
 inline void draw_sprite_in(const RenderInfo& ctx, const Sprite& s, const SDL2pp::Rect& dst, bool flip = false, std::optional<SDL_Color> tint = std::nullopt) {
     draw_scaled(ctx, s.sprite_id, s.src(), dst, flip, tint);
 }
@@ -33,7 +32,6 @@ inline void draw_region(const RenderInfo& ctx, SpriteId sprite_id, const SDL2pp:
     draw_scaled(ctx, sprite_id, src, dst, flip, tint);
 }
 
-// Dibuja el sprite usando su recorte y offsets; `origin` es el punto ancla en pantalla.
 inline void draw_sprite(const RenderInfo& ctx, const Sprite& s, const SDL2pp::Point& origin, bool flip = false, std::optional<SDL_Color> tint = std::nullopt) {
     draw_region(ctx, s.sprite_id, s.src(), origin, s.dx(flip), s.offset_y, flip, tint);
 }

@@ -1,7 +1,5 @@
 #pragma once
 
-#include <map>
-#include <memory>
 #include <vector>
 
 #include "zone_view.h"
@@ -21,7 +19,10 @@ private:
         if (current == Zone::Farm) return &farm;
         return nullptr;
     }
+
 public:
+    MapView(const ConstMapData& data, AssetManager& assets) : mines(data.levels, assets), farm(data.farm, assets) {}
+
     void update(const State& data) {
         const PlayerDataLocal& local = data.get_local();
         current = local.currentZone ;
@@ -31,11 +32,10 @@ public:
         } else if (const auto* f = std::get_if<FarmData>(&local.zoneData)) {
             farm.update(*f);
         }
-    
     }
 
-    void draw_background(const RenderInfo&) override {
-        // if (ZoneView* view = current_view()) view->draw_background(ctx);
+    void draw_background(const RenderInfo& ctx) override {
+        if (ZoneView* view = current_view()) view->draw_background(ctx);
     }
 
     void collect_drawables(const RenderInfo& ctx, std::vector<Drawable>& out) override {

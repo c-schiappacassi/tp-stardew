@@ -34,18 +34,26 @@ struct AnimalData{
     // Age ? TBD si hacemos logica de que los animales llegan bebes y crecen
 };
 
-struct DecorationData {
+struct FurnitureData {
     uint32_t id = 0;
     Position pos{0, 0};
-    ItemId item = ItemId::Table;
+    FurnitureId type = FurnitureId::Chair;
+    Direction dir;
 };
 
 struct FarmData{
     std::vector<CropData> crops;
     std::vector<AnimalData> animals;
     std::vector<Position> tilledSoil;
-    std::vector<DecorationData> decorations;
+    std::vector<FurnitureData> furniture;
 };
+
+// Farmer houses
+struct HouseData {
+    uint8_t house_index = 0;
+    std::vector<FurnitureData> furniture;
+};
+
 // FIN Farm
 
 // Mine
@@ -79,6 +87,50 @@ struct MineData{
 
 using ZoneData = std::variant<MineData, FarmData, std::monostate>;
 
+// Map DTOS para el segundo handshake
+
+// Constante: viaja en el segundo handshake, dentro de BackgroundData
+struct TileData {
+    Position pos;
+    TileTextureId id;
+};
+
+struct StaticFurnitureData {  // para la deco del pueblo o las casas de npcs
+    Position pos;
+    FurnitureId id;
+    Direction dir;
+};
+
+struct DecorData { // para cosas como arboles y plantas
+    Position pos;
+    DecorId id;
+};
+
+struct BuildingData {
+    Position pos;
+    BuildingId id;
+};
+
+struct BackgroundData{
+    std::vector<TileData> floor;
+    std::vector<DecorData> decor;
+    std::vector<BuildingData> buildings; // Exteriores, para los interiores son una zona distinta, asi que les llega su propio BackgroundData
+    std::vector<StaticFurnitureData> furniture;
+};
+
+// TODO: TBD primer draft del segundo Handshake, para la data que NUNCA cambia.
+// se excluye:  Furniture (en casa del player cambia de lugar, pero en los shops de los npcs no. 
+//              el servidor se encarga de no permitieme interactuar con muebles de npcs)
+
+struct ConstMapData{
+    BackgroundData farm;
+    std::vector<BackgroundData> levels;
+    std::vector<BackgroundData> farm_houses;
+    BackgroundData pierres;
+    BackgroundData robins;
+    BackgroundData clints;
+    BackgroundData marnies;
+};
 
 // Player
 struct Color{

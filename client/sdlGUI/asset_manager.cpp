@@ -123,6 +123,11 @@ const Sound& AssetManager::get_sound(SoundId id) const { return sounds.at(id); }
 
 const Sprite& AssetManager::get_sprite(ResourceType type, ResourceState state) const { return ore_sprites.at({type, state});}
 
+const Sprite& AssetManager::get_sprite(TileTextureId id) const { return tile_sprites.at(id); }
+const Sprite& AssetManager::get_sprite(DecorId id) const { return decor_sprites.at(id); }
+const Sprite& AssetManager::get_sprite(BuildingId id) const { return building_sprites.at(id); }
+const Sprite& AssetManager::get_sprite(FurnitureId id, Direction dir) const {  return furniture_sprites.at({id, dir});}
+
 const Sprite* AssetManager::find_sprite(ItemId id) const {
     const auto it = item_sprites.find(id);
     return it == item_sprites.end() ? nullptr : &it->second;
@@ -134,3 +139,4 @@ const ToolFrame* AssetManager::find_tool_frame(ItemId item, Direction dir, std::
     if (it == tool_frames.end() || it->second.empty()) return nullptr;
     return &it->second[std::min(i, it->second.size() - 1)];
 }
+

@@ -24,8 +24,8 @@ private:
     }
 
 public:
-    explicit WorldView(const std::string& local_name): local_name(local_name) {}
-
+    explicit WorldView(const std::string& local_name, const ConstMapData& map_data, AssetManager& assets) : local_name(local_name), map(map_data, assets) {}
+    
     void update(const State& state) {
         this->update_players_and_list(state.get_players());
         this->player_hud.update(state.get_local());

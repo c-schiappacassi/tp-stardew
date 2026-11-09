@@ -188,3 +188,32 @@ enum class CheatType : uint8_t {
     CompleteSet = 4,
     NextLevel = 5,
 };
+
+// TODO: completar
+enum class TileTextureId{
+    Grass,
+    Dirt,
+};
+
+enum class DecorId{
+    MapleTree,
+    PineTree,
+};
+
+
+enum class FurnitureId{
+    Chair,
+    Table,
+};
+
+enum class BuildingId{
+    FarmHouse,
+    StoneCabin,
+    WoodCabin,
+    BrickCabin,
+    MarniesShop,
+    PierresShop,
+    RobinsShop,
+    ClintsShop,
+    ComunityCenter
+};

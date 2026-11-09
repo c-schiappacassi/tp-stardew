@@ -6,8 +6,8 @@
 #include "constants.h"
 #include "foo.h"
 
-Game::Game(NetworkManager& net, const std::string& player_name, const ServerStatus& initialStatus):
-        player_name(player_name), net(net), ui(player_name, initialStatus.gameId) {
+Game::Game(NetworkManager& net, const std::string& player_name, const ServerStatus& initialStatus, const ConstMapData& map):
+        player_name(player_name), net(net), ui(player_name, initialStatus.gameId, map) {
     currentState.update(initialStatus);
 }
 
