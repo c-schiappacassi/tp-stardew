@@ -22,7 +22,6 @@ void validateFarmCounts(const FarmData& farm) {
     validateCount(farm.crops.size(), MAX_U16, "cultivos");
     validateCount(farm.animals.size(), MAX_U16, "animales");
     validateCount(farm.tilledSoil.size(), MAX_U16, "tierra arada");
-    validateCount(farm.decorations.size(), MAX_U16, "decoraciones");
 }
 
 bool hasMatchingZoneData(const PlayerDataLocal& data) {
@@ -165,10 +164,11 @@ void ServerProtocol::writeAnimalData(MessageBuffer& out, const AnimalData& anima
     out.putUint8(animal.needs_interaction ? 1 : 0);
 }
 
-void ServerProtocol::writeDecorationData(MessageBuffer& out, const DecorationData& decoration) {
-    out.putUint32(decoration.id);
-    writePosition(out, decoration.pos);
-    out.putUint16(static_cast<uint16_t>(decoration.item));
+void ServerProtocol::writeFurnitureData(MessageBuffer& out, const FurnitureData& f) {
+    out.putUint32(f.id);
+    writePosition(out, f.pos);
+    out.putUint8(static_cast<uint8_t>(f.type));
+    out.putUint8(static_cast<uint8_t>(f.dir));
 }
 
 void ServerProtocol::writeFarmData(MessageBuffer& out, const FarmData& farm) {
@@ -184,10 +184,51 @@ void ServerProtocol::writeFarmData(MessageBuffer& out, const FarmData& farm) {
     for (const auto& position : farm.tilledSoil) {
         writePosition(out, position);
     }
-    out.putUint16(static_cast<uint16_t>(farm.decorations.size()));
-    for (const auto& decoration : farm.decorations) {
-        writeDecorationData(out, decoration);
+}
+
+void ServerProtocol::writeBackgroundData(MessageBuffer& out, const BackgroundData& bg) {
+    validateCount(bg.decor.size(),     MAX_U16, "decor");
+    validateCount(bg.buildings.size(), MAX_U16, "edificios");
+    validateCount(bg.furniture.size(), MAX_U16, "muebles estaticos");
+
+    out.putUint32(static_cast<uint32_t>(bg.floor.size()));
+    for (const auto& t : bg.floor) {
+        writePosition(out, t.pos);
+        out.putUint8(static_cast<uint8_t>(t.id));
     }
+    out.putUint16(static_cast<uint16_t>(bg.decor.size()));
+    for (const auto& d : bg.decor) {
+        writePosition(out, d.pos);
+        out.putUint8(static_cast<uint8_t>(d.id));
+    }
+    out.putUint16(static_cast<uint16_t>(bg.buildings.size()));
+    for (const auto& b : bg.buildings) {
+        writePosition(out, b.pos);
+        out.putUint8(static_cast<uint8_t>(b.id));
+    }
+    out.putUint16(static_cast<uint16_t>(bg.furniture.size()));
+    for (const auto& f : bg.furniture) {
+        writePosition(out, f.pos);
+        out.putUint8(static_cast<uint8_t>(f.id));
+        out.putUint8(static_cast<uint8_t>(f.dir));
+    }
+}
+
+void ServerProtocol::sendConstMap(const ConstMapData& map) {
+    validateCount(map.levels.size(),      MAX_U8, "niveles");
+    validateCount(map.farm_houses.size(), MAX_U8, "casas");
+
+    MessageBuffer out(1 << 20);
+    writeBackgroundData(out, map.farm);
+    out.putUint8(static_cast<uint8_t>(map.levels.size()));
+    for (const auto& l : map.levels) writeBackgroundData(out, l);
+    out.putUint8(static_cast<uint8_t>(map.farm_houses.size()));
+    for (const auto& h : map.farm_houses) writeBackgroundData(out, h);
+    writeBackgroundData(out, map.pierres);
+    writeBackgroundData(out, map.robins);
+    writeBackgroundData(out, map.clints);
+    writeBackgroundData(out, map.marnies);
+    base.send(out);
 }
 
 void ServerProtocol::writeZoneData(MessageBuffer& out, Zone currentZone,

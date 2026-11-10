@@ -8,7 +8,7 @@
 #include "farm/farm_config.h"
 #include "player/player_config.h"
 #include "protocol_types.h"
-#include "farm/farm_layout.h"
+#include "farm/loading/farm_layout.h"
 #include "town/town_config.h"
 
 

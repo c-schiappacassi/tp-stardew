@@ -144,14 +144,6 @@ AnimalData ClientProtocol::receiveAnimalData() {
     return a;
 }
 
-DecorData ClientProtocol::receiveDecorationData() {
-    DecorationData d;
-    d.id = base.receiveUint32();
-    d.pos = receivePosition();
-    d.item = static_cast<ItemId>(base.receiveUint16());
-    return d;
-}
-
 FarmData ClientProtocol::receiveFarmData() {
     FarmData farm;
     uint16_t n = base.receiveUint16();
@@ -160,8 +152,6 @@ FarmData ClientProtocol::receiveFarmData() {
     for (uint16_t i = 0; i < n; ++i) farm.animals.push_back(receiveAnimalData());
     n = base.receiveUint16();
     for (uint16_t i = 0; i < n; ++i) farm.tilledSoil.push_back(receivePosition());
-    n = base.receiveUint16();
-    for (uint16_t i = 0; i < n; ++i) farm.decorations.push_back(receiveDecorationData());
     return farm;
 }
 
@@ -347,3 +337,57 @@ void ClientProtocol::recv(qtStatus& status) {
         status.games.push_back(receiveGameInfo());
     }
 }
+
+
+BackgroundData ClientProtocol::receiveBackgroundData() {
+    constexpr uint32_t MAX_FLOOR = 1024 * 1024; 
+    BackgroundData bg;
+
+    const uint32_t nFloor = base.receiveUint32();
+    if (nFloor > MAX_FLOOR) throw ProtocolError("floor demasiado grande");
+    bg.floor.reserve(nFloor);
+    for (uint32_t i = 0; i < nFloor; ++i) {
+        TileData t;
+        t.pos = receivePosition();
+        t.id  = static_cast<TileTextureId>(base.receiveUint8());
+        bg.floor.push_back(t);
+    }
+    uint16_t n = base.receiveUint16();
+    for (uint16_t i = 0; i < n; ++i) {
+        DecorData d;
+        d.pos = receivePosition();
+        d.id  = static_cast<DecorId>(base.receiveUint8());
+        bg.decor.push_back(d);
+    }
+    n = base.receiveUint16();
+    for (uint16_t i = 0; i < n; ++i) {
+        BuildingData b;
+        b.pos = receivePosition();
+        b.id  = static_cast<BuildingId>(base.receiveUint8());
+        bg.buildings.push_back(b);
+    }
+    n = base.receiveUint16();
+    for (uint16_t i = 0; i < n; ++i) {
+        StaticFurnitureData f;
+        f.pos = receivePosition();
+        f.id  = static_cast<FurnitureId>(base.receiveUint8());
+        f.dir = static_cast<Direction>(base.receiveUint8());
+        bg.furniture.push_back(f);
+    }
+    return bg;
+}
+
+void ClientProtocol::recv(ConstMapData& map) {
+    map.farm = receiveBackgroundData();
+    uint8_t n = base.receiveUint8();
+    map.levels.clear();
+    for (uint8_t i = 0; i < n; ++i) map.levels.push_back(receiveBackgroundData());
+    n = base.receiveUint8();
+    map.farm_houses.clear();
+    for (uint8_t i = 0; i < n; ++i) map.farm_houses.push_back(receiveBackgroundData());
+    map.pierres = receiveBackgroundData();
+    map.robins  = receiveBackgroundData();
+    map.clints  = receiveBackgroundData();
+    map.marnies = receiveBackgroundData();
+}
+

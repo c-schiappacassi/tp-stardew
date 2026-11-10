@@ -4,6 +4,24 @@
 WorldManager::WorldManager(const DungeonConfig& config, uint32_t seed, const FarmConfig& farmConfig)
     : dungeon(config, seed), farm(farmConfig, seed) {}
 
+
+ConstMapData WorldManager::buildConstMap() const {
+    ConstMapData map;
+
+    for (const auto& t : farm.getBackground()) {
+        const Position px(t.tile.getX() * 16, t.tile.getY() * 16);
+        if (t.textureId > static_cast<uint16_t>(TileTextureId::Dirt))
+            throw std::runtime_error("texture_id de granja desconocido");
+        map.farm.floor.push_back({px, static_cast<TileTextureId>(t.textureId)});
+    }
+
+    // TODO: decor / buildings de la granja (hoy FarmLayout no los tiene)
+    // TODO: fondo de los niveles. Por ahora vacios, pero en orden: MinesView numera por indice (i + 1)
+    map.levels.resize(DUNGEON_ROOM_COUNT);
+    // TODO: farm_houses, pierres, robins, clints, marnies
+    return map;
+}
+
 bool WorldManager::spawnPlayer(Player& player) const {
     return farm.isInitialized() ? farm.spawnPlayer(player) : dungeon.spawnPlayer(player);
 }

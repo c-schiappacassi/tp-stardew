@@ -91,24 +91,24 @@ using ZoneData = std::variant<MineData, FarmData, std::monostate>;
 
 // Constante: viaja en el segundo handshake, dentro de BackgroundData
 struct TileData {
-    Position pos;
-    TileTextureId id;
+    Position pos{0,0};
+    TileTextureId id = TileTextureId::Grass;
 };
 
 struct StaticFurnitureData {  // para la deco del pueblo o las casas de npcs
-    Position pos;
-    FurnitureId id;
-    Direction dir;
+    Position pos{0,0};
+    FurnitureId id = FurnitureId::Chair;
+    Direction dir = Direction::None;
 };
 
 struct DecorData { // para cosas como arboles y plantas
-    Position pos;
-    DecorId id;
+    Position pos{0,0};
+    DecorId id = DecorId::MapleTree;
 };
 
 struct BuildingData {
-    Position pos;
-    BuildingId id;
+    Position pos{0,0};
+    BuildingId id = BuildingId::FarmHouse;
 };
 
 struct BackgroundData{

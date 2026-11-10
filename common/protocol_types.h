@@ -190,23 +190,23 @@ enum class CheatType : uint8_t {
 };
 
 // TODO: completar
-enum class TileTextureId{
+enum class TileTextureId : uint8_t{
     Grass,
     Dirt,
 };
 
-enum class DecorId{
+enum class DecorId : uint8_t{
     MapleTree,
     PineTree,
 };
 
 
-enum class FurnitureId{
+enum class FurnitureId : uint8_t{
     Chair,
     Table,
 };
 
-enum class BuildingId{
+enum class BuildingId : uint8_t{
     FarmHouse,
     StoneCabin,
     WoodCabin,

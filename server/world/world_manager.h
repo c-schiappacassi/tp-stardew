@@ -23,6 +23,7 @@ private:
 
 public:
     explicit WorldManager(const DungeonConfig& config = {},uint32_t seed = std::random_device{}(),const FarmConfig& farmConfig = FarmConfig{});
+    ConstMapData buildConstMap() const;
     bool loadFarm(uint8_t worldId, const FarmLayout& layout);
     bool spawnPlayer(Player& player) const override;
     const FarmManager& getFarm() const;

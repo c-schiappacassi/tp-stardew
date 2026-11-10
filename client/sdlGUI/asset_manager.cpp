@@ -126,11 +126,11 @@ void AssetManager::load_farmer_clips() {
 }
 
 void AssetManager::load_cow_clips() {
-    register_clips(clips, SpriteDefs::COW_SET, SpriteDefs::COW_CLIPS, false);
+    register_clips(clips, SpriteDefs::COW_SET, SpriteDefs::COW_CLIPS, true);
 }
 
 void AssetManager::load_chicken_clips() {
-    register_clips(clips, SpriteDefs::CHICKEN_SET, SpriteDefs::CHICKEN_CLIPS, false);
+    register_clips(clips, SpriteDefs::CHICKEN_SET, SpriteDefs::CHICKEN_CLIPS, true);
 }
 
 void AssetManager::load_tool_frames() {

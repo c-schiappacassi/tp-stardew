@@ -23,9 +23,9 @@ namespace {
 }
 
 const toml::table& tableAt(const toml::node* node,
-                           const std::string& field) {
+                           std::string_view field) {
     if (!node || !node->is_table()) {
-        invalid(field, "se esperaba una tabla");
+        invalid(std::string(field), "se esperaba una tabla");
     }
 
     return *node->as_table();

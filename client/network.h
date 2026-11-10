@@ -90,4 +90,10 @@ public:
         protocolo.recv(status);
         return status;
     }
+
+    const ConstMapData recvMap(){
+        ConstMapData map;
+        protocolo.recv(map);
+        return map;
+    };
 };

@@ -282,21 +282,20 @@ namespace SpriteDefs {
 
     // TODO: cambiar sprite dependiendo del color de vaca y pollo
     // Cow
-    inline constexpr ClipSetInfo COW_SET{SpriteId::BronwCow, Dimentions::COW_COLS, Dimentions::COW_CELL_W, Dimentions::COW_CELL_H,
-                                         -Dimentions::COW_CELL_W / 2, -Dimentions::COW_CELL_H};
+    inline constexpr ClipSetInfo COW_SET{SpriteId::BronwCow, Dimentions::COW_COLS, Dimentions::COW_CELL_W, Dimentions::COW_CELL_H, -Dimentions::COW_CELL_W / 2, -Dimentions::COW_CELL_H};
     inline constexpr int COW_IDLE_MS = 400;
     inline constexpr int COW_WALK_MS = 150;
 
     inline constexpr ClipDef<AnimalState> COW_CLIPS[] = {
-        clip_run(AnimalState::Idle, Direction::Down,  true, 0,  2, COW_IDLE_MS),
-        clip_run(AnimalState::Idle, Direction::Right, true, 4,  2, COW_IDLE_MS),
-        clip_run(AnimalState::Idle, Direction::Up,    true, 8,  2, COW_IDLE_MS),
-        clip_run(AnimalState::Idle, Direction::Left,  true, 12, 2, COW_IDLE_MS),
+        clip_run(AnimalState::Idle, Direction::Down,  true, 0, 1, COW_IDLE_MS),
+        clip_run(AnimalState::Idle, Direction::Right, true, 4, 1, COW_IDLE_MS),
+        clip_run(AnimalState::Idle, Direction::Up,    true, 8, 1, COW_IDLE_MS),
+        clip_run(AnimalState::Idle, Direction::Left,  true, 4, 1, COW_IDLE_MS),
 
-        clip_run(AnimalState::Walking, Direction::Down,  true, 0,  4, COW_WALK_MS),
-        clip_run(AnimalState::Walking, Direction::Right, true, 4,  4, COW_WALK_MS),
-        clip_run(AnimalState::Walking, Direction::Up,    true, 8,  4, COW_WALK_MS),
-        clip_run(AnimalState::Walking, Direction::Left,  true, 12, 4, COW_WALK_MS),
+        clip_run(AnimalState::Walking, Direction::Down,  true, 0, 4, COW_WALK_MS),
+        clip_run(AnimalState::Walking, Direction::Right, true, 4, 4, COW_WALK_MS),
+        clip_run(AnimalState::Walking, Direction::Up,    true, 8, 4, COW_WALK_MS),
+        clip_run(AnimalState::Walking, Direction::Left,  true, 4, 4, COW_WALK_MS),
     };
 
     // Chicken
@@ -305,22 +304,20 @@ namespace SpriteDefs {
 
     inline constexpr int CHICKEN_IDLE_MS = 400;
     inline constexpr int CHICKEN_WALK_MS = 120;
-
-    inline constexpr int CHICKEN_LEFT_ROW  = 0;
+    inline constexpr int CHICKEN_DOWN_ROW  = 0 * Dimentions::CHICKEN_COLS;
     inline constexpr int CHICKEN_RIGHT_ROW = 1 * Dimentions::CHICKEN_COLS;
-    inline constexpr int CHICKEN_FRONT_ROW = 6 * Dimentions::CHICKEN_COLS;
-    inline constexpr int CHICKEN_BACK_ROW  = CHICKEN_FRONT_ROW;
+    inline constexpr int CHICKEN_UP_ROW    = 2 * Dimentions::CHICKEN_COLS;
 
     inline constexpr ClipDef<AnimalState> CHICKEN_CLIPS[] = {
-        clip_run(AnimalState::Idle, Direction::Left,  true, CHICKEN_LEFT_ROW,  2, CHICKEN_IDLE_MS),
-        clip_run(AnimalState::Idle, Direction::Right, true, CHICKEN_RIGHT_ROW, 2, CHICKEN_IDLE_MS),
-        clip_run(AnimalState::Idle, Direction::Down,  true, CHICKEN_FRONT_ROW, 2, CHICKEN_IDLE_MS),
-        clip_run(AnimalState::Idle, Direction::Up,    true, CHICKEN_BACK_ROW,  2, CHICKEN_IDLE_MS),
+        clip_run(AnimalState::Idle, Direction::Down,  true, CHICKEN_DOWN_ROW,  1, CHICKEN_IDLE_MS),
+        clip_run(AnimalState::Idle, Direction::Right, true, CHICKEN_RIGHT_ROW, 1, CHICKEN_IDLE_MS),
+        clip_run(AnimalState::Idle, Direction::Up,    true, CHICKEN_UP_ROW,    1, CHICKEN_IDLE_MS),
+        clip_run(AnimalState::Idle, Direction::Left,  true, CHICKEN_RIGHT_ROW, 1, CHICKEN_IDLE_MS),
 
-        clip_run(AnimalState::Walking, Direction::Left,  true, CHICKEN_LEFT_ROW,  4, CHICKEN_WALK_MS),
+        clip_run(AnimalState::Walking, Direction::Down,  true, CHICKEN_DOWN_ROW,  4, CHICKEN_WALK_MS),
         clip_run(AnimalState::Walking, Direction::Right, true, CHICKEN_RIGHT_ROW, 4, CHICKEN_WALK_MS),
-        clip_run(AnimalState::Walking, Direction::Down,  true, CHICKEN_FRONT_ROW, 4, CHICKEN_WALK_MS),
-        clip_run(AnimalState::Walking, Direction::Up,    true, CHICKEN_BACK_ROW,  4, CHICKEN_WALK_MS),
+        clip_run(AnimalState::Walking, Direction::Up,    true, CHICKEN_UP_ROW,    4, CHICKEN_WALK_MS),
+        clip_run(AnimalState::Walking, Direction::Left,  true, CHICKEN_RIGHT_ROW, 4, CHICKEN_WALK_MS),
     };
 
 }

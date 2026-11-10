@@ -25,11 +25,11 @@ private:
     void writeMineData(MessageBuffer& out, const MineData& mine);
     void writeCropData(MessageBuffer& out, const CropData& crop);
     void writeAnimalData(MessageBuffer& out, const AnimalData& animal);
-    void writeDecorationData(MessageBuffer& out, const DecorationData& decoration);
+    void writeFurnitureData(MessageBuffer& out, const FurnitureData& f);
+    void writeBackgroundData(MessageBuffer& out, const BackgroundData& bg);
     void writeFarmData(MessageBuffer& out, const FarmData& farm);
     void writeZoneData(MessageBuffer& out, Zone currentZone, const ZoneData& zoneData);
     void writeGameInfo(MessageBuffer& out, const GameInfoDTO& info);
-
     void writePlayerData(MessageBuffer& out, const PlayerData& data);
     void writePlayerDataLocal(MessageBuffer& out, const PlayerDataLocal& localData);
 
@@ -59,6 +59,7 @@ public:
     CheckCodeDTO receiveCheckCode();
 
     void sendStatus(const ServerStatus& status);
+    void sendConstMap(const ConstMapData& map);
     void sendQtStatus(const qtStatus& status);
 };
 

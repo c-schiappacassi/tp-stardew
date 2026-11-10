@@ -35,6 +35,8 @@ private:
     DecorData receiveDecorationData();
     FarmData receiveFarmData();
 
+    BackgroundData receiveBackgroundData();
+
 public:
     explicit ClientProtocol(Socket&& socket);
 
@@ -60,6 +62,7 @@ public:
     void send(const ListGamesDTO& dto);
     void send(const CheckCodeDTO& dto);
 
+    void recv(ConstMapData& map);
     void recv(ServerStatus& status);
     void recv(qtStatus& status);
 };

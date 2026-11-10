@@ -24,6 +24,9 @@ class Game:public Thread {
         bool configured = false;
         WorldManager world;
         PlayerManager playerManager;
+        std::shared_ptr<const ConstMapData> constMap;
+
+        std::shared_ptr<const ConstMapData> mapForSession();
 
         void processCommands();
         void sendStatus();
@@ -33,6 +36,7 @@ class Game:public Thread {
         void closeAll();
         ServerStatus buildStatus() const;
         GameSession addPlayer(const std::string& playerName,const PlayerData& data,const std::shared_ptr<OutQueue>& output,const std::string& successMsg);
+    
     public:
         Game(const std::string& id,const std::string& name,uint8_t worldId,const PlayerConfig& playerConfig = {},const DungeonConfig& dungeonConfig = {},const FarmConfig& farmConfig = FarmConfig{},uint8_t maxPlayers = 4);
 

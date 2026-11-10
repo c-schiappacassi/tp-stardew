@@ -115,10 +115,10 @@ void ClientHandler::runGame() {
 bool ClientHandler::answerEntry() {
     const bool joined = session.status.status == StatusCode::Ok && session.input;
     protocol.sendStatus(session.status);
-
-    if (!joined) {
-        session = GameSession();
+    if (joined) {
+        protocol.sendConstMap(*session.map);
     }
+    if (!joined) session = GameSession();
     return joined;
 }
 
