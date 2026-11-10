@@ -2,7 +2,7 @@
 gold_drop = 100
 
 [shops.robin]
-# despues cuando sumemos mas deco vamos a aumentar a 7 que es lo que pide la consigna!
+# despues cuando sumemos mas deco vamos a aumentar a 7 que es lo que pide la consigna (por ahora 6 que es lo que tenemos)!
 daily_rotation_count = 6
 
 [[shops.robin.products]]

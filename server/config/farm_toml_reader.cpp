@@ -208,7 +208,6 @@ void readBackground(const toml::table& farm,
                 "requiere background_default");
     }
 
-    // Compatibilidad con el formato anterior: debe definir todos los tiles.
     std::vector<std::vector<bool>> defined(
         height, std::vector<bool>(width, false));
 
@@ -357,7 +356,6 @@ void validateInitialPlacements(const FarmLayout& layout,
             invalid("farm.crops", "posicion de cultivo fuera del mapa");
         }
 
-        // FarmLoader labra automaticamente el tile si no estaba preparado.
         if (!tilledCells.contains(*cell)) {
             if (!canPlace(bounds)) {
                 invalid("farm.crops", "no se puede labrar el tile del cultivo");
