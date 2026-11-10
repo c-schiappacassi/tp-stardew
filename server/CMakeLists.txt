@@ -61,6 +61,12 @@ target_sources(taller_server
         world/world_farm.cpp
         player/ports/player_spawn_source.cpp
         config/game_toml_reader.cpp
+        config/toml_helpers.cpp
+        config/death_toml_reader.cpp
+        config/shop_toml_reader.cpp
+        config/dungeon_toml_reader.cpp
+        config/town_toml_reader.cpp
+        config/farm_toml_reader.cpp
     PUBLIC
     # .h files
         network/acceptor.h
@@ -135,6 +141,12 @@ target_sources(taller_server
         farm/loading/farm_layout.h
         config/game_toml_reader.h
         config/game_config.h
+        config/toml_helpers.h
+        config/death_toml_reader.h
+        config/shop_toml_reader.h
+        config/dungeon_toml_reader.h
+        config/town_toml_reader.h
+        config/farm_toml_reader.h
 )
 
 target_include_directories(taller_server PRIVATE ${CMAKE_CURRENT_SOURCE_DIR})
