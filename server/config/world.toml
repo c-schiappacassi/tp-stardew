@@ -251,3 +251,60 @@ furniture = [
     { item_id = 52, position = { x = 9, y = 3 } },
     { item_id = 54, position = { x = 9, y = 6 } },
 ]
+
+
+# MAZMORRA
+
+
+[dungeon]
+mining_range = 64
+mineral_density_percent = 10
+
+# Densidad particular por habitacion. Si una habitacion no aparece, se utiliza la densidad general.
+mineral_density_by_room = []
+
+# mas adelante:
+# mineral_density_by_room = [
+#     { room = 1, density = 15 },
+#     { room = 5, density = 25 },
+# ]
+
+[[dungeon.minerals]]
+type = "CoalRock"
+hits_to_break = 2
+spawn_weight = 60
+first_room = 1
+reward_item = "Coal"
+reward_quantity = 1
+reward_quality = "None"
+reward_chance = 100
+
+[[dungeon.minerals]]
+type = "LapisRock"
+hits_to_break = 4
+spawn_weight = 25
+first_room = 1
+reward_item = "Lapis"
+reward_quantity = 1
+reward_quality = "None"
+reward_chance = 85
+
+[[dungeon.minerals]]
+type = "SilverRock"
+hits_to_break = 6
+spawn_weight = 10
+first_room = 1
+reward_item = "Silver"
+reward_quantity = 1
+reward_quality = "None"
+reward_chance = 100
+
+[[dungeon.minerals]]
+type = "GoldRock"
+hits_to_break = 8
+spawn_weight = 5
+first_room = 5
+reward_item = "Gold"
+reward_quantity = 1
+reward_quality = "None"
+reward_chance = 100
