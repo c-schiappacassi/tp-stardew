@@ -52,6 +52,172 @@ bool boolean(const toml::table& table, std::string_view key,
     return *node->value<bool>();
 }
 
+std::string string(const toml::table& table, std::string_view key,
+                   const std::string& field) {
+    const auto* node = table.get(key);
+
+    if (!node || !node->is_string()) {
+        invalid(field, "se esperaba un texto");
+    }
+
+    return *node->value<std::string>();
+}
+
+ResourceType resourceTypeFromName(const std::string& name,
+                                  const std::string& field) {
+    if (name == "CoalRock") return ResourceType::CoalRock;
+    if (name == "LapisRock") return ResourceType::LapisRock;
+    if (name == "SilverRock") return ResourceType::SilverRock;
+    if (name == "GoldRock") return ResourceType::GoldRock;
+
+    invalid(field, "tipo de mineral desconocido");
+}
+
+ItemId rewardItemFromName(const std::string& name,
+                          const std::string& field) {
+    if (name == "Coal") return ItemId::Coal;
+    if (name == "Lapis") return ItemId::Lapis;
+    if (name == "Silver") return ItemId::Silver;
+    if (name == "Gold") return ItemId::Gold;
+
+    invalid(field, "objeto de recompensa desconocido");
+}
+
+Quality qualityFromName(const std::string& name,
+                        const std::string& field) {
+    if (name == "None") return Quality::None;
+
+    invalid(field, "calidad desconocida");
+}
+
+void readDungeon(const toml::table& root, GameConfig& config) {
+    const auto& dungeon = tableAt(root.get("dungeon"), "dungeon");
+
+    config.dungeon.miningRange = static_cast<uint16_t>(
+        integer(dungeon, "mining_range", 65535,
+                "dungeon.mining_range"));
+
+    if (config.dungeon.miningRange == 0) {
+        invalid("dungeon.mining_range", "debe ser mayor que cero");
+    }
+
+    config.dungeon.mineralDensityPercent = static_cast<uint8_t>(
+        integer(dungeon, "mineral_density_percent", 100,
+                "dungeon.mineral_density_percent"));
+
+    config.dungeon.minerals.clear();
+    config.dungeon.mineralDensityByRoom.clear();
+
+    const auto* densityNode = dungeon.get("mineral_density_by_room");
+
+    if (!densityNode || !densityNode->is_array()) {
+        invalid("dungeon.mineral_density_by_room",
+                "se esperaba una lista");
+    }
+
+    const auto& densities = *densityNode->as_array();
+
+    for (std::size_t i = 0; i < densities.size(); ++i) {
+        const auto field = "dungeon.mineral_density_by_room[" +
+                           std::to_string(i) + "]";
+        const auto& density = tableAt(&densities[i], field);
+
+        const auto room = static_cast<uint8_t>(
+            integer(density, "room", DUNGEON_ROOM_COUNT,
+                    field + ".room"));
+
+        const auto percentage = static_cast<uint8_t>(
+            integer(density, "density", 100,
+                    field + ".density"));
+
+        if (room == 0) {
+            invalid(field + ".room", "la habitacion debe ser mayor que cero");
+        }
+
+        if (!config.dungeon.mineralDensityByRoom.emplace(
+                room, percentage).second) {
+            invalid(field, "habitacion repetida");
+        }
+    }
+
+    const auto* mineralsNode = dungeon.get("minerals");
+
+    if (!mineralsNode || !mineralsNode->is_array()) {
+        invalid("dungeon.minerals", "se esperaba una lista");
+    }
+
+    const auto& minerals = *mineralsNode->as_array();
+
+    if (minerals.empty()) {
+        invalid("dungeon.minerals", "debe haber al menos un mineral");
+    }
+
+    for (std::size_t i = 0; i < minerals.size(); ++i) {
+        const auto field = "dungeon.minerals[" + std::to_string(i) + "]";
+        const auto& mineral = tableAt(&minerals[i], field);
+
+        const auto typeName = string(mineral, "type", field + ".type");
+        const auto type = resourceTypeFromName(
+            typeName, field + ".type");
+
+        const auto hits = integer(
+            mineral, "hits_to_break", 65535,
+            field + ".hits_to_break");
+
+        if (hits == 0) {
+            invalid(field + ".hits_to_break",
+                    "debe ser mayor que cero");
+        }
+
+        const auto weight = integer(
+            mineral, "spawn_weight", 65535,
+            field + ".spawn_weight");
+
+        const auto firstRoom = integer(
+            mineral, "first_room", DUNGEON_ROOM_COUNT,
+            field + ".first_room");
+
+        if (firstRoom == 0) {
+            invalid(field + ".first_room",
+                    "la habitacion debe ser mayor que cero");
+        }
+
+        const auto itemName = string(
+            mineral, "reward_item", field + ".reward_item");
+
+        const auto item = rewardItemFromName(
+            itemName, field + ".reward_item");
+
+        const auto quantity = integer(
+            mineral, "reward_quantity", 65535,
+            field + ".reward_quantity");
+
+        if (quantity == 0) {
+            invalid(field + ".reward_quantity",
+                    "debe ser mayor que cero");
+        }
+
+        const auto qualityName = string(
+            mineral, "reward_quality", field + ".reward_quality");
+
+        const auto quality = qualityFromName(
+            qualityName, field + ".reward_quality");
+
+        const auto chance = integer(
+            mineral, "reward_chance", 100,
+            field + ".reward_chance");
+
+        config.dungeon.minerals.push_back({
+            type,
+            static_cast<uint16_t>(hits),
+            static_cast<uint16_t>(weight),
+            static_cast<uint8_t>(firstRoom),
+            {item, static_cast<uint16_t>(quantity), quality},
+            static_cast<uint8_t>(chance)
+        });
+    }
+}
+
 ItemId itemFromId(int id, const std::string& field) {
     switch (id) {
         case 50: return ItemId::Chest;
@@ -135,6 +301,7 @@ WorldData GameTomlReader::read(const std::string& path) const {
 
         readDeath(root, world.config);
         readRobin(root, world.config);
+        readDungeon(root, world.config);
 
         if (root.contains("farm")) {
             world.farm = FarmTomlReader{}.read(root, world.config.farm);
