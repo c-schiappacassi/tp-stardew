@@ -106,23 +106,27 @@ int main(int argc, char* argv[]) {
             }
         }
 
-        GameConfig config;
+        WorldData world;
+
         if (!worldPath.empty()) {
-            config = GameTomlReader{}.read(worldPath);
+            world = GameTomlReader{}.read(worldPath);
 
             std::cout << "Configuracion general cargada.\n";
             std::cout << "Oro perdido al morir: "
-                      << config.death.goldDrop << '\n';
+                      << world.config.death.goldDrop << '\n';
             std::cout << "Productos de Robin: "
-                      << config.robin.products.size() << '\n';
+                      << world.config.robin.products.size() << '\n';
         }
 
-        std::optional<FarmLayout> farm;
         if (!farmPath.empty()) {
-            farm = FarmTomlReader{}.read(farmPath, config.farm);
+            world.farm = FarmTomlReader{}.read(farmPath, world.config.farm);
         }
 
-        GameManager manager(config.dungeon, config.player, farm);
+        GameManager manager(
+            world.config.dungeon,
+            world.config.player,
+            world.farm
+        );
 
         Socket listener(argv[1]);
         Acceptor acceptor(listener, manager);
