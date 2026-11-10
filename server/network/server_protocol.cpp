@@ -24,6 +24,43 @@ void validateFarmCounts(const FarmData& farm) {
     validateCount(farm.tilledSoil.size(), MAX_U16, "tierra arada");
 }
 
+void validateCombatPosition(const Position& pos) {
+    if (pos.getX() < 0 || pos.getY() < 0 || pos.getX() > static_cast<int>(MAX_U16) ||
+        pos.getY() > static_cast<int>(MAX_U16)) {
+        throw ProtocolError("Posicion de combate fuera del protocolo");
+    }
+}
+
+void validateCombat(const DungeonCombatData& combat) {
+    validateCount(combat.enemies.size(), MAX_U16, "enemigos");
+    validateCount(combat.projectiles.size(), MAX_U16, "proyectiles");
+    validateCount(combat.traps.size(), MAX_U16, "trampas");
+    validateCount(combat.loot.size(), MAX_U16, "botines");
+    for (const auto& enemy: combat.enemies) {
+        validateCombatPosition(enemy.pos);
+        if (enemy.dir > Direction::Right || enemy.type > EnemyType::Skull ||
+            enemy.state > EnemyState::Dead) {
+            throw ProtocolError("Estado de enemigo desconocido");
+        }
+    }
+    for (const auto& projectile: combat.projectiles) {
+        validateCombatPosition(projectile.pos);
+        if (projectile.type > FlameType::Green) {
+            throw ProtocolError("Tipo de llama desconocido");
+        }
+    }
+    for (const auto& trap: combat.traps) {
+        validateCombatPosition(trap.pos);
+        if (trap.dir == Direction::None || trap.dir > Direction::Right ||
+            trap.type > TrapType::WallFlame || trap.state > TrapState::Active) {
+            throw ProtocolError("Estado de trampa desconocido");
+        }
+    }
+    for (const auto& loot: combat.loot) {
+        validateCombatPosition(loot.pos);
+    }
+}
+
 bool hasMatchingZoneData(const PlayerDataLocal& data) {
     switch (data.currentZone) {
         case Zone::Farm:
@@ -48,11 +85,14 @@ void validateStatus(const ServerStatus& status) {
 
     validateCount(status.players.size(), MAX_U16, "jugadores");
     validateCount(local.items.size(), MAX_U8, "items");
-    if (const auto* farm = std::get_if<FarmData>(&local.zoneData)) {
+    const auto* farm = std::get_if<FarmData>(&local.zoneData);
+    if (farm) {
         validateFarmCounts(*farm);
     }
-    if (const auto* mine = std::get_if<MineData>(&local.zoneData)) {
+    const auto* mine = std::get_if<MineData>(&local.zoneData);
+    if (mine) {
         validateCount(mine->current_level_data.minerals.size(), MAX_U16, "minerales");
+        validateCombat(mine->current_level_data.combat);
     }
 }
 }  // namespace
@@ -61,8 +101,8 @@ ServerProtocol::ServerProtocol(Socket&& socket) : base(std::move(socket)) {}
 
 void ServerProtocol::shutdown() { base.shutdown(); }
 
-MessageType ServerProtocol::receiveType() {
-    return static_cast<MessageType>(base.receiveUint8());
+MessageType ServerProtocol::receiveType() { 
+    return static_cast<MessageType>(base.receiveUint8()); 
 }
 
 Position ServerProtocol::receivePosition() {
@@ -137,8 +177,48 @@ void ServerProtocol::writeLevelData(MessageBuffer& out, const LevelData& level) 
     writePosition(out, level.exit);
 
     out.putUint16(static_cast<uint16_t>(level.minerals.size()));
-    for (const MineralData& mineral : level.minerals) {
+    for (const MineralData& mineral: level.minerals) {
         writeMineralData(out, mineral);
+    }
+    writeCombatData(out, level.combat);
+}
+
+void ServerProtocol::writeCombatData(MessageBuffer& out, const DungeonCombatData& combat) {
+    out.putUint32(combat.visitId);
+    out.putUint8(combat.room);
+    out.putUint16(static_cast<uint16_t>(combat.enemies.size()));
+    for (const auto& enemy: combat.enemies) {
+        out.putUint32(enemy.id);
+        writePosition(out, enemy.pos);
+        out.putUint8(static_cast<uint8_t>(enemy.dir));
+        out.putUint8(static_cast<uint8_t>(enemy.type));
+        out.putUint8(static_cast<uint8_t>(enemy.state));
+        out.putUint16(enemy.health);
+        out.putUint16(enemy.maxHealth);
+        out.putUint8(enemy.frenzied ? 1 : 0);
+        out.putUint32(enemy.action);
+    }
+    out.putUint16(static_cast<uint16_t>(combat.projectiles.size()));
+    for (const auto& projectile: combat.projectiles) {
+        out.putUint32(projectile.id);
+        writePosition(out, projectile.pos);
+        out.putUint8(static_cast<uint8_t>(projectile.type));
+    }
+    out.putUint16(static_cast<uint16_t>(combat.traps.size()));
+    for (const auto& trap: combat.traps) {
+        out.putUint32(trap.id);
+        writePosition(out, trap.pos);
+        out.putUint8(static_cast<uint8_t>(trap.dir));
+        out.putUint8(static_cast<uint8_t>(trap.type));
+        out.putUint8(static_cast<uint8_t>(trap.state));
+        out.putUint16(trap.range);
+    }
+    out.putUint16(static_cast<uint16_t>(combat.loot.size()));
+    for (const auto& loot: combat.loot) {
+        out.putUint32(loot.id);
+        writePosition(out, loot.pos);
+        out.putUint16(static_cast<uint16_t>(loot.item));
+        out.putUint16(loot.quantity);
     }
 }
 
@@ -231,8 +311,7 @@ void ServerProtocol::sendConstMap(const ConstMapData& map) {
     base.send(out);
 }
 
-void ServerProtocol::writeZoneData(MessageBuffer& out, Zone currentZone,
-                                   const ZoneData& zoneData) {
+void ServerProtocol::writeZoneData(MessageBuffer& out, Zone currentZone,const ZoneData& zoneData) {
     switch (currentZone) {
         case Zone::Farm: {
             const auto* farm = std::get_if<FarmData>(&zoneData);
@@ -265,6 +344,10 @@ void ServerProtocol::writePlayerDataLocal(MessageBuffer& out, const PlayerDataLo
     out.putUint16(localData.energy);
     out.putUint16(localData.maxEnergy);
     writeZoneData(out, localData.currentZone, localData.zoneData);
+    out.putUint8(localData.combatProgress.skeletons ? 1 : 0);
+    out.putUint8(localData.combatProgress.vampires ? 1 : 0);
+    out.putUint8(localData.combatProgress.orcs ? 1 : 0);
+    out.putUint8(localData.combatProgress.skull ? 1 : 0);
 }
 
 // RECEIVERS (the type byte --> consumed by receiveType())
@@ -318,6 +401,8 @@ InteractDTO ServerProtocol::receiveInteract() {
     return dto;
 }
 
+DayOkDTO ServerProtocol::receiveDayOk() { return DayOkDTO{base.receiveString()}; }
+
 DonateDTO ServerProtocol::receiveDonate() {
     DonateDTO dto(base.receiveString());
     dto.slot = base.receiveUint8();
@@ -341,13 +426,13 @@ RequestMultiplayerCodeDTO ServerProtocol::receiveRequestMultiplayerCode() {
     return RequestMultiplayerCodeDTO(base.receiveString());
 }
 
-DisconnectDTO ServerProtocol::receiveDisconnect() {
-    return DisconnectDTO(base.receiveString());
+DisconnectDTO ServerProtocol::receiveDisconnect() { 
+    return DisconnectDTO(base.receiveString()); 
 }
 
 ListGamesDTO ServerProtocol::receiveListGames() {
-    return ListGamesDTO(base.receiveString());
-}
+     return ListGamesDTO(base.receiveString()); 
+    }
 
 CheckCodeDTO ServerProtocol::receiveCheckCode() {
     CheckCodeDTO dto(base.receiveString());
@@ -375,6 +460,7 @@ void ServerProtocol::sendStatus(const ServerStatus& status) {
     }
 
     writePlayerDataLocal(out, status.localPlayer);
+    out.putUint8(status.dayEnded ? 1 : 0);
     base.send(out);
 }
 

@@ -1,13 +1,13 @@
 #include "player_manager.h"
 
 PlayerManager::PlayerManager(const PlayerConfig& config,const MovementRules& movement,const ZoneDataSource& zones,PlayerInteractions& interactions,const PlayerSpawnSource& spawns,uint8_t maxPlayers):
-    maxPlayers(maxPlayers),
-    factory(config),
-    updates(movement),
-    playerStatus(zones),
-    actions(interactions), spawns(spawns), movement(movement) {}
+        maxPlayers(maxPlayers),
+        factory(config),
+        updates(movement),
+        playerStatus(zones),
+        actions(interactions), spawns(spawns), movement(movement),dayDuration(config.dayDurationMs) {}
 
-    
+
 ServerStatus PlayerManager::addPlayer(const std::string& name,const PlayerData& appearance,const std::shared_ptr<OutQueue>& output) {
     ServerStatus result{};
     result.status = StatusCode::Error;
@@ -31,14 +31,22 @@ ServerStatus PlayerManager::addPlayer(const std::string& name,const PlayerData& 
 
     const uint16_t playerId = nextPlayerId;
     auto player = factory.create(appearance);
+    if (combatBonusUnlocked) {
+        player.applyCombatBonus();
+    }
     if (!spawns.spawnPlayer(player)) {
         result.errorMsg = "No hay una posicion disponible para el jugador";
         return result;
     }
-    auto it = players.emplace(playerId, PlayerRecord{playerId, name, output, true, std::move(player)}).first;
+    if (dayEnded) {
+        player.passOut();
+    }
+    auto it =players.emplace(playerId, PlayerRecord{playerId, name, output, true, std::move(player)}).first;
     ++nextPlayerId;
 
-    return playerStatus.buildForPlayer(players, it->second);
+    auto status = playerStatus.buildForPlayer(players, it->second);
+    status.dayEnded = dayEnded;
+    return status;
 }
 void PlayerManager::disconnectPlayer(uint16_t playerId) {
     const auto it = players.find(playerId);
@@ -77,7 +85,9 @@ ServerStatus PlayerManager::resumePlayer(const std::string& name,const std::shar
         record.connected = true;
         record.output = output;
         record.player.setMovement(Direction::None);
-        return playerStatus.buildForPlayer(players, record);
+        auto status = playerStatus.buildForPlayer(players, record);
+        status.dayEnded = dayEnded;
+        return status;
     }
     result.errorMsg = "No tenes un jugador en esta partida";
     return result;
@@ -109,12 +119,14 @@ void PlayerManager::updateToolStates(
     updates.updateToolStates(players, now);
 }
 
-void PlayerManager::advancePlayers(int normalStep) {
-    updates.advancePlayers(players, normalStep);
+void PlayerManager::advancePlayers(int normalStep) { 
+    updates.advancePlayers(players, normalStep); 
 }
 
 void PlayerManager::publishStatus(const ServerStatus& base) const {
-    playerStatus.publish(players, base);
+    auto status = base;
+    status.dayEnded = dayEnded;
+    playerStatus.publish(players, status);
 }
 
 void PlayerManager::handleCommand(const PlayerCommand& command) {
@@ -131,5 +143,79 @@ void PlayerManager::handleCommand(const PlayerCommand& command) {
         return;
     }
 
-    actions.execute(it->second.player, *command.command);
+    if (command.command->type() == MessageType::DayOk) {
+        const auto state = it->second.player.getPublicData().state;
+        if (state == PlayerState::Unconscious || state == PlayerState::Sleeping) {
+            it->second.readyForNextDay = true;
+        }
+        return;
+    }
+
+    actions.execute(it->second.player, *command.command, command.playerId);
+}
+
+std::vector<Combatant> PlayerManager::getCombatants() {
+    std::vector<Combatant> result;
+    for (auto& [id, record]: players) {
+        if (record.connected) {
+            result.push_back(Combatant{id, &record.player});
+        }
+    }
+    return result;
+}
+
+void PlayerManager::applyCombatBonus() {
+    combatBonusUnlocked = true;
+    for (auto& [id, record]: players) {
+        record.player.applyCombatBonus();
+    }
+}
+
+bool PlayerManager::advanceDay(std::chrono::milliseconds elapsed) {
+    if (elapsed.count() < 0) {
+        throw std::invalid_argument("El tiempo no puede retroceder");
+    }
+    bool connected = false;
+    bool allIncapacitated = true;
+    for (const auto& [id, record]: players) {
+        if (!record.connected) {
+            continue;
+        }
+        connected = true;
+        if (record.player.canBeAttacked()) {
+            allIncapacitated = false;
+        }
+    }
+    if (!connected) {
+        return false;
+    }
+    if (!dayEnded) {
+        dayElapsed += elapsed;
+        dayEnded = allIncapacitated || dayElapsed >= dayDuration;
+        if (dayEnded) {
+            for (auto& [id, record]: players) {
+                record.player.passOut();
+            }
+        }
+    }
+    if (!dayEnded) {
+        return false;
+    }
+    for (const auto& [id, record]: players) {
+        if (record.connected && !record.readyForNextDay) {
+            return false;
+        }
+    }
+    auto prepared = players;
+    for (auto& [id, record]: prepared) {
+        record.player.wakeUp();
+        if (!spawns.recoverPlayer(record.player)) {
+            return false;
+        }
+        record.readyForNextDay = false;
+    }
+    players = std::move(prepared);
+    dayElapsed = std::chrono::milliseconds{0};
+    dayEnded = false;
+    return true;
 }

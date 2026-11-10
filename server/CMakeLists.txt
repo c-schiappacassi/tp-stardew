@@ -2,6 +2,17 @@ target_sources(taller_server
     PRIVATE
     # .cpp files
         main.cpp
+        dungeon/enemies/enemy.cpp
+        dungeon/enemies/enemy_generator.cpp
+        dungeon/enemies/enemy_navigation.cpp
+        dungeon/combat/combat_progress.cpp
+        dungeon/combat/dungeon_combat.cpp
+        dungeon/combat/combat_damage.cpp
+        dungeon/combat/sword_combat.cpp
+        dungeon/combat/enemy_behavior.cpp
+        dungeon/combat/projectile_combat.cpp
+        dungeon/combat/trap_combat.cpp
+        config/combat_toml_reader.cpp
         network/acceptor.cpp
         network/client_handler.cpp
         network/client_sender.cpp
@@ -69,6 +80,19 @@ target_sources(taller_server
         config/farm_toml_reader.cpp
     PUBLIC
     # .h files
+        dungeon/enemies/enemy.h
+        dungeon/enemies/enemy_definition.h
+        dungeon/enemies/enemy_generator.h
+        dungeon/enemies/enemy_navigation.h
+        dungeon/combat/dungeon_combat.h
+        dungeon/combat/combat_progress.h
+        dungeon/combat/room_combat.h
+        dungeon/combat/combat_context.h
+        dungeon/combat/combat_damage.h
+        dungeon/combat/sword_combat.h
+        dungeon/combat/enemy_behavior.h
+        dungeon/combat/projectile_combat.h
+        dungeon/combat/trap_combat.h
         network/acceptor.h
         network/client_handler.h
         network/client_sender.h
@@ -96,6 +120,7 @@ target_sources(taller_server
         player/ports/movement_rules.h
         player/ports/zone_data_source.h
         player/ports/player_interactions.h
+        player/ports/combatant.h
         player/player_updates.h
         player/player_status.h
         game/command_router.h
@@ -140,6 +165,7 @@ target_sources(taller_server
         player/ports/player_spawn_source.h
         farm/loading/farm_layout.h
         config/game_toml_reader.h
+        config/combat_toml_reader.h
         config/game_config.h
         config/toml_helpers.h
         config/death_toml_reader.h

@@ -21,6 +21,7 @@ private:
 
     void writeStack(MessageBuffer& out, const Stack& stack);
     void writeMineralData(MessageBuffer& out, const MineralData& mineral);
+    void writeCombatData(MessageBuffer& out, const DungeonCombatData& combat);
     void writeLevelData(MessageBuffer& out, const LevelData& level);
     void writeMineData(MessageBuffer& out, const MineData& mine);
     void writeCropData(MessageBuffer& out, const CropData& crop);
@@ -40,7 +41,7 @@ public:
     ServerProtocol& operator=(const ServerProtocol&) = delete;
     ServerProtocol(ServerProtocol&&) = default;
     ServerProtocol& operator=(ServerProtocol&&) = default;
-    
+
     void shutdown();
 
     MessageType receiveType();
@@ -50,6 +51,7 @@ public:
     ResumeGameDTO receiveResumeGame();
     MoveDTO receiveMove();
     InteractDTO receiveInteract();
+    DayOkDTO receiveDayOk();
     DonateDTO receiveDonate();
     ChatDTO receiveChat();
     UseItemDTO receiveUseItem();

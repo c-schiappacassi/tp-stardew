@@ -1,6 +1,27 @@
 target_sources(taller_tests
     PRIVATE
     # .cpp files
+    enemies_test.cpp
+    combat_config_test.cpp
+    enemy_protocol_test.cpp
+    ../server/dungeon/enemies/enemy.cpp
+    ../server/dungeon/enemies/enemy_generator.cpp
+    ../server/dungeon/enemies/enemy_navigation.cpp
+    ../server/dungeon/combat/combat_progress.cpp
+    ../server/dungeon/combat/dungeon_combat.cpp
+    ../server/dungeon/combat/combat_damage.cpp
+    ../server/dungeon/combat/sword_combat.cpp
+    ../server/dungeon/combat/enemy_behavior.cpp
+    ../server/dungeon/combat/projectile_combat.cpp
+    ../server/dungeon/combat/trap_combat.cpp
+    ../server/config/combat_toml_reader.cpp
+    ../server/config/game_toml_reader.cpp
+    ../server/config/toml_helpers.cpp
+    ../server/config/death_toml_reader.cpp
+    ../server/config/shop_toml_reader.cpp
+    ../server/config/dungeon_toml_reader.cpp
+    ../server/config/town_toml_reader.cpp
+    ../server/config/farm_toml_reader.cpp
     ../client/client_protocol.cpp
     ../server/network/acceptor.cpp
     ../server/network/client_handler.cpp
@@ -70,4 +91,4 @@ target_include_directories(taller_tests
     ../server
 )
 
-target_compile_definitions(taller_tests PRIVATE FARM_EXAMPLE_PATH="${PROJECT_SOURCE_DIR}/server/config/farm.toml")
+target_compile_definitions(taller_tests PRIVATE WORLD_EXAMPLE_PATH="${PROJECT_SOURCE_DIR}/server/config/world.toml")

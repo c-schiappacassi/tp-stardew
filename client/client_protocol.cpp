@@ -54,6 +54,75 @@ MineralData ClientProtocol::receiveMineralData() {
     return mineral;
 }
 
+EnemySnapshot ClientProtocol::receiveEnemyData() {
+    EnemySnapshot enemy;
+    enemy.id = base.receiveUint32();
+    enemy.pos = receivePosition();
+    enemy.dir = static_cast<Direction>(base.receiveUint8());
+    enemy.type = static_cast<EnemyType>(base.receiveUint8());
+    enemy.state = static_cast<EnemyState>(base.receiveUint8());
+    enemy.health = base.receiveUint16();
+    enemy.maxHealth = base.receiveUint16();
+    enemy.frenzied = base.receiveUint8() != 0;
+    enemy.action = base.receiveUint32();
+    return enemy;
+}
+
+ProjectileData ClientProtocol::receiveProjectileData() {
+    ProjectileData projectile;
+    projectile.id = base.receiveUint32();
+    projectile.pos = receivePosition();
+    projectile.type = static_cast<FlameType>(base.receiveUint8());
+    return projectile;
+}
+
+TrapData ClientProtocol::receiveTrapData() {
+    TrapData trap;
+    trap.id = base.receiveUint32();
+    trap.pos = receivePosition();
+    trap.dir = static_cast<Direction>(base.receiveUint8());
+    trap.type = static_cast<TrapType>(base.receiveUint8());
+    trap.state = static_cast<TrapState>(base.receiveUint8());
+    trap.range = base.receiveUint16();
+    return trap;
+}
+
+LootData ClientProtocol::receiveLootData() {
+    LootData loot;
+    loot.id = base.receiveUint32();
+    loot.pos = receivePosition();
+    loot.item = static_cast<ItemId>(base.receiveUint16());
+    loot.quantity = base.receiveUint16();
+    return loot;
+}
+
+DungeonCombatData ClientProtocol::receiveCombatData() {
+    DungeonCombatData combat;
+    combat.visitId = base.receiveUint32();
+    combat.room = base.receiveUint8();
+    auto count = base.receiveUint16();
+    combat.enemies.reserve(count);
+    for (uint16_t i = 0; i < count; ++i) {
+        combat.enemies.push_back(receiveEnemyData());
+    }
+    count = base.receiveUint16();
+    combat.projectiles.reserve(count);
+    for (uint16_t i = 0; i < count; ++i) {
+        combat.projectiles.push_back(receiveProjectileData());
+    }
+    count = base.receiveUint16();
+    combat.traps.reserve(count);
+    for (uint16_t i = 0; i < count; ++i) {
+        combat.traps.push_back(receiveTrapData());
+    }
+    count = base.receiveUint16();
+    combat.loot.reserve(count);
+    for (uint16_t i = 0; i < count; ++i) {
+        combat.loot.push_back(receiveLootData());
+    }
+    return combat;
+}
+
 LevelData ClientProtocol::receiveLevelData() {
     LevelData level;
     level.entry = receivePosition();
@@ -64,6 +133,7 @@ LevelData ClientProtocol::receiveLevelData() {
     for (uint16_t i = 0; i < count; ++i) {
         level.minerals.push_back(receiveMineralData());
     }
+    level.combat = receiveCombatData();
     return level;
 }
 
@@ -119,6 +189,10 @@ PlayerDataLocal ClientProtocol::receivePlayerDataLocal() {
     localData.energy = base.receiveUint16();
     localData.maxEnergy = base.receiveUint16();
     localData.zoneData = receiveZoneData(baseData.currentZone);
+    localData.combatProgress.skeletons = base.receiveUint8() != 0;
+    localData.combatProgress.vampires = base.receiveUint8() != 0;
+    localData.combatProgress.orcs = base.receiveUint8() != 0;
+    localData.combatProgress.skull = base.receiveUint8() != 0;
 
     return localData;
 }
@@ -173,6 +247,7 @@ void ClientProtocol::send(const CommandDTO& dto) {
         case MessageType::ResumeGame: send(static_cast<const ResumeGameDTO&>(dto)); break;
         case MessageType::Move: send(static_cast<const MoveDTO&>(dto)); break;
         case MessageType::Interact: send(static_cast<const InteractDTO&>(dto)); break;
+        case MessageType::DayOk:send(static_cast<const DayOkDTO&>(dto));break;
         case MessageType::Donate: send(static_cast<const DonateDTO&>(dto)); break;
         case MessageType::Chat: send(static_cast<const ChatDTO&>(dto)); break;
         case MessageType::UseItem: send(static_cast<const UseItemDTO&>(dto)); break;
@@ -247,6 +322,13 @@ void ClientProtocol::send(const DonateDTO& dto) {
     base.send(out);
 }
 
+void ClientProtocol::send(const DayOkDTO& dto) {
+    MessageBuffer out;
+    out.putUint8(static_cast<uint8_t>(MessageType::DayOk));
+    out.putString(dto.userName);
+    base.send(out);
+}
+
 void ClientProtocol::send(const ChatDTO& dto) {
     MessageBuffer out;
     out.putUint8(static_cast<uint8_t>(MessageType::Chat));
@@ -303,7 +385,7 @@ void ClientProtocol::send(const CheckCodeDTO& dto) {
 // RECEIVERS
 
 // ServerStatus { status, errorMsg, successMsg, gameId, playerId, worldId,
-//                players, localPlayer }
+//                players, localPlayer, dayEnded }
 
 void ClientProtocol::recv(ServerStatus& status) {
     status.status = static_cast<StatusCode>(base.receiveUint8());
@@ -321,6 +403,7 @@ void ClientProtocol::recv(ServerStatus& status) {
     }
 
     status.localPlayer = receivePlayerDataLocal();
+    status.dayEnded = base.receiveUint8() != 0;
 }
 
 // qtStatus { status, errorMsg, successMsg, games }
@@ -340,7 +423,7 @@ void ClientProtocol::recv(qtStatus& status) {
 
 
 BackgroundData ClientProtocol::receiveBackgroundData() {
-    constexpr uint32_t MAX_FLOOR = 1024 * 1024; 
+    constexpr uint32_t MAX_FLOOR = 1024 * 1024;
     BackgroundData bg;
 
     const uint32_t nFloor = base.receiveUint32();
@@ -390,4 +473,3 @@ void ClientProtocol::recv(ConstMapData& map) {
     map.clints  = receiveBackgroundData();
     map.marnies = receiveBackgroundData();
 }
-

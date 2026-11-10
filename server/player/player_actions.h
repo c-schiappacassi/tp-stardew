@@ -10,5 +10,5 @@ private:
 public:
     explicit PlayerActions(PlayerInteractions& interactions);
 
-    void execute(Player& player, const CommandDTO& command) const;
+    void execute(Player& player, const CommandDTO& command, uint16_t playerId) const;
 };

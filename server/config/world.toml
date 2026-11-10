@@ -212,3 +212,75 @@ position = { x = 2, y = 15 }
 [[town.connections]]
 destination = "dungeon"
 position = { x = 35, y = 15 }
+
+# COMBATE:
+
+[player]
+sword_damage = 20
+sword_range = 40
+sword_energy_cost = 2
+sword_interval_ms = 500
+damage_grace_ms = 350
+passout_gold_percent = 10
+day_duration_ms = 900000
+
+[combat]
+skeleton_revive_ms = 7000
+vampire_revive_ms = 3000
+blood_radius = 80
+flame_speed = 80
+flame_lifetime_ms = 4000
+trap_inactive_ms = 2000
+trap_warning_ms = 700
+trap_active_ms = 1000
+trap_hit_ms = 800
+trap_damage = 12
+wall_flame_range = 64
+orc_silver_chance = 20
+mining_ambush_chance = 10
+gold_chance = 60
+gold_min = 2
+gold_max = 10
+
+[spawns]
+safety_range = 64
+skeletons_per_room = 1
+orc_group_every = 3
+vampire_pair_every = 4
+skull_every = 5
+max_enemies_per_room = 32
+
+[enemies.skeleton]
+health = 40
+damage = 8
+speed = 32
+range = 20
+attack_ms = 1000
+
+[enemies.orc]
+health = 70
+damage = 12
+speed = 36
+range = 20
+attack_ms = 1200
+
+[enemies.vampire_male]
+health = 100
+damage = 18
+speed = 40
+range = 22
+attack_ms = 1000
+
+[enemies.vampire_female]
+health = 90
+damage = 12
+speed = 60
+range = 22
+attack_ms = 900
+
+[enemies.skull]
+health = 1
+damage = 10
+speed = 0
+range = 160
+attack_ms = 1500

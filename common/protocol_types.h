@@ -7,7 +7,7 @@ enum class MessageType : uint8_t {
     JoinGame = 0x02,
     ListGames = 0x03,  // lo usamos para cuando hay que retomar una partida
     ResumeGame = 0x04, // llamamos a todas las partidas y vemos si entre ellas
-                       // esta la aprtida a la que nos queremos reunir
+                        // esta la aprtida a la que nos queremos reunir
     CheckCode = 0x05,
     ExitGame = 0x06,
 
@@ -33,9 +33,9 @@ enum class MessageType : uint8_t {
     CommunityState = 0x88, // avance de las misiones
 };
 
-enum class StatusCode : uint8_t {
-    Ok = 0,
-    Error = 1
+enum class StatusCode : uint8_t { 
+    Ok = 0, 
+    Error = 1 
 };
 
 enum class Direction : uint8_t {
@@ -86,6 +86,10 @@ enum class EnemyState : uint8_t {
     Attacking = 2,
     Dead = 3,
 };
+
+enum class FlameType : uint8_t { Blue = 0, Green = 1 };
+enum class TrapType : uint8_t { Spikes = 0, WallFlame = 1 };
+enum class TrapState : uint8_t { Inactive = 0, Warning = 1, Active = 2 };
 
 // PLANTS
 enum class CropType : uint8_t {

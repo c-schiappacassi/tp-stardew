@@ -21,6 +21,11 @@ private:
     Stack receiveStack();
 
     MineralData receiveMineralData();
+    EnemySnapshot receiveEnemyData();
+    ProjectileData receiveProjectileData();
+    TrapData receiveTrapData();
+    LootData receiveLootData();
+    DungeonCombatData receiveCombatData();
     LevelData receiveLevelData();
     MineData receiveMineData();
     ZoneData receiveZoneData(Zone currentZone);
@@ -54,6 +59,7 @@ public:
     void send(const ResumeGameDTO& dto);
     void send(const MoveDTO& dto);
     void send(const InteractDTO& dto);
+    void send(const DayOkDTO& dto);
     void send(const DonateDTO& dto);
     void send(const ChatDTO& dto);
     void send(const UseItemDTO& dto);

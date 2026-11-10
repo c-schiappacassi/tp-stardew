@@ -1,12 +1,11 @@
-#include "game.h"
-
 #include <chrono>
-#include <thread>
 #include <iostream>
+#include <thread>
+
+#include "time/game_clock.h"
 
 #include "constants.h"
-#include "foo.h"
-#include "time/game_clock.h"
+#include "game.h"
 
 void Game::updateToolStates() {
     std::lock_guard<std::mutex> lock(mtx);
@@ -26,7 +25,11 @@ void Game::sendStatus() {
 
 void Game::advanceWorld(std::chrono::milliseconds elapsed) {
     std::lock_guard<std::mutex> lock(mtx);
-    world.update(elapsed, playerManager.getCollisionBounds(Zone::Farm));
+    world.update(elapsed, playerManager.getCollisionBounds(Zone::Farm),playerManager.getCombatants());
+    if (world.combatCompleted()) {
+        playerManager.applyCombatBonus();
+    }
+    playerManager.advanceDay(elapsed);
 }
 
 void Game::processCommands() {
@@ -38,23 +41,27 @@ void Game::processCommands() {
 }
 
 void Game::run() {
-    bool running = should_keep_running();
-    const auto rate = std::chrono::duration_cast<std::chrono::milliseconds>(std::chrono::duration<float, std::milli>{TICK_MS});
+    const auto rate = std::chrono::duration_cast<std::chrono::milliseconds>(
+            std::chrono::duration<float, std::milli>{TICK_MS});
     GameClock clock;
     try {
-        Foo::constant_rate_loop(
-            [this, &running, &clock](long long) {
-                updateToolStates();
-                processCommands();
-                advancePlayers();
-                advanceWorld(clock.advance());
-                running = should_keep_running();
-
-                if (running) {
-                    sendStatus();
-                }
-            },
-            rate, running);
+        auto nextTick = std::chrono::steady_clock::now();
+        while (should_keep_running()) {
+            updateToolStates();
+            processCommands();
+            advancePlayers();
+            advanceWorld(clock.advance());
+            if (should_keep_running()) {
+                sendStatus();
+            }
+            nextTick += rate;
+            const auto now = std::chrono::steady_clock::now();
+            if (nextTick < now) {
+                const auto missedTicks = (now - nextTick) / rate;
+                nextTick += rate * (missedTicks + 1);
+            }
+            std::this_thread::sleep_until(nextTick);
+        }
     } catch (const ClosedQueue&) {
         // cola cerrada.
     } catch (const std::exception& e) {

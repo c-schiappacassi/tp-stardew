@@ -11,16 +11,15 @@ bool WorldManager::loadFarm(uint8_t worldId, const FarmLayout& layout) {
     return true;
 }
 //bool WorldManager::spawnPlayer(Player& player) const {
-  //  return farm.spawnPlayer(player);
+//  return farm.spawnPlayer(player);
 //}
 
 const FarmManager& WorldManager::getFarm() const { return farm; }
 
-void WorldManager::update(std::chrono::milliseconds elapsed,
-    const std::vector<CollisionBounds>& farmPlayers) {
-    if (!farm.isInitialized()) {
-        return;
+void WorldManager::update(std::chrono::milliseconds elapsed,const std::vector<CollisionBounds>& farmPlayers,const std::vector<Combatant>& players,std::chrono::steady_clock::time_point now) {
+    if (farm.isInitialized()) {
+        farm.setObstacles(farmPlayers);
+        farm.update(elapsed);
     }
-    farm.setObstacles(farmPlayers);
-    farm.update(elapsed);
+    dungeon.update(elapsed, players, entityIds, now);
 }

@@ -1,17 +1,25 @@
 #include "player.h"
 
 #include <algorithm>
-#include <stdexcept>
 #include <cmath>
 #include <limits>
+#include <stdexcept>
+
+namespace {
+uint16_t improvedMaximum(uint16_t value) {
+    const uint32_t improved = static_cast<uint32_t>(value) * 5 / 4;
+    return static_cast<uint16_t>(
+            std::min<uint32_t>(std::numeric_limits<uint16_t>::max(), improved));
+}
+}
 
 Player::Player(
-    const PlayerData& initialData,
-    uint8_t inventoryCapacity,
+    const PlayerData& initialData, 
+    uint8_t inventoryCapacity, 
     uint16_t maxHealth,
-    uint16_t maxEnergy,
+    uint16_t maxEnergy, 
     uint32_t initialGold,
-    const PlayerConfig& config):
+     const PlayerConfig& config):
         characterName(initialData.characterName),
         pos(initialData.pos),
         state(initialData.state),
@@ -32,9 +40,7 @@ Player::Player(
     if (maxHealth == 0 || maxEnergy == 0) {
         throw std::invalid_argument("Vida y energia maximas deben ser mayores a cero");
     }
-    if (!config.collision.isValid()) {
-        throw std::invalid_argument("La caja de colision debe tener dimensiones positivas");
-    }
+    config.validate();
     if (state == PlayerState::Walking) {
         movementDirection = dir;
     }
@@ -79,19 +85,28 @@ Position Player::getNextPosition(int step) const {
     int y = pos.getY();
 
     switch (dir) {
-        case Direction::Up: y -= step; break;
-        case Direction::Down: y += step; break;
-        case Direction::Left: x -= step; break;
-        case Direction::Right: x += step; break;
-        default: return pos;
+        case Direction::Up:
+            y -= step;
+            break;
+        case Direction::Down:
+            y += step;
+            break;
+        case Direction::Left:
+            x -= step;
+            break;
+        case Direction::Right:
+            x += step;
+            break;
+        default:
+            return pos;
     }
 
     return Position(std::max(0, x), std::max(0, y));
 }
 
-void Player::advance(int step) {
+void Player::advance(int step) { 
     pos = getNextPosition(step);
-}
+ }
 
 bool Player::selectSlot(uint8_t slot) {
     if (!canAct()) {
@@ -105,8 +120,8 @@ bool Player::selectSlot(uint8_t slot) {
     return true;
 }
 
-bool Player::addItem(const Stack& stack) {
-    return inventory.add(stack);
+bool Player::addItem(const Stack& stack) { 
+    return inventory.add(stack); 
 }
 
 bool Player::removeItem(uint8_t slot, uint16_t quantity) {
@@ -114,8 +129,8 @@ bool Player::removeItem(uint8_t slot, uint16_t quantity) {
 }
 
 const Stack* Player::getSelectedItem() const {
-    return inventory.getSlot(currentSlot);
-}
+     return inventory.getSlot(currentSlot); 
+    }
 
 PlayerData Player::getPublicData() const {
     PlayerData data;
@@ -123,7 +138,7 @@ PlayerData Player::getPublicData() const {
     data.pos = pos;
     data.state = state;
     data.dir = dir;
-    data.currentZone = zone;    
+    data.currentZone = zone;
     const Stack* item = getSelectedItem();
     if (item != nullptr) {
         data.heldItem = item->item_id;
@@ -207,8 +222,7 @@ bool Player::performAction(uint16_t energyCost, std::chrono::milliseconds interv
 
     nextActionTime = now + interval;
     if (energy == 0) {
-        state = PlayerState::Unconscious;
-        movementDirection = Direction::None;
+        passOut();
     } else {
         setMovement(movementDirection);
     }
@@ -216,8 +230,7 @@ bool Player::performAction(uint16_t energyCost, std::chrono::milliseconds interv
     return true;
 }
 
-void Player::updateToolState(
-    std::chrono::steady_clock::time_point now) {
+void Player::updateToolState(std::chrono::steady_clock::time_point now) {
     if (state != PlayerState::UsingTool) {
         return;
     }
@@ -239,27 +252,85 @@ bool Player::canReach(const Position& target, uint16_t range) const {
 }
 
 Zone Player::getZone() const {
-    return zone;
-}
+     return zone; 
+    }
 
-uint8_t Player::getDungeonLevel() const {
-    return dungeonLevel;
+uint8_t Player::getDungeonLevel() const { 
+    return dungeonLevel; 
 }
 
 const Position& Player::getPosition() const {
-    return pos;
-}
+     return pos; 
+    }
 
 CollisionBounds Player::getCollisionBounds(const Position& position) const {
     return config.collision.at(position);
 }
 
 Position Player::getCollisionCenter() const {
-    return getCollisionBounds(pos).center();
-}
+     return getCollisionBounds(pos).center(); 
+    }
 
 bool Player::canAct() const {
     return(state == PlayerState::Idle ||state == PlayerState::Walking) &&health > 0 &&energy > 0;
+}
+
+bool Player::canBeAttacked() const {
+    return health > 0 && energy > 0 && state != PlayerState::Unconscious &&state != PlayerState::Sleeping;
+}
+
+uint16_t Player::receiveDamage(uint16_t damage, std::chrono::steady_clock::time_point now) {
+    if (!canBeAttacked() || damage == 0 || now < nextDamageTime) {
+        return 0;
+    }
+    const uint16_t applied = std::min(health, damage);
+    health -= applied;
+    nextDamageTime = now + std::chrono::milliseconds{config.damageGraceMs};
+    if (health == 0) {
+        passOut();
+    }
+    return applied;
+}
+
+uint16_t Player::getSwordDamage() const {
+    if (static_cast<uint32_t>(health) * 5 <= maxHealth && config.swordDamage > 0) {
+        return std::max<uint16_t>(1, config.swordDamage / 2);
+    }
+    return config.swordDamage;
+}
+
+uint16_t Player::getSwordRange() const { return config.swordRange; }
+
+void Player::addGold(uint32_t amount) {
+    gold += std::min(amount, std::numeric_limits<uint32_t>::max() - gold);
+}
+
+void Player::applyCombatBonus() {
+    if (combatBonus) {
+        return;
+    }
+    maxHealth = improvedMaximum(maxHealth);
+    maxEnergy = improvedMaximum(maxEnergy);
+    combatBonus = true;
+}
+
+void Player::passOut() {
+    if (state == PlayerState::Unconscious || state == PlayerState::Sleeping) {
+        return;
+    }
+    gold -= static_cast<uint32_t>(static_cast<uint64_t>(gold) * config.passoutGoldPercent / 100);
+    state = PlayerState::Unconscious;
+    movementDirection = Direction::None;
+}
+
+void Player::wakeUp() {
+    const bool rested = state == PlayerState::Sleeping;
+    health = rested ? maxHealth : std::max<uint16_t>(1, maxHealth / 2);
+    energy = rested ? maxEnergy : std::max<uint16_t>(1, maxEnergy / 2);
+    state = PlayerState::Idle;
+    movementDirection = Direction::None;
+    nextActionTime = {};
+    nextDamageTime = {};
 }
 
 bool Player::changeLocation(Zone destination,uint8_t level,const Position& target) {
@@ -271,7 +342,7 @@ bool Player::changeLocation(Zone destination,uint8_t level,const Position& targe
         if (level == 0) {
             return false;
         }
-    } else if ( destination == Zone::Farm ||destination == Zone::Town) {
+    } else if (destination == Zone::Farm || destination == Zone::Town) {
         if (level != 0) {
             return false;
         }
@@ -292,11 +363,9 @@ void Player::faceTarget(const Position& target) {
         return;
     }
 
-    const double dx =
-        static_cast<double>(target.getX()) - pos.getX();
+    const double dx =static_cast<double>(target.getX()) - pos.getX();
 
-    const double dy =
-        static_cast<double>(target.getY()) - pos.getY();
+    const double dy =static_cast<double>(target.getY()) - pos.getY();
 
     if (dx == 0 && dy == 0) {
         return;
