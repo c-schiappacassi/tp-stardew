@@ -9,6 +9,7 @@
 #include "player/player_config.h"
 #include "protocol_types.h"
 #include "farm/farm_layout.h"
+#include "town/town_config.h"
 
 
 struct DeathConfig {
@@ -30,6 +31,7 @@ struct GameConfig {
     DungeonConfig dungeon;
     PlayerConfig player;
     FarmConfig farm;
+    TownConfig town;
     DeathConfig death;
     RobinShopConfig robin;
 };
