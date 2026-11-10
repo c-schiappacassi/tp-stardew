@@ -308,3 +308,31 @@ reward_item = "Gold"
 reward_quantity = 1
 reward_quality = "None"
 reward_chance = 100
+
+
+
+# TOWN (CUANDO SE IMPLEMENTE CAMBIAMOS LO QUE NECESITEMOS, LOS VALORES SON AL AZAR AHORA)
+
+
+[town.map]
+width = 40
+height = 30
+tile_size = 16
+
+[[town.buildings]]
+id = "blacksmith"
+position = { x = 10, y = 5 }
+width = 6
+height = 5
+
+[[town.npcs]]
+id = "merchant"
+position = { x = 12, y = 8 }
+
+[[town.connections]]
+destination = "farm"
+position = { x = 2, y = 15 }
+
+[[town.connections]]
+destination = "dungeon"
+position = { x = 35, y = 15 }
