@@ -60,7 +60,7 @@ target_include_directories(taller_common PUBLIC .)
 
 # Install libSDL2 and libSDL2pp (for client or editor)
 # HEY!! TODO XXX: add more dependendies (either for client, server or editor)
-if(TALLER_CLIENT OR TALLER_EDITOR)
+if(TALLER_CLIENT)
     include(FetchContent)
     find_package(SDL2 QUIET CONFIG)
     find_package(SDL2_image QUIET CONFIG)
@@ -129,7 +129,7 @@ if(TALLER_CLIENT OR TALLER_EDITOR)
     FetchContent_MakeAvailable(libSDL2pp)
 endif()
 
-if(TALLER_SERVER OR TALLER_TESTS)
+if(TALLER_SERVER OR TALLER_TESTS OR TALLER_EDITOR)
     include(FetchContent)
     find_package(tomlplusplus 3.4 QUIET)
     if(NOT TARGET tomlplusplus::tomlplusplus)
@@ -180,11 +180,17 @@ if(TALLER_SERVER)
 endif()
 
 if(TALLER_EDITOR)
+    find_package(Qt6 REQUIRED COMPONENTS Widgets)
+
     # HEY!! TODO XXX: Change the name of the executable to the one you like!
     add_executable(taller_editor)
 
+    set_target_properties(taller_editor PROPERTIES
+        AUTOMOC ON
+    )
+
     # Make them depend on taller_common lib
-    add_dependencies(taller_editor taller_common SDL2pp::SDL2pp)
+    add_dependencies(taller_editor taller_common)
 
     # Add source files and enable warnings
     # HEY!! TODO XXX: add more subfolders here
@@ -192,11 +198,7 @@ if(TALLER_EDITOR)
 
     set_project_warnings(taller_editor ${TALLER_MAKE_WARNINGS_AS_ERRORS} FALSE)
 
-    # add libSDL2pp's headers
-    target_include_directories(taller_editor PRIVATE ${libSDL2pp_SOURCE_DIR})
-
-    # Link the taller_common lib target
-    target_link_libraries(taller_editor taller_common SDL2pp::SDL2pp)
+    target_link_libraries(taller_editor PRIVATE taller_common Qt6::Widgets tomlplusplus::tomlplusplus)
 endif()
 
 

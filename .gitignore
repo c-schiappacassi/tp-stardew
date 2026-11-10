@@ -46,3 +46,5 @@ build
 # IDEs
 .idea/
 .qtcreator/
+build-server/
+build-editor/
