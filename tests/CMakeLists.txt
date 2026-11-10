@@ -52,7 +52,6 @@ target_sources(taller_tests
     ../server/farm/interactions/farm_interactions.cpp
     ../server/farm/interactions/farm_targeting.cpp
     ../server/farm/loading/farm_loader.cpp
-    ../server/farm/loading/farm_toml_reader.cpp
     ../server/farm/crops/crop.cpp
     ../server/farm/crops/crop_manager.cpp
     ../server/farm/crops/crop_quality.cpp
