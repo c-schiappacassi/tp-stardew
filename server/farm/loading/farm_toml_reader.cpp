@@ -190,9 +190,11 @@ FarmLayout readFarm(const toml::table& root, const FarmConfig& config) {
 }
 }
 
+
 FarmLayout FarmTomlReader::read(const std::string& path, const FarmConfig& config) const {
     try {
-        return readFarm(toml::parse_file(path), config);
+        const auto root = toml::parse_file(path);
+        return read(root, config);
     } catch (const toml::parse_error& error) {
         std::ostringstream message;
         message << path << ": " << error;
@@ -200,4 +202,9 @@ FarmLayout FarmTomlReader::read(const std::string& path, const FarmConfig& confi
     } catch (const std::invalid_argument& error) {
         throw std::invalid_argument(path + ": " + error.what());
     }
+}
+
+FarmLayout FarmTomlReader::read(const toml::table& root,
+                                const FarmConfig& config) const {
+    return readFarm(root, config);
 }
