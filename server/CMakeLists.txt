@@ -61,6 +61,7 @@ target_sources(taller_server
         game/time/game_clock.cpp
         world/world_farm.cpp
         player/ports/player_spawn_source.cpp
+        config/game_toml_reader.cpp
     PUBLIC
     # .h files
         network/acceptor.h
@@ -134,6 +135,8 @@ target_sources(taller_server
         game/time/game_clock.h
         player/ports/player_spawn_source.h
         farm/loading/farm_layout.h
+        config/game_toml_reader.h
+        config/game_config.h
 )
 
 target_include_directories(taller_server PRIVATE ${CMAKE_CURRENT_SOURCE_DIR})
