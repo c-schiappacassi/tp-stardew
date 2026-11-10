@@ -39,3 +39,33 @@ rotates = true
 item_id = 56
 price = 600
 rotates = true
+
+[farm]
+width = 12
+height = 10
+player_houses = 2
+
+spawn = { x = 1, y = 1 }
+door_mines = { x = 10, y = 8 }
+mine_return = { x = 2, y = 2 }
+
+background = [
+    { x = 0, y = 0, texture_id = 2, state = "unwalkable" },
+    { x = 1, y = 0, texture_id = 2, state = "walkable" }
+]
+
+tilled_soil = [
+    { x = 3, y = 7 }
+]
+
+crops = [
+    { type = "strawberry", position = { x = 3, y = 4 }, watered = true }
+]
+
+animals = [
+    { type = "brown_cow", position = { x = 5, y = 5 } }
+]
+
+furniture = [
+    { item_id = 51, position = { x = 8, y = 4 } }
+]

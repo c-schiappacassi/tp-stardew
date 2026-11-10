@@ -1,4 +1,5 @@
 #include "config/game_toml_reader.h"
+#include "farm/loading/farm_toml_reader.h"
 
 #include <limits>
 #include <set>
@@ -126,16 +127,20 @@ void readRobin(const toml::table& root, GameConfig& config) {
 
 }
 
-GameConfig GameTomlReader::read(const std::string& path) const {
+WorldData GameTomlReader::read(const std::string& path) const {
     try {
         const auto root = toml::parse_file(path);
 
-        GameConfig config;
+        WorldData world;
 
-        readDeath(root, config);
-        readRobin(root, config);
+        readDeath(root, world.config);
+        readRobin(root, world.config);
 
-        return config;
+        if (root.contains("farm")) {
+            world.farm = FarmTomlReader{}.read(root, world.config.farm);
+        }
+
+        return world;
 
     } catch (const toml::parse_error& error) {
         std::ostringstream message;

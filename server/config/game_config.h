@@ -3,11 +3,14 @@
 
 #include <cstdint>
 #include <vector>
+#include <optional>
 
 #include "dungeon/dungeon_config.h"
 #include "farm/farm_config.h"
 #include "player/player_config.h"
 #include "protocol_types.h"
+#include "farm/farm_layout.h"
+
 
 struct DeathConfig {
     uint32_t goldDrop = 100;
@@ -30,4 +33,9 @@ struct GameConfig {
     FarmConfig farm;
     DeathConfig death;
     RobinShopConfig robin;
+};
+
+struct WorldData {
+    GameConfig config;
+    std::optional<FarmLayout> farm;
 };
