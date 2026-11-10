@@ -1,16 +1,10 @@
-//
-// Created by carop on 11/9/2026.
-//
+#pragma once
 
-#ifndef TP_STARDEW_GAME_TOML_READER_H
-#define TP_STARDEW_GAME_TOML_READER_H
+#include <string>
 
+#include "config/game_config.h"
 
-
-class game_toml_reader {
-
+class GameTomlReader {
+public:
+    GameConfig read(const std::string& path) const;
 };
-
-
-
-#endif //TP_STARDEW_GAME_TOML_READER_H
