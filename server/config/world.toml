@@ -1,0 +1,41 @@
+[death]
+gold_drop = 100
+
+[shops.robin]
+# despues cuando sumemos mas deco vamos a aumentar a 7 que es lo que pide la consigna!
+daily_rotation_count = 6
+
+[[shops.robin.products]]
+item_id = 50
+price = 250
+rotates = false
+
+[[shops.robin.products]]
+item_id = 51
+price = 500
+rotates = true
+
+[[shops.robin.products]]
+item_id = 52
+price = 300
+rotates = true
+
+[[shops.robin.products]]
+item_id = 53
+price = 400
+rotates = true
+
+[[shops.robin.products]]
+item_id = 54
+price = 200
+rotates = true
+
+[[shops.robin.products]]
+item_id = 55
+price = 350
+rotates = true
+
+[[shops.robin.products]]
+item_id = 56
+price = 600
+rotates = true
