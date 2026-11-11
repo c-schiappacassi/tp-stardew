@@ -28,7 +28,7 @@ namespace {
                 };
                 clip.sequence.push_back({frame, f.ms});
             }
-            clips.insert_or_assign(ClipId{set.sprite, Action{d.state}, d.dir}, std::move(clip));
+            clips.insert_or_assign(ClipId{set.sprite, Action{d.state}, d.dir, d.item}, std::move(clip));
         }
     }
 
@@ -61,6 +61,14 @@ AssetManager::AssetManager(SDL2pp::Renderer& renderer, const std::filesystem::pa
     load_decor_sprites();
     load_building_sprites();
     load_furniture_sprites();
+    load_skeleton_clips();
+    load_golem_clips();
+    load_bat_clips();
+    load_skull_clips();
+}
+
+void AssetManager::load_skull_clips() {
+    register_clips(clips, SpriteDefs::SKULL_SET, SpriteDefs::SKULL_CLIPS, false);
 }
 
 void AssetManager::load_sprites_texture(SDL2pp::Renderer& renderer, const std::filesystem::path& sprites_root) {
@@ -141,11 +149,29 @@ void AssetManager::load_tool_frames() {
             const int16_t off_x = s.off.x - Dimentions::FARMER_CELL_W / 2;
             const int16_t off_y = s.off.y - Dimentions::FARMER_FEET_Y;
             frames.push_back(ToolFrame{
-                Sprite{SpriteId::Tools, r.x, r.y, r.w, r.h, off_x, off_y},
+                Sprite{d.sheet, r.x, r.y, r.w, r.h, off_x, off_y}, 
                 s.angle, SDL2pp::Point(d.pivot_x, d.pivot_y)});
         }
         tool_frames.insert_or_assign({d.item, d.dir}, std::move(frames));
     }
+}
+
+void AssetManager::load_bat_clips() {
+    register_clips(clips, SpriteDefs::FROST_BAT_SET, SpriteDefs::BAT_CLIPS, false);
+    register_clips(clips, SpriteDefs::FROST_BAT_DEBRIS_SET, SpriteDefs::BAT_DEAD_CLIPS, false);
+    register_clips(clips, SpriteDefs::LAVA_BAT_SET, SpriteDefs::BAT_CLIPS, false);
+    register_clips(clips, SpriteDefs::LAVA_BAT_DEBRIS_SET, SpriteDefs::BAT_DEAD_CLIPS, false);
+}
+
+
+void AssetManager::load_skeleton_clips() {
+    register_clips(clips, SpriteDefs::SKELETON_SET, SpriteDefs::SKELETON_CLIPS, false);
+    register_clips(clips, SpriteDefs::SKELETON_BONES_SET, SpriteDefs::SKELETON_DEAD_CLIPS, false);
+}
+
+void AssetManager::load_golem_clips() {
+    register_clips(clips, SpriteDefs::GOLEM_SET, SpriteDefs::GOLEM_CLIPS, false);
+    register_clips(clips, SpriteDefs::GOLEM_ROCKS_SET, SpriteDefs::GOLEM_DEAD_CLIPS, false);
 }
 
 SDL2pp::Texture& AssetManager::get_texture(SpriteId id) { return textures.at(id); }

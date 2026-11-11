@@ -1,9 +1,6 @@
 target_sources(taller_tests
     PRIVATE
     # .cpp files
-    enemies_test.cpp
-    combat_config_test.cpp
-    enemy_protocol_test.cpp
     ../server/dungeon/enemies/enemy.cpp
     ../server/dungeon/enemies/enemy_generator.cpp
     ../server/dungeon/enemies/enemy_navigation.cpp

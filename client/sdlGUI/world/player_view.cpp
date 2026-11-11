@@ -99,7 +99,12 @@ void PlayerView::draw_layers_in_order(const RenderInfo& ctx, const farmer::DrawP
 }
 
 void PlayerView::draw(const RenderInfo& ctx) {
-    const ClipId clip_id{SpriteId::FarmerBase, Action{state}, facing};
+    ClipId clip_id{SpriteId::FarmerBase, Action{state}, facing};
+    if (state == PlayerState::UsingTool && held_item) {
+        ClipId with_item = clip_id;
+        with_item.item_id = held_item;
+        if (ctx.assets.has_clip(with_item)) clip_id = with_item;
+    }
     tick(ctx, clip_id);
 
     const Clip& clip = ctx.assets.get_clip(clip_id);

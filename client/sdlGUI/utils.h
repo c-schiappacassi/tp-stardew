@@ -32,7 +32,12 @@ enum class SpriteId : uint16_t {
     Trees,
     MarketBuildings,
     FarmBuildings,
-    Cabins
+    Cabins,
+    Skeleton,
+    StoneGolem,
+    FrostBat,
+    LavaBat,
+    SquidKid
 };
 
 enum class UiSpriteId : uint8_t {

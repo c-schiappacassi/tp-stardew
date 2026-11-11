@@ -25,6 +25,26 @@ namespace Dimentions {
     constexpr uint16_t ORE_SIZE       = 16;
     constexpr uint16_t CROP_CELL_W    = 16;
     constexpr uint16_t CROP_CELL_H    = 32;
+
+    constexpr uint16_t SKELETON_COLS   = 4;
+    constexpr uint16_t SKELETON_CELL_W = 16;
+    constexpr uint16_t SKELETON_CELL_H = 32;
+    constexpr uint16_t SKELETON_FEET_Y = 30;
+
+    constexpr uint16_t GOLEM_COLS   = 4;
+    constexpr uint16_t GOLEM_CELL_W = 16;
+    constexpr uint16_t GOLEM_CELL_H = 24;
+    constexpr uint16_t GOLEM_FEET_Y = 22;
+
+    constexpr uint16_t BAT_COLS   = 4;
+    constexpr uint16_t BAT_CELL_W = 16;
+    constexpr uint16_t BAT_CELL_H = 24;
+    constexpr uint16_t BAT_FEET_Y = 22;
+
+    constexpr uint16_t SKULL_COLS    = 4;
+    constexpr uint16_t SKULL_CELL_W  = 16;
+    constexpr uint16_t SKULL_CELL_H  = 16;
+    constexpr uint16_t SKULL_HOVER_Y = 6;
 }
 
 namespace SpriteDefs {
@@ -48,6 +68,12 @@ namespace SpriteDefs {
         {SpriteId::MarketBuildings, "market/world/buildings.png"},
         {SpriteId::FarmBuildings,   "farm/environment/farm_buildings.png"},
         {SpriteId::Cabins,          "farm/environment/cabins.png"},
+        {SpriteId::StoneGolem, "caverns/monsters/stone_golem.png"},
+        {SpriteId::Skeleton, "caverns/monsters/skeleton.png"},
+        {SpriteId::FrostBat, "caverns/monsters/frost_bat.png"},
+        {SpriteId::LavaBat, "caverns/monsters/lava_bat.png"},
+        {SpriteId::SquidKid, "caverns/monsters/squid_kid.png"},
+
     };
 
     // Ores
@@ -162,11 +188,19 @@ namespace SpriteDefs {
         bool loop;
         int count;
         FrameDef frames[MAX_FRAMES];
+        std::optional<ItemId> item = std::nullopt;
     };
 
     template <class State>
     constexpr ClipDef<State> clip(State s, Direction d, bool loop, std::initializer_list<FrameDef> f) {
         ClipDef<State> c{s, d, loop, 0, {}};
+        for (const auto& fr : f) c.frames[c.count++] = fr;
+        return c;
+    }
+
+    template <class State>
+    constexpr ClipDef<State> clip(ItemId item, State s, Direction d, bool loop, std::initializer_list<FrameDef> f) {
+        ClipDef<State> c{s, d, loop, 0, {}, item};
         for (const auto& fr : f) c.frames[c.count++] = fr;
         return c;
     }
@@ -204,6 +238,15 @@ namespace SpriteDefs {
         clip_run(PlayerState::UsingTool, Direction::Right, false, 48, 5, 100),
         clip_run(PlayerState::UsingTool, Direction::Left,  false, 48, 5, 100),
         clip_run(PlayerState::UsingTool, Direction::Up,    false, 36, 5, 100),
+
+        clip(ItemId::WateringCan, PlayerState::UsingTool, Direction::Down,  false, {{54,150},{55,150},{55,150},{55,150},{54,150}}),
+        clip(ItemId::WateringCan, PlayerState::UsingTool, Direction::Right, false, {{58,150},{59,150},{59,150},{59,150},{58,150}}),
+        clip(ItemId::WateringCan, PlayerState::UsingTool, Direction::Left,  false, {{58,150},{59,150},{59,150},{59,150},{58,150}}),
+        clip(ItemId::WateringCan, PlayerState::UsingTool, Direction::Up,    false, {{62,150},{63,150},{63,150},{63,150},{62,150}}),
+
+        clip(ItemId::Sword, PlayerState::UsingTool, Direction::Down,  false, {{24,100},{25,70},{26,60},{27,60},{29,150}}),
+        clip(ItemId::Sword, PlayerState::UsingTool, Direction::Right, false, {{30,100},{31,70},{32,60},{33,60},{35,150}}),
+        clip(ItemId::Sword, PlayerState::UsingTool, Direction::Left,  false, {{30,100},{31,70},{32,60},{33,60},{35,150}}),
     };
 
     struct FarmerOffsetDef { int frame; LayerOffsets off; };
@@ -245,6 +288,29 @@ namespace SpriteDefs {
         { 68, {{  0, -1}, {  0, -1}, {0, 0}} },
         { 69, {{  0, -2}, {  0, -2}, {0, 0}} },
         { 70, {{  0,  0}, {  0,  0}, {0, 0}} },
+
+        // Watering can down
+        { 54, {{0, 4}, {0, 4}, {0, 0}} },
+        { 55, {{0, 3}, {0, 3}, {0, 0}} },
+        // Watering can side
+        { 58, {{ 0, 1}, { 0, 2}, {0, 0}} },
+        { 59, {{-1, 0}, {-1, 1}, {0, 0}} },
+        // Watering can up
+        { 62, {{0, 3}, {0, 3}, {0, 0}} },
+        { 63, {{0, 1}, {0, 1}, {0, 0}} },
+
+        // Sword down
+        { 24, {{0, -1}, {0, -1}, {0, 0}} },
+        { 25, {{0, -1}, {0, -1}, {0, 0}} },
+        { 26, {{0,  1}, {0,  1}, {0, 0}} },
+        { 27, {{0,  1}, {0,  1}, {0, 0}} },
+        { 29, {{0,  3}, {0,  3}, {0, 0}} },
+        // Sword side
+        { 30, {{0, -2}, {0, -1}, {0, 0}} },
+        { 31, {{0, -2}, {0, -1}, {0, 0}} },
+        { 32, {{0, -1}, {0,  0}, {0, 0}} },
+        { 33, {{0,  0}, {0,  1}, {0, 0}} },
+        { 35, {{0, -1}, {0,  0}, {0, 0}} },
     };
 
     // Tools
@@ -257,6 +323,7 @@ namespace SpriteDefs {
         ToolRect sprites[2];
         int pivot_x, pivot_y;
         ToolStep steps[5];
+        SpriteId sheet = SpriteId::Tools;
     };
 
     // TODO: agregar las otras herramientas
@@ -272,6 +339,45 @@ namespace SpriteDefs {
         { ItemId::Pickaxe, Direction::Right,
         {{256, 93, 16, 19}, {0, 0, 0, 0}}, 2, 17,
         {{0, {3, -5},  -110}, {0, {6, -7},  -60}, {0, {10, -5}, -10}, {0, {10, -4},   40},  {0, {10, -4},   80}} },
+
+        { ItemId::WateringCan, Direction::Down,
+        {{2, 224, 11, 15}, {2, 224, 11, 15}}, 0, 0,
+        {{0, {3, 14}, 0}, {0, {3, 13}, 0}, {0, {3, 13}, 0}, {0, {3, 13}, 0}, {0, {3, 14}, 0}} },
+
+        { ItemId::WateringCan, Direction::Right,
+        {{32, 228, 16, 11}, {49, 226, 15, 13}}, 0, 0,
+        {{0, {5, 17}, 0}, {1, {5, 12}, 0}, {1, {5, 12}, 0}, {1, {5, 12}, 0}, {0, {5, 17}, 0}} },
+
+        { ItemId::WateringCan, Direction::Up,
+        {{32, 228, 16, 11}, {32, 228, 16, 11}}, 0, 0,
+        {{0, {0, 13}, 0}, {0, {0, 12}, 0}, {0, {0, 12}, 0}, {0, {0, 12}, 0}, {0, {0, 13}, 0}} },
+
+        { ItemId::Sword, Direction::Down,
+        {{48, 16, 16, 16}, {0, 0, 0, 0}}, 3, 13,
+        {{0, {7, -3}, -30}, {0, {7, -1}, 0}, {0, {7, 2}, 50}, {0, {7, 5}, 95}, {0, {6, 8}, 135}},
+        SpriteId::Weapons },
+
+        { ItemId::Sword, Direction::Right,
+        {{48, 16, 16, 16}, {0, 0, 0, 0}}, 3, 13,
+        {{0, {0, -5}, -70}, {0, {9, -5}, -15}, {0, {10, -2}, 25}, {0, {11, 3}, 65}, {0, {12, 5}, 110}},
+        SpriteId::Weapons },
+
+        { ItemId::Sword, Direction::Up,
+        {{48, 16, 16, 16}, {0, 0, 0, 0}}, 3, 13,
+        {{0, {9, 1}, 70}, {0, {9, 0}, 30}, {0, {9, -1}, -10}, {0, {9, -1}, -45}, {0, {9, 0}, -80}},
+        SpriteId::Weapons },
+
+        { ItemId::Shovel, Direction::Down,
+        {{224, 25, 16, 23}, {240, 25, 16, 23}}, 0, 0,
+        {{0, {0, -6}, 0}, {0, {0, -8}, 0}, {0, {0, -7}, 0}, {1, {0, 8}, 0}, {1, {0, 8}, 0}} },
+
+        { ItemId::Shovel, Direction::Up,
+        {{288, 25, 16, 23}, {272, 25, 16, 23}}, 0, 0,
+        {{0, {0, -10}, 0}, {0, {0, -12}, 0}, {0, {0, -12}, 0}, {1, {0, -10}, 0}, {1, {0, -8}, 0}} },
+
+        { ItemId::Shovel, Direction::Right,
+        {{256, 29, 16, 19}, {0, 0, 0, 0}}, 9, 17,
+        {{0, {-6, -6}, -30}, {0, {-2, -7}, 0}, {0, {4, -4}, 40}, {0, {5, -2}, 80}, {0, {5, -1}, 100}} },
     };
 
     constexpr LayerOffsets farmer_offsets(int frame) {
@@ -318,6 +424,151 @@ namespace SpriteDefs {
         clip_run(AnimalState::Walking, Direction::Right, true, CHICKEN_RIGHT_ROW, 4, CHICKEN_WALK_MS),
         clip_run(AnimalState::Walking, Direction::Up,    true, CHICKEN_UP_ROW,    4, CHICKEN_WALK_MS),
         clip_run(AnimalState::Walking, Direction::Left,  true, CHICKEN_RIGHT_ROW, 4, CHICKEN_WALK_MS),
+    };
+
+
+    inline constexpr ClipSetInfo SKELETON_SET{
+    SpriteId::Skeleton, Dimentions::SKELETON_COLS,
+    Dimentions::SKELETON_CELL_W, Dimentions::SKELETON_CELL_H,
+    -Dimentions::SKELETON_CELL_W / 2, -Dimentions::SKELETON_FEET_Y};
+
+    inline constexpr ClipSetInfo SKELETON_BONES_SET{
+        SpriteId::Skeleton, Dimentions::SKELETON_COLS,
+        Dimentions::SKELETON_CELL_W, 16,
+        -Dimentions::SKELETON_CELL_W / 2, -16};
+
+    inline constexpr int SKELETON_IDLE_MS   = 400;
+    inline constexpr int SKELETON_WALK_MS   = 160;
+    inline constexpr int SKELETON_ATTACK_MS = 120;
+
+    inline constexpr ClipDef<EnemyState> SKELETON_CLIPS[] = {
+        clip_run(EnemyState::Idle, Direction::Down,  true, 0,  1, SKELETON_IDLE_MS),
+        clip_run(EnemyState::Idle, Direction::Right, true, 4,  1, SKELETON_IDLE_MS),
+        clip_run(EnemyState::Idle, Direction::Up,    true, 8,  1, SKELETON_IDLE_MS),
+        clip_run(EnemyState::Idle, Direction::Left,  true, 12, 1, SKELETON_IDLE_MS),
+
+        clip_run(EnemyState::Moving, Direction::Down,  true, 0,  4, SKELETON_WALK_MS),
+        clip_run(EnemyState::Moving, Direction::Right, true, 4,  4, SKELETON_WALK_MS),
+        clip_run(EnemyState::Moving, Direction::Up,    true, 8,  4, SKELETON_WALK_MS),
+        clip_run(EnemyState::Moving, Direction::Left,  true, 12, 4, SKELETON_WALK_MS),
+
+        clip_run(EnemyState::Attacking, Direction::Down,  true, 20, 4, SKELETON_ATTACK_MS),
+        clip_run(EnemyState::Attacking, Direction::Right, true, 4,  4, 100),
+        clip_run(EnemyState::Attacking, Direction::Up,    true, 8,  4, 100),
+        clip_run(EnemyState::Attacking, Direction::Left,  true, 12, 4, 100),
+    };
+
+    inline constexpr ClipDef<EnemyState> SKELETON_DEAD_CLIPS[] = {
+        clip_run(EnemyState::Dead, Direction::Down,  true, 32, 1, 400),
+        clip_run(EnemyState::Dead, Direction::Right, true, 32, 1, 400),
+        clip_run(EnemyState::Dead, Direction::Up,    true, 32, 1, 400),
+        clip_run(EnemyState::Dead, Direction::Left,  true, 32, 1, 400),
+    };
+
+    inline constexpr ClipSetInfo GOLEM_SET{
+    SpriteId::StoneGolem, Dimentions::GOLEM_COLS,
+    Dimentions::GOLEM_CELL_W, Dimentions::GOLEM_CELL_H,
+    -Dimentions::GOLEM_CELL_W / 2, -Dimentions::GOLEM_FEET_Y};
+
+    inline constexpr ClipSetInfo GOLEM_ROCKS_SET{
+        SpriteId::StoneGolem, Dimentions::GOLEM_COLS,
+        Dimentions::GOLEM_CELL_W, 16,
+        -Dimentions::GOLEM_CELL_W / 2, -16};
+
+    inline constexpr int GOLEM_IDLE_MS   = 400;
+    inline constexpr int GOLEM_WALK_MS   = 200;
+    inline constexpr int GOLEM_ATTACK_MS = 130;
+
+    inline constexpr ClipDef<EnemyState> GOLEM_CLIPS[] = {
+        clip_run(EnemyState::Idle, Direction::Down,  true, 0,  1, GOLEM_IDLE_MS),
+        clip_run(EnemyState::Idle, Direction::Right, true, 4,  1, GOLEM_IDLE_MS),
+        clip_run(EnemyState::Idle, Direction::Up,    true, 8,  1, GOLEM_IDLE_MS),
+        clip_run(EnemyState::Idle, Direction::Left,  true, 12, 1, GOLEM_IDLE_MS),
+
+        clip_run(EnemyState::Moving, Direction::Down,  true, 0,  4, GOLEM_WALK_MS),
+        clip_run(EnemyState::Moving, Direction::Right, true, 4,  4, GOLEM_WALK_MS),
+        clip_run(EnemyState::Moving, Direction::Up,    true, 8,  4, GOLEM_WALK_MS),
+        clip_run(EnemyState::Moving, Direction::Left,  true, 12, 4, GOLEM_WALK_MS),
+
+        clip_run(EnemyState::Attacking, Direction::Down,  true, 0,  4, GOLEM_ATTACK_MS),
+        clip_run(EnemyState::Attacking, Direction::Right, true, 4,  4, GOLEM_ATTACK_MS),
+        clip_run(EnemyState::Attacking, Direction::Up,    true, 8,  4, GOLEM_ATTACK_MS),
+        clip_run(EnemyState::Attacking, Direction::Left,  true, 12, 4, GOLEM_ATTACK_MS),
+    };
+
+    inline constexpr ClipDef<EnemyState> GOLEM_DEAD_CLIPS[] = {
+        clip_run(EnemyState::Dead, Direction::Down,  true, 36, 1, 400),
+        clip_run(EnemyState::Dead, Direction::Right, true, 36, 1, 400),
+        clip_run(EnemyState::Dead, Direction::Up,    true, 36, 1, 400),
+        clip_run(EnemyState::Dead, Direction::Left,  true, 36, 1, 400),
+    };
+
+    inline constexpr ClipSetInfo FROST_BAT_SET{
+    SpriteId::FrostBat, Dimentions::BAT_COLS, Dimentions::BAT_CELL_W, Dimentions::BAT_CELL_H,
+    -Dimentions::BAT_CELL_W / 2, -Dimentions::BAT_FEET_Y};
+    inline constexpr ClipSetInfo LAVA_BAT_SET{
+        SpriteId::LavaBat, Dimentions::BAT_COLS, Dimentions::BAT_CELL_W, Dimentions::BAT_CELL_H,
+        -Dimentions::BAT_CELL_W / 2, -Dimentions::BAT_FEET_Y};
+
+    inline constexpr ClipSetInfo FROST_BAT_DEBRIS_SET{
+        SpriteId::FrostBat, Dimentions::BAT_COLS, Dimentions::BAT_CELL_W, 16,
+        -Dimentions::BAT_CELL_W / 2, -16};
+    inline constexpr ClipSetInfo LAVA_BAT_DEBRIS_SET{
+        SpriteId::LavaBat, Dimentions::BAT_COLS, Dimentions::BAT_CELL_W, 16,
+        -Dimentions::BAT_CELL_W / 2, -16};
+
+    inline constexpr int BAT_FLAP_MS   = 130;
+    inline constexpr int BAT_ATTACK_MS = 90;
+
+    inline constexpr ClipDef<EnemyState> BAT_CLIPS[] = {
+        clip_run(EnemyState::Idle, Direction::Down,  true, 0, 4, BAT_FLAP_MS),
+        clip_run(EnemyState::Idle, Direction::Right, true, 0, 4, BAT_FLAP_MS),
+        clip_run(EnemyState::Idle, Direction::Left,  true, 0, 4, BAT_FLAP_MS),
+        clip_run(EnemyState::Idle, Direction::Up,    true, 8, 4, BAT_FLAP_MS),
+
+        clip_run(EnemyState::Moving, Direction::Down,  true, 0, 4, BAT_FLAP_MS),
+        clip_run(EnemyState::Moving, Direction::Right, true, 0, 4, BAT_FLAP_MS),
+        clip_run(EnemyState::Moving, Direction::Left,  true, 0, 4, BAT_FLAP_MS),
+        clip_run(EnemyState::Moving, Direction::Up,    true, 8, 4, BAT_FLAP_MS),
+
+        clip_run(EnemyState::Attacking, Direction::Down,  true, 0, 4, BAT_ATTACK_MS),
+        clip_run(EnemyState::Attacking, Direction::Right, true, 0, 4, BAT_ATTACK_MS),
+        clip_run(EnemyState::Attacking, Direction::Left,  true, 0, 4, BAT_ATTACK_MS),
+        clip_run(EnemyState::Attacking, Direction::Up,    true, 8, 4, BAT_ATTACK_MS),
+    };
+
+    inline constexpr ClipDef<EnemyState> BAT_DEAD_CLIPS[] = {
+        clip_run(EnemyState::Dead, Direction::Down,  true, 24, 1, 400),
+        clip_run(EnemyState::Dead, Direction::Right, true, 24, 1, 400),
+        clip_run(EnemyState::Dead, Direction::Up,    true, 24, 1, 400),
+        clip_run(EnemyState::Dead, Direction::Left,  true, 24, 1, 400),
+    };
+
+    inline constexpr ClipSetInfo SKULL_SET{
+    SpriteId::SquidKid, Dimentions::SKULL_COLS,
+    Dimentions::SKULL_CELL_W, Dimentions::SKULL_CELL_H,
+    -Dimentions::SKULL_CELL_W / 2, -(Dimentions::SKULL_CELL_H + Dimentions::SKULL_HOVER_Y)};
+
+    inline constexpr int SKULL_OPEN_MS  = 600;
+    inline constexpr int SKULL_BLINK_MS = 120;
+    inline constexpr int SKULL_WINDUP_MS = 180;
+    inline constexpr int SKULL_SHOOT_MS  = 220;
+
+    inline constexpr ClipDef<EnemyState> SKULL_CLIPS[] = {
+        clip(EnemyState::Idle, Direction::Down,  true, {{0, SKULL_OPEN_MS}, {1, SKULL_BLINK_MS}}),
+        clip(EnemyState::Idle, Direction::Right, true, {{4, SKULL_OPEN_MS}, {5, SKULL_BLINK_MS}}),
+        clip(EnemyState::Idle, Direction::Up,    true, {{8, SKULL_OPEN_MS}}),
+        clip(EnemyState::Idle, Direction::Left,  true, {{12, SKULL_OPEN_MS}, {13, SKULL_BLINK_MS}}),
+
+        clip(EnemyState::Moving, Direction::Down,  true, {{0, SKULL_OPEN_MS}, {1, SKULL_BLINK_MS}}),
+        clip(EnemyState::Moving, Direction::Right, true, {{4, SKULL_OPEN_MS}, {5, SKULL_BLINK_MS}}),
+        clip(EnemyState::Moving, Direction::Up,    true, {{8, SKULL_OPEN_MS}}),
+        clip(EnemyState::Moving, Direction::Left,  true, {{12, SKULL_OPEN_MS}, {13, SKULL_BLINK_MS}}),
+
+        clip(EnemyState::Attacking, Direction::Down,  true, {{2,  SKULL_WINDUP_MS}, {3,  SKULL_SHOOT_MS}}),
+        clip(EnemyState::Attacking, Direction::Right, true, {{6,  SKULL_WINDUP_MS}, {7,  SKULL_SHOOT_MS}}),
+        clip(EnemyState::Attacking, Direction::Up,    true, {{10, SKULL_WINDUP_MS}, {11, SKULL_SHOOT_MS}}),
+        clip(EnemyState::Attacking, Direction::Left,  true, {{14, SKULL_WINDUP_MS}, {15, SKULL_SHOOT_MS}}),
     };
 
 }

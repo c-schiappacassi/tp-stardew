@@ -41,6 +41,10 @@ private:
     void load_tile_sprites();
     void load_furniture_sprites();
     void load_building_sprites();
+    void load_skeleton_clips();
+    void load_golem_clips();
+    void load_bat_clips();
+    void load_skull_clips();
 
 public:
     AssetManager(SDL2pp::Renderer& renderer, const std::filesystem::path& assets_root);
@@ -64,6 +68,8 @@ public:
 
     // TODO: Sounds
     const Sound& get_sound(SoundId id) const;
+
+    bool has_clip(const ClipId& id) const { return clips.count(id) > 0; }
 
     AssetManager(const AssetManager&) = delete;
     AssetManager& operator=(const AssetManager&) = delete;
