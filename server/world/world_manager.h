@@ -11,20 +11,24 @@
 #include "player/ports/player_interactions.h"
 #include "player/ports/player_spawn_source.h"
 #include "player/ports/zone_data_source.h"
+#include "world_travel.h"
+#include "town/town_map.h"
 
 class WorldManager final : public MovementRules, public ZoneDataSource, public PlayerInteractions,public PlayerSpawnSource {
 private:
     DungeonManager dungeon;
     FarmManager farm;
+    TownMap town;
     EntityIdGenerator entityIds;
     std::optional<uint8_t> loadedWorld;
-    std::optional<DungeonEntrance> entrance;
-    bool usePassage(Player& player);
+    WorldTravel travel;
 
 public:
     explicit WorldManager(const DungeonConfig& config = {},uint32_t seed = std::random_device{}(),const FarmConfig& farmConfig = FarmConfig{});
     ConstMapData buildConstMap() const;
     bool loadFarm(uint8_t worldId, const FarmLayout& layout);
+    bool loadTown(const TownConfig& config);
+    void finishDay();
     bool spawnPlayer(Player& player) const override;
     bool recoverPlayer(Player& player) const override;
     const FarmManager& getFarm() const;

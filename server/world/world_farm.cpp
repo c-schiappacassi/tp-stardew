@@ -8,11 +8,10 @@ bool WorldManager::loadFarm(uint8_t worldId, const FarmLayout& layout) {
         return false;
     }
     loadedWorld = worldId;
+    travel.configureFarm(layout);
+    town = TownMap{};
     return true;
 }
-//bool WorldManager::spawnPlayer(Player& player) const {
-//  return farm.spawnPlayer(player);
-//}
 
 const FarmManager& WorldManager::getFarm() const { return farm; }
 

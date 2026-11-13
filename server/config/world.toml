@@ -53,6 +53,9 @@ player_houses = 2
 spawn = { x = 2, y = 2 }
 door_mines = { x = 14, y = 2 }
 mine_return = { x = 13, y = 2 }
+door_town = { x = 14, y = 10 }
+town_return = { x = 13, y = 10 }
+beds = [{ x = 2, y = 3 }, { x = 3, y = 3 }]
 
 background_default = { texture_id = 1, state = "walkable" }
 background_overrides = [

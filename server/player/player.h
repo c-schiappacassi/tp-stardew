@@ -58,14 +58,17 @@ public:
     Position getCollisionCenter() const;
     bool canAct() const;
     bool canBeAttacked() const;
+    bool isResting() const;
     uint16_t receiveDamage(uint16_t damage, std::chrono::steady_clock::time_point now);
     uint16_t getSwordDamage() const;
     uint16_t getSwordRange() const;
     void addGold(uint32_t amount);
     void applyCombatBonus();
     void passOut();
+    bool sleep();
     void wakeUp();
     bool changeLocation(Zone destination, uint8_t level, const Position& target);
+    bool restoreLocation(Zone destination, uint8_t level, const Position& target);
     void faceTarget(const Position& target);
     void faceDirection(Direction direction);
     int getMovementStep(int normalStep) const;

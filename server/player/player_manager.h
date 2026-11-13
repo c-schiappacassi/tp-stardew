@@ -8,6 +8,7 @@
 #include <string>
 
 #include "player/player_record.h"
+#include "game/time/day_cycle.h"
 #include "ports/combatant.h"
 #include "ports/player_spawn_source.h"
 #include "player_actions.h"
@@ -26,9 +27,7 @@ private:
     PlayerActions actions;
     const PlayerSpawnSource& spawns;
     const MovementRules& movement;
-    std::chrono::milliseconds dayElapsed{0};
-    std::chrono::milliseconds dayDuration;
-    bool dayEnded = false;
+    DayCycle day;
     bool combatBonusUnlocked = false;
 
 public:
@@ -42,6 +41,8 @@ public:
     std::vector<Combatant> getCombatants();
     void applyCombatBonus();
     bool advanceDay(std::chrono::milliseconds elapsed);
+    bool isDayEnded() const;
+    bool hasConnectedPlayers() const;
     void disconnectPlayer(uint16_t playerId);
     void closeOutputs();
     void updateToolStates(std::chrono::steady_clock::time_point now);

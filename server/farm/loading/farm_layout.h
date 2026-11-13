@@ -37,5 +37,8 @@ struct FarmLayout {
     std::vector<FarmBackgroundTile> background;
     std::optional<Position> mineDoor;
     std::optional<Position> mineReturn;
+    std::optional<Position> townDoor;
+    std::optional<Position> townReturn;
+    std::vector<Position> beds;
     uint8_t playerHouses = 4;
 };

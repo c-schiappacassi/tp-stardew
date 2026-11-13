@@ -279,6 +279,10 @@ bool Player::canBeAttacked() const {
     return health > 0 && energy > 0 && state != PlayerState::Unconscious &&state != PlayerState::Sleeping;
 }
 
+bool Player::isResting() const {
+    return state == PlayerState::Sleeping || state == PlayerState::Unconscious;
+}
+
 uint16_t Player::receiveDamage(uint16_t damage, std::chrono::steady_clock::time_point now) {
     if (!canBeAttacked() || damage == 0 || now < nextDamageTime) {
         return 0;
@@ -323,6 +327,15 @@ void Player::passOut() {
     movementDirection = Direction::None;
 }
 
+bool Player::sleep() {
+    if (!canAct()) {
+        return false;
+    }
+    state = PlayerState::Sleeping;
+    movementDirection = Direction::None;
+    return true;
+}
+
 void Player::wakeUp() {
     const bool rested = state == PlayerState::Sleeping;
     health = rested ? maxHealth : std::max<uint16_t>(1, maxHealth / 2);
@@ -334,7 +347,15 @@ void Player::wakeUp() {
 }
 
 bool Player::changeLocation(Zone destination,uint8_t level,const Position& target) {
-    if (!canAct() ||target.getX() < 0 ||target.getY() < 0) {
+    if (!canAct() || !restoreLocation(destination, level, target)) {
+        return false;
+    }
+    state = PlayerState::Idle;
+    return true;
+}
+
+bool Player::restoreLocation(Zone destination, uint8_t level, const Position& target) {
+    if (target.getX() < 0 || target.getY() < 0) {
         return false;
     }
 
@@ -354,6 +375,8 @@ bool Player::changeLocation(Zone destination,uint8_t level,const Position& targe
     pos = target;
     zone = destination;
     dungeonLevel = level;
+    movementDirection = Direction::None;
+    if (state == PlayerState::Walking) state = PlayerState::Idle;
 
     return true;
 }

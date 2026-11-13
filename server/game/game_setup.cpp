@@ -29,12 +29,18 @@ GameSetup makeDefaultGameSetup(uint8_t worldId) {
     setup.farm.terrain = terrain;
     setup.farm.spawn = setup.entrance->returnPosition;
     setup.farm.reservedPositions = {setup.farm.spawn, setup.entrance->position};
+    setup.farm.townDoor = terrain.baseAt({3, 26}).value();
+    setup.farm.townReturn = terrain.baseAt({4, 26}).value();
+    setup.farm.beds = {terrain.baseAt({4, 4}).value()};
+    setup.townConfig.map = {32, 24, entity_dimensions::TILE_SIZE};
+    setup.townConfig.connections = {{"farm", {2, 12}}, {"dungeon", {29, 12}}};
     return setup;
 }
 
 GameSetup makeFarmGameSetup(uint8_t worldId, const FarmLayout& farm) {
     auto setup = makeDefaultGameSetup(worldId);
     setup.farm = farm;
+    setup.townConfig = {};
     setup.entrance.reset();
     if (farm.mineDoor) {
         setup.entrance.emplace();

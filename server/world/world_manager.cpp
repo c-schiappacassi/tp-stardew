@@ -1,5 +1,7 @@
 #include "world_manager.h"
 
+#include <utility>
+
 #include "player/player.h"
 
 WorldManager::WorldManager(const DungeonConfig& config, uint32_t seed, const FarmConfig& farmConfig)
@@ -38,21 +40,26 @@ bool WorldManager::loadDungeon(uint8_t worldId,const std::map<uint8_t, DungeonRo
         return false;
     }
     loadedWorld = worldId;
-    entrance.reset();
+    travel.resetDungeon();
     return true;
 }
 
 bool WorldManager::configureDungeonEntrance(const DungeonEntrance& data) {
-    if (!loadedWorld || (data.zone != Zone::Farm && data.zone != Zone::Town) ||!data.terrain.isWalkableBase(data.position) || !data.terrain.isWalkableBase(data.returnPosition)) {
+    return loadedWorld && travel.configureEntrance(data, farm, town);
+}
+
+bool WorldManager::loadTown(const TownConfig& config) {
+    TownMap prepared;
+    if (!loadedWorld || !prepared.initialize(config) || !travel.canConnectTown(prepared, farm)) {
         return false;
     }
-    if (farm.isInitialized() && data.zone == Zone::Farm &&
-        (!farm.canWalk(CollisionBox{entity_dimensions::PLAYER}.at(data.position)) ||
-         !farm.canWalk(CollisionBox{entity_dimensions::PLAYER}.at(data.returnPosition)))) {
-        return false;
-    }
-    entrance = data;
+    town = std::move(prepared);
     return true;
+}
+
+void WorldManager::finishDay() {
+    travel.finishDay();
+    dungeon.update(std::chrono::milliseconds{0}, {}, entityIds, std::chrono::steady_clock::now());
 }
 
 bool WorldManager::acceptsWorld(uint8_t worldId) const {
@@ -67,7 +74,7 @@ bool WorldManager::canMove(const Player& player, const Position& next) const {
     if (player.getZone() == Zone::Farm && farm.isInitialized()) {
         return farm.canWalk(bounds);
     }
-    return !entrance || player.getZone() != entrance->zone || entrance->terrain.isWalkable(bounds);
+    return player.getZone() == Zone::Town && town.canWalk(bounds);
 }
 
 void WorldManager::completeZoneData(const Player& player,PlayerDataLocal& data,bool includeBroken) const {
@@ -86,15 +93,21 @@ void WorldManager::completeZoneData(const Player& player,PlayerDataLocal& data,b
 }
 
 void WorldManager::interact(Player& player, Direction direction,uint16_t playerId) {
-    if (usePassage(player)) {
-        dungeon.onTravel(playerId, player.getDungeonLevel(), player.canBeAttacked());
+    if (!player.canAct()) return;
+    const auto previousZone = player.getZone();
+    if (travel.use(player, playerId, dungeon, farm, town)) {
+        if (previousZone == Zone::Dungeon || player.getZone() == Zone::Dungeon) {
+            dungeon.onTravel(playerId, player.getDungeonLevel(), player.canBeAttacked());
+        }
         return;
     }
     const auto now = std::chrono::steady_clock::now();
     if (player.getZone() == Zone::Dungeon) {
         dungeon.useSelectedItem(player, direction, now, entityIds, playerId);
     } else if (player.getZone() == Zone::Farm && farm.isInitialized()) {
-        farm.useSelectedItem(player, direction, entityIds, now);
+        if (!farm.useBed(player)) {
+            farm.useSelectedItem(player, direction, entityIds, now);
+        }
     }
 }
 
@@ -106,29 +119,6 @@ std::optional<DungeonCombatData> WorldManager::getCombatData(uint8_t number) con
 
 const CombatProgressData& WorldManager::getCombatProgress() const {
     return dungeon.getCombatProgress();
-}
-
-bool WorldManager::usePassage(Player& player) {
-    if (!loadedWorld || !entrance || !player.canAct()) {
-        return false;
-    }
-    if (player.getZone() == Zone::Dungeon) {
-        if (dungeon.canExit(player)) {
-            if (entrance->zone == Zone::Farm && farm.isInitialized() &&
-                !farm.canWalk(player.getCollisionBounds(entrance->returnPosition))) {
-                return false;
-            }
-            if (!entrance->terrain.isWalkable(player.getCollisionBounds(entrance->returnPosition))) {
-                return false;
-            }
-            return player.changeLocation(entrance->zone, 0, entrance->returnPosition);
-        }
-        return dungeon.advanceRoom(player);
-    }
-    if (player.getZone() != entrance->zone ||!entrance->terrain.sameBaseCell(player.getPosition(), entrance->position)) {
-        return false;
-    }
-    return dungeon.enter(player);
 }
 
 void WorldManager::afterStatusPublished() { 

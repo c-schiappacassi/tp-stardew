@@ -51,6 +51,7 @@ class Game:public Thread {
         std::optional<GameInfoDTO> infoFor(const std::string& userName) const;
         bool loadDungeon(uint8_t selectedWorldId,const std::map<uint8_t, DungeonRoomLayout>& layout);
         bool loadFarm(uint8_t selectedWorldId, const FarmLayout& layout);
+        bool loadTown(const TownConfig& config);
         bool configureDungeonEntrance(const DungeonEntrance& entrance);
 
         void run() override;

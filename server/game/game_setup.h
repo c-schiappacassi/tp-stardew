@@ -9,6 +9,7 @@
 #include "player/player_config.h"
 #include "farm/farm_config.h"
 #include "farm/loading/farm_layout.h"
+#include "town/town_config.h"
 
 struct GameSetup {
     uint8_t worldId = 0;
@@ -18,6 +19,7 @@ struct GameSetup {
     PlayerConfig playerConfig;
     FarmLayout farm;
     FarmConfig farmConfig;
+    TownConfig townConfig;
 };
 
 GameSetup makeDefaultGameSetup(uint8_t worldId);

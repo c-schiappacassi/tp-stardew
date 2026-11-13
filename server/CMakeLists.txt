@@ -32,6 +32,9 @@ target_sources(taller_server
         player/player_factory.cpp
         player/player_manager.cpp
         world/world_manager.cpp
+        world/world_travel.cpp
+        game/time/day_cycle.cpp
+        town/town_map.cpp
         player/player_updates.cpp
         player/player_status.cpp
         game/command_router.cpp
@@ -117,6 +120,9 @@ target_sources(taller_server
         player/player_factory.h
         player/player_manager.h
         world/world_manager.h
+        world/world_travel.h
+        game/time/day_cycle.h
+        town/town_map.h
         player/ports/movement_rules.h
         player/ports/zone_data_source.h
         player/ports/player_interactions.h

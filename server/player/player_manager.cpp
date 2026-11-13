@@ -5,7 +5,7 @@ PlayerManager::PlayerManager(const PlayerConfig& config,const MovementRules& mov
         factory(config),
         updates(movement),
         playerStatus(zones),
-        actions(interactions), spawns(spawns), movement(movement),dayDuration(config.dayDurationMs) {}
+        actions(interactions), spawns(spawns), movement(movement),day(std::chrono::milliseconds{config.dayDurationMs}) {}
 
 
 ServerStatus PlayerManager::addPlayer(const std::string& name,const PlayerData& appearance,const std::shared_ptr<OutQueue>& output) {
@@ -38,20 +38,21 @@ ServerStatus PlayerManager::addPlayer(const std::string& name,const PlayerData& 
         result.errorMsg = "No hay una posicion disponible para el jugador";
         return result;
     }
-    if (dayEnded) {
+    if (day.hasEnded()) {
         player.passOut();
     }
     auto it =players.emplace(playerId, PlayerRecord{playerId, name, output, true, std::move(player)}).first;
     ++nextPlayerId;
 
     auto status = playerStatus.buildForPlayer(players, it->second);
-    status.dayEnded = dayEnded;
+    status.dayEnded = day.hasEnded();
     return status;
 }
 void PlayerManager::disconnectPlayer(uint16_t playerId) {
     const auto it = players.find(playerId);
     if (it != players.end()) {
         it->second.connected = false;
+        day.forgetConfirmation(playerId);
         it->second.output.reset();
         it->second.player.setMovement(Direction::None);
     }
@@ -82,11 +83,15 @@ ServerStatus PlayerManager::resumePlayer(const std::string& name,const std::shar
             result.errorMsg = "No hay una posicion disponible para retomar la partida";
             return result;
         }
+        if (day.hasEnded()) {
+            record.player.passOut();
+        }
+        day.forgetConfirmation(id);
         record.connected = true;
         record.output = output;
         record.player.setMovement(Direction::None);
         auto status = playerStatus.buildForPlayer(players, record);
-        status.dayEnded = dayEnded;
+        status.dayEnded = day.hasEnded();
         return status;
     }
     result.errorMsg = "No tenes un jugador en esta partida";
@@ -125,7 +130,7 @@ void PlayerManager::advancePlayers(int normalStep) {
 
 void PlayerManager::publishStatus(const ServerStatus& base) const {
     auto status = base;
-    status.dayEnded = dayEnded;
+    status.dayEnded = day.hasEnded();
     playerStatus.publish(players, status);
 }
 
@@ -144,14 +149,13 @@ void PlayerManager::handleCommand(const PlayerCommand& command) {
     }
 
     if (command.command->type() == MessageType::DayOk) {
-        const auto state = it->second.player.getPublicData().state;
-        if (state == PlayerState::Unconscious || state == PlayerState::Sleeping) {
-            it->second.readyForNextDay = true;
-        }
+        day.acknowledge(command.playerId, it->second.player);
         return;
     }
 
-    actions.execute(it->second.player, *command.command, command.playerId);
+    if (!day.hasEnded()) {
+        actions.execute(it->second.player, *command.command, command.playerId);
+    }
 }
 
 std::vector<Combatant> PlayerManager::getCombatants() {
@@ -172,50 +176,19 @@ void PlayerManager::applyCombatBonus() {
 }
 
 bool PlayerManager::advanceDay(std::chrono::milliseconds elapsed) {
-    if (elapsed.count() < 0) {
-        throw std::invalid_argument("El tiempo no puede retroceder");
+    std::vector<DayCycle::Participant> participants;
+    participants.reserve(players.size());
+    for (auto& [id, record]: players) {
+        participants.push_back({id, record.player, record.connected});
     }
-    bool connected = false;
-    bool allIncapacitated = true;
+    return day.advance(elapsed, participants, spawns);
+}
+
+bool PlayerManager::isDayEnded() const { return day.hasEnded(); }
+
+bool PlayerManager::hasConnectedPlayers() const {
     for (const auto& [id, record]: players) {
-        if (!record.connected) {
-            continue;
-        }
-        connected = true;
-        if (record.player.canBeAttacked()) {
-            allIncapacitated = false;
-        }
+        if (record.connected) return true;
     }
-    if (!connected) {
-        return false;
-    }
-    if (!dayEnded) {
-        dayElapsed += elapsed;
-        dayEnded = allIncapacitated || dayElapsed >= dayDuration;
-        if (dayEnded) {
-            for (auto& [id, record]: players) {
-                record.player.passOut();
-            }
-        }
-    }
-    if (!dayEnded) {
-        return false;
-    }
-    for (const auto& [id, record]: players) {
-        if (record.connected && !record.readyForNextDay) {
-            return false;
-        }
-    }
-    auto prepared = players;
-    for (auto& [id, record]: prepared) {
-        record.player.wakeUp();
-        if (!spawns.recoverPlayer(record.player)) {
-            return false;
-        }
-        record.readyForNextDay = false;
-    }
-    players = std::move(prepared);
-    dayElapsed = std::chrono::milliseconds{0};
-    dayEnded = false;
-    return true;
+    return false;
 }

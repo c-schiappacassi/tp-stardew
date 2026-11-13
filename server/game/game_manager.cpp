@@ -16,6 +16,7 @@ GameSession GameManager::createGame(const CreateGameDTO& dto,
     GameSetup setup = farmLayout ? makeFarmGameSetup(dto.worldId, *farmLayout) :makeDefaultGameSetup(dto.worldId);
     setup.dungeonConfig = dungeonConfig;
     setup.playerConfig = playerConfig;
+    if (townConfig.map.width != 0) setup.townConfig = townConfig;
     auto game = std::make_unique<Game>(id, dto.gameName, setup.worldId,
                                        setup.playerConfig, setup.dungeonConfig, setup.farmConfig,setup.farm.playerHouses);
     if (!game->loadDungeon(setup.worldId, setup.layout)) {
@@ -24,6 +25,9 @@ GameSession GameManager::createGame(const CreateGameDTO& dto,
 
     if (!game->loadFarm(setup.worldId, setup.farm)) {
         throw std::invalid_argument("No se pudo cargar la granja de la partida");
+    }
+    if (setup.townConfig.map.width != 0 && !game->loadTown(setup.townConfig)) {
+        throw std::invalid_argument("El pueblo o su conexion con la granja es invalido");
     }
     if (setup.entrance && !game->configureDungeonEntrance(*setup.entrance)) {
         throw std::invalid_argument("La entrada de la mazmorra es invalida");

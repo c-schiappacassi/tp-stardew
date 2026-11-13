@@ -445,11 +445,33 @@ FarmLayout readFarmLayout(const toml::table& root,
     }
 
     if (farm.contains("door_town")) {
-        reserveFarmPosition(
-            layout,
-            farmBaseAt(farm.get("door_town"), layout.terrain,
-                       width, height, "farm.door_town"));
+        layout.townDoor = farmBaseAt(farm.get("door_town"), layout.terrain,width, height, "farm.door_town");
+        layout.townReturn = farm.contains("town_return")
+            ? farmBaseAt(farm.get("town_return"), layout.terrain, width,
+                         height, "farm.town_return")
+            : layout.spawn;
+        if (layout.mineDoor && layout.terrain.sameBaseCell(*layout.mineDoor, *layout.townDoor)) {
+            invalid("farm.door_town", "no puede coincidir con door_mines");
+        }
+        reserveFarmPosition(layout, *layout.townDoor);
+        reserveFarmPosition(layout, *layout.townReturn);
+    } else if (farm.contains("town_return")) {
+        invalid("farm.town_return", "requiere door_town");
     }
+
+    farmEntries(farm, "beds", [&](const auto& entry, const auto& field) {
+        const auto base = farmBaseAt(&entry, layout.terrain, width, height, field);
+        const auto conflicts = [&](const Position& other) {
+            return layout.terrain.sameBaseCell(base, other);
+        };
+        if (std::any_of(layout.beds.begin(), layout.beds.end(), conflicts) ||
+            (layout.mineDoor && conflicts(*layout.mineDoor)) ||
+            (layout.townDoor && conflicts(*layout.townDoor))) {
+            invalid(field, "la cama coincide con otra cama o una puerta");
+        }
+        layout.beds.push_back(base);
+        reserveFarmPosition(layout, base);
+    }, false, 4);
 
     farmEntries(farm, "reserved_positions",
         [&](const auto& entry, const auto& field) {

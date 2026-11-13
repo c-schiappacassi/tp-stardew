@@ -14,7 +14,6 @@ struct PlayerRecord {
     std::shared_ptr<OutQueue> output;
     bool connected;
     Player player;
-    bool readyForNextDay = false;
 };
 
 #endif

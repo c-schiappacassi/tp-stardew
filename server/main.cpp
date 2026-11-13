@@ -44,7 +44,8 @@ int main(int argc, char* argv[]) {
         GameManager manager(
             world.config.dungeon,
             world.config.player,
-            world.farm
+            world.farm,
+            world.config.town
         );
 
         Socket listener(argv[1]);

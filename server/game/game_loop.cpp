@@ -25,11 +25,15 @@ void Game::sendStatus() {
 
 void Game::advanceWorld(std::chrono::milliseconds elapsed) {
     std::lock_guard<std::mutex> lock(mtx);
-    world.update(elapsed, playerManager.getCollisionBounds(Zone::Farm),playerManager.getCombatants());
+    if (!playerManager.isDayEnded() && playerManager.hasConnectedPlayers()) {
+        world.update(elapsed, playerManager.getCollisionBounds(Zone::Farm),playerManager.getCombatants());
+    }
     if (world.combatCompleted()) {
         playerManager.applyCombatBonus();
     }
-    playerManager.advanceDay(elapsed);
+    if (playerManager.advanceDay(elapsed)) {
+        world.finishDay();
+    }
 }
 
 void Game::processCommands() {
