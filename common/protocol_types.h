@@ -87,7 +87,7 @@ enum class EnemyState : uint8_t {
     Dead = 3,
 };
 
-enum class FlameType : uint8_t { Blue = 0, Green = 1 };
+enum class FlameType : uint8_t { Blue = 0, Green = 1, Common };
 enum class TrapType : uint8_t { Spikes = 0, WallFlame = 1 };
 enum class TrapState : uint8_t { Inactive = 0, Warning = 1, Active = 2 };
 
