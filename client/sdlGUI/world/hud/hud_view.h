@@ -16,7 +16,7 @@ private:
     BarView health_bar;
 
 public:
-    explicit HudView(): hot_bar(HotbarView()), energy_bar(BarView('E', 0)), health_bar(BarView('H', 1)){};
+    explicit HudView(): hot_bar(HotbarView()), energy_bar(BarView(UiSpriteId::EnergyBar, 0)), health_bar(BarView(UiSpriteId::HealthBar, 1)){};
 
     void update(const PlayerDataLocal& player_data) {
         hot_bar.update(player_data);

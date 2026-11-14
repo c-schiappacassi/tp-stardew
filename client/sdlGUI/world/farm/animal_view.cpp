@@ -1,23 +1,14 @@
 #include "animal_view.h"
 
 namespace {
-    // TODO: cambiar sprite dependiendo del color de vaca y pollo
-    SpriteId sprite_for(AnimalType type) {
-        switch (type) {
-            case AnimalType::BrownCow:     return SpriteId::BronwCow;
-            case AnimalType::WhiteCow:     return SpriteId::BronwCow;
-            case AnimalType::BrownChicken: return SpriteId::BronwChicken;
-            case AnimalType::WhiteChicken: return SpriteId::BronwChicken;
-            case AnimalType::BlueChicken: return SpriteId::BronwChicken;
-            case AnimalType::VoidChicken: return SpriteId::BronwChicken;
-        }
-        throw std::invalid_argument("AnimalView: AnimalType desconocido");
+    bool is_cow(AnimalType t) {
+        return t == AnimalType::BrownCow || t == AnimalType::WhiteCow;
     }
-}  
+}
 
 std::optional<float> AnimalView::depth(const RenderInfo& ctx) const {
-    int heigt = this->type == AnimalType::BrownCow ? dimentions::COW_H : dimentions::CHICKEN_H;
-    const int radius = heigt * ctx.cam.get_zoom();
+    const int height = is_cow(type) ? dimentions::COW_H : dimentions::CHICKEN_H;
+    const int radius = height * ctx.cam.get_zoom();
 
     if (!ctx.cam.is_visible(pos.getX(), pos.getY(), radius)) {
         return std::nullopt;
@@ -39,8 +30,7 @@ void AnimalView::update(const AnimalData& data) {
 }
 
 void AnimalView::draw(const RenderInfo& ctx) {
-    const SpriteId sprite_id = sprite_for(type);
-    const ClipId id{sprite_id, Action{state}, facing};
+    const ClipId id{ctx.assets.get_sprite_id(type), Action{state}, facing};
 
     if (!current_clip || !(*current_clip == id)) {
         current_clip = id;
@@ -59,5 +49,9 @@ void AnimalView::draw(const RenderInfo& ctx) {
 
     draw_sprite(ctx, frame.sprite, origin, frame.flip);
 
-    // TODO: if (needs_interaction) dibujar el indicador
+    if (this->needs_interaction){
+        SDL2pp::Point origin_emote = ctx.cam.world_to_screen(pos.getX() , pos.getY() - frame.sprite.height);
+        const Sprite& emote = ctx.assets.get_sprite(EmoteId::Alert);
+        draw_sprite(ctx, emote, origin_emote);
+    }
 }

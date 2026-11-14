@@ -184,6 +184,10 @@ enum class ItemId : uint16_t {
     Painting = 56
 };
 
+enum class EmoteId : uint16_t {
+    Alert
+};
+
 // CHEATS
 enum class CheatType : uint8_t {
     SetLife = 1,
@@ -197,17 +201,98 @@ enum class CheatType : uint8_t {
 enum class TileTextureId : uint8_t{
     Grass,
     Dirt,
+    StoneCliftTop,
+    StoneCliftSide,
+    StoneCliftTopRightCorner,
+    StoneCliftBottom,
+    StoneCliftBottomRigthCorner,
+    DungeonWall,
+    DungeonWallCorner,
+    StonePath,
+    ConnctionStonePathGrassCorner,
+    ConnctionStonePathGrassLeftSide,
+    ConnctionStonePathGrassTop,
+    ConnctionStonePathGrassBottom,
+    WateredDirt,
+    TilledDirt
 };
 
 enum class DecorId : uint8_t{
     MapleTree,
     PineTree,
+    MushroomTree,
+    PinkTree,
+    YellowTree,
+    BlueTree,
+    PinkFlowerGrass,
+    OrangeFlowerGrass,
+    OrangeGrass,
+    VelvetGrass,
+    BlueGrass,
+    PlainGrass,
+    RedGrass,
+    SimpleBush,
+    RedBBerryBush,
+    PinkBush,
+    PurpleBerryBush,
+    BlueBush,
+    BigRedBush,
+    StreatLamp,
+    FenceFront,
+    FenceBack,
+    PinkFlower,
+    BlueFlower,
+    WeirdGreenPlant,
+    SmallFern,
+    BigFern,
+    PinkMushrom,
+    YellowMushrom,
+    BabyRedMushrom,
+    BigRedMushroom,
+    DungeonPilar,
+    DungeonTorch,
+    DungeonChain,
+    DungeonWindow,
+    DungeonWallCrack,
+    SpiderWeb,
+    CornerSpiderWeb,
+    PottedPlants,
+    SmallBlueFlower,
+};
+
+
+enum class PortalId : uint8_t{
+    FarmToMine,
+    ToNextLevel, // en todos los niveles excepto el que quedo ultimo
+    MineToFarm, // en todos los niveles
 };
 
 
 enum class FurnitureId : uint8_t{
     Chair,
     Table,
+    Bed,
+    BedSheet,
+    Bonsai,
+    PottedTree,
+    BlueArmCouch,
+    Tv,
+    BeigeRug,
+    ClockFirePlace,
+    BlueRug,
+    CatFirePlace,
+    SimpleFirePlace,
+    BlueJunimoPushee,
+    GreenJunimoPushee,
+    YellowJunimoPushee,
+    PinkJunimoPushee,
+    SimpleLamp,
+    BookShelf,
+    SquareLamp,
+    RoundTable,
+    GreenStool,
+    BrownSofa,
+    BrownArmCouch,
 };
 
 enum class BuildingId : uint8_t{
@@ -219,5 +304,5 @@ enum class BuildingId : uint8_t{
     PierresShop,
     RobinsShop,
     ClintsShop,
-    ComunityCenter
+    ComunityCenter,
 };

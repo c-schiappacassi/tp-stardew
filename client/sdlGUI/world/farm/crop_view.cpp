@@ -16,8 +16,6 @@ std::optional<float> CropView::depth(const RenderInfo& ctx) const {
 };
 
 void CropView::draw(const RenderInfo& ctx){
-    // TODO: if wattered draw decal
-
     const Sprite& sprite = ctx.assets.get_sprite(this->type, this->state );
     const SDL2pp::Point origin = ctx.cam.world_to_screen(pos.getX(), pos.getY());
     draw_sprite(ctx, sprite, origin);

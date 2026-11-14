@@ -472,4 +472,5 @@ void ClientProtocol::recv(ConstMapData& map) {
     map.robins  = receiveBackgroundData();
     map.clints  = receiveBackgroundData();
     map.marnies = receiveBackgroundData();
+    map.town    = receiveBackgroundData();
 }

@@ -8,14 +8,14 @@
 #include "constants.h"
 
 namespace {
-    std::optional<SpriteId> sprite_for(EnemyType type) {
+    std::optional<SpriteId> sprite_for(EnemyType type, bool frenzied) {
         switch (type) {
             case EnemyType::Skeleton: return SpriteId::Skeleton;
             case EnemyType::Orc:      return SpriteId::StoneGolem;
-            case EnemyType::VampireMale:   return SpriteId::FrostBat;
-            case EnemyType::VampireFemale: return SpriteId::LavaBat;
-            case EnemyType::Skull:         return SpriteId::SquidKid;
-            case EnemyType::Traps:    return std::nullopt;  // TODO: sacar traps de EnemyType
+            case EnemyType::VampireMale:   return frenzied ? SpriteId::FrostBatFrenzy : SpriteId::FrostBat;
+            case EnemyType::VampireFemale: return frenzied ? SpriteId::LavaBatFrenzy  : SpriteId::LavaBat;
+            case EnemyType::Skull:         return SpriteId::Skull;
+            case EnemyType::Traps:    return std::nullopt;
         }
         return std::nullopt;
     }
@@ -37,14 +37,13 @@ namespace {
     }
 }
 
-EnemyView::EnemyView(const EnemyData& data) {
-    update(data);
-}
+EnemyView::EnemyView(const EnemySnapshot& data) { update(data); }
 
-void EnemyView::update(const EnemyData& data) {
+void EnemyView::update(const EnemySnapshot& data) {
     pos = data.pos;
     type = data.type;
     state = data.state;
+    frenzied = data.frenzied && data.state != EnemyState::Dead;
 
     if (data.dir != Direction::None) {
         facing = data.dir;
@@ -52,7 +51,7 @@ void EnemyView::update(const EnemyData& data) {
 }
 
 std::optional<float> EnemyView::depth(const RenderInfo& ctx) const {
-    if (!sprite_for(type)) {
+    if (!sprite_for(type, frenzied)) {
         return std::nullopt;
     }
 
@@ -65,7 +64,7 @@ std::optional<float> EnemyView::depth(const RenderInfo& ctx) const {
 }
 
 void EnemyView::draw(const RenderInfo& ctx) {
-    const auto sprite_id = sprite_for(type);
+    const auto sprite_id = sprite_for(type, frenzied);
     if (!sprite_id) {
         return;
     }

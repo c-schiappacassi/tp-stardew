@@ -308,6 +308,7 @@ void ServerProtocol::sendConstMap(const ConstMapData& map) {
     writeBackgroundData(out, map.robins);
     writeBackgroundData(out, map.clints);
     writeBackgroundData(out, map.marnies);
+    writeBackgroundData(out, map.town);
     base.send(out);
 }
 

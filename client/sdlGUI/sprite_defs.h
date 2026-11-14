@@ -38,13 +38,25 @@ namespace Dimentions {
 
     constexpr uint16_t BAT_COLS   = 4;
     constexpr uint16_t BAT_CELL_W = 16;
-    constexpr uint16_t BAT_CELL_H = 24;
-    constexpr uint16_t BAT_FEET_Y = 22;
+    constexpr uint16_t BAT_CELL_H = 16;
+    constexpr uint16_t BAT_CELL_FRENZY_H = 17;
+    constexpr uint16_t BAT_FEET_Y = 13;
+    constexpr uint16_t BAT_FRENZY_FEET_Y = 15;
 
-    constexpr uint16_t SKULL_COLS    = 4;
+    constexpr uint16_t SKULL_COLS    = 2;
     constexpr uint16_t SKULL_CELL_W  = 16;
     constexpr uint16_t SKULL_CELL_H  = 16;
     constexpr uint16_t SKULL_HOVER_Y = 6;
+
+    constexpr uint16_t WALL_FLAME_MAX_H = 19;
+
+    constexpr uint16_t SPIKE_COLS   = 3;
+    constexpr uint16_t SPIKE_CELL_W = 16;
+    constexpr uint16_t SPIKE_CELL_H = 16;
+
+    constexpr uint16_t FLAME_COLS   = 7;
+    constexpr uint16_t FLAME_CELL_W = 8;
+    constexpr uint16_t FLAME_CELL_H = 8;
 }
 
 namespace SpriteDefs {
@@ -52,28 +64,60 @@ namespace SpriteDefs {
     struct TextureDef { SpriteId id; const char* path; };
 
     inline constexpr TextureDef TEXTURES[] = {
+        // ui
         {SpriteId::MenuTiles,    "menus/menutiles.png"},
+        {SpriteId::Cursors,      "menus/cursors.png"},
+        {SpriteId::Emotes,      "misc/emotes.png"},
+
+        // farmer
         {SpriteId::FarmerBase,   "characters/farmer_base.png"},
         {SpriteId::Hairstyles,   "characters/hairstyles.png"},
         {SpriteId::Pants,        "characters/pants.png"},
         {SpriteId::Shirts,       "characters/shirts.png"},
         {SpriteId::Tools,        "characters/tools.png"},
         {SpriteId::Weapons,      "characters/weapons.png"},
+
         {SpriteId::Ores,         "caverns/mines.png"},
         {SpriteId::Crops,        "farm/crops/crops.png"},
+
+        //animals
         {SpriteId::BronwCow,     "farm/animals/cow_brown.png"},
+        {SpriteId::WhiteCow,     "farm/animals/cow_white.png"},
         {SpriteId::BronwChicken, "farm/animals/chicken_brown.png"},
+        {SpriteId::WhiteChicken, "farm/animals/chicken_white.png"},
+        {SpriteId::BlueChicken, "farm/animals/chicken_blue.png"},
+        {SpriteId::VoidChicken, "farm/animals/chicken_void.png"},
+
+        // enviroment
         {SpriteId::OutdoorsSpring,  "enviroment/outdoors_spring.png"},
         {SpriteId::Trees,           "enviroment/trees.png"},
         {SpriteId::MarketBuildings, "market/world/buildings.png"},
         {SpriteId::FarmBuildings,   "farm/environment/farm_buildings.png"},
         {SpriteId::Cabins,          "farm/environment/cabins.png"},
+        {SpriteId::Mushrooms,       "enviroment/mushroom.png"},
+        {SpriteId::GrassDecor,      "enviroment/grass.png"},
+        {SpriteId::Bushes,          "enviroment/bushes.png"},
+        {SpriteId::TownSpring,      "market/world/town_spring.png"},
+        {SpriteId::CavernPlants,    "caverns/plants.png"},
+        {SpriteId::DungeonWallTiles, "caverns/wall_tiles.png"},
+        {SpriteId::Furniture,       "farm/environment/furniture.png"},
+        {SpriteId::LevelPortals,    "caverns/level_portals.png"},
+        {SpriteId::TilledDirt,      "farm/environment/tilled_dirt.png"},
+    
+
+        // monsters
         {SpriteId::StoneGolem, "caverns/monsters/stone_golem.png"},
         {SpriteId::Skeleton, "caverns/monsters/skeleton.png"},
         {SpriteId::FrostBat, "caverns/monsters/frost_bat.png"},
+        {SpriteId::FrostBatFrenzy, "caverns/monsters/frost_bat_frenzy.png"},
         {SpriteId::LavaBat, "caverns/monsters/lava_bat.png"},
-        {SpriteId::SquidKid, "caverns/monsters/squid_kid.png"},
+        {SpriteId::LavaBatFrenzy, "caverns/monsters/lava_bat_frenzy.png"},
+        {SpriteId::Skull, "caverns/monsters/skull.png"},
 
+        // traps
+        {SpriteId::SpikeTrap, "caverns/monsters/spikes.png"},
+        {SpriteId::WallFlameTrap, "caverns/monsters/wallflame.png"},
+        {SpriteId::Flames, "caverns/monsters/projectile_fire.png"},
     };
 
     // Ores
@@ -122,36 +166,121 @@ namespace SpriteDefs {
     struct DecorDef     { DecorId id;       SpriteRect rect; };
     struct BuildingDef  { BuildingId id;    SpriteRect rect; };
     struct FurnitureDef { FurnitureId id; Direction dir; SpriteRect rect; };
+    struct PortalDef { PortalId id; SpriteRect rect; };
 
     inline constexpr TileDef TILES[] = {
-        {TileTextureId::Grass, {SpriteId::OutdoorsSpring,  0, 112, 16, 16}},
-        {TileTextureId::Dirt,  {SpriteId::OutdoorsSpring, 16, 112, 16, 16}},
+        {TileTextureId::Grass,                           {SpriteId::OutdoorsSpring, 0, 112, 16, 16}},
+        {TileTextureId::Dirt,                            {SpriteId::OutdoorsSpring, 16, 112, 16, 16}},
+        {TileTextureId::StoneCliftTop,                   {SpriteId::OutdoorsSpring, 276, 328, 59, 63}},
+        {TileTextureId::StoneCliftSide,                  {SpriteId::OutdoorsSpring, 257, 221, 15, 32}},
+        {TileTextureId::StoneCliftTopRightCorner,        {SpriteId::OutdoorsSpring, 384, 176, 16, 64}},
+        {TileTextureId::StoneCliftBottom,                {SpriteId::OutdoorsSpring, 208, 256, 16, 32}},
+        {TileTextureId::StoneCliftBottomRigthCorner,     {SpriteId::OutdoorsSpring, 240, 256, 16, 16}},
+        {TileTextureId::DungeonWall,                     {SpriteId::DungeonWallTiles, 26, 491, 29, 37}},
+        {TileTextureId::DungeonWallCorner,               {SpriteId::DungeonWallTiles, 55, 487, 9, 41}},
+        {TileTextureId::StonePath,                       {SpriteId::TownSpring, 0, 368, 32, 32}},
+        {TileTextureId::ConnctionStonePathGrassCorner,   {SpriteId::TownSpring, 0, 304, 16, 16}},
+        {TileTextureId::ConnctionStonePathGrassLeftSide, {SpriteId::TownSpring, 0, 320, 16, 16}},
+        {TileTextureId::ConnctionStonePathGrassTop,      {SpriteId::TownSpring, 16, 304, 16, 16}},
+        {TileTextureId::ConnctionStonePathGrassBottom,   {SpriteId::TownSpring, 16, 336, 16, 16}},
+        {TileTextureId::TilledDirt,   {SpriteId::TilledDirt, 0,0, 16, 16}},
+        {TileTextureId::WateredDirt,   {SpriteId::TilledDirt, 64,0, 16, 16}},
     };
 
     inline constexpr DecorDef DECOR[] = {
-        {DecorId::MapleTree, {SpriteId::Trees, 0,   0, 48, 97}},
-        {DecorId::PineTree,  {SpriteId::Trees, 0, 320, 48, 97}},
-    };
-
-    inline constexpr BuildingDef BUILDINGS[] = {
-        {BuildingId::ComunityCenter, {SpriteId::MarketBuildings,   0, 160, 192, 160}},
-        {BuildingId::PierresShop,    {SpriteId::MarketBuildings,   0,   0, 161, 160}},
-        {BuildingId::ClintsShop,     {SpriteId::MarketBuildings, 161,   0, 130, 127}},
-        {BuildingId::MarniesShop,    {SpriteId::MarketBuildings, 291,   0, 128, 112}},
-        {BuildingId::RobinsShop,     {SpriteId::MarketBuildings, 192, 127, 157, 193}},
-        {BuildingId::FarmHouse,      {SpriteId::FarmBuildings,   157, 268, 144, 145}},
-        {BuildingId::StoneCabin,     {SpriteId::Cabins,           80, 336,  80, 112}},
-        {BuildingId::WoodCabin,      {SpriteId::Cabins,           80,   0,  80, 112}},
-        {BuildingId::BrickCabin,     {SpriteId::Cabins,           80, 112,  80, 112}},
+        {DecorId::MapleTree,         {SpriteId::Trees, 0, 0, 48, 97}},
+        {DecorId::PineTree,          {SpriteId::Trees, 0, 320, 48, 97}},
+        {DecorId::MushroomTree,      {SpriteId::Mushrooms, 0, 14, 48, 80}},
+        {DecorId::PinkTree,          {SpriteId::Trees, 292, 160, 48, 97}},
+        {DecorId::YellowTree,        {SpriteId::Trees, 292, 480, 48, 97}},
+        {DecorId::BlueTree,          {SpriteId::Trees, 438, 1120, 48, 97}},
+        {DecorId::PinkFlowerGrass,   {SpriteId::GrassDecor, 0, 0, 15, 20}},
+        {DecorId::OrangeFlowerGrass, {SpriteId::GrassDecor, 0, 20, 15, 20}},
+        {DecorId::OrangeGrass,       {SpriteId::GrassDecor, 0, 40, 15, 20}},
+        {DecorId::VelvetGrass,       {SpriteId::GrassDecor, 15, 100, 15, 20}},
+        {DecorId::BlueGrass,         {SpriteId::GrassDecor, 15, 160, 15, 20}},
+        {DecorId::PlainGrass,        {SpriteId::GrassDecor, 0, 60, 15, 20}},
+        {DecorId::RedGrass,          {SpriteId::GrassDecor, 15, 40, 15, 20}},
+        {DecorId::SimpleBush,        {SpriteId::Bushes, 0, 9, 32, 36}},
+        {DecorId::RedBBerryBush,     {SpriteId::Bushes, 32, 9, 32, 36}},
+        {DecorId::PinkBush,          {SpriteId::Bushes, 32, 95, 32, 32}},
+        {DecorId::PurpleBerryBush,   {SpriteId::Bushes, 32, 57, 32, 36}},
+        {DecorId::BlueBush,          {SpriteId::Bushes, 64, 57, 32, 36}},
+        {DecorId::BigRedBush,        {SpriteId::Bushes, 48, 132, 48, 43}},
+        {DecorId::StreatLamp,        {SpriteId::TownSpring, 176, 448, 16, 64}},
+        {DecorId::FenceFront,        {SpriteId::TownSpring, 16, 449, 16, 32}},
+        {DecorId::FenceBack,         {SpriteId::TownSpring, 16, 400, 16, 32}},
+        {DecorId::PinkFlower,        {SpriteId::OutdoorsSpring, 112, 160, 16, 16}},
+        {DecorId::BlueFlower,        {SpriteId::OutdoorsSpring, 112, 192, 16, 16}},
+        {DecorId::WeirdGreenPlant,   {SpriteId::CavernPlants, 0, 0, 16, 24}},
+        {DecorId::SmallFern,         {SpriteId::CavernPlants, 16, 0, 16, 24}},
+        {DecorId::BigFern,           {SpriteId::CavernPlants, 32, 0, 16, 24}},
+        {DecorId::PinkMushrom,       {SpriteId::CavernPlants, 96, 0, 16, 24}},
+        {DecorId::YellowMushrom,     {SpriteId::CavernPlants, 128, 0, 16, 24}},
+        {DecorId::BabyRedMushrom,    {SpriteId::Mushrooms, 0, 128, 16, 16}},
+        {DecorId::BigRedMushroom,    {SpriteId::Mushrooms, 0, 102, 16, 25}},
+        {DecorId::DungeonPilar,      {SpriteId::DungeonWallTiles, 0, 384, 16, 48}},
+        {DecorId::DungeonTorch,      {SpriteId::DungeonWallTiles, 64, 388, 16, 27}},
+        {DecorId::DungeonChain,      {SpriteId::DungeonWallTiles, 64, 416, 16, 32}},
+        {DecorId::DungeonWindow,     {SpriteId::DungeonWallTiles, 64, 448, 16, 32}},
+        {DecorId::DungeonWallCrack,  {SpriteId::DungeonWallTiles, 64, 480, 16, 32}},
+        {DecorId::SpiderWeb,         {SpriteId::GrassDecor, 15, 140, 16, 20}},
+        {DecorId::CornerSpiderWeb,   {SpriteId::GrassDecor, 31, 140, 16, 20}},
+        {DecorId::PottedPlants,      {SpriteId::TownSpring, 368, 476, 47, 36}},
+        {DecorId::SmallBlueFlower,   {SpriteId::TownSpring, 353, 432, 16, 16}},
     };
 
     inline constexpr FurnitureDef FURNITURE[] = {
-        {FurnitureId::Chair, Direction::Down,  {SpriteId::OutdoorsSpring,  0,   0, 16, 32}},
-        {FurnitureId::Chair, Direction::Up,    {SpriteId::OutdoorsSpring, 32,   0, 16, 32}},
-        {FurnitureId::Chair, Direction::Right, {SpriteId::OutdoorsSpring, 16,   0, 16, 32}},
-        {FurnitureId::Chair, Direction::Left,  {SpriteId::OutdoorsSpring, 16,   0, 16, 32}},
-        {FurnitureId::Chair, Direction::None,  {SpriteId::OutdoorsSpring,  0,   0, 16, 32}},
-        {FurnitureId::Table, Direction::None,  {SpriteId::OutdoorsSpring,  0, 569, 32, 39}},
+        {FurnitureId::Chair,               Direction::Down,   {SpriteId::Furniture,   0,    0, 16, 32}},
+        {FurnitureId::Chair,               Direction::Up,     {SpriteId::Furniture,  32,    0, 16, 32}},
+        {FurnitureId::Chair,               Direction::Right,  {SpriteId::Furniture,  16,    0, 16, 32}},
+        {FurnitureId::Table,               Direction::None,   {SpriteId::Furniture,   0,  569, 32, 39}},
+        {FurnitureId::Bed,                 Direction::None,   {SpriteId::Furniture,   0, 1032, 32, 55}},
+        {FurnitureId::BedSheet,            Direction::None,   {SpriteId::Furniture,  32, 1032, 32, 55}},
+        {FurnitureId::Bonsai,              Direction::None,   {SpriteId::Furniture, 514,  633, 32, 48}},
+        {FurnitureId::PottedTree,          Direction::None,   {SpriteId::Furniture, 514,  585, 32, 48}},
+        {FurnitureId::BlueArmCouch,        Direction::Down,   {SpriteId::Furniture,   0,  144, 32, 32}},
+        {FurnitureId::BlueArmCouch,        Direction::Right,  {SpriteId::Furniture,  32,  144, 32, 32}},
+        {FurnitureId::BlueArmCouch,        Direction::Up,     {SpriteId::Furniture,  64,  144, 32, 32}},
+        {FurnitureId::Tv,                  Direction::None,   {SpriteId::Furniture, 259,  832, 26, 32}},
+        {FurnitureId::BeigeRug,            Direction::None,   {SpriteId::Furniture, 229,  871, 24, 20}},
+        {FurnitureId::ClockFirePlace,      Direction::None,   {SpriteId::Furniture, 160,  938, 32, 70}},
+        {FurnitureId::BlueRug,             Direction::None,   {SpriteId::Furniture, 149,  867, 37, 28}},
+        {FurnitureId::CatFirePlace,        Direction::None,   {SpriteId::Furniture, 128,  925, 32, 51}},
+        {FurnitureId::SimpleFirePlace,     Direction::None,   {SpriteId::Furniture,   0,  896, 32, 80}},
+        {FurnitureId::BlueJunimoPushee,    Direction::None,   {SpriteId::Furniture,  16,  880, 16, 16}},
+        {FurnitureId::GreenJunimoPushee,   Direction::None,   {SpriteId::Furniture,   0,  880, 16, 16}},
+        {FurnitureId::YellowJunimoPushee,  Direction::None,   {SpriteId::Furniture,  32,  880, 16, 16}},
+        {FurnitureId::PinkJunimoPushee,    Direction::None,   {SpriteId::Furniture,  48,  880, 16, 16}},
+        {FurnitureId::SimpleLamp,          Direction::None,   {SpriteId::Furniture,  49,  733, 16, 34}},
+        {FurnitureId::BookShelf,           Direction::None,   {SpriteId::Furniture,  80,  640, 32, 48}},
+        {FurnitureId::SquareLamp,          Direction::None,   {SpriteId::Furniture,  80,  729, 16, 39}},
+        {FurnitureId::RoundTable,          Direction::None,   {SpriteId::Furniture, 224,  570, 32, 38}},
+        {FurnitureId::GreenStool,          Direction::None,   {SpriteId::Furniture, 480,   47, 16, 17}},
+        {FurnitureId::BrownSofa,           Direction::Down,   {SpriteId::Furniture,   0,  256, 48, 32}},
+        {FurnitureId::BrownSofa,           Direction::Right,  {SpriteId::Furniture,  48,  256, 32, 48}},
+        {FurnitureId::BrownSofa,           Direction::Up,     {SpriteId::Furniture,  80,  256, 48, 32}},
+        {FurnitureId::BrownArmCouch,       Direction::Down,   {SpriteId::Furniture, 384,  144, 32, 32}},
+        {FurnitureId::BrownArmCouch,       Direction::Right,  {SpriteId::Furniture, 416,  144, 32, 32}},
+        {FurnitureId::BrownArmCouch,       Direction::Up,     {SpriteId::Furniture, 448,  144, 32, 32}},
+    };
+
+    inline constexpr BuildingDef BUILDINGS[] = {
+        {BuildingId::ComunityCenter, {SpriteId::MarketBuildings, 0, 160, 192, 160}},
+        {BuildingId::PierresShop,    {SpriteId::MarketBuildings, 0, 0, 161, 160}},
+        {BuildingId::ClintsShop,     {SpriteId::MarketBuildings, 161, 0, 130, 127}},
+        {BuildingId::MarniesShop,    {SpriteId::MarketBuildings, 291, 0, 128, 112}},
+        {BuildingId::RobinsShop,     {SpriteId::MarketBuildings, 192, 127, 157, 193}},
+        {BuildingId::FarmHouse,      {SpriteId::FarmBuildings, 157, 268, 144, 145}},
+        {BuildingId::StoneCabin,     {SpriteId::Cabins, 80, 336, 80, 112}},
+        {BuildingId::WoodCabin,      {SpriteId::Cabins, 80, 0, 80, 112}},
+        {BuildingId::BrickCabin,     {SpriteId::Cabins, 80, 112, 80, 112}},
+    };
+
+    inline constexpr  PortalDef PORTALS[] = {
+        {PortalId::FarmToMine,  {SpriteId::OutdoorsSpring, 608, 160, 48, 48}},
+        {PortalId::ToNextLevel,  {SpriteId::LevelPortals, 0, 0, 16, 16}},
+        {PortalId::MineToFarm,  {SpriteId::LevelPortals, 0, 16, 16, 64}},
     };
 
     // Items
@@ -167,19 +296,27 @@ namespace SpriteDefs {
         {ItemId::Gold,        SpriteId::Ores,     94, 108, 16, 16},
     };
 
+    struct EmoteDef { EmoteId id; SpriteId sprite; uint16_t x, y, w, h; };
+    inline constexpr EmoteDef EMOTES[] = {
+        {EmoteId::Alert, SpriteId::Emotes, 0, 64, 16, 16},
+    };
+
     // UI
-    struct UiDef { UiSpriteId id; uint16_t x, y, w, h; };
+    struct UiDef { UiSpriteId id; SpriteId sheet; uint16_t x, y, w, h; };
     inline constexpr UiDef UI[] = {
-        {UiSpriteId::HotbarBar,          0, 256, 60, 60},
-        {UiSpriteId::HotbarSlot,        64, 128, 64, 64},
-        {UiSpriteId::HotbarSlotOutline, 128, 128, 64, 64},
-        {UiSpriteId::HotbarSlotSelected,  0, 896, 64, 64},
+        {UiSpriteId::HotbarBar,          SpriteId::MenuTiles,   0, 256, 60, 60},
+        {UiSpriteId::HotbarSlot,         SpriteId::MenuTiles,  64, 128, 64, 64},
+        {UiSpriteId::HotbarSlotOutline,  SpriteId::MenuTiles, 128, 128, 64, 64},
+        {UiSpriteId::HotbarSlotSelected, SpriteId::MenuTiles,   0, 896, 64, 64},
+
+        {UiSpriteId::EnergyBar,          SpriteId::Cursors,   256, 408, 12, 56},
+        {UiSpriteId::HealthBar,          SpriteId::Cursors,   268, 408, 12, 56},
     };
 
     // Clips
     struct FrameDef { int index; int ms; };
 
-    constexpr int MAX_FRAMES = 5; // TODO: creo que este es el max en la anim de todo, pero chequear enemigos
+    constexpr int MAX_FRAMES = 7; // las llamas (projectile_fire.png) tienen 7 frames; el resto de las anims usa <= 5
 
     template <class State>
     struct ClipDef {
@@ -209,6 +346,24 @@ namespace SpriteDefs {
     constexpr ClipDef<State> clip_run(State s, Direction d, bool loop, int start, int count, int ms) {
         ClipDef<State> c{s, d, loop, 0, {}};
         for (int i = 0; i < count; ++i) c.frames[c.count++] = FrameDef{start + i, ms};
+        return c;
+    }
+
+    struct RectFrame { uint16_t x, y, w, h; int ms; };
+
+    template <class State>
+    struct RectClipDef {
+        State state;
+        Direction dir;
+        bool loop;
+        int count;
+        RectFrame frames[MAX_FRAMES];
+    };
+
+    template <class State>
+    constexpr RectClipDef<State> rect_clip(State s, Direction d, bool loop, std::initializer_list<RectFrame> f) {
+        RectClipDef<State> c{s, d, loop, 0, {}};
+        for (const auto& fr : f) c.frames[c.count++] = fr;
         return c;
     }
 
@@ -326,7 +481,6 @@ namespace SpriteDefs {
         SpriteId sheet = SpriteId::Tools;
     };
 
-    // TODO: agregar las otras herramientas
     inline const ToolAnimDef TOOL_ANIMS[] = {
         { ItemId::Pickaxe, Direction::Down,
         {{224, 89, 16, 23}, {240, 89, 16, 23}}, 0, 0,
@@ -341,16 +495,16 @@ namespace SpriteDefs {
         {{0, {3, -5},  -110}, {0, {6, -7},  -60}, {0, {10, -5}, -10}, {0, {10, -4},   40},  {0, {10, -4},   80}} },
 
         { ItemId::WateringCan, Direction::Down,
-        {{2, 224, 11, 15}, {2, 224, 11, 15}}, 0, 0,
-        {{0, {3, 14}, 0}, {0, {3, 13}, 0}, {0, {3, 13}, 0}, {0, {3, 13}, 0}, {0, {3, 14}, 0}} },
+        {{0, 219, 16, 20}, {16, 219, 16, 20}}, 0, 0,
+        {{0, {1, 9}, 0}, {1, {1, 8}, 0}, {1, {1, 8}, 0}, {1, {1, 8}, 0}, {0, {1, 9}, 0}} },
 
         { ItemId::WateringCan, Direction::Right,
-        {{32, 228, 16, 11}, {49, 226, 15, 13}}, 0, 0,
-        {{0, {5, 17}, 0}, {1, {5, 12}, 0}, {1, {5, 12}, 0}, {1, {5, 12}, 0}, {0, {5, 17}, 0}} },
+        {{32, 219, 16, 20}, {48, 219, 16, 20}}, 0, 0,
+        {{0, {5, 8}, 0}, {1, {4, 5}, 0}, {1, {4, 5}, 0}, {1, {4, 5}, 0}, {0, {5, 8}, 0}} },
 
         { ItemId::WateringCan, Direction::Up,
-        {{32, 228, 16, 11}, {32, 228, 16, 11}}, 0, 0,
-        {{0, {0, 13}, 0}, {0, {0, 12}, 0}, {0, {0, 12}, 0}, {0, {0, 12}, 0}, {0, {0, 13}, 0}} },
+        {{64, 219, 16, 20}, {64, 219, 16, 20}}, 0, 0,
+        {{0, {0, 4}, 0}, {0, {0, 3}, 0}, {0, {0, 3}, 0}, {0, {0, 3}, 0}, {0, {0, 4}, 0}} },
 
         { ItemId::Sword, Direction::Down,
         {{48, 16, 16, 16}, {0, 0, 0, 0}}, 3, 13,
@@ -368,16 +522,16 @@ namespace SpriteDefs {
         SpriteId::Weapons },
 
         { ItemId::Shovel, Direction::Down,
-        {{224, 25, 16, 23}, {240, 25, 16, 23}}, 0, 0,
-        {{0, {0, -6}, 0}, {0, {0, -8}, 0}, {0, {0, -7}, 0}, {1, {0, 8}, 0}, {1, {0, 8}, 0}} },
+        {{224, 26, 16, 22}, {240, 26, 16, 22}}, 0, 0,
+        {{0, {0, -5}, 0}, {0, {0, -7}, 0}, {0, {0, -6}, 0}, {1, {0, 9}, 0}, {1, {0, 9}, 0}} },
 
         { ItemId::Shovel, Direction::Up,
-        {{288, 25, 16, 23}, {272, 25, 16, 23}}, 0, 0,
-        {{0, {0, -10}, 0}, {0, {0, -12}, 0}, {0, {0, -12}, 0}, {1, {0, -10}, 0}, {1, {0, -8}, 0}} },
+        {{272, 26, 16, 22}, {288, 26, 16, 22}}, 0, 0,
+        {{0, {0, -9}, 0}, {0, {0, -11}, 0}, {0, {0, -11}, 0}, {1, {0, -9}, 0}, {1, {0, -7}, 0}} },
 
         { ItemId::Shovel, Direction::Right,
-        {{256, 29, 16, 19}, {0, 0, 0, 0}}, 9, 17,
-        {{0, {-6, -6}, -30}, {0, {-2, -7}, 0}, {0, {4, -4}, 40}, {0, {5, -2}, 80}, {0, {5, -1}, 100}} },
+        {{256, 26, 16, 22}, {0, 0, 0, 0}}, 9, 20,
+        {{0, {-6, -9}, -30}, {0, {-2, -10}, 0}, {0, {4, -7}, 40}, {0, {5, -5}, 80}, {0, {5, -4}, 100}} },
     };
 
     constexpr LayerOffsets farmer_offsets(int frame) {
@@ -386,7 +540,6 @@ namespace SpriteDefs {
         return {};
     }
 
-    // TODO: cambiar sprite dependiendo del color de vaca y pollo
     // Cow
     inline constexpr ClipSetInfo COW_SET{SpriteId::BronwCow, Dimentions::COW_COLS, Dimentions::COW_CELL_W, Dimentions::COW_CELL_H, -Dimentions::COW_CELL_W / 2, -Dimentions::COW_CELL_H};
     inline constexpr int COW_IDLE_MS = 400;
@@ -510,6 +663,13 @@ namespace SpriteDefs {
         SpriteId::LavaBat, Dimentions::BAT_COLS, Dimentions::BAT_CELL_W, Dimentions::BAT_CELL_H,
         -Dimentions::BAT_CELL_W / 2, -Dimentions::BAT_FEET_Y};
 
+    inline constexpr ClipSetInfo FROST_BAT_FRENZY_SET{
+        SpriteId::FrostBatFrenzy, Dimentions::BAT_COLS, Dimentions::BAT_CELL_W, Dimentions::BAT_CELL_FRENZY_H,
+        -Dimentions::BAT_CELL_W / 2, -Dimentions::BAT_FRENZY_FEET_Y};
+    inline constexpr ClipSetInfo LAVA_BAT_FRENZY_SET{
+        SpriteId::LavaBatFrenzy, Dimentions::BAT_COLS, Dimentions::BAT_CELL_W, Dimentions::BAT_CELL_FRENZY_H,
+        -Dimentions::BAT_CELL_W / 2, -Dimentions::BAT_FRENZY_FEET_Y};
+
     inline constexpr ClipSetInfo FROST_BAT_DEBRIS_SET{
         SpriteId::FrostBat, Dimentions::BAT_COLS, Dimentions::BAT_CELL_W, 16,
         -Dimentions::BAT_CELL_W / 2, -16};
@@ -519,56 +679,111 @@ namespace SpriteDefs {
 
     inline constexpr int BAT_FLAP_MS   = 130;
     inline constexpr int BAT_ATTACK_MS = 90;
+    inline constexpr int BAT_DEBRIS_FRAME = 1 * Dimentions::BAT_COLS;
+
 
     inline constexpr ClipDef<EnemyState> BAT_CLIPS[] = {
         clip_run(EnemyState::Idle, Direction::Down,  true, 0, 4, BAT_FLAP_MS),
         clip_run(EnemyState::Idle, Direction::Right, true, 0, 4, BAT_FLAP_MS),
         clip_run(EnemyState::Idle, Direction::Left,  true, 0, 4, BAT_FLAP_MS),
-        clip_run(EnemyState::Idle, Direction::Up,    true, 8, 4, BAT_FLAP_MS),
+        clip_run(EnemyState::Idle, Direction::Up,    true, 0, 4, BAT_FLAP_MS),
 
         clip_run(EnemyState::Moving, Direction::Down,  true, 0, 4, BAT_FLAP_MS),
         clip_run(EnemyState::Moving, Direction::Right, true, 0, 4, BAT_FLAP_MS),
         clip_run(EnemyState::Moving, Direction::Left,  true, 0, 4, BAT_FLAP_MS),
-        clip_run(EnemyState::Moving, Direction::Up,    true, 8, 4, BAT_FLAP_MS),
+        clip_run(EnemyState::Moving, Direction::Up,    true, 0, 4, BAT_FLAP_MS),
 
         clip_run(EnemyState::Attacking, Direction::Down,  true, 0, 4, BAT_ATTACK_MS),
         clip_run(EnemyState::Attacking, Direction::Right, true, 0, 4, BAT_ATTACK_MS),
         clip_run(EnemyState::Attacking, Direction::Left,  true, 0, 4, BAT_ATTACK_MS),
-        clip_run(EnemyState::Attacking, Direction::Up,    true, 8, 4, BAT_ATTACK_MS),
+        clip_run(EnemyState::Attacking, Direction::Up,    true, 0, 4, BAT_ATTACK_MS),
     };
 
     inline constexpr ClipDef<EnemyState> BAT_DEAD_CLIPS[] = {
-        clip_run(EnemyState::Dead, Direction::Down,  true, 24, 1, 400),
-        clip_run(EnemyState::Dead, Direction::Right, true, 24, 1, 400),
-        clip_run(EnemyState::Dead, Direction::Up,    true, 24, 1, 400),
-        clip_run(EnemyState::Dead, Direction::Left,  true, 24, 1, 400),
+        clip_run(EnemyState::Dead, Direction::Down,  true, BAT_DEBRIS_FRAME, 1, 400),
+        clip_run(EnemyState::Dead, Direction::Right, true, BAT_DEBRIS_FRAME, 1, 400),
+        clip_run(EnemyState::Dead, Direction::Up,    true, BAT_DEBRIS_FRAME, 1, 400),
+        clip_run(EnemyState::Dead, Direction::Left,  true, BAT_DEBRIS_FRAME, 1, 400),
     };
 
     inline constexpr ClipSetInfo SKULL_SET{
-    SpriteId::SquidKid, Dimentions::SKULL_COLS,
-    Dimentions::SKULL_CELL_W, Dimentions::SKULL_CELL_H,
-    -Dimentions::SKULL_CELL_W / 2, -(Dimentions::SKULL_CELL_H + Dimentions::SKULL_HOVER_Y)};
+        SpriteId::Skull, Dimentions::SKULL_COLS,
+        Dimentions::SKULL_CELL_W, Dimentions::SKULL_CELL_H,
+        -Dimentions::SKULL_CELL_W / 2, -(Dimentions::SKULL_CELL_H + Dimentions::SKULL_HOVER_Y)};
 
-    inline constexpr int SKULL_OPEN_MS  = 600;
-    inline constexpr int SKULL_BLINK_MS = 120;
-    inline constexpr int SKULL_WINDUP_MS = 180;
-    inline constexpr int SKULL_SHOOT_MS  = 220;
+    inline constexpr int SKULL_IDLE_MS   = 400;
+    inline constexpr int SKULL_MOVE_MS   = 200;
+    inline constexpr int SKULL_ATTACK_MS = 120;
+
+    inline constexpr int SKULL_UP    = 0 * Dimentions::SKULL_COLS;
+    inline constexpr int SKULL_RIGHT = 1 * Dimentions::SKULL_COLS;
+    inline constexpr int SKULL_DOWN  = 2 * Dimentions::SKULL_COLS;
+    inline constexpr int SKULL_LEFT  = 3 * Dimentions::SKULL_COLS;
 
     inline constexpr ClipDef<EnemyState> SKULL_CLIPS[] = {
-        clip(EnemyState::Idle, Direction::Down,  true, {{0, SKULL_OPEN_MS}, {1, SKULL_BLINK_MS}}),
-        clip(EnemyState::Idle, Direction::Right, true, {{4, SKULL_OPEN_MS}, {5, SKULL_BLINK_MS}}),
-        clip(EnemyState::Idle, Direction::Up,    true, {{8, SKULL_OPEN_MS}}),
-        clip(EnemyState::Idle, Direction::Left,  true, {{12, SKULL_OPEN_MS}, {13, SKULL_BLINK_MS}}),
+        clip_run(EnemyState::Idle, Direction::Up,    true, SKULL_UP,    1, SKULL_IDLE_MS),
+        clip_run(EnemyState::Idle, Direction::Right, true, SKULL_RIGHT, 1, SKULL_IDLE_MS),
+        clip_run(EnemyState::Idle, Direction::Down,  true, SKULL_DOWN,  1, SKULL_IDLE_MS),
+        clip_run(EnemyState::Idle, Direction::Left,  true, SKULL_LEFT,  1, SKULL_IDLE_MS),
 
-        clip(EnemyState::Moving, Direction::Down,  true, {{0, SKULL_OPEN_MS}, {1, SKULL_BLINK_MS}}),
-        clip(EnemyState::Moving, Direction::Right, true, {{4, SKULL_OPEN_MS}, {5, SKULL_BLINK_MS}}),
-        clip(EnemyState::Moving, Direction::Up,    true, {{8, SKULL_OPEN_MS}}),
-        clip(EnemyState::Moving, Direction::Left,  true, {{12, SKULL_OPEN_MS}, {13, SKULL_BLINK_MS}}),
+        clip_run(EnemyState::Moving, Direction::Up,    true, SKULL_UP,    1, SKULL_MOVE_MS),
+        clip_run(EnemyState::Moving, Direction::Right, true, SKULL_RIGHT, 1, SKULL_MOVE_MS),
+        clip_run(EnemyState::Moving, Direction::Down,  true, SKULL_DOWN,  1, SKULL_MOVE_MS),
+        clip_run(EnemyState::Moving, Direction::Left,  true, SKULL_LEFT,  1, SKULL_MOVE_MS),
 
-        clip(EnemyState::Attacking, Direction::Down,  true, {{2,  SKULL_WINDUP_MS}, {3,  SKULL_SHOOT_MS}}),
-        clip(EnemyState::Attacking, Direction::Right, true, {{6,  SKULL_WINDUP_MS}, {7,  SKULL_SHOOT_MS}}),
-        clip(EnemyState::Attacking, Direction::Up,    true, {{10, SKULL_WINDUP_MS}, {11, SKULL_SHOOT_MS}}),
-        clip(EnemyState::Attacking, Direction::Left,  true, {{14, SKULL_WINDUP_MS}, {15, SKULL_SHOOT_MS}}),
+        clip_run(EnemyState::Attacking, Direction::Up,    true, SKULL_UP    + 1, 1, SKULL_ATTACK_MS),
+        clip_run(EnemyState::Attacking, Direction::Right, true, SKULL_RIGHT + 1, 1, SKULL_ATTACK_MS),
+        clip_run(EnemyState::Attacking, Direction::Down,  true, SKULL_DOWN  + 1, 1, SKULL_ATTACK_MS),
+        clip_run(EnemyState::Attacking, Direction::Left,  true, SKULL_LEFT  + 1, 1, SKULL_ATTACK_MS),
     };
 
+    inline constexpr ClipSetInfo SPIKE_SET{
+        SpriteId::SpikeTrap, Dimentions::SPIKE_COLS,
+        Dimentions::SPIKE_CELL_W, Dimentions::SPIKE_CELL_H,
+        -Dimentions::SPIKE_CELL_W / 2, -Dimentions::SPIKE_CELL_H};
+
+    inline constexpr int SPIKE_STATE_MS = 400;
+
+    inline constexpr ClipDef<TrapState> SPIKE_CLIPS[] = {
+        clip_run(TrapState::Inactive, Direction::None, true, 0, 1, SPIKE_STATE_MS),
+        clip_run(TrapState::Warning,  Direction::None, true, 1, 1, SPIKE_STATE_MS),
+        clip_run(TrapState::Active,   Direction::None, true, 2, 1, SPIKE_STATE_MS),
+    };
+
+    inline constexpr int WALL_FLAME_STATE_MS   = 400;
+    inline constexpr int WALL_FLAME_WARNING_MS = 150;
+
+    inline constexpr RectClipDef<TrapState> WALL_FLAME_CLIPS[] = {
+        rect_clip(TrapState::Inactive, Direction::Down, true,  {{ 0, 22, 11, 15, WALL_FLAME_STATE_MS}}),
+        rect_clip(TrapState::Warning,  Direction::Down, false, {{11, 22, 11, 15, WALL_FLAME_WARNING_MS},
+                                                                {22, 22, 11, 15, WALL_FLAME_WARNING_MS},
+                                                                {33, 22, 11, 15, WALL_FLAME_WARNING_MS}}),
+        rect_clip(TrapState::Active,   Direction::Down, true,  {{44, 22, 11, 15, WALL_FLAME_STATE_MS}}),
+
+        rect_clip(TrapState::Inactive, Direction::Up, true,  {{ 0, 37, 11, 19, WALL_FLAME_STATE_MS}}),
+        rect_clip(TrapState::Warning,  Direction::Up, false, {{11, 37, 11, 19, WALL_FLAME_WARNING_MS},
+                                                              {22, 37, 11, 19, WALL_FLAME_WARNING_MS},
+                                                              {33, 37, 11, 19, WALL_FLAME_WARNING_MS}}),
+        rect_clip(TrapState::Active,   Direction::Up, true,  {{44, 37, 11, 19, WALL_FLAME_STATE_MS}}),
+
+        rect_clip(TrapState::Inactive, Direction::Right, true,  {{ 0,  0, 15, 11, WALL_FLAME_STATE_MS}}),
+        rect_clip(TrapState::Warning,  Direction::Right, false, {{19,  0, 15, 11, WALL_FLAME_WARNING_MS},
+                                                                 {39,  0, 15, 11, WALL_FLAME_WARNING_MS},
+                                                                 { 0, 11, 15, 11, WALL_FLAME_WARNING_MS}}),
+        rect_clip(TrapState::Active,   Direction::Right, true,  {{19, 11, 15, 11, WALL_FLAME_STATE_MS}}),
+    };
+
+    inline constexpr ClipSetInfo FLAME_SET{
+        SpriteId::Flames, Dimentions::FLAME_COLS,
+        Dimentions::FLAME_CELL_W, Dimentions::FLAME_CELL_H,
+        -Dimentions::FLAME_CELL_W / 2, -Dimentions::FLAME_CELL_H / 2};
+
+    inline constexpr int FLAME_FRAME_MS = 80;
+    inline constexpr int FLAME_FRAMES   = 7;
+
+    inline constexpr ClipDef<FlameType> FLAME_CLIPS[] = {
+        clip_run(FlameType::Green,  Direction::None, true, 0 * Dimentions::FLAME_COLS, FLAME_FRAMES, FLAME_FRAME_MS),
+        clip_run(FlameType::Blue,   Direction::None, true, 1 * Dimentions::FLAME_COLS, FLAME_FRAMES, FLAME_FRAME_MS),
+        clip_run(FlameType::Common, Direction::None, true, 2 * Dimentions::FLAME_COLS, FLAME_FRAMES, FLAME_FRAME_MS),
+    };
 }

@@ -26,25 +26,52 @@ enum class SpriteId : uint16_t {
     Ores,
     MenuTiles,
     Crops,
+
     BronwCow,
+    WhiteCow,
     BronwChicken,
+    WhiteChicken,
+    BlueChicken,
+    VoidChicken,
+    
     OutdoorsSpring,
+    TilledDirt,
     Trees,
     MarketBuildings,
     FarmBuildings,
     Cabins,
+    Mushrooms,
+    GrassDecor,
+    Bushes,
+    TownSpring,
+    CavernPlants,
+    DungeonWallTiles,
+    LevelPortals,
+    Furniture,
+    
     Skeleton,
     StoneGolem,
     FrostBat,
     LavaBat,
-    SquidKid
+    FrostBatFrenzy,
+    LavaBatFrenzy,
+    Skull,
+
+    SpikeTrap,
+    WallFlameTrap,
+    Flames,
+
+    Cursors,
+    Emotes
 };
 
 enum class UiSpriteId : uint8_t {
     HotbarBar,
     HotbarSlot,
     HotbarSlotOutline,
-    HotbarSlotSelected
+    HotbarSlotSelected,
+    EnergyBar,
+    HealthBar
 };
 
 struct Drawable {
@@ -90,7 +117,7 @@ struct Clip {
 };
 
 
-using Action = std::variant<PlayerState, AnimalState, EnemyState>;
+using Action = std::variant<PlayerState, AnimalState, EnemyState, TrapState, FlameType>;
 
 struct ClipId {
     SpriteId sprite_id;

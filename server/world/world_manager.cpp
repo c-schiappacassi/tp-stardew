@@ -22,6 +22,14 @@ ConstMapData WorldManager::buildConstMap() const {
     // TODO: decor / buildings de la granja (hoy FarmLayout no los tiene)
     // TODO: fondo de los niveles. Por ahora vacios, pero en orden: MinesView numera por indice (i + 1)
     map.levels.resize(DUNGEON_ROOM_COUNT);
+    // TODO: edificios y NPCs del pueblo cuando exista BuildingId/sprites para ellos
+    const int townTile = town.getTileSize();
+    map.town.floor.reserve(static_cast<size_t>(town.getWidth()) * town.getHeight());
+    for (int y = 0; y < town.getHeight(); ++y) {
+        for (int x = 0; x < town.getWidth(); ++x) {
+            map.town.floor.push_back({Position(x * townTile, y * townTile), TileTextureId::Grass});
+        }
+    }
     // TODO: farm_houses, pierres, robins, clints, marnies
     return map;
 }

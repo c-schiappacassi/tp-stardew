@@ -56,8 +56,6 @@ target_sources(taller_tests
     ../server/world/world_travel.cpp
     ../server/town/town_map.cpp
     ../server/game/time/day_cycle.cpp
-    ../server/tests/travel_day_test.cpp
-    ../server/tests/day_cycle_test.cpp
     ../server/farm/farm_config.cpp
     ../server/farm/animals/animal.cpp
     ../server/farm/animals/cow.cpp

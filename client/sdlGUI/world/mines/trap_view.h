@@ -16,7 +16,7 @@ private:
        
     Direction facing = Direction::Down;
     TrapState state;
-    
+
     Animator anim;
     std::optional<ClipId> current_clip;
     long long last_it = -1;

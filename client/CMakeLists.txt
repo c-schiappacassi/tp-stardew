@@ -16,6 +16,8 @@ target_sources(taller_client
     sdlGUI/world/mines/level_view.cpp
     sdlGUI/world/mines/mine_view.cpp
     sdlGUI/world/mines/enemy_view.cpp
+    sdlGUI/world/mines/trap_view.cpp
+    sdlGUI/world/mines/projectile_view.cpp
 
     sdlGUI/world/farm/crop_view.cpp
     sdlGUI/world/farm/animal_view.cpp
@@ -57,6 +59,7 @@ target_sources(taller_client
     sdlGUI/world/mines/ore_view.h
     sdlGUI/world/mines/enemy_view.h
     sdlGUI/world/mines/trap_view.h
+    sdlGUI/world/mines/projectile_view.h
 
     sdlGUI/world/farm/farm_view.h
     sdlGUI/world/farm/crop_view.h

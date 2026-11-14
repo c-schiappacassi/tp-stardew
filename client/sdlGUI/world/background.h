@@ -22,11 +22,13 @@ class StaticSpriteView : public EntityView {
 private:
     Position pos;
     const Sprite& sprite;
+    bool flip;
 public:
-    StaticSpriteView(Position pos, const Sprite& sprite): pos(pos), sprite(sprite) {}
+    StaticSpriteView(Position pos, const Sprite& sprite, bool flip = false)
+        : pos(pos), sprite(sprite), flip(flip) {}
 
     void draw(const RenderInfo& ctx) override {
-        draw_sprite(ctx, sprite, ctx.cam.world_to_screen(pos.getX(), pos.getY()));
+        draw_sprite(ctx, sprite, ctx.cam.world_to_screen(pos.getX(), pos.getY()), flip);
     }
 
     std::optional<float> depth(const RenderInfo& ctx) const override {

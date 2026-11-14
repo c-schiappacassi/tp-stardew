@@ -9,18 +9,15 @@
 
 namespace {
     constexpr int REFERENCE_HEIGHT = 720;
-    constexpr int FRAME_CORNER = 16;
-    constexpr int FRAME_THICKNESS = 12;
-    constexpr int BAR_W = 44;
-    constexpr int BAR_H = 144;
-    constexpr int FILL_MARGIN = 2;
+    constexpr int SPRITE_SCALE = 3;
+    constexpr int FILL_INSET_X = 3;
+    constexpr int FILL_INSET_TOP = 13;
+    constexpr int FILL_INSET_BOTTOM = 2;
     constexpr int RIGHT_MARGIN = 8;
     constexpr int BOTTOM_MARGIN = 8;
     constexpr int BAR_GAP = 4;
     constexpr int LABEL_PX = 3;
     constexpr int LABEL_GAP = 4;
-
-    constexpr SDL_Color EMPTY_COLOR{60, 30, 10, 255};
 
     SDL_Color fill_color(float ratio) {
         const float r = (ratio <= 0.5f ? 1.0f : 1.0f - 2.0f * (ratio - 0.5f)) * 220.0f;
@@ -45,34 +42,26 @@ void BarView::draw(const RenderInfo& ctx) const {
     const SDL2pp::Point screen = ctx.r.GetOutputSize();
     const int u = std::max(1, screen.y / REFERENCE_HEIGHT);
 
-    const int w = BAR_W * u;
-    const int h = BAR_H * u;
+    const Sprite& frame = ctx.assets.get_sprite(frame_sprite);
+    const int s = SPRITE_SCALE * u;
+
+    const int w = frame.width * s;
+    const int h = frame.height * s;
     const int x = screen.x - RIGHT_MARGIN * u - w - order * (w + BAR_GAP * u);
     const int y = screen.y - BOTTOM_MARGIN * u - h;
     const SDL2pp::Rect bar(x, y, w, h);
 
-    const Sprite& frame = ctx.assets.get_sprite(UiSpriteId::HotbarBar);
-    draw_texture_box(ctx, frame.sprite_id, frame.src(), bar, FRAME_CORNER, u);
+    draw_sprite_in(ctx, frame, bar);
 
-    const int t = FRAME_THICKNESS * u;
-    const SDL2pp::Rect inner(bar.x + t, bar.y + t, bar.w - 2 * t, bar.h - 2 * t);
-    fill_rect(ctx, inner, EMPTY_COLOR);
+    const SDL2pp::Rect inner(bar.x + FILL_INSET_X * s, bar.y + FILL_INSET_TOP * s, bar.w - 2 * FILL_INSET_X * s, bar.h - (FILL_INSET_TOP + FILL_INSET_BOTTOM) * s);
 
     const float ratio = std::clamp(static_cast<float>(value) / static_cast<float>(max_value), 0.0f, 1.0f);
-    const int m = FILL_MARGIN * u;
-    const int max_fill_h = inner.h - 2 * m;
-    int fill_h = static_cast<int>(std::round(static_cast<float>(max_fill_h) * ratio));
+    int fill_h = static_cast<int>(std::round(static_cast<float>(inner.h) * ratio));
     if (value > 0) {
-        fill_h = std::max(fill_h, u);
+        fill_h = std::max(fill_h, s);
     }
     if (fill_h > 0) {
-        const SDL2pp::Rect fill(inner.x + m, inner.y + inner.h - m - fill_h, inner.w - 2 * m, fill_h);
+        const SDL2pp::Rect fill(inner.x, inner.y + inner.h - fill_h, inner.w, fill_h);
         fill_rect(ctx, fill, fill_color(ratio));
     }
-
-    const std::string text(1, label);
-    const int px = LABEL_PX * u;
-    const int lx = bar.x + (bar.w - pixel_font::width(text, px)) / 2;
-    const int ly = bar.y - LABEL_GAP * u - pixel_font::height(px);
-    pixel_font::draw_shadowed(ctx, text, lx, ly, px);
 }

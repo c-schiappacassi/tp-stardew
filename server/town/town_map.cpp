@@ -63,6 +63,9 @@ bool TownMap::initialize(const TownConfig& config) {
     terrain = std::move(prepared);
     farmDoor = toFarm;
     mineDoor = toMine;
+    widthTiles = map.width;
+    heightTiles = map.height;
+    tileSizePx = map.tileSize;
     return true;
 }
 

@@ -5,7 +5,7 @@
 
 class BarView {
 private:
-    char label;
+    UiSpriteId frame_sprite;
     int order;
     bool hide_when_full;
 
@@ -13,8 +13,8 @@ private:
     uint16_t max_value = 0;
 
 public:
-    explicit BarView(char label, int order = 0, bool hide_when_full = false)
-        : label(label), order(order), hide_when_full(hide_when_full) {}
+    explicit BarView(UiSpriteId frame_sprite, int order = 0, bool hide_when_full = false)
+        : frame_sprite(frame_sprite), order(order), hide_when_full(hide_when_full) {}
 
     void update(uint16_t current, uint16_t maximum) {
         value = current;

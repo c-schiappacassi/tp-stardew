@@ -175,6 +175,7 @@ struct ConstMapData{
     BackgroundData robins;
     BackgroundData clints;
     BackgroundData marnies;
+    BackgroundData town;
 };
 
 // Player
@@ -211,6 +212,7 @@ struct GameInfoDTO {
     bool isMultiplayer = false;
 };
 
+
 struct PlayerDataLocal : public PlayerData {
     std::map<uint8_t, Stack> items;
     uint8_t current_slot = 0;
@@ -221,6 +223,8 @@ struct PlayerDataLocal : public PlayerData {
     uint16_t maxEnergy = 0;
     ZoneData zoneData{std::monostate{}};
     CombatProgressData combatProgress;
+
+    // TODO: enviar la max cap del inventario (9 y con la recompenza sube a 10)
 
     PlayerDataLocal() = default;
     explicit PlayerDataLocal(const PlayerData& publicData): PlayerData(publicData) {}
