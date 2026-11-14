@@ -4,8 +4,11 @@
 #include <set>
 #include <string>
 #include <utility>
+#include <vector>
 
 #include "config/toml_helpers.h"
+#include "entities/entity_dimensions.h"
+#include "world/zone_map.h"
 
 ResourceType DungeonTomlReader::resourceTypeFromName(
     const std::string& name, const std::string& field) {
@@ -34,6 +37,29 @@ Quality DungeonTomlReader::qualityFromName(
     toml_helpers::invalid(field, "calidad desconocida");
 }
 
+Position DungeonTomlReader::readCell(const toml::node* node,
+                                     const std::string& field,
+                                     int64_t maxX,
+                                     int64_t maxY) {
+    const auto& position = toml_helpers::tableAt(node, field);
+    const auto x = toml_helpers::integer(position, "x", maxX, field + ".x");
+    const auto y = toml_helpers::integer(position, "y", maxY, field + ".y");
+    return Position(static_cast<int>(x), static_cast<int>(y));
+}
+
+Position DungeonTomlReader::readBasePosition(const toml::node* node,
+                                             const std::string& field,
+                                             const ZoneMap& terrain,
+                                             int64_t width,
+                                             int64_t height) {
+    const auto cell = readCell(node, field, width - 1, height - 1);
+    const auto base = terrain.baseAt({cell.getY(), cell.getX()});
+    if (!base) {
+        toml_helpers::invalid(field, "la celda esta fuera del mapa");
+    }
+    return *base;
+}
+
 DungeonConfig DungeonTomlReader::read(const toml::table& root) const {
     using toml_helpers::integer;
     using toml_helpers::invalid;
@@ -56,6 +82,111 @@ DungeonConfig DungeonTomlReader::read(const toml::table& root) const {
 
     config.minerals.clear();
     config.mineralDensityByRoom.clear();
+    config.roomLayouts.clear();
+
+    const auto* mapNode = dungeon.get("map");
+    const auto* roomsNode = dungeon.get("rooms");
+    if (mapNode || roomsNode) {
+        const auto& map = tableAt(mapNode, "dungeon.map");
+        if (!roomsNode || !roomsNode->is_array()) {
+            invalid("dungeon.rooms", "se esperaba una lista de habitaciones");
+        }
+
+        const auto width = integer(map, "width", 256, "dungeon.map.width");
+        const auto height = integer(map, "height", 256, "dungeon.map.height");
+        const auto tileSize = integer(map, "tile_size", 256, "dungeon.map.tile_size");
+        if (width == 0 || height == 0 || tileSize == 0) {
+            invalid("dungeon.map", "ancho, alto y tile_size deben ser mayores que cero");
+        }
+        if (tileSize != entity_dimensions::TILE_SIZE) {
+            invalid("dungeon.map.tile_size",
+                    "debe coincidir con el tamaño de tile del juego");
+        }
+
+        bool defaultWalkable = true;
+        if (map.get("default_walkable")) {
+            defaultWalkable = toml_helpers::boolean(
+                map, "default_walkable", "dungeon.map.default_walkable");
+        }
+
+        const auto& rooms = *roomsNode->as_array();
+        for (std::size_t i = 0; i < rooms.size(); ++i) {
+            const auto field = "dungeon.rooms[" + std::to_string(i) + "]";
+            const auto& room = tableAt(&rooms[i], field);
+            const auto number = static_cast<uint8_t>(integer(
+                room, "number", DUNGEON_ROOM_COUNT, field + ".number"));
+            if (number == 0) {
+                invalid(field + ".number", "la habitacion debe estar entre 1 y 10");
+            }
+
+            std::vector<std::vector<bool>> walkable(
+                static_cast<std::size_t>(height),
+                std::vector<bool>(static_cast<std::size_t>(width), defaultWalkable));
+
+            const auto* walkableNode = room.get("walkable_tiles");
+            if (walkableNode) {
+                if (!walkableNode->is_array()) {
+                    invalid(field + ".walkable_tiles", "se esperaba una lista");
+                }
+                const auto& walkableCells = *walkableNode->as_array();
+                for (std::size_t j = 0; j < walkableCells.size(); ++j) {
+                    const auto tileField = field + ".walkable_tiles[" +
+                                           std::to_string(j) + "]";
+                    const auto cell = readCell(
+                        &walkableCells[j], tileField, width - 1, height - 1);
+                    walkable[cell.getY()][cell.getX()] = true;
+                }
+            }
+
+            const auto* blockedNode = room.get("blocked_tiles");
+            if (blockedNode) {
+                if (!blockedNode->is_array()) {
+                    invalid(field + ".blocked_tiles", "se esperaba una lista");
+                }
+                const auto& blocked = *blockedNode->as_array();
+                for (std::size_t j = 0; j < blocked.size(); ++j) {
+                    const auto tileField = field + ".blocked_tiles[" + std::to_string(j) + "]";
+                    const auto cell = readCell(
+                        &blocked[j], tileField, width - 1, height - 1);
+                    walkable[cell.getY()][cell.getX()] = false;
+                }
+            }
+
+            DungeonRoomLayout layout;
+            layout.terrain = ZoneMap(walkable, static_cast<int>(tileSize));
+            layout.passages.entry = readBasePosition(
+                room.get("entry"), field + ".entry", layout.terrain, width, height);
+            layout.passages.exit = readBasePosition(
+                room.get("exit"), field + ".exit", layout.terrain, width, height);
+            if (room.get("next_room")) {
+                layout.passages.nextRoom = readBasePosition(
+                    room.get("next_room"), field + ".next_room",
+                    layout.terrain, width, height);
+            }
+
+            const auto* reservedNode = room.get("reserved_positions");
+            if (reservedNode) {
+                if (!reservedNode->is_array()) {
+                    invalid(field + ".reserved_positions", "se esperaba una lista");
+                }
+                const auto& reserved = *reservedNode->as_array();
+                for (std::size_t j = 0; j < reserved.size(); ++j) {
+                    const auto positionField = field + ".reserved_positions[" +
+                                               std::to_string(j) + "]";
+                    layout.reservedPositions.push_back(readBasePosition(
+                        &reserved[j], positionField, layout.terrain, width, height));
+                }
+            }
+
+            if (!config.roomLayouts.emplace(number, std::move(layout)).second) {
+                invalid(field + ".number", "numero de habitacion repetido");
+            }
+        }
+
+        if (config.roomLayouts.size() != DUNGEON_ROOM_COUNT) {
+            invalid("dungeon.rooms", "deben configurarse exactamente 10 habitaciones");
+        }
+    }
 
     const auto* densityNode = dungeon.get("mineral_density_by_room");
     if (!densityNode || !densityNode->is_array()) {

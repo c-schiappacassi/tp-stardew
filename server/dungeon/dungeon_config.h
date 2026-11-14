@@ -4,6 +4,7 @@
 #include <vector>
 #include "dtos.h"
 #include <map>
+#include "dungeon/loading/dungeon_layout.h"
 
 inline constexpr uint8_t DUNGEON_ROOM_COUNT = 10;
 
@@ -26,4 +27,5 @@ struct DungeonConfig {
     uint16_t miningRange = 64;
     uint8_t mineralDensityPercent = 10;
     std::map<uint8_t, uint8_t> mineralDensityByRoom;
+    std::map<uint8_t, DungeonRoomLayout> roomLayouts;
 };

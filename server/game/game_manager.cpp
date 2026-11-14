@@ -14,6 +14,9 @@ GameSession GameManager::createGame(const CreateGameDTO& dto,
     const std::string id = "game-" + std::to_string(nextId);
 
     GameSetup setup = farmLayout ? makeFarmGameSetup(dto.worldId, *farmLayout) :makeDefaultGameSetup(dto.worldId);
+    if (!dungeonConfig.roomLayouts.empty()) {
+        setup.layout = dungeonConfig.roomLayouts;
+    }
     setup.dungeonConfig = dungeonConfig;
     setup.playerConfig = playerConfig;
     auto game = std::make_unique<Game>(id, dto.gameName, setup.worldId,

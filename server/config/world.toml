@@ -147,6 +147,105 @@ mining_range = 64
 mineral_density_percent = 10
 mineral_density_by_room = []
 
+# Geometria de las 10 habitaciones. Todas las coordenadas se expresan
+# en tiles: x es la columna e y es la fila.
+# default_walkable define el estado inicial de todas las celdas.
+# walkable_tiles y blocked_tiles permiten sobrescribir celdas puntuales.
+[dungeon.map]
+width = 32
+height = 24
+tile_size = 16
+default_walkable = true
+
+[[dungeon.rooms]]
+number = 1
+entry = { x = 3, y = 3 }
+exit = { x = 1, y = 3 }
+next_room = { x = 29, y = 21 }
+reserved_positions = []
+walkable_tiles = []
+blocked_tiles = []
+
+[[dungeon.rooms]]
+number = 2
+entry = { x = 3, y = 3 }
+exit = { x = 1, y = 3 }
+next_room = { x = 29, y = 21 }
+reserved_positions = []
+walkable_tiles = []
+blocked_tiles = []
+
+[[dungeon.rooms]]
+number = 3
+entry = { x = 3, y = 3 }
+exit = { x = 1, y = 3 }
+next_room = { x = 29, y = 21 }
+reserved_positions = []
+walkable_tiles = []
+blocked_tiles = []
+
+[[dungeon.rooms]]
+number = 4
+entry = { x = 3, y = 3 }
+exit = { x = 1, y = 3 }
+next_room = { x = 29, y = 21 }
+reserved_positions = []
+walkable_tiles = []
+blocked_tiles = []
+
+[[dungeon.rooms]]
+number = 5
+entry = { x = 3, y = 3 }
+exit = { x = 1, y = 3 }
+next_room = { x = 29, y = 21 }
+reserved_positions = []
+walkable_tiles = []
+blocked_tiles = []
+
+[[dungeon.rooms]]
+number = 6
+entry = { x = 3, y = 3 }
+exit = { x = 1, y = 3 }
+next_room = { x = 29, y = 21 }
+reserved_positions = []
+walkable_tiles = []
+blocked_tiles = []
+
+[[dungeon.rooms]]
+number = 7
+entry = { x = 3, y = 3 }
+exit = { x = 1, y = 3 }
+next_room = { x = 29, y = 21 }
+reserved_positions = []
+walkable_tiles = []
+blocked_tiles = []
+
+[[dungeon.rooms]]
+number = 8
+entry = { x = 3, y = 3 }
+exit = { x = 1, y = 3 }
+next_room = { x = 29, y = 21 }
+reserved_positions = []
+walkable_tiles = []
+blocked_tiles = []
+
+[[dungeon.rooms]]
+number = 9
+entry = { x = 3, y = 3 }
+exit = { x = 1, y = 3 }
+next_room = { x = 29, y = 21 }
+reserved_positions = []
+walkable_tiles = []
+blocked_tiles = []
+
+[[dungeon.rooms]]
+number = 10
+entry = { x = 3, y = 3 }
+exit = { x = 1, y = 3 }
+reserved_positions = []
+walkable_tiles = []
+blocked_tiles = []
+
 [[dungeon.minerals]]
 type = "CoalRock"
 hits_to_break = 2
