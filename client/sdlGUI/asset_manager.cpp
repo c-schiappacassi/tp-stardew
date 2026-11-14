@@ -94,7 +94,15 @@ AssetManager::AssetManager(SDL2pp::Renderer& renderer, const std::filesystem::pa
     load_skull_clips();
     load_trap_clips();
     load_projectile_clips();
+    load_portals();
 }
+
+void AssetManager::load_portals() {
+    for (const auto& d : SpriteDefs::PORTALS)
+        portal_sprites.insert_or_assign(d.id, make_standing_sprite(d.rect));
+}
+
+const Sprite& AssetManager::get_sprite(PortalId id) const { return portal_sprites.at(id); }
 
 void AssetManager::load_trap_clips() {
     register_clips(clips, SpriteDefs::SPIKE_SET, SpriteDefs::SPIKE_CLIPS, false);

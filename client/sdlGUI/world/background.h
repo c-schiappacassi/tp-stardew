@@ -44,7 +44,12 @@ public:
 class Background {
 private:
     std::vector<TileView> floor;
-    std::vector<StaticSpriteView> props; // decor + buildings
+    std::vector<StaticSpriteView> flat_props;  // portales planos en el piso
+    std::vector<StaticSpriteView> props;       // decor + buildings + furniture + portales parados
+
+    static bool is_flat(PortalId id) {
+        return id == PortalId::ToNextLevel;
+    }
 
 public:
     explicit Background(const BackgroundData& data, AssetManager& assets) {
@@ -52,18 +57,26 @@ public:
         for (const auto& t : data.floor)
             floor.emplace_back(t, assets);
 
-        props.reserve(data.decor.size() + data.buildings.size());
+        props.reserve(data.decor.size() + data.buildings.size() +
+                      data.furniture.size() + data.portals.size());
         for (const DecorData& d : data.decor)
             props.emplace_back(d.pos, assets.get_sprite(d.id));
         for (const BuildingData& b : data.buildings)
             props.emplace_back(b.pos, assets.get_sprite(b.id));
         for (const StaticFurnitureData& f : data.furniture)
             props.emplace_back(f.pos, assets.get_sprite(f.id, f.dir));
+
+        for (const PortalData& p : data.portals) {
+            auto& target = is_flat(p.id) ? flat_props : props;
+            target.emplace_back(p.pos, assets.get_sprite(p.id));
+        }
     }
 
-    void draw(const RenderInfo& ctx){
-        for (TileView& t : floor){
+    void draw(const RenderInfo& ctx) {
+        for (TileView& t : floor)
             t.draw(ctx);
+        for (StaticSpriteView& p : flat_props) {
+            if (p.depth(ctx)) p.draw(ctx);
         }
     }
 
