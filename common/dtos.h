@@ -130,7 +130,7 @@ struct MineData{
 };
 // Fin Mine
 
-using ZoneData = std::variant<MineData, FarmData, std::monostate>;
+using ZoneData = std::variant<MineData, FarmData, HouseData, std::monostate>;
 
 // Map DTOS para el segundo handshake
 

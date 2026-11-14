@@ -7,6 +7,7 @@
 #include <vector>
 
 #include "../background_zone_view.h"
+#include "../furniture_view.h"
 #include "../../sync_views.h"
 #include "../../draw_region.h"
 #include "crop_view.h"
@@ -19,6 +20,7 @@ private:
     std::unordered_map<uint32_t, CropView> crops;
     std::unordered_map<uint32_t, AnimalView> animals;
     std::vector<SoilTile> soil;
+    std::unordered_map<uint32_t, FurnitureView> furniture;
 
     static std::pair<int, int> cell_of(const Position& base) {
         return {base.getX() / TILE_TO_PIXEL, (base.getY() - 1) / TILE_TO_PIXEL};
@@ -40,6 +42,7 @@ inline void FarmView::update(const FarmData& farm) {
     auto id_of = [](const auto& d) { return d.id; };
     sync_views(crops, farm.crops, id_of);
     sync_views(animals, farm.animals, id_of);
+    sync_views(furniture, farm.furniture, id_of);
 
     std::set<std::pair<int, int>> watered;
     for (const auto& crop : farm.crops) {
@@ -70,4 +73,5 @@ inline void FarmView::draw_floor_overlay(const RenderInfo& ctx) {
 inline void FarmView::collect_entities(const RenderInfo& ctx, std::vector<Drawable>& out, uint64_t& tie) {
     collect_from(ctx, crops, out, tie);
     collect_from(ctx, animals, out, tie);
+    collect_from(ctx, furniture, out, tie);
 }

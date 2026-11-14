@@ -49,7 +49,9 @@ enum class Direction : uint8_t {
 enum class Zone : uint8_t {
     Farm = 0,
     Town = 1,
-    Dungeon = 2
+    Dungeon = 2,
+    InsideHouse,
+    // InsideShop,
 };
 
 enum class TargetType : uint8_t {

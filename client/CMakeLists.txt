@@ -8,6 +8,7 @@ target_sources(taller_client
     sdlGUI/asset_manager.cpp
 
     sdlGUI/world/player_view.cpp
+    sdlGUI/world/furniture_view.cpp
 
     sdlGUI/world/hud/hotbar_view.cpp
     sdlGUI/world/hud/bar_view.cpp
@@ -46,8 +47,12 @@ target_sources(taller_client
     sdlGUI/world/map_view.h
     sdlGUI/world/zone_view.h
     sdlGUI/world/entity_view.h
+    sdlGUI/world/furniture_view.h
     sdlGUI/world/background.h
     sdlGUI/world/background_zone_view.h
+
+    sdlGUI/world/farmer_houses/houses_view.h
+    sdlGUI/world/farmer_houses/house_view.h
 
     sdlGUI/world/hud/hud_view.h
     sdlGUI/world/hud/hotbar_view.h
