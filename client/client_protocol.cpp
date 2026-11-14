@@ -457,6 +457,17 @@ BackgroundData ClientProtocol::receiveBackgroundData() {
         f.dir = static_cast<Direction>(base.receiveUint8());
         bg.furniture.push_back(f);
     }
+    n = base.receiveUint16();
+    bg.portals.reserve(n);
+    for (uint16_t i = 0; i < n; ++i) {
+        PortalData portal;
+        portal.pos = receivePosition();
+        portal.id = static_cast<PortalId>(base.receiveUint8());
+        if (portal.id > PortalId::MineToFarm) {
+            throw ProtocolError("Tipo de portal desconocido");
+        }
+        bg.portals.push_back(portal);
+    }
     return bg;
 }
 

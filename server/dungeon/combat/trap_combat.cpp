@@ -6,11 +6,16 @@
 
 #include "combat_context.h"
 #include "combat_damage.h"
+#include "projectile_combat.h"
 
 namespace {
+CollisionBounds trapBounds(const TrapData& trap) {
+    return CollisionBox{16, trap.type == TrapType::Spikes ? 16 : 8}.at(trap.pos);
+}
+
 bool isValid(const TrapData& trap, const DungeonRoom& room, const DungeonRoomPassages& passages) {
     const auto& map = room.getMap();
-    if (!room.canWalk(CollisionBox(16, 8).at(trap.pos)) ||
+    if (!room.canWalk(trapBounds(trap)) ||
         map.sameBaseCell(trap.pos, passages.entry) || map.sameBaseCell(trap.pos, passages.exit) ||
         (passages.nextRoom && map.sameBaseCell(trap.pos, *passages.nextRoom)) ||
         static_cast<uint8_t>(trap.type) > static_cast<uint8_t>(TrapType::WallFlame) ||
@@ -53,24 +58,6 @@ void updateFlameRange(Trap& trap, const DungeonRoom& room, const EnemyConfig& co
     }
 }
 
-bool reachesPlayer(const Trap& trap, const Player& player, const DungeonRoom& room) {
-    const auto bounds = player.getCollisionBounds(player.getPosition());
-    int range = 0;
-    if (trap.data.type == TrapType::WallFlame) {
-        range = trap.data.range;
-    }
-    for (int distance = 0; distance <= range; ++distance) {
-        const auto point = enemy_navigation::offsetPosition(trap.data.pos, trap.data.dir, distance);
-        const auto area = CollisionBox{16, 8}.at(point);
-        if (!room.canWalk(area)) {
-            break;
-        }
-        if (area.intersects(bounds)) {
-            return true;
-        }
-    }
-    return false;
-}
 }
 
 bool trap_combat::populate(DungeonRoom& room, const DungeonRoomLayout& layout,const EnemyConfig& config, EntityIdGenerator& ids) {
@@ -105,15 +92,23 @@ void trap_combat::update(CombatContext& context, DungeonRoom& room,const std::ve
         if (trap.data.type == TrapType::WallFlame) {
             updateFlameRange(trap, room, context.config);
         }
+        const auto previousState = trap.data.state;
         updateState(trap, context.config, context.time);
         if (trap.data.state != TrapState::Active) {
+            continue;
+        }
+        if (trap.data.type == TrapType::WallFlame) {
+            if (previousState != TrapState::Active) {
+                projectile_combat::launch(context, trap.data, room);
+            }
             continue;
         }
         for (const auto& actor: players) {
             if (!actor.player->canBeAttacked() || context.time < trap.nextHits[actor.id]) {
                 continue;
             }
-            if (reachesPlayer(trap, *actor.player, room)) {
+            if (trapBounds(trap.data).intersects(
+                        actor.player->getCollisionBounds(actor.player->getPosition()))) {
                 trap.nextHits[actor.id] = context.time + CombatTime{context.config.trapHitMs};
                 combat_damage::apply(context, *actor.player, actor.id, context.config.trapDamage,
                                      room);

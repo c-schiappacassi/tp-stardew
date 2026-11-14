@@ -24,10 +24,10 @@ void validateFarmCounts(const FarmData& farm) {
     validateCount(farm.tilledSoil.size(), MAX_U16, "tierra arada");
 }
 
-void validateCombatPosition(const Position& pos) {
+void validatePosition(const Position& pos) {
     if (pos.getX() < 0 || pos.getY() < 0 || pos.getX() > static_cast<int>(MAX_U16) ||
         pos.getY() > static_cast<int>(MAX_U16)) {
-        throw ProtocolError("Posicion de combate fuera del protocolo");
+        throw ProtocolError("Posicion fuera del protocolo");
     }
 }
 
@@ -37,27 +37,27 @@ void validateCombat(const DungeonCombatData& combat) {
     validateCount(combat.traps.size(), MAX_U16, "trampas");
     validateCount(combat.loot.size(), MAX_U16, "botines");
     for (const auto& enemy: combat.enemies) {
-        validateCombatPosition(enemy.pos);
+        validatePosition(enemy.pos);
         if (enemy.dir > Direction::Right || enemy.type > EnemyType::Skull ||
             enemy.state > EnemyState::Dead) {
             throw ProtocolError("Estado de enemigo desconocido");
         }
     }
     for (const auto& projectile: combat.projectiles) {
-        validateCombatPosition(projectile.pos);
-        if (projectile.type > FlameType::Green) {
+        validatePosition(projectile.pos);
+        if (projectile.type > FlameType::Common) {
             throw ProtocolError("Tipo de llama desconocido");
         }
     }
     for (const auto& trap: combat.traps) {
-        validateCombatPosition(trap.pos);
+        validatePosition(trap.pos);
         if (trap.dir == Direction::None || trap.dir > Direction::Right ||
             trap.type > TrapType::WallFlame || trap.state > TrapState::Active) {
             throw ProtocolError("Estado de trampa desconocido");
         }
     }
     for (const auto& loot: combat.loot) {
-        validateCombatPosition(loot.pos);
+        validatePosition(loot.pos);
     }
 }
 
@@ -270,6 +270,13 @@ void ServerProtocol::writeBackgroundData(MessageBuffer& out, const BackgroundDat
     validateCount(bg.decor.size(),     MAX_U16, "decor");
     validateCount(bg.buildings.size(), MAX_U16, "edificios");
     validateCount(bg.furniture.size(), MAX_U16, "muebles estaticos");
+    validateCount(bg.portals.size(), MAX_U16, "portales");
+    for (const auto& portal: bg.portals) {
+        validatePosition(portal.pos);
+        if (portal.id > PortalId::MineToFarm) {
+            throw ProtocolError("Tipo de portal desconocido");
+        }
+    }
 
     out.putUint32(static_cast<uint32_t>(bg.floor.size()));
     for (const auto& t : bg.floor) {
@@ -291,6 +298,11 @@ void ServerProtocol::writeBackgroundData(MessageBuffer& out, const BackgroundDat
         writePosition(out, f.pos);
         out.putUint8(static_cast<uint8_t>(f.id));
         out.putUint8(static_cast<uint8_t>(f.dir));
+    }
+    out.putUint16(static_cast<uint16_t>(bg.portals.size()));
+    for (const auto& portal: bg.portals) {
+        writePosition(out, portal.pos);
+        out.putUint8(static_cast<uint8_t>(portal.id));
     }
 }
 

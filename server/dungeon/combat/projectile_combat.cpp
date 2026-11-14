@@ -3,6 +3,7 @@
 #include <algorithm>
 #include <cmath>
 
+#include "dungeon/enemies/enemy_navigation.h"
 #include "dungeon/rooms/dungeon_room.h"
 #include "player/player.h"
 
@@ -71,6 +72,26 @@ void projectile_combat::launch(CombatContext& context, const Enemy& enemy, const
                        static_cast<double>(origin.getY()), speed * dx / length, speed * dy / length,
                        damage, context.time + CombatTime{context.config.flameLifetimeMs},
                        context.time});
+}
+
+void projectile_combat::launch(CombatContext& context, const TrapData& trap, DungeonRoom& room) {
+    auto& projectiles = room.getCombat().projectiles;
+    if (trap.type != TrapType::WallFlame || trap.range == 0 ||
+        trap.dir == Direction::None || trap.dir > Direction::Right ||
+        projectiles.size() >= 128 || context.entityIds.getNextId() == 0) {
+        return;
+    }
+    const auto origin = CollisionBox{16, 8}.at(trap.pos).center();
+    const auto step = enemy_navigation::offsetPosition(origin, trap.dir, 1);
+    const double speed = context.config.flameSpeed;
+    const auto rangeLifetime = CombatTime{static_cast<int64_t>(std::ceil(static_cast<double>(trap.range) * 1000.0 / speed))};
+    const auto lifetime = std::min(rangeLifetime, CombatTime{context.config.flameLifetimeMs});
+    const auto id = context.entityIds.generate();
+    projectiles.emplace(id, Projectile{ProjectileData{id, origin, FlameType::Common},
+                        static_cast<double>(origin.getX()), static_cast<double>(origin.getY()),
+                        speed * (step.getX() - origin.getX()),
+                        speed * (step.getY() - origin.getY()), context.config.trapDamage,
+                        context.time + lifetime, context.time});
 }
 
 void projectile_combat::update(CombatContext& context, DungeonRoom& room,const std::vector<Combatant>& players, CombatTime elapsed) {

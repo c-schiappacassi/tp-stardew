@@ -44,6 +44,13 @@ bool WorldTravel::canConnectTown(const TownMap& town, const FarmManager& farm) c
            farm.canWalk(playerBox.at(farmTown->returnPosition));
 }
 
+std::optional<Position> WorldTravel::getDungeonEntrance(Zone zone) const {
+    if (!entrance || entrance->zone != zone) {
+        return std::nullopt;
+    }
+    return entrance->position;
+}
+
 bool WorldTravel::canArrive(const Player& player, const ReturnPoint& target,const FarmManager& farm, const TownMap& town) const {
     const auto bounds = player.getCollisionBounds(target.position);
     if (target.zone == Zone::Farm) return farm.isInitialized() && farm.canWalk(bounds);

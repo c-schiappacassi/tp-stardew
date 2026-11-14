@@ -58,6 +58,19 @@ std::optional<MineData> DungeonManager::getMineData(uint8_t number, bool include
     return mine;
 }
 
+std::vector<PortalData> DungeonManager::getPortals(uint8_t number) const {
+    const auto* room = findRoom(number);
+    if (!room || !room->getPassages()) {
+        return {};
+    }
+    const auto& passages = *room->getPassages();
+    std::vector<PortalData> portals{{passages.exit, PortalId::MineToFarm}};
+    if (passages.nextRoom) {
+        portals.push_back({*passages.nextRoom, PortalId::ToNextLevel});
+    }
+    return portals;
+}
+
 std::optional<DungeonCombatData> DungeonManager::getCombatData(uint8_t number) const {
     const auto* room = findRoom(number);
     if (!room) {

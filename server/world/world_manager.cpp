@@ -20,8 +20,14 @@ ConstMapData WorldManager::buildConstMap() const {
     }
 
     // TODO: decor / buildings de la granja (hoy FarmLayout no los tiene)
+    if (const auto entrance = travel.getDungeonEntrance(Zone::Farm)) {
+        map.farm.portals.push_back({*entrance, PortalId::FarmToMine});
+    }
     // TODO: fondo de los niveles. Por ahora vacios, pero en orden: MinesView numera por indice (i + 1)
     map.levels.resize(DUNGEON_ROOM_COUNT);
+    for (uint8_t number = 1; number <= DUNGEON_ROOM_COUNT; ++number) {
+        map.levels[number - 1].portals = dungeon.getPortals(number);
+    }
     // TODO: edificios y NPCs del pueblo cuando exista BuildingId/sprites para ellos
     const int townTile = town.getTileSize();
     map.town.floor.reserve(static_cast<size_t>(town.getWidth()) * town.getHeight());

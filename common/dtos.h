@@ -156,11 +156,17 @@ struct BuildingData {
     BuildingId id = BuildingId::FarmHouse;
 };
 
+struct PortalData {
+    Position pos{0, 0};
+    PortalId id = PortalId::FarmToMine;
+};
+
 struct BackgroundData{
     std::vector<TileData> floor;
     std::vector<DecorData> decor;
     std::vector<BuildingData> buildings; // Exteriores, para los interiores son una zona distinta, asi que les llega su propio BackgroundData
     std::vector<StaticFurnitureData> furniture;
+    std::vector<PortalData> portals;
 };
 
 // TODO: TBD primer draft del segundo Handshake, para la data que NUNCA cambia.

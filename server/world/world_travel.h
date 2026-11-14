@@ -43,6 +43,7 @@ public:
     void configureFarm(const FarmLayout& layout);
     void resetDungeon();
     bool configureEntrance(const DungeonEntrance& data, const FarmManager& farm, const TownMap& town);
+    std::optional<Position> getDungeonEntrance(Zone zone) const;
     bool canConnectTown(const TownMap& town, const FarmManager& farm) const;
     bool use(Player& player, uint16_t playerId, DungeonManager& dungeon,const FarmManager& farm, const TownMap& town);
     void finishDay();
