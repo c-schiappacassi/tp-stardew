@@ -3,9 +3,8 @@
 #include <sys/socket.h>
 #include <utility>
 
-ClientSender::ClientSender(ServerProtocol& protocol, std::shared_ptr<OutQueue> output,
-                           Socket& socket):
-        protocol(protocol), output(std::move(output)), socket(socket) {}
+ClientSender::ClientSender(ServerProtocol& protocol, std::shared_ptr<OutQueue> output):
+        protocol(protocol), output(std::move(output)) {}
 
 void ClientSender::run() {
     try {
@@ -13,11 +12,9 @@ void ClientSender::run() {
             protocol.sendStatus(output->pop());
         }
     } catch (const ClosedQueue&) {
-    } catch (const std::exception&) {
-        // Wake the receiver so it can unregister a client that stopped reading.
-        try {
-            socket.shutdown(SHUT_RDWR);
-        } catch (const std::exception&) {
-        }
-    }
+    } catch (const std::exception&) {}
+
+    try {
+        protocol.shutdown();
+    } catch (const std::exception&) {}
 }

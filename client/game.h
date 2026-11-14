@@ -17,7 +17,7 @@ private:
     void loopInternalLogic(long long it);
 
 public:
-    Game(NetworkManager& net, const std::string& player_name, const ServerStatus& initialStatus);
+    Game(NetworkManager& net, const std::string& player_name, const ServerStatus& initialStatus, const ConstMapData& map);
 
     Game(const Game&) = delete;
     Game& operator=(const Game&) = delete;

@@ -3,25 +3,55 @@
 #include <limits>
 #include <stdexcept>
 
-std::vector<Position> ZoneMap::walkablePositions() const {
-    std::vector<Position> positions;
-    if (isEmpty()) {
-        return positions;
+std::optional<ZoneMap::Cell> ZoneMap::baseCellAt(const Position& base) const {
+    if (base.getY() <= 0) return std::nullopt;
+    return cellAt(Position{base.getX(), base.getY() - 1});
+}
+
+std::optional<Position> ZoneMap::baseAt(const Cell& cell) const {
+    if (isEmpty() || cell.first < 0 || cell.second < 0 ||
+        static_cast<std::size_t>(cell.first) >= walkableTiles.size() ||
+        static_cast<std::size_t>(cell.second) >= walkableTiles.front().size()) {
+        return std::nullopt;
     }
+    const int64_t x = static_cast<int64_t>(cell.second) * cellSize + cellSize / 2;
+    const int64_t y = (static_cast<int64_t>(cell.first) + 1) * cellSize;
+    if (x > std::numeric_limits<int>::max() || y > std::numeric_limits<int>::max()) {
+        return std::nullopt;
+    }
+    return Position{static_cast<int>(x), static_cast<int>(y)};
+}
 
-    const auto limit = static_cast<std::size_t>(std::numeric_limits<int>::max() / cellSize);
+bool ZoneMap::isWalkableBase(const Position& base) const {
+    const auto cell = baseCellAt(base);
+    return cell && walkableTiles[cell->first][cell->second];
+}
 
+bool ZoneMap::sameBaseCell(const Position& first, const Position& second) const {
+    const auto a = baseCellAt(first);
+    const auto b = baseCellAt(second);
+    return a && b && *a == *b;
+}
+
+bool ZoneMap::hasBasePath(const Position& from, const Position& to) const {
+    return from.getY() > 0 && to.getY() > 0 &&
+           hasPath(Position{from.getX(), from.getY() - 1},
+                   Position{to.getX(), to.getY() - 1});
+}
+
+std::vector<Position> ZoneMap::walkableBasePositions() const {
+    std::vector<Position> result;
+    if (isEmpty()) return result;
     for (std::size_t row = 0; row < walkableTiles.size(); ++row) {
-        for (std::size_t column = 0; column < walkableTiles[row].size(); ++column) {
-            if (!walkableTiles[row][column]) {
-                continue;
+        for (std::size_t col = 0; col < walkableTiles[row].size(); ++col) {
+            if (!walkableTiles[row][col]) continue;
+            if (row > static_cast<std::size_t>(std::numeric_limits<int>::max()) || col > static_cast<std::size_t>(std::numeric_limits<int>::max())) {
+                throw std::overflow_error("Celda fuera del rango de Position");
             }
-            if (row > limit || column > limit) {
-                throw std::overflow_error("El terreno excede el rango de Position");
-            }
-
-            positions.emplace_back(static_cast<int>(column) * cellSize,static_cast<int>(row) * cellSize);
+            const auto base = baseAt({static_cast<int>(row), static_cast<int>(col)});
+            if (!base) throw std::overflow_error("Base fuera del rango de Position");
+            result.push_back(*base);
         }
     }
-    return positions;
+    return result;
 }

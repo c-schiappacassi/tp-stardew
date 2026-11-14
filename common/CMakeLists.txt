@@ -7,9 +7,11 @@ target_sources(taller_common
         resolver.cpp
         resolvererror.cpp
         socket.cpp
+        message_buffer.cpp
 
     PUBLIC
     # .h files
+        message_buffer.h
         constants.h
         dtos.h
         foo.h

@@ -6,18 +6,18 @@ const DungeonRoom* DungeonTravel::findRoom(const std::map<uint8_t, DungeonRoom>&
     return it == rooms.end() ? nullptr : &it->second;
 }
 
-bool DungeonTravel::enter(Player& player, const std::map<uint8_t, DungeonRoom>& rooms) const {
-    if (player.getZone() == Zone::Dungeon || !player.canAct()) {
-        return false;
-    }
-
+bool DungeonTravel::spawnPlayer(Player& player, const std::map<uint8_t, DungeonRoom>& rooms) const {
     const auto* first = findRoom(rooms, 1);
     if (!first || !first->getPassages() ||
         !first->canWalk(player.getCollisionBounds(first->getPassages()->entry))) {
         return false;
     }
 
-    return player.changeLocation(Zone::Dungeon, 1, first->getPassages()->entry);
+    return player.restoreLocation(Zone::Dungeon, 1, first->getPassages()->entry);
+}
+
+bool DungeonTravel::enter(Player& player, const std::map<uint8_t, DungeonRoom>& rooms) const {
+    return player.canAct() && player.getZone() != Zone::Dungeon && spawnPlayer(player, rooms);
 }
 
 bool DungeonTravel::advanceRoom(Player& player, const std::map<uint8_t, DungeonRoom>& rooms) const {
@@ -31,7 +31,7 @@ bool DungeonTravel::advanceRoom(Player& player, const std::map<uint8_t, DungeonR
     }
 
     const auto& passages = *room->getPassages();
-    if (!room->getMap().sameCell(player.getPosition(), *passages.nextRoom)) {
+    if (!room->getMap().sameBaseCell(player.getPosition(), *passages.nextRoom)) {
         return false;
     }
 
@@ -50,5 +50,5 @@ bool DungeonTravel::canExit(const Player& player, const std::map<uint8_t, Dungeo
     }
 
     const auto* room = findRoom(rooms, player.getDungeonLevel());
-    return room && room->getPassages() && room->getMap().sameCell(player.getPosition(), room->getPassages()->exit);
+    return room && room->getPassages() && room->getMap().sameBaseCell(player.getPosition(), room->getPassages()->exit);
 }

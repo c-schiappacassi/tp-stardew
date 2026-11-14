@@ -1,4 +1,5 @@
 #include "mineral_placement.h"
+#include "entities/collision_box.h"
 
 #include <algorithm>
 #include <cstddef>
@@ -14,19 +15,19 @@ std::optional<std::vector<Position>> MineralPlacement::choose(const DungeonRoom&
 
     std::set<ZoneMap::Cell> forbidden;
     for (const auto& position : reserved) {
-        if (!map.isWalkable(position)) {
+        if (!map.isWalkableBase(position)) {
             return std::nullopt;
         }
-        forbidden.insert(*map.cellAt(position));
+        forbidden.insert(*map.baseCellAt(position));
     }
 
     const RoomGeometry geometry;
     std::vector<Position> candidates;
 
-    for (const auto& position : map.walkablePositions()) {
-        if (room.canWalk(position) &&
+    for (const auto& position : map.walkableBasePositions()) {
+        if (room.canWalk(CollisionBox{entity_dimensions::MINERAL}.at(position)) &&
             !geometry.isPassageCell(map, *passages, position) &&
-            !forbidden.contains(*map.cellAt(position))) {
+            !forbidden.contains(*map.baseCellAt(position))) {
             candidates.push_back(position);
         }
     }

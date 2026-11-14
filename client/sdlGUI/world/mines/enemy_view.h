@@ -16,17 +16,14 @@ private:
        
     Direction facing = Direction::Down;
     EnemyState state;
+    bool frenzied = false;
     
     Animator anim;
     std::optional<ClipId> current_clip;
     long long last_it = -1;
-
-    // age ? TBD
-
-public:
-    explicit EnemyView(const EnemyData& data);
-
-    void update(const EnemyData& data);
+public: 
+    explicit EnemyView(const EnemySnapshot& data);
+    void update(const EnemySnapshot& data);
 
     std::optional<float> depth(const RenderInfo& ctx) const override;
     void draw(const RenderInfo& ctx) override;

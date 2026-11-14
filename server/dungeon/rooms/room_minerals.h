@@ -15,7 +15,7 @@ public:
     Mineral* find(EntityId id);
     const Mineral* find(EntityId id) const;
     const std::map<EntityId, Mineral>& all() const;
-    bool blocks(const ZoneMap::Cell& cell) const;
+    bool blocks(const CollisionBounds& bounds) const;
     bool reindex(const ZoneMap& terrain);
     void removeBroken(const ZoneMap& terrain);
     std::vector<MineralData> getPublicData(bool includeBroken) const;

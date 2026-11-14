@@ -1,23 +1,52 @@
 #include "game_setup.h"
 
 #include <utility>
+#include "entities/entity_dimensions.h"
 
 GameSetup makeDefaultGameSetup(uint8_t worldId) {
     GameSetup setup;
     setup.worldId = worldId;
-    const ZoneMap terrain(std::vector<std::vector<bool>>(24, std::vector<bool>(32, true)), 16);
+    const ZoneMap terrain(std::vector<std::vector<bool>>(24, std::vector<bool>(32, true)), entity_dimensions::TILE_SIZE);
     for (uint8_t level = 1; level <= DUNGEON_ROOM_COUNT; ++level) {
         DungeonRoomLayout room;
         room.terrain = terrain;
-        room.passages.entry = Position(48, 48);
-        room.passages.exit = Position(16, 48);
+        room.passages.entry = terrain.baseAt({3, 3}).value();
+        room.passages.exit = terrain.baseAt({3, 1}).value();
         if (level < DUNGEON_ROOM_COUNT) {
-            room.passages.nextRoom = Position(464, 336);
+            room.passages.nextRoom = terrain.baseAt({21, 29}).value();
+        }
+        room.traps.push_back(TrapData{0, terrain.baseAt({12, 14}).value(), Direction::Down,TrapType::Spikes, TrapState::Inactive, 16});
+        room.traps.push_back(TrapData{0, terrain.baseAt({8, 0}).value(), Direction::Right,TrapType::WallFlame, TrapState::Inactive, 64});
+        for (const auto& trap: room.traps) {
+            room.reservedPositions.push_back(trap.pos);
         }
         setup.layout.emplace(level, std::move(room));
     }
-    setup.entrance.terrain = terrain;
-    setup.entrance.position = Position(48, 48);
-    setup.entrance.returnPosition = Position(48, 64);
+    setup.entrance.emplace();
+    setup.entrance->terrain = terrain;
+    setup.entrance->position = terrain.baseAt({3, 3}).value();
+    setup.entrance->returnPosition = terrain.baseAt({4, 3}).value();
+    setup.farm.terrain = terrain;
+    setup.farm.spawn = setup.entrance->returnPosition;
+    setup.farm.reservedPositions = {setup.farm.spawn, setup.entrance->position};
+    setup.farm.townDoor = terrain.baseAt({3, 26}).value();
+    setup.farm.townReturn = terrain.baseAt({4, 26}).value();
+    setup.farm.beds = {terrain.baseAt({4, 4}).value()};
+    setup.townConfig.map = {32, 24, entity_dimensions::TILE_SIZE};
+    setup.townConfig.connections = {{"farm", {2, 12}}, {"dungeon", {29, 12}}};
+    return setup;
+}
+
+GameSetup makeFarmGameSetup(uint8_t worldId, const FarmLayout& farm) {
+    auto setup = makeDefaultGameSetup(worldId);
+    setup.farm = farm;
+    setup.townConfig = {};
+    setup.entrance.reset();
+    if (farm.mineDoor) {
+        setup.entrance.emplace();
+        setup.entrance->terrain = farm.terrain;
+        setup.entrance->position = *farm.mineDoor;
+        setup.entrance->returnPosition = farm.mineReturn.value_or(farm.spawn);
+    }
     return setup;
 }

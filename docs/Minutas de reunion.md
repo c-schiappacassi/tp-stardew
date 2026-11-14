@@ -194,10 +194,38 @@
     - regalos - 1 semana
     - enemigos - comienzo enemigos - uno completo y extendemos
     - vida player + consecuencias de desmayarse
-    - cama + ok irse a dormir 
+    - cama + ok irse a dormir
         - cama fija
 
 - Client:
     - sound manager
 
 - Server: ayuda C pero no descuida el protocolo y el testing.
+
+
+# 5ra Reunión 10-11-2026
+
+## TODO:
+### Quedo:
+- QT:
+    -   Fin de juego
+
+- Feat:
+    - terminar granja - piso, aviso de la vaca
+    - mapa
+    - cofre - click
+    - barra de energia - label
+    - regalos
+    - enemigos - trampas
+    - consecuencias de desmayarse
+    - cama + ok irse a dormir
+        - cama fija
+    - NPCs
+    - chat 
+        - hablar con comerciantes (hacer primero)
+        - otro players (@ para mensaje directo, sino es general)
+    - community center
+    - persistencia 
+ 
+- Client:
+    - sound manager

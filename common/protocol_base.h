@@ -3,26 +3,26 @@
 #include <cstdint>
 #include <string>
 
+#include "message_buffer.h"
 #include "socket.h"
 
 
 class ProtocolBase {
 private:
-    Socket& socket;
+    Socket socket;
 
-    void sendBytes(const void* data, unsigned int size);
     void receiveBytes(void* data, unsigned int size);
 
 public:
-    explicit ProtocolBase(Socket& socket);
+    explicit ProtocolBase(Socket&& socket);
 
     ProtocolBase(const ProtocolBase&) = delete;
     ProtocolBase& operator=(const ProtocolBase&) = delete;
+    ProtocolBase(ProtocolBase&&) = default;
+    ProtocolBase& operator=(ProtocolBase&&) = default;
 
-    void sendUint8(const uint8_t value);
-    void sendUint16(const uint16_t value);
-    void sendUint32(const uint32_t value);
-    void sendString(const std::string& value);
+    void send(const MessageBuffer& message);
+    void shutdown();
 
     uint8_t receiveUint8();
     uint16_t receiveUint16();

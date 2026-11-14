@@ -1,11 +1,26 @@
 #include "game.h"
-Game::Game(const std::string& id,const std::string& name,uint8_t worldId,const PlayerConfig& playerConfig,const DungeonConfig& dungeonConfig):
+Game::Game(const std::string& id,const std::string& name,uint8_t worldId,const PlayerConfig& playerConfig,const DungeonConfig& dungeonConfig,const FarmConfig& farmConfig,uint8_t maxPlayers):
     id(id),
     name(name),
     worldId(worldId),
     input(std::make_shared<CommandQueue>()),
-    world(dungeonConfig),
-    playerManager(playerConfig, world, world, world) {}
+    world(dungeonConfig, std::random_device{}(), farmConfig),
+    playerManager(playerConfig, world, world, world, world, maxPlayers) {}
+
+bool Game::loadFarm(uint8_t selectedWorldId, const FarmLayout& layout) {
+    std::lock_guard<std::mutex> lock(mtx);
+    return !configured && world.loadFarm(selectedWorldId, layout);
+}
+
+bool Game::loadTown(const TownConfig& config) {
+    std::lock_guard<std::mutex> lock(mtx);
+    return !configured && world.loadTown(config);
+}
+
+std::shared_ptr<const ConstMapData> Game::mapForSession() {
+    if (!constMap) constMap = std::make_shared<const ConstMapData>(world.buildConstMap());
+    return constMap;
+}
 
 const std::string& Game::getId() const {
     return id;

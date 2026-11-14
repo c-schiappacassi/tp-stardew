@@ -26,5 +26,5 @@ std::optional<float> OreView::depth(const RenderInfo& ctx) const {
 void OreView::draw(const RenderInfo& ctx) {
     const Sprite& sprite = ctx.assets.get_sprite(type, state);
     const SDL2pp::Point origin = ctx.cam.world_to_screen(pos.getX(), pos.getY());
-    draw_region(ctx, sprite.sprite_id, sprite_rect(sprite), origin);
+    draw_sprite(ctx, sprite, origin);
 }

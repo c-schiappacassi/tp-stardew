@@ -2,10 +2,10 @@
 #include <utility>
 
 bool RoomMinerals::add(Mineral mineral, const ZoneMap& terrain) {
-    const auto cell = terrain.cellAt(mineral.getPosition());
+    const auto cell = terrain.baseCellAt(mineral.getPosition());
     const EntityId id = mineral.getId();
 
-    if (!cell || !terrain.isWalkable(mineral.getPosition()) ||minerals.contains(id) || byCell.contains(*cell)) {
+    if (!cell || !terrain.isWalkable(mineral.getCollisionBounds()) ||minerals.contains(id) || byCell.contains(*cell) || blocks(mineral.getCollisionBounds())) {
         return false;
     }
 
@@ -25,7 +25,7 @@ bool RoomMinerals::remove(EntityId id, const ZoneMap& terrain) {
         return false;
     }
 
-    byCell.erase(*terrain.cellAt(it->second.getPosition()));
+    byCell.erase(*terrain.baseCellAt(it->second.getPosition()));
     minerals.erase(it);
     return true;
 }
@@ -44,17 +44,21 @@ const std::map<EntityId, Mineral>& RoomMinerals::all() const {
     return minerals;
 }
 
-bool RoomMinerals::blocks(const ZoneMap::Cell& cell) const {
-    const auto it = byCell.find(cell);
-    return it != byCell.end() && !minerals.at(it->second).isDepleted();
+bool RoomMinerals::blocks(const CollisionBounds& bounds) const {
+    for (const auto& [id, mineral] : minerals) {
+        if (!mineral.isDepleted() && mineral.getCollisionBounds().intersects(bounds)) {
+            return true;
+        }
+    }
+    return false;
 }
 
 bool RoomMinerals::reindex(const ZoneMap& terrain) {
     std::map<ZoneMap::Cell, EntityId> prepared;
 
     for (const auto& [id, mineral] : minerals) {
-        const auto cell = terrain.cellAt(mineral.getPosition());
-        if (!cell || !terrain.isWalkable(mineral.getPosition()) ||
+        const auto cell = terrain.baseCellAt(mineral.getPosition());
+        if (!cell || !terrain.isWalkable(mineral.getCollisionBounds()) ||
             !prepared.emplace(*cell, id).second) {
             return false;
         }

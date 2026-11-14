@@ -1,0 +1,24 @@
+#include "world_manager.h"
+
+bool WorldManager::loadFarm(uint8_t worldId, const FarmLayout& layout) {
+    if (loadedWorld && *loadedWorld != worldId) {
+        return false;
+    }
+    if (!farm.initialize(layout, entityIds)) {
+        return false;
+    }
+    loadedWorld = worldId;
+    travel.configureFarm(layout);
+    town = TownMap{};
+    return true;
+}
+
+const FarmManager& WorldManager::getFarm() const { return farm; }
+
+void WorldManager::update(std::chrono::milliseconds elapsed,const std::vector<CollisionBounds>& farmPlayers,const std::vector<Combatant>& players,std::chrono::steady_clock::time_point now) {
+    if (farm.isInitialized()) {
+        farm.setObstacles(farmPlayers);
+        farm.update(elapsed);
+    }
+    dungeon.update(elapsed, players, entityIds, now);
+}

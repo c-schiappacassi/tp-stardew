@@ -1,10 +1,11 @@
-#include "game.h"
-
 #include <chrono>
+#include <iostream>
 #include <thread>
 
+#include "time/game_clock.h"
+
 #include "constants.h"
-#include "foo.h"
+#include "game.h"
 
 void Game::updateToolStates() {
     std::lock_guard<std::mutex> lock(mtx);
@@ -22,6 +23,19 @@ void Game::sendStatus() {
     world.afterStatusPublished();
 }
 
+void Game::advanceWorld(std::chrono::milliseconds elapsed) {
+    std::lock_guard<std::mutex> lock(mtx);
+    if (!playerManager.isDayEnded() && playerManager.hasConnectedPlayers()) {
+        world.update(elapsed, playerManager.getCollisionBounds(Zone::Farm),playerManager.getCombatants());
+    }
+    if (world.combatCompleted()) {
+        playerManager.applyCombatBonus();
+    }
+    if (playerManager.advanceDay(elapsed)) {
+        world.finishDay();
+    }
+}
+
 void Game::processCommands() {
     PlayerCommand command;
     while (should_keep_running() && input->try_pop(command)) {
@@ -31,25 +45,48 @@ void Game::processCommands() {
 }
 
 void Game::run() {
-    bool running = should_keep_running();
-    const auto rate = std::chrono::milliseconds(1000 / FPS);
+    const auto rate = std::chrono::duration_cast<std::chrono::milliseconds>(
+            std::chrono::duration<float, std::milli>{TICK_MS});
+    GameClock clock;
     try {
-        Foo::constant_rate_loop(
-            [this, &running](long long) {
-                updateToolStates();
-                processCommands();
-                advancePlayers();
-                running = should_keep_running();
-
-                if (running) {
-                    sendStatus();
-                }
-            },
-            rate, running);
+        auto nextTick = std::chrono::steady_clock::now();
+        while (should_keep_running()) {
+            updateToolStates();
+            processCommands();
+            advancePlayers();
+            advanceWorld(clock.advance());
+            if (should_keep_running()) {
+                sendStatus();
+            }
+            nextTick += rate;
+            const auto now = std::chrono::steady_clock::now();
+            if (nextTick < now) {
+                const auto missedTicks = (now - nextTick) / rate;
+                nextTick += rate * (missedTicks + 1);
+            }
+            std::this_thread::sleep_until(nextTick);
+        }
     } catch (const ClosedQueue&) {
-        // Cola cerrada al frenar la partida.
+        // cola cerrada.
+    } catch (const std::exception& e) {
+        std::cerr << "Error en Game: " << e.what() << "\n";
+    } catch (...) {
+        std::cerr << "Error desconocido en Game\n";
     }
 
+    closeAll();
+}
+
+void Game::closeAll() {
+    {
+        std::lock_guard<std::mutex> lock(mtx);
+        playerManager.closeOutputs();
+    }
+    try {
+        input->close();
+    } catch (const std::runtime_error&) {
+        // cola cerrada
+    }
 }
 
 void Game::stop() {

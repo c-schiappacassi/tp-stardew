@@ -2,7 +2,6 @@
 
 #include <atomic>
 #include <optional>
-#include <sys/socket.h>
 
 #include "client_protocol.h"
 #include "dtos.h"
@@ -14,7 +13,6 @@ class NetworkManager {
 private:
     Queue<std::shared_ptr<CommandDTO>> send_queue{100};
     Queue<ServerStatus> recv_queue{100};
-    Socket socket;
     ClientProtocol protocolo;
     std::atomic<bool> connected{true};
     SendThread sender;
@@ -24,8 +22,8 @@ private:
 
 public:
     NetworkManager(const std::string& host, const std::string& port):
-            socket(host.c_str(), port.c_str()), protocolo(socket),
-            sender(send_queue, protocolo, socket, connected),
+            protocolo(Socket(host.c_str(), port.c_str())),
+            sender(send_queue, protocolo, connected),
             receiver(recv_queue, protocolo, connected) {}
 
     ~NetworkManager() { quit(); }
@@ -70,7 +68,7 @@ public:
             receiver.stop();
         }
         try {
-            socket.shutdown(SHUT_RDWR);
+            protocolo.shutdown();
         } catch (const std::exception&) {
         }
         if (started) {
@@ -92,4 +90,10 @@ public:
         protocolo.recv(status);
         return status;
     }
+
+    const ConstMapData recvMap(){
+        ConstMapData map;
+        protocolo.recv(map);
+        return map;
+    };
 };

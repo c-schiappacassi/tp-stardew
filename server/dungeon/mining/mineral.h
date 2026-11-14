@@ -1,6 +1,7 @@
 #pragma once
 #include <cstdint>
 #include "entities/entity_id.h"
+#include "entities/collision_bounds.h"
 #include "position.h"
 #include "protocol_types.h"
 #include "dtos.h"
@@ -18,6 +19,8 @@ public:
     EntityId getId() const;
     const Position& getPosition() const;
     ResourceType getType() const;
+    CollisionBounds getCollisionBounds() const;
+    Position getCollisionCenter() const;
     bool isDepleted() const;
     bool hit();
     MineralState getState() const;

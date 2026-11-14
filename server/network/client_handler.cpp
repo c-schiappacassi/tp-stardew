@@ -18,8 +18,7 @@ ClientHandler::Receiver ClientHandler::receiver(DTO (ServerProtocol::*recv)()) {
 }
 
 ClientHandler::ClientHandler(Socket&& socket, GameManager& manager):
-        socket(std::move(socket)),
-        protocol(this->socket),
+        protocol(std::move(socket)),
         manager(manager),
         outQueue(std::make_shared<OutQueue>()),
         session(),
@@ -28,6 +27,7 @@ ClientHandler::ClientHandler(Socket&& socket, GameManager& manager):
         {MessageType::Move,       receiver(&ServerProtocol::receiveMove)},
         {MessageType::SelectSlot, receiver(&ServerProtocol::receiveSelectSlot)},
         {MessageType::Interact,   receiver(&ServerProtocol::receiveInteract)},
+        {MessageType::DayOk,      receiver(&ServerProtocol::receiveDayOk)},
         {MessageType::UseItem,    receiver(&ServerProtocol::receiveUseItem)},
         {MessageType::Donate,     receiver(&ServerProtocol::receiveDonate)},
         {MessageType::Chat,       receiver(&ServerProtocol::receiveChat)},
@@ -98,7 +98,7 @@ bool ClientHandler::runMenu() {
 }
 
 void ClientHandler::runGame() {
-    sender = std::make_unique<ClientSender>(protocol, outQueue, socket);
+    sender = std::make_unique<ClientSender>(protocol, outQueue);
     sender->start();
 
     while (should_keep_running()) {
@@ -116,17 +116,17 @@ void ClientHandler::runGame() {
 bool ClientHandler::answerEntry() {
     const bool joined = session.status.status == StatusCode::Ok && session.input;
     protocol.sendStatus(session.status);
-
-    if (!joined) {
-        session = GameSession();
+    if (joined) {
+        protocol.sendConstMap(*session.map);
     }
+    if (!joined) session = GameSession();
     return joined;
 }
 
 void ClientHandler::stop() {
     Thread::stop();
     try {
-        socket.shutdown(SHUT_RDWR);
+        protocol.shutdown();
     } catch (const std::exception&) {
     }
 }

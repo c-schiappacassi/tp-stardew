@@ -1,72 +1,168 @@
 #include "farm_manager.h"
 
-Farm::Farm(const FarmConfig& config):config(config), cropManager(config), animalManager(config) {}
+#include <stdexcept>
+#include <utility>
 
-bool Farm::setMap(const ZoneMap& map) {return !cropManager.hasTilledSoil() && space.setMap(map);}
+#include "entities/entity_id_generator.h"
+#include "player/player.h"
+#include "farm_status.h"
+#include "loading/farm_loader.h"
 
-const ZoneMap& Farm::getMap() const { return space.getMap(); }
+FarmManager::FarmManager(const FarmConfig& config, uint32_t seed):config(config), seed(seed), cropManager(config), animalManager(config, seed) {}
 
-bool Farm::canWalk(const Position& pos) const { return space.canWalk(pos); }
-
-bool Farm::tillSoil(const Position& pos) {
-    return cropManager.tillSoil(pos, space);
+bool FarmManager::initialize(const FarmLayout& layout, EntityIdGenerator& entityIds) {
+    FarmManager prepared{config, seed};
+    auto preparedIds = entityIds;
+    if (!FarmLoader{}.load(layout, prepared, preparedIds)) {
+        return false;
+    }
+    prepared.spawnPosition = layout.spawn;
+    prepared.background = layout.background;
+    prepared.beds = layout.beds;
+    prepared.initialized = true;
+    *this = std::move(prepared);
+    entityIds = preparedIds;
+    return true;
 }
 
-bool Farm::isTilled(const Position& pos) const {
-    return cropManager.isTilled(pos, space);
+bool FarmManager::isInitialized() const { return initialized; }
+
+bool FarmManager::useBed(Player& player) const {
+    if (!initialized || player.getZone() != Zone::Farm) return false;
+    for (const auto& bed: beds) {
+        if (space.getMap().sameBaseCell(player.getPosition(), bed)) {
+            return player.sleep();
+        }
+    }
+    return false;
 }
 
-bool Farm::plant(EntityId id, const Position& pos, PlantType type) {
-    return cropManager.plant(id, pos, type, space);
+bool FarmManager::spawnPlayer(Player& player) const {
+    if (!initialized) {
+        return false;
+    }
+    const auto collision = player.getCollisionBounds(spawnPosition);
+    if (space.canWalk(collision)) {
+        return player.restoreLocation(Zone::Farm, 0, spawnPosition);
+    }
+    for (const auto& position : space.getMap().walkableBasePositions()) {
+        if (space.canWalk(player.getCollisionBounds(position))) {
+            return player.restoreLocation(Zone::Farm, 0, position);
+        }
+    }
+    return false;
 }
 
-bool Farm::waterCrop(EntityId id) { return cropManager.water(id); }
+bool FarmManager::useSelectedItem(Player& player, Direction direction, EntityIdGenerator& entityIds,
+        std::chrono::steady_clock::time_point now) {
+    return interactions.interact(player, *this, entityIds, direction, now);
+}
 
-std::optional<FarmProduct> Farm::harvestCrop(EntityId id, double luck) {
+bool FarmManager::setReservedPositions(const std::vector<Position>& positions) {
+    if (cropManager.hasTilledSoil()) {
+        return false;
+    }
+    return space.setReservedPositions(positions);
+}
+
+void FarmManager::setObstacles(const std::vector<CollisionBounds>& bounds) {
+    space.setObstacles(bounds);
+}
+
+FarmData FarmManager::getPublicData() const { return FarmStatus::build(*this); }
+
+std::vector<Position> FarmManager::getTilledPositions() const {
+    std::vector<Position> result;
+    for (const auto& cell : cropManager.getTilledSoil()) {
+        const auto base = space.getMap().baseAt(cell);
+        if (base) {
+            result.push_back(*base);
+        }
+    }
+    return result;
+}
+
+bool FarmManager::setMap(const ZoneMap& map) {
+    if (cropManager.hasTilledSoil()) {
+        return false;
+    }
+    return space.setMap(map);
+}
+
+const ZoneMap& FarmManager::getMap() const { return space.getMap(); }
+
+const std::vector<FarmBackgroundTile>& FarmManager::getBackground() const {
+    return background;
+}
+
+bool FarmManager::canWalk(const CollisionBounds& bounds) const { return space.canWalk(bounds); }
+
+bool FarmManager::tillSoil(const Position& position) {
+    return cropManager.tillSoil(position, space);
+}
+
+bool FarmManager::isTilled(const Position& position) const {
+    return cropManager.isTilled(position, space);
+}
+
+bool FarmManager::plant(EntityId id, const Position& position, CropType type) {
+    return cropManager.plant(id, position, type, space);
+}
+
+bool FarmManager::waterCrop(EntityId id) { return cropManager.water(id); }
+
+std::optional<FarmProduct> FarmManager::harvestCrop(EntityId id, double luck) {
     return cropManager.harvest(id, space, luck);
 }
 
-bool Farm::addAnimal(EntityId id, const Position& pos, AnimalType type) {
-    return animalManager.add(id, pos, type, space);
+bool FarmManager::addAnimal(EntityId id, const Position& position, AnimalType type) {
+    return animalManager.add(id, position, type, space);
 }
 
-bool Farm::moveAnimal(EntityId id, const Position& pos) {
-    return animalManager.move(id, pos, space);
+bool FarmManager::moveAnimal(EntityId id, const Position& position) {
+    return animalManager.move(id, position, space);
 }
 
-bool Farm::removeAnimal(EntityId id) { return animalManager.remove(id, space); }
+bool FarmManager::removeAnimal(EntityId id) { return animalManager.remove(id, space); }
 
-std::optional<FarmProduct> Farm::collectFromAnimal(EntityId id) {
+std::optional<FarmProduct> FarmManager::collectFromAnimal(EntityId id) {
     return animalManager.collect(id);
 }
 
-bool Farm::placeDecoration(EntityId id, const Position& pos, ItemId item) {
-    return decorationManager.place(id, pos, item, space);
+bool FarmManager::placeDecoration(EntityId id, const Position& position, ItemId item) {
+    return decorationManager.place(id, position, item, space);
 }
 
-std::optional<ItemId> Farm::removeDecoration(EntityId id) {
+std::optional<ItemId> FarmManager::removeDecoration(EntityId id) {
     return decorationManager.remove(id, space);
 }
 
-void Farm::update() {
-    cropManager.update();
-    animalManager.update();
+void FarmManager::update(std::chrono::milliseconds elapsed) {
+    if (elapsed.count() < 0) {
+        throw std::invalid_argument("Tiempo negativo");
+    }
+    if (elapsed.count() == 0) {
+        return;
+    }
+    cropManager.update(elapsed);
+    animalManager.update(elapsed, space);
 }
 
-const Crop* Farm::findCrop(EntityId id) const { return cropManager.find(id); }
-const Animal* Farm::findAnimal(EntityId id) const { return animalManager.find(id); }
-const Decoration* Farm::findDecoration(EntityId id) const { return decorationManager.find(id); }
+const Crop* FarmManager::findCrop(EntityId id) const { return cropManager.find(id); }
+const Animal* FarmManager::findAnimal(EntityId id) const { return animalManager.find(id); }
+const Decoration* FarmManager::findDecoration(EntityId id) const {
+    return decorationManager.find(id);
+}
 
-const std::map<EntityId, Crop>& Farm::getCrops() const {
+const std::map<EntityId, Crop>& FarmManager::getCrops() const {
     return cropManager.getCrops();
 }
 
-const std::map<EntityId, Animal>& Farm::getAnimals() const {
+std::vector<const Animal*> FarmManager::getAnimals() const {
     return animalManager.getAnimals();
 }
-
-const std::map<EntityId, Decoration>& Farm::getDecorations() const {
+const std::map<EntityId, Decoration>& FarmManager::getDecorations() const {
     return decorationManager.getDecorations();
 }
 
-const FarmConfig& Farm::getConfig() const { return config; }
+const FarmConfig& FarmManager::getConfig() const { return config; }

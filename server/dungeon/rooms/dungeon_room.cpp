@@ -10,8 +10,8 @@ DungeonRoom::DungeonRoom(uint8_t number) : number(number) {
     }
 }
 
-uint8_t DungeonRoom::getNumber() const {
-    return number;
+uint8_t DungeonRoom::getNumber() const { 
+    return number; 
 }
 
 bool DungeonRoom::addMineral(Mineral mineral) {
@@ -22,35 +22,31 @@ bool DungeonRoom::addMineral(Mineral mineral) {
 }
 
 bool DungeonRoom::removeMineral(EntityId id) {
-    return minerals.remove(id, terrain);
+     return minerals.remove(id, terrain); 
+    }
+
+Mineral* DungeonRoom::findMineral(EntityId id) { 
+    return minerals.find(id); 
 }
 
-Mineral* DungeonRoom::findMineral(EntityId id) {
-    return minerals.find(id);
+const Mineral* DungeonRoom::findMineral(EntityId id) const { 
+    return minerals.find(id); 
 }
 
-const Mineral* DungeonRoom::findMineral(EntityId id) const {
-    return minerals.find(id);
+const std::map<EntityId, Mineral>& DungeonRoom::getMinerals() const { 
+    return minerals.all(); 
 }
 
-const std::map<EntityId, Mineral>& DungeonRoom::getMinerals() const {
-    return minerals.all();
-}
-
-const ZoneMap& DungeonRoom::getMap() const {
-    return terrain;
-}
-
-bool DungeonRoom::canWalk(const Position& pos) const {
-    return geometry.canWalk(terrain, minerals, pos);
+const ZoneMap& DungeonRoom::getMap() const { 
+    return terrain; 
 }
 
 bool DungeonRoom::canWalk(const CollisionBounds& bounds) const {
     return geometry.canWalk(terrain, minerals, bounds);
 }
 
-void DungeonRoom::removeBrokenMinerals() {
-    minerals.removeBroken(terrain);
+void DungeonRoom::removeBrokenMinerals() { 
+    minerals.removeBroken(terrain); 
 }
 
 bool DungeonRoom::setPassages(const DungeonRoomPassages& data) {
@@ -67,8 +63,8 @@ bool DungeonRoom::setPassages(const DungeonRoomPassages& data) {
     return true;
 }
 
-const std::optional<DungeonRoomPassages>& DungeonRoom::getPassages() const {
-    return passages;
+const std::optional<DungeonRoomPassages>& DungeonRoom::getPassages() const { 
+    return passages; 
 }
 
 bool DungeonRoom::hasClearLine(const Position& from, const Position& target) const {
@@ -79,8 +75,36 @@ std::optional<MineData> DungeonRoom::getMineData(bool includeBroken) const {
     if (!passages) {
         return std::nullopt;
     }
-    return MineData{number, LevelData{passages->entry, passages->exit,minerals.getPublicData(includeBroken)}};
+    MineData mine;
+    mine.current_level = number;
+    auto& level = mine.current_level_data;
+    level.entry = passages->entry;
+    level.exit = passages->exit;
+    level.minerals = minerals.getPublicData(includeBroken);
+    level.combat = getCombatData();
+    return mine;
 }
+
+DungeonCombatData DungeonRoom::getCombatData() const {
+    DungeonCombatData data;
+    data.room = number;
+    for (const auto& [id, enemy]: combat.enemies) {
+        data.enemies.push_back(enemy.data);
+    }
+    for (const auto& [id, projectile]: combat.projectiles) {
+        data.projectiles.push_back(projectile.data);
+    }
+    for (const auto& [id, trap]: combat.traps) {
+        data.traps.push_back(trap.data);
+    }
+    for (const auto& [id, loot]: combat.loot) {
+        data.loot.push_back(loot);
+    }
+    return data;
+}
+
+RoomCombat& DungeonRoom::getCombat() { return combat; }
+const RoomCombat& DungeonRoom::getCombat() const { return combat; }
 
 bool DungeonRoom::setMap(const ZoneMap& map) {
     if (map.isEmpty() || (passages && !geometry.arePassagesValid(number, map, *passages))) {
