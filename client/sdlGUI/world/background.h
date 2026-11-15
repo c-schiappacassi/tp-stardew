@@ -47,24 +47,38 @@ private:
     std::vector<StaticSpriteView> flat_props;  // portales planos en el piso
     std::vector<StaticSpriteView> props;       // decor + buildings + furniture + portales parados
 
+    struct InteriorSprite {
+        Position pos;
+        const Sprite& sprite;
+    };
+    std::optional<InteriorSprite> interior;
+
     static bool is_flat(PortalId id) {
         return id == PortalId::ToNextLevel;
     }
 
 public:
     explicit Background(const BackgroundData& data, AssetManager& assets) {
+        if (data.interior) {
+            interior.emplace(InteriorSprite{data.interior->pos, assets.get_sprite(data.interior->id)});
+        }
+
         floor.reserve(data.floor.size());
         for (const auto& t : data.floor)
             floor.emplace_back(t, assets);
 
-        props.reserve(data.decor.size() + data.buildings.size() +
-                      data.furniture.size() + data.portals.size());
+        props.reserve(data.decor.size() + data.buildings.size() + data.furniture.size() + data.portals.size() + 1);
         for (const DecorData& d : data.decor)
             props.emplace_back(d.pos, assets.get_sprite(d.id));
         for (const BuildingData& b : data.buildings)
             props.emplace_back(b.pos, assets.get_sprite(b.id));
         for (const StaticFurnitureData& f : data.furniture)
             props.emplace_back(f.pos, assets.get_sprite(f.id, f.dir));
+
+        if (data.interior && data.interior->npc) {
+            const NpcData& npc = *data.interior->npc;
+            props.emplace_back(npc.pos, assets.get_sprite(npc.id));
+        }
 
         for (const PortalData& p : data.portals) {
             auto& target = is_flat(p.id) ? flat_props : props;
@@ -73,6 +87,9 @@ public:
     }
 
     void draw(const RenderInfo& ctx) {
+        if (interior) {
+            draw_sprite(ctx, interior->sprite, ctx.cam.world_to_screen(interior->pos.getX(), interior->pos.getY()));
+        }
         for (TileView& t : floor)
             t.draw(ctx);
         for (StaticSpriteView& p : flat_props) {

@@ -7,6 +7,7 @@
 #include "protocol_types.h"
 #include "mines/mine_view.h"
 #include "town/town_view.h"
+#include "interiors/interiors_view.h"
 
 class MapView : public ZoneView {
 private:
@@ -15,16 +16,18 @@ private:
     MinesView mines;
     FarmView farm;
     TownView town;
+    InteriorsView interiors;
 
     ZoneView* current_view() {
         if (current == Zone::Dungeon) return &mines;
         if (current == Zone::Farm) return &farm;
         if (current == Zone::Town) return &town;
+        if (current == Zone::InsideHouse) return &interiors;
         return nullptr;
     }
 
 public:
-    MapView(const ConstMapData& data, AssetManager& assets) : mines(data.levels, assets), farm(data.farm, assets), town(data.town, assets) {}
+    MapView(const ConstMapData& data, AssetManager& assets) : mines(data.levels, assets), farm(data.farm, assets), town(data.town, assets), interiors(data, assets) {}
 
     void update(const State& data) {
         const PlayerDataLocal& local = data.get_local();
@@ -34,6 +37,8 @@ public:
             mines.update(*mine);
         } else if (const auto* f = std::get_if<FarmData>(&local.zoneData)) {
             farm.update(*f);
+        } else if (const auto* in = std::get_if<InteriorData>(&local.zoneData)) {
+            interiors.update(*in);
         }
     }
 

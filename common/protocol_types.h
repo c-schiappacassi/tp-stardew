@@ -176,14 +176,9 @@ enum class ItemId : uint16_t {
     Milk = 40,
     Egg = 41,
 
-    // podemos agregar mas cosas al shop
+    // TODO: podemos agregar mas cosas al shop
     Chest = 50,
-    Table = 51,
-    Chair = 52,
-    Lamp = 53,
-    Rug = 54,
-    Plant = 55,
-    Painting = 56
+
 };
 
 enum class EmoteId : uint16_t {
@@ -307,4 +302,21 @@ enum class BuildingId : uint8_t{
     RobinsShop,
     ClintsShop,
     ComunityCenter,
+};
+
+
+enum class InteriorId : uint8_t{
+    PlayerHouse,
+    MarniesShop,
+    PierresShop,
+    RobinsShop,
+    ClintsShop,
+    ComunityCenter,
+};
+
+enum class NpcId : uint8_t{
+    Marnie,
+    Pierre,
+    Robin,
+    Clint,
 };

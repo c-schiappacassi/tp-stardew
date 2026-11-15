@@ -18,7 +18,7 @@ private:
     Direction dir = Direction::Down;
 
     static bool is_flat(FurnitureId id) {
-        return id == FurnitureId::BeigeRug || id == FurnitureId::BlueRug;
+        return id == FurnitureId::BeigeRug || id == FurnitureId::BlueRug || id == FurnitureId::Bed;
     }
 
 public:

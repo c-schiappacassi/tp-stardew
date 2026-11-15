@@ -51,8 +51,8 @@ target_sources(taller_client
     sdlGUI/world/background.h
     sdlGUI/world/background_zone_view.h
 
-    sdlGUI/world/farmer_houses/houses_view.h
-    sdlGUI/world/farmer_houses/house_view.h
+    sdlGUI/world/interiors/interior_view.h
+    sdlGUI/world/interiors/interiors_view.h
 
     sdlGUI/world/hud/hud_view.h
     sdlGUI/world/hud/hotbar_view.h

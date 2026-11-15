@@ -38,6 +38,10 @@ private:
     CropData receiveCropData();
     AnimalData receiveAnimalData();
     DecorData receiveDecorationData();
+    FurnitureData receiveFurnitureData();
+    InteriorData receiveInteriorData();
+    NpcData receiveNpcData();
+    InteriorBackgroundData receiveInteriorBackground();
     FarmData receiveFarmData();
 
     BackgroundData receiveBackgroundData();

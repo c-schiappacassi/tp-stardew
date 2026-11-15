@@ -77,8 +77,10 @@ namespace SpriteDefs {
         {SpriteId::Tools,        "characters/tools.png"},
         {SpriteId::Weapons,      "characters/weapons.png"},
 
+        // items y mas
         {SpriteId::Ores,         "caverns/mines.png"},
         {SpriteId::Crops,        "farm/crops/crops.png"},
+        {SpriteId::Harvest , "farm/crops/harvested_crops_seed_packets_minerals_food_equipment_miscellaneous_objects.png"},
 
         //animals
         {SpriteId::BronwCow,     "farm/animals/cow_brown.png"},
@@ -118,6 +120,12 @@ namespace SpriteDefs {
         {SpriteId::SpikeTrap, "caverns/monsters/spikes.png"},
         {SpriteId::WallFlameTrap, "caverns/monsters/wallflame.png"},
         {SpriteId::Flames, "caverns/monsters/projectile_fire.png"},
+
+        // interiors
+        {SpriteId::PlayerHouseInterior, "farm/interior.png"},
+
+        // npcs
+        {SpriteId::Marnie, "market/npcs/marnie.png"}
     };
 
     // Ores
@@ -167,6 +175,18 @@ namespace SpriteDefs {
     struct BuildingDef  { BuildingId id;    SpriteRect rect; };
     struct FurnitureDef { FurnitureId id; Direction dir; SpriteRect rect; };
     struct PortalDef { PortalId id; SpriteRect rect; };
+
+    struct InteriorDef  { InteriorId id;    SpriteRect rect; };
+    inline constexpr InteriorDef INTERIORS[] = {
+        {InteriorId::PlayerHouse , {SpriteId::PlayerHouseInterior, 0, 0, 272, 272}}
+    };
+    
+
+    struct NpcDef  { NpcId id;    SpriteRect rect; };
+    inline constexpr NpcDef NPCS[] = {
+        {NpcId::Marnie , {SpriteId::Marnie, 0, 0, 16, 32}}
+    };
+    
 
     inline constexpr TileDef TILES[] = {
         {TileTextureId::Grass,                           {SpriteId::OutdoorsSpring, 0, 112, 16, 16}},
@@ -294,6 +314,8 @@ namespace SpriteDefs {
         {ItemId::Lapis,       SpriteId::Ores,     64, 108, 16, 16},
         {ItemId::Silver,      SpriteId::Ores,    145,  68, 15, 15},
         {ItemId::Gold,        SpriteId::Ores,     94, 108, 16, 16},
+        {ItemId::Milk,        SpriteId::Harvest,     290, 112, 13, 16},
+        {ItemId::Egg,        SpriteId::Harvest,     224, 113, 16, 16},
     };
 
     struct EmoteDef { EmoteId id; SpriteId sprite; uint16_t x, y, w, h; };
@@ -316,7 +338,7 @@ namespace SpriteDefs {
     // Clips
     struct FrameDef { int index; int ms; };
 
-    constexpr int MAX_FRAMES = 7; // las llamas (projectile_fire.png) tienen 7 frames; el resto de las anims usa <= 5
+    constexpr int MAX_FRAMES = 7;
 
     template <class State>
     struct ClipDef {

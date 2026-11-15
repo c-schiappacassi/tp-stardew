@@ -38,7 +38,7 @@ struct FurnitureData {
     uint32_t id = 0;
     Position pos{0, 0};
     FurnitureId type = FurnitureId::Chair;
-    Direction dir;
+    Direction dir = Direction::Down;
 };
 
 struct FarmData{
@@ -48,8 +48,8 @@ struct FarmData{
     std::vector<FurnitureData> furniture;
 };
 
-// Farmer houses
-struct HouseData {
+struct InteriorData {
+    InteriorId interior_id = InteriorId::PlayerHouse;
     uint8_t house_index = 0;
     std::vector<FurnitureData> furniture;
 };
@@ -130,7 +130,7 @@ struct MineData{
 };
 // Fin Mine
 
-using ZoneData = std::variant<MineData, FarmData, HouseData, std::monostate>;
+using ZoneData = std::variant<MineData, FarmData, InteriorData, std::monostate>;
 
 // Map DTOS para el segundo handshake
 
@@ -161,12 +161,25 @@ struct PortalData {
     PortalId id = PortalId::FarmToMine;
 };
 
+struct NpcData{
+    Position pos{0,0};
+    NpcId id = NpcId::Marnie;
+};
+
+struct InteriorBackgroundData
+{
+    Position pos{0,0};
+    InteriorId interior_id = InteriorId::PlayerHouse;
+    std::optional<NpcData> npc;
+};
+
 struct BackgroundData{
     std::vector<TileData> floor;
     std::vector<DecorData> decor;
     std::vector<BuildingData> buildings; // Exteriores, para los interiores son una zona distinta, asi que les llega su propio BackgroundData
     std::vector<StaticFurnitureData> furniture;
     std::vector<PortalData> portals;
+    std::optional<InteriorBackgroundData> interior;
 };
 
 // TODO: TBD primer draft del segundo Handshake, para la data que NUNCA cambia.

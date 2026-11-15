@@ -62,7 +62,13 @@ enum class SpriteId : uint16_t {
     Flames,
 
     Cursors,
-    Emotes
+    Emotes,
+
+    PlayerHouseInterior,
+
+    Marnie,
+    
+    Harvest
 };
 
 enum class UiSpriteId : uint8_t {

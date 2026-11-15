@@ -229,11 +229,34 @@ FarmData ClientProtocol::receiveFarmData() {
     return farm;
 }
 
+FurnitureData ClientProtocol::receiveFurnitureData() {
+    FurnitureData f;
+    f.id = base.receiveUint32();
+    f.pos = receivePosition();
+    f.type = static_cast<FurnitureId>(base.receiveUint8());
+    f.dir = static_cast<Direction>(base.receiveUint8());
+    return f;
+}
+
+InteriorData ClientProtocol::receiveInteriorData() {
+    InteriorData in;
+    in.interior_id = static_cast<InteriorId>(base.receiveUint8());
+    if (in.interior_id > InteriorId::ComunityCenter) {
+        throw ProtocolError("Interior desconocido");
+    }
+    in.house_index = base.receiveUint8();
+    const uint16_t n = base.receiveUint16();
+    in.furniture.reserve(n);
+    for (uint16_t i = 0; i < n; ++i) in.furniture.push_back(receiveFurnitureData());
+    return in;
+}
+
 ZoneData ClientProtocol::receiveZoneData(Zone currentZone) {
     switch (currentZone) {
         case Zone::Dungeon: return ZoneData{receiveMineData()};
         case Zone::Farm:    return ZoneData{receiveFarmData()};
         case Zone::Town:    return ZoneData{std::monostate{}};
+        case Zone::InsideHouse: return ZoneData{receiveInteriorData()};
     }
     throw ProtocolError("ZoneData desconocida");
 }
@@ -422,6 +445,23 @@ void ClientProtocol::recv(qtStatus& status) {
 }
 
 
+NpcData ClientProtocol::receiveNpcData() {
+    const Position pos = receivePosition();
+    const auto id = static_cast<NpcId>(base.receiveUint8());
+    if (id > NpcId::Clint) throw ProtocolError("NPC desconocido");
+    return NpcData{pos, id};
+}
+
+InteriorBackgroundData ClientProtocol::receiveInteriorBackground() {
+    const Position pos = receivePosition();
+    const auto id = static_cast<InteriorId>(base.receiveUint8());
+    if (id > InteriorId::ComunityCenter) throw ProtocolError("Interior desconocido");
+
+    InteriorBackgroundData interior{pos, id, std::nullopt};
+    if (base.receiveUint8() != 0) interior.npc = receiveNpcData();
+    return interior;
+}
+
 BackgroundData ClientProtocol::receiveBackgroundData() {
     constexpr uint32_t MAX_FLOOR = 1024 * 1024;
     BackgroundData bg;
@@ -468,6 +508,7 @@ BackgroundData ClientProtocol::receiveBackgroundData() {
         }
         bg.portals.push_back(portal);
     }
+    if (base.receiveUint8() != 0) bg.interior = receiveInteriorBackground();
     return bg;
 }
 

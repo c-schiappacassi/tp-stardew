@@ -95,6 +95,8 @@ AssetManager::AssetManager(SDL2pp::Renderer& renderer, const std::filesystem::pa
     load_trap_clips();
     load_projectile_clips();
     load_portals();
+    load_interiors();
+    load_npcs();
 }
 
 void AssetManager::load_portals() {
@@ -103,6 +105,21 @@ void AssetManager::load_portals() {
 }
 
 const Sprite& AssetManager::get_sprite(PortalId id) const { return portal_sprites.at(id); }
+
+// El interior es una imagen unica que se ancla arriba a la izquierda (como un tile grande)
+void AssetManager::load_interiors() {
+    for (const auto& d : SpriteDefs::INTERIORS)
+        interior_sprites.insert_or_assign(d.id, make_tile_sprite(d.rect));
+}
+
+// Los NPCs se paran sobre su posicion (anclados abajo al centro, como el decor)
+void AssetManager::load_npcs() {
+    for (const auto& d : SpriteDefs::NPCS)
+        npc_sprites.insert_or_assign(d.id, make_standing_sprite(d.rect));
+}
+
+const Sprite& AssetManager::get_sprite(InteriorId id) const { return interior_sprites.at(id); }
+const Sprite& AssetManager::get_sprite(NpcId id) const { return npc_sprites.at(id); }
 
 void AssetManager::load_trap_clips() {
     register_clips(clips, SpriteDefs::SPIKE_SET, SpriteDefs::SPIKE_CLIPS, false);
