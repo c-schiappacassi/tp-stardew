@@ -2,12 +2,15 @@
 
 #include <cstdint>
 #include <stdexcept>
+#include <utility>
 
 #include "protocol_errors.h"
 
 
-ClientProtocol::ClientProtocol(Socket& socket) : base(socket) {}
+ClientProtocol::ClientProtocol(Socket&& socket) : base(std::move(socket)) {}
 
+
+void ClientProtocol::shutdown() { base.shutdown(); }
 
 Position ClientProtocol::receivePosition() {
     int x = static_cast<int>(base.receiveUint16());
@@ -15,15 +18,15 @@ Position ClientProtocol::receivePosition() {
     return Position(x, y);
 }
 
-void ClientProtocol::sendPosition(const Position& pos) {
-    base.sendUint16(static_cast<uint16_t>(pos.getX()));
-    base.sendUint16(static_cast<uint16_t>(pos.getY()));
+void ClientProtocol::writePosition(MessageBuffer& out, const Position& pos) {
+    out.putUint16(static_cast<uint16_t>(pos.getX()));
+    out.putUint16(static_cast<uint16_t>(pos.getY()));
 }
 
-void ClientProtocol::sendColor(const Color& color) {
-    base.sendUint8(color.r);
-    base.sendUint8(color.g);
-    base.sendUint8(color.b);
+void ClientProtocol::writeColor(MessageBuffer& out, const Color& color) {
+    out.putUint8(color.r);
+    out.putUint8(color.g);
+    out.putUint8(color.b);
 }
 
 Color ClientProtocol::receiveColor() {
@@ -51,6 +54,75 @@ MineralData ClientProtocol::receiveMineralData() {
     return mineral;
 }
 
+EnemySnapshot ClientProtocol::receiveEnemyData() {
+    EnemySnapshot enemy;
+    enemy.id = base.receiveUint32();
+    enemy.pos = receivePosition();
+    enemy.dir = static_cast<Direction>(base.receiveUint8());
+    enemy.type = static_cast<EnemyType>(base.receiveUint8());
+    enemy.state = static_cast<EnemyState>(base.receiveUint8());
+    enemy.health = base.receiveUint16();
+    enemy.maxHealth = base.receiveUint16();
+    enemy.frenzied = base.receiveUint8() != 0;
+    enemy.action = base.receiveUint32();
+    return enemy;
+}
+
+ProjectileData ClientProtocol::receiveProjectileData() {
+    ProjectileData projectile;
+    projectile.id = base.receiveUint32();
+    projectile.pos = receivePosition();
+    projectile.type = static_cast<FlameType>(base.receiveUint8());
+    return projectile;
+}
+
+TrapData ClientProtocol::receiveTrapData() {
+    TrapData trap;
+    trap.id = base.receiveUint32();
+    trap.pos = receivePosition();
+    trap.dir = static_cast<Direction>(base.receiveUint8());
+    trap.type = static_cast<TrapType>(base.receiveUint8());
+    trap.state = static_cast<TrapState>(base.receiveUint8());
+    trap.range = base.receiveUint16();
+    return trap;
+}
+
+LootData ClientProtocol::receiveLootData() {
+    LootData loot;
+    loot.id = base.receiveUint32();
+    loot.pos = receivePosition();
+    loot.item = static_cast<ItemId>(base.receiveUint16());
+    loot.quantity = base.receiveUint16();
+    return loot;
+}
+
+DungeonCombatData ClientProtocol::receiveCombatData() {
+    DungeonCombatData combat;
+    combat.visitId = base.receiveUint32();
+    combat.room = base.receiveUint8();
+    auto count = base.receiveUint16();
+    combat.enemies.reserve(count);
+    for (uint16_t i = 0; i < count; ++i) {
+        combat.enemies.push_back(receiveEnemyData());
+    }
+    count = base.receiveUint16();
+    combat.projectiles.reserve(count);
+    for (uint16_t i = 0; i < count; ++i) {
+        combat.projectiles.push_back(receiveProjectileData());
+    }
+    count = base.receiveUint16();
+    combat.traps.reserve(count);
+    for (uint16_t i = 0; i < count; ++i) {
+        combat.traps.push_back(receiveTrapData());
+    }
+    count = base.receiveUint16();
+    combat.loot.reserve(count);
+    for (uint16_t i = 0; i < count; ++i) {
+        combat.loot.push_back(receiveLootData());
+    }
+    return combat;
+}
+
 LevelData ClientProtocol::receiveLevelData() {
     LevelData level;
     level.entry = receivePosition();
@@ -61,6 +133,7 @@ LevelData ClientProtocol::receiveLevelData() {
     for (uint16_t i = 0; i < count; ++i) {
         level.minerals.push_back(receiveMineralData());
     }
+    level.combat = receiveCombatData();
     return level;
 }
 
@@ -116,6 +189,10 @@ PlayerDataLocal ClientProtocol::receivePlayerDataLocal() {
     localData.energy = base.receiveUint16();
     localData.maxEnergy = base.receiveUint16();
     localData.zoneData = receiveZoneData(baseData.currentZone);
+    localData.combatProgress.skeletons = base.receiveUint8() != 0;
+    localData.combatProgress.vampires = base.receiveUint8() != 0;
+    localData.combatProgress.orcs = base.receiveUint8() != 0;
+    localData.combatProgress.skull = base.receiveUint8() != 0;
 
     return localData;
 }
@@ -141,14 +218,6 @@ AnimalData ClientProtocol::receiveAnimalData() {
     return a;
 }
 
-DecorationData ClientProtocol::receiveDecorationData() {
-    DecorationData d;
-    d.id = base.receiveUint32();
-    d.pos = receivePosition();
-    d.item = static_cast<ItemId>(base.receiveUint16());
-    return d;
-}
-
 FarmData ClientProtocol::receiveFarmData() {
     FarmData farm;
     uint16_t n = base.receiveUint16();
@@ -157,8 +226,6 @@ FarmData ClientProtocol::receiveFarmData() {
     for (uint16_t i = 0; i < n; ++i) farm.animals.push_back(receiveAnimalData());
     n = base.receiveUint16();
     for (uint16_t i = 0; i < n; ++i) farm.tilledSoil.push_back(receivePosition());
-    n = base.receiveUint16();
-    for (uint16_t i = 0; i < n; ++i) farm.decorations.push_back(receiveDecorationData());
     return farm;
 }
 
@@ -180,6 +247,7 @@ void ClientProtocol::send(const CommandDTO& dto) {
         case MessageType::ResumeGame: send(static_cast<const ResumeGameDTO&>(dto)); break;
         case MessageType::Move: send(static_cast<const MoveDTO&>(dto)); break;
         case MessageType::Interact: send(static_cast<const InteractDTO&>(dto)); break;
+        case MessageType::DayOk:send(static_cast<const DayOkDTO&>(dto));break;
         case MessageType::Donate: send(static_cast<const DonateDTO&>(dto)); break;
         case MessageType::Chat: send(static_cast<const ChatDTO&>(dto)); break;
         case MessageType::UseItem: send(static_cast<const UseItemDTO&>(dto)); break;
@@ -193,97 +261,131 @@ void ClientProtocol::send(const CommandDTO& dto) {
 }
 
 void ClientProtocol::send(const CreateGameDTO& dto) {
-    base.sendUint8(static_cast<uint8_t>(MessageType::CreateGame));
-    base.sendString(dto.userName);
-    base.sendString(dto.characterName);
-    base.sendString(dto.gameName);
-    base.sendUint8(dto.worldId);
-    base.sendUint16(dto.hairModel);
-    base.sendUint16(dto.shirtModel);
-    base.sendUint16(dto.pantsModel);
-    sendColor(dto.hairColor);
-    sendColor(dto.pantsColor);
+    MessageBuffer out;
+    out.putUint8(static_cast<uint8_t>(MessageType::CreateGame));
+    out.putString(dto.userName);
+    out.putString(dto.characterName);
+    out.putString(dto.gameName);
+    out.putUint8(dto.worldId);
+    out.putUint16(dto.hairModel);
+    out.putUint16(dto.shirtModel);
+    out.putUint16(dto.pantsModel);
+    writeColor(out, dto.hairColor);
+    writeColor(out, dto.pantsColor);
+    base.send(out);
 }
 
 void ClientProtocol::send(const JoinGameDTO& dto) {
-    base.sendUint8(static_cast<uint8_t>(MessageType::JoinGame));
-    base.sendString(dto.userName);
-    base.sendString(dto.characterName);
-    base.sendString(dto.code);
-    base.sendUint16(dto.hairModel);
-    base.sendUint16(dto.shirtModel);
-    base.sendUint16(dto.pantsModel);
-    sendColor(dto.hairColor);
-    sendColor(dto.pantsColor);
+    MessageBuffer out;
+    out.putUint8(static_cast<uint8_t>(MessageType::JoinGame));
+    out.putString(dto.userName);
+    out.putString(dto.characterName);
+    out.putString(dto.code);
+    out.putUint16(dto.hairModel);
+    out.putUint16(dto.shirtModel);
+    out.putUint16(dto.pantsModel);
+    writeColor(out, dto.hairColor);
+    writeColor(out, dto.pantsColor);
+    base.send(out);
 }
 
 void ClientProtocol::send(const ResumeGameDTO& dto) {
-    base.sendUint8(static_cast<uint8_t>(MessageType::ResumeGame));
-    base.sendString(dto.userName);
-    base.sendString(dto.gameId);
+    MessageBuffer out;
+    out.putUint8(static_cast<uint8_t>(MessageType::ResumeGame));
+    out.putString(dto.userName);
+    out.putString(dto.gameId);
+    base.send(out);
 }
 
 void ClientProtocol::send(const MoveDTO& dto) {
-    base.sendUint8(static_cast<uint8_t>(MessageType::Move));
-    base.sendString(dto.userName);
-    base.sendUint8(static_cast<uint8_t>(dto.dir));
+    MessageBuffer out;
+    out.putUint8(static_cast<uint8_t>(MessageType::Move));
+    out.putString(dto.userName);
+    out.putUint8(static_cast<uint8_t>(dto.dir));
+    base.send(out);
 }
 
 void ClientProtocol::send(const InteractDTO& dto) {
-    base.sendUint8(static_cast<uint8_t>(MessageType::Interact));
-    base.sendString(dto.userName);
-    base.sendUint8(static_cast<uint8_t>(dto.dir));
+    MessageBuffer out;
+    out.putUint8(static_cast<uint8_t>(MessageType::Interact));
+    out.putString(dto.userName);
+    out.putUint8(static_cast<uint8_t>(dto.dir));
+    base.send(out);
 }
 
 void ClientProtocol::send(const DonateDTO& dto) {
-    base.sendUint8(static_cast<uint8_t>(MessageType::Donate));
-    base.sendString(dto.userName);
-    base.sendUint8(dto.slot);
-    base.sendUint32(dto.quantity);
+    MessageBuffer out;
+    out.putUint8(static_cast<uint8_t>(MessageType::Donate));
+    out.putString(dto.userName);
+    out.putUint8(dto.slot);
+    out.putUint32(dto.quantity);
+    base.send(out);
+}
+
+void ClientProtocol::send(const DayOkDTO& dto) {
+    MessageBuffer out;
+    out.putUint8(static_cast<uint8_t>(MessageType::DayOk));
+    out.putString(dto.userName);
+    base.send(out);
 }
 
 void ClientProtocol::send(const ChatDTO& dto) {
-    base.sendUint8(static_cast<uint8_t>(MessageType::Chat));
-    base.sendString(dto.userName);
-    base.sendString(dto.text);
+    MessageBuffer out;
+    out.putUint8(static_cast<uint8_t>(MessageType::Chat));
+    out.putString(dto.userName);
+    out.putString(dto.text);
+    base.send(out);
 }
 
 void ClientProtocol::send(const UseItemDTO& dto) {
-    base.sendUint8(static_cast<uint8_t>(MessageType::UseItem));
-    base.sendString(dto.userName);
-    base.sendUint8(dto.itemSlot);
+    MessageBuffer out;
+    out.putUint8(static_cast<uint8_t>(MessageType::UseItem));
+    out.putString(dto.userName);
+    out.putUint8(dto.itemSlot);
+    base.send(out);
 }
 
 void ClientProtocol::send(const RequestMultiplayerCodeDTO& dto) {
-    base.sendUint8(static_cast<uint8_t>(MessageType::MultiplayerCode));
-    base.sendString(dto.userName);
+    MessageBuffer out;
+    out.putUint8(static_cast<uint8_t>(MessageType::MultiplayerCode));
+    out.putString(dto.userName);
+    base.send(out);
 }
 
 void ClientProtocol::send(const DisconnectDTO& dto) {
-    base.sendUint8(static_cast<uint8_t>(MessageType::ExitGame));
-    base.sendString(dto.userName);
+    MessageBuffer out;
+    out.putUint8(static_cast<uint8_t>(MessageType::ExitGame));
+    out.putString(dto.userName);
+    base.send(out);
 }
 
 void ClientProtocol::send(const SelectSlotDTO& dto) {
-    base.sendUint8(static_cast<uint8_t>(MessageType::SelectSlot));
-    base.sendString(dto.userName);
-    base.sendUint8(dto.slot);
+    MessageBuffer out;
+    out.putUint8(static_cast<uint8_t>(MessageType::SelectSlot));
+    out.putString(dto.userName);
+    out.putUint8(dto.slot);
+    base.send(out);
 }
 
 void ClientProtocol::send(const ListGamesDTO& dto) {
-    base.sendUint8(static_cast<uint8_t>(MessageType::ListGames));
-    base.sendString(dto.userName);
+    MessageBuffer out;
+    out.putUint8(static_cast<uint8_t>(MessageType::ListGames));
+    out.putString(dto.userName);
+    base.send(out);
 }
 
 void ClientProtocol::send(const CheckCodeDTO& dto) {
-    base.sendUint8(static_cast<uint8_t>(MessageType::CheckCode));
-    base.sendString(dto.userName);
-    base.sendString(dto.code);
+    MessageBuffer out;
+    out.putUint8(static_cast<uint8_t>(MessageType::CheckCode));
+    out.putString(dto.userName);
+    out.putString(dto.code);
+    base.send(out);
 }
+
 // RECEIVERS
 
 // ServerStatus { status, errorMsg, successMsg, gameId, playerId, worldId,
-//                players, localPlayer }
+//                players, localPlayer, dayEnded }
 
 void ClientProtocol::recv(ServerStatus& status) {
     status.status = static_cast<StatusCode>(base.receiveUint8());
@@ -301,6 +403,7 @@ void ClientProtocol::recv(ServerStatus& status) {
     }
 
     status.localPlayer = receivePlayerDataLocal();
+    status.dayEnded = base.receiveUint8() != 0;
 }
 
 // qtStatus { status, errorMsg, successMsg, games }
@@ -316,4 +419,69 @@ void ClientProtocol::recv(qtStatus& status) {
     for (uint16_t i = 0; i < gamesCount; ++i) {
         status.games.push_back(receiveGameInfo());
     }
+}
+
+
+BackgroundData ClientProtocol::receiveBackgroundData() {
+    constexpr uint32_t MAX_FLOOR = 1024 * 1024;
+    BackgroundData bg;
+
+    const uint32_t nFloor = base.receiveUint32();
+    if (nFloor > MAX_FLOOR) throw ProtocolError("floor demasiado grande");
+    bg.floor.reserve(nFloor);
+    for (uint32_t i = 0; i < nFloor; ++i) {
+        TileData t;
+        t.pos = receivePosition();
+        t.id  = static_cast<TileTextureId>(base.receiveUint8());
+        bg.floor.push_back(t);
+    }
+    uint16_t n = base.receiveUint16();
+    for (uint16_t i = 0; i < n; ++i) {
+        DecorData d;
+        d.pos = receivePosition();
+        d.id  = static_cast<DecorId>(base.receiveUint8());
+        bg.decor.push_back(d);
+    }
+    n = base.receiveUint16();
+    for (uint16_t i = 0; i < n; ++i) {
+        BuildingData b;
+        b.pos = receivePosition();
+        b.id  = static_cast<BuildingId>(base.receiveUint8());
+        bg.buildings.push_back(b);
+    }
+    n = base.receiveUint16();
+    for (uint16_t i = 0; i < n; ++i) {
+        StaticFurnitureData f;
+        f.pos = receivePosition();
+        f.id  = static_cast<FurnitureId>(base.receiveUint8());
+        f.dir = static_cast<Direction>(base.receiveUint8());
+        bg.furniture.push_back(f);
+    }
+    n = base.receiveUint16();
+    bg.portals.reserve(n);
+    for (uint16_t i = 0; i < n; ++i) {
+        PortalData portal;
+        portal.pos = receivePosition();
+        portal.id = static_cast<PortalId>(base.receiveUint8());
+        if (portal.id > PortalId::MineToFarm) {
+            throw ProtocolError("Tipo de portal desconocido");
+        }
+        bg.portals.push_back(portal);
+    }
+    return bg;
+}
+
+void ClientProtocol::recv(ConstMapData& map) {
+    map.farm = receiveBackgroundData();
+    uint8_t n = base.receiveUint8();
+    map.levels.clear();
+    for (uint8_t i = 0; i < n; ++i) map.levels.push_back(receiveBackgroundData());
+    n = base.receiveUint8();
+    map.farm_houses.clear();
+    for (uint8_t i = 0; i < n; ++i) map.farm_houses.push_back(receiveBackgroundData());
+    map.pierres = receiveBackgroundData();
+    map.robins  = receiveBackgroundData();
+    map.clints  = receiveBackgroundData();
+    map.marnies = receiveBackgroundData();
+    map.town    = receiveBackgroundData();
 }

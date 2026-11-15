@@ -1,13 +1,13 @@
 #include "player_manager.h"
 
 PlayerManager::PlayerManager(const PlayerConfig& config,const MovementRules& movement,const ZoneDataSource& zones,PlayerInteractions& interactions,const PlayerSpawnSource& spawns,uint8_t maxPlayers):
-    maxPlayers(maxPlayers),
-    factory(config),
-    updates(movement),
-    playerStatus(zones),
-    actions(interactions), spawns(spawns), movement(movement) {}
+        maxPlayers(maxPlayers),
+        factory(config),
+        updates(movement),
+        playerStatus(zones),
+        actions(interactions), spawns(spawns), movement(movement),day(std::chrono::milliseconds{config.dayDurationMs}) {}
 
-    
+
 ServerStatus PlayerManager::addPlayer(const std::string& name,const PlayerData& appearance,const std::shared_ptr<OutQueue>& output) {
     ServerStatus result{};
     result.status = StatusCode::Error;
@@ -31,19 +31,28 @@ ServerStatus PlayerManager::addPlayer(const std::string& name,const PlayerData& 
 
     const uint16_t playerId = nextPlayerId;
     auto player = factory.create(appearance);
+    if (combatBonusUnlocked) {
+        player.applyCombatBonus();
+    }
     if (!spawns.spawnPlayer(player)) {
         result.errorMsg = "No hay una posicion disponible para el jugador";
         return result;
     }
-    auto it = players.emplace(playerId, PlayerRecord{playerId, name, output, true, std::move(player)}).first;
+    if (day.hasEnded()) {
+        player.passOut();
+    }
+    auto it =players.emplace(playerId, PlayerRecord{playerId, name, output, true, std::move(player)}).first;
     ++nextPlayerId;
 
-    return playerStatus.buildForPlayer(players, it->second);
+    auto status = playerStatus.buildForPlayer(players, it->second);
+    status.dayEnded = day.hasEnded();
+    return status;
 }
 void PlayerManager::disconnectPlayer(uint16_t playerId) {
     const auto it = players.find(playerId);
     if (it != players.end()) {
         it->second.connected = false;
+        day.forgetConfirmation(playerId);
         it->second.output.reset();
         it->second.player.setMovement(Direction::None);
     }
@@ -74,10 +83,16 @@ ServerStatus PlayerManager::resumePlayer(const std::string& name,const std::shar
             result.errorMsg = "No hay una posicion disponible para retomar la partida";
             return result;
         }
+        if (day.hasEnded()) {
+            record.player.passOut();
+        }
+        day.forgetConfirmation(id);
         record.connected = true;
         record.output = output;
         record.player.setMovement(Direction::None);
-        return playerStatus.buildForPlayer(players, record);
+        auto status = playerStatus.buildForPlayer(players, record);
+        status.dayEnded = day.hasEnded();
+        return status;
     }
     result.errorMsg = "No tenes un jugador en esta partida";
     return result;
@@ -109,12 +124,14 @@ void PlayerManager::updateToolStates(
     updates.updateToolStates(players, now);
 }
 
-void PlayerManager::advancePlayers(int normalStep) {
-    updates.advancePlayers(players, normalStep);
+void PlayerManager::advancePlayers(int normalStep) { 
+    updates.advancePlayers(players, normalStep); 
 }
 
 void PlayerManager::publishStatus(const ServerStatus& base) const {
-    playerStatus.publish(players, base);
+    auto status = base;
+    status.dayEnded = day.hasEnded();
+    playerStatus.publish(players, status);
 }
 
 void PlayerManager::handleCommand(const PlayerCommand& command) {
@@ -131,5 +148,47 @@ void PlayerManager::handleCommand(const PlayerCommand& command) {
         return;
     }
 
-    actions.execute(it->second.player, *command.command);
+    if (command.command->type() == MessageType::DayOk) {
+        day.acknowledge(command.playerId, it->second.player);
+        return;
+    }
+
+    if (!day.hasEnded()) {
+        actions.execute(it->second.player, *command.command, command.playerId);
+    }
+}
+
+std::vector<Combatant> PlayerManager::getCombatants() {
+    std::vector<Combatant> result;
+    for (auto& [id, record]: players) {
+        if (record.connected) {
+            result.push_back(Combatant{id, &record.player});
+        }
+    }
+    return result;
+}
+
+void PlayerManager::applyCombatBonus() {
+    combatBonusUnlocked = true;
+    for (auto& [id, record]: players) {
+        record.player.applyCombatBonus();
+    }
+}
+
+bool PlayerManager::advanceDay(std::chrono::milliseconds elapsed) {
+    std::vector<DayCycle::Participant> participants;
+    participants.reserve(players.size());
+    for (auto& [id, record]: players) {
+        participants.push_back({id, record.player, record.connected});
+    }
+    return day.advance(elapsed, participants, spawns);
+}
+
+bool PlayerManager::isDayEnded() const { return day.hasEnded(); }
+
+bool PlayerManager::hasConnectedPlayers() const {
+    for (const auto& [id, record]: players) {
+        if (record.connected) return true;
+    }
+    return false;
 }

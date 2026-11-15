@@ -19,7 +19,28 @@ bool FarmLoader::load(const FarmLayout& layout, FarmManager& farm, EntityIdGener
             return false;
         }
     }
-    if (!farm.setMap(layout.terrain) || !farm.setReservedPositions(layout.reservedPositions)) {
+    auto reserved = layout.reservedPositions;
+    reserved.push_back(layout.spawn);
+    std::vector<Position> triggers;
+    if (layout.mineDoor) triggers.push_back(*layout.mineDoor);
+    if (layout.townDoor) triggers.push_back(*layout.townDoor);
+    triggers.insert(triggers.end(), layout.beds.begin(), layout.beds.end());
+    for (std::size_t i = 0; i < triggers.size(); ++i) {
+        if (!validBase(triggers[i]) ||
+            !layout.terrain.isWalkable(CollisionBox{entity_dimensions::PLAYER}.at(triggers[i])) ||
+            !layout.terrain.hasBasePath(layout.spawn, triggers[i])) {
+            return false;
+        }
+        for (std::size_t j = 0; j < i; ++j) {
+            if (layout.terrain.sameBaseCell(triggers[i], triggers[j])) return false;
+        }
+        reserved.push_back(triggers[i]);
+    }
+    if (layout.beds.size() > 4 || (layout.mineReturn && !layout.mineDoor) ||
+        (layout.townReturn && !layout.townDoor)) return false;
+    if (layout.mineReturn) reserved.push_back(*layout.mineReturn);
+    if (layout.townReturn) reserved.push_back(*layout.townReturn);
+    if (!farm.setMap(layout.terrain) || !farm.setReservedPositions(reserved)) {
         return false;
     }
     for (const auto& base : layout.tilledSoil) {

@@ -1,17 +1,17 @@
 #pragma once
 
 #include <cstdint>
+#include <map>
+#include <memory>
+#include <optional>
+#include <stdexcept>
 #include <string>
+#include <unordered_map>
 #include <variant>
 #include <vector>
-#include <stdexcept>
-#include <unordered_map>
-#include <map>
-#include <optional>
-#include <memory>
 
-#include "protocol_types.h"
 #include "position.h"
+#include "protocol_types.h"
 
 // AUXILIARES
 
@@ -61,8 +61,53 @@ struct EnemyData{
     uint32_t id = 0;
     Position pos{0,0};
     Direction dir{Direction::None};
-    EnemyType type;
-    EnemyState state;
+    EnemyType type=EnemyType::Skeleton;
+    EnemyState state=EnemyState::Idle;
+};
+
+struct EnemySnapshot: EnemyData {
+    uint16_t health = 0;
+    uint16_t maxHealth = 0;
+    bool frenzied = false;
+    uint32_t action = 0;
+};
+
+struct ProjectileData {
+    uint32_t id = 0;
+    Position pos{0, 0};
+    FlameType type = FlameType::Blue;
+};
+
+struct TrapData {
+    uint32_t id = 0;
+    Position pos{0, 0};
+    Direction dir = Direction::Down;
+    TrapType type = TrapType::Spikes;
+    TrapState state = TrapState::Inactive;
+    uint16_t range = 0;
+};
+
+struct LootData {
+    uint32_t id = 0;
+    Position pos{0, 0};
+    ItemId item = ItemId::Silver;
+    uint16_t quantity = 1;
+};
+
+struct CombatProgressData {
+    bool skeletons = false;
+    bool vampires = false;
+    bool orcs = false;
+    bool skull = false;
+};
+
+struct DungeonCombatData {
+    uint32_t visitId = 0;
+    uint8_t room = 0;
+    std::vector<EnemySnapshot> enemies;
+    std::vector<ProjectileData> projectiles;
+    std::vector<TrapData> traps;
+    std::vector<LootData> loot;
 };
 
 struct MineralData {
@@ -76,7 +121,7 @@ struct LevelData {
     Position entry{0, 0};
     Position exit{0, 0};
     std::vector<MineralData> minerals;
-    // TODO: enemys
+    DungeonCombatData combat;
 };
 
 struct MineData{
@@ -91,24 +136,29 @@ using ZoneData = std::variant<MineData, FarmData, std::monostate>;
 
 // Constante: viaja en el segundo handshake, dentro de BackgroundData
 struct TileData {
-    Position pos;
-    TileTextureId id;
+    Position pos{0,0};
+    TileTextureId id = TileTextureId::Grass;
 };
 
 struct StaticFurnitureData {  // para la deco del pueblo o las casas de npcs
-    Position pos;
-    FurnitureId id;
-    Direction dir;
+    Position pos{0,0};
+    FurnitureId id = FurnitureId::Chair;
+    Direction dir = Direction::None;
 };
 
 struct DecorData { // para cosas como arboles y plantas
-    Position pos;
-    DecorId id;
+    Position pos{0,0};
+    DecorId id = DecorId::MapleTree;
 };
 
 struct BuildingData {
-    Position pos;
-    BuildingId id;
+    Position pos{0,0};
+    BuildingId id = BuildingId::FarmHouse;
+};
+
+struct PortalData {
+    Position pos{0, 0};
+    PortalId id = PortalId::FarmToMine;
 };
 
 struct BackgroundData{
@@ -116,10 +166,11 @@ struct BackgroundData{
     std::vector<DecorData> decor;
     std::vector<BuildingData> buildings; // Exteriores, para los interiores son una zona distinta, asi que les llega su propio BackgroundData
     std::vector<StaticFurnitureData> furniture;
+    std::vector<PortalData> portals;
 };
 
 // TODO: TBD primer draft del segundo Handshake, para la data que NUNCA cambia.
-// se excluye:  Furniture (en casa del player cambia de lugar, pero en los shops de los npcs no. 
+// se excluye:  Furniture (en casa del player cambia de lugar, pero en los shops de los npcs no.
 //              el servidor se encarga de no permitieme interactuar con muebles de npcs)
 
 struct ConstMapData{
@@ -130,6 +181,7 @@ struct ConstMapData{
     BackgroundData robins;
     BackgroundData clints;
     BackgroundData marnies;
+    BackgroundData town;
 };
 
 // Player
@@ -166,6 +218,7 @@ struct GameInfoDTO {
     bool isMultiplayer = false;
 };
 
+
 struct PlayerDataLocal : public PlayerData {
     std::map<uint8_t, Stack> items;
     uint8_t current_slot = 0;
@@ -175,6 +228,9 @@ struct PlayerDataLocal : public PlayerData {
     uint16_t energy = 0;
     uint16_t maxEnergy = 0;
     ZoneData zoneData{std::monostate{}};
+    CombatProgressData combatProgress;
+
+    // TODO: enviar la max cap del inventario (9 y con la recompenza sube a 10)
 
     PlayerDataLocal() = default;
     explicit PlayerDataLocal(const PlayerData& publicData): PlayerData(publicData) {}
@@ -236,14 +292,19 @@ struct MoveDTO : public CommandDTO {
     Direction dir{Direction::None};
 
     MessageType type() const override { return MessageType::Move; }
-    explicit MoveDTO(const std::string& name) : CommandDTO(name) {}
+    explicit MoveDTO(const std::string& name): CommandDTO(name) {}
 };
 
-struct InteractDTO : public CommandDTO {
+struct InteractDTO: public CommandDTO {
     Direction dir{Direction::None};
 
     MessageType type() const override { return MessageType::Interact; }
     explicit InteractDTO(const std::string& name) : CommandDTO(name) {}
+};
+
+struct DayOkDTO: public CommandDTO {
+    explicit DayOkDTO(const std::string& name): CommandDTO(name) {}
+    MessageType type() const override { return MessageType::DayOk; }
 };
 
 struct DonateDTO : public CommandDTO {
@@ -313,6 +374,7 @@ struct ServerStatus {
     uint8_t worldId = 0;
     std::map<std::string, PlayerData> players;
     PlayerDataLocal localPlayer;
+    bool dayEnded = false;
 };
 
 struct qtStatus {

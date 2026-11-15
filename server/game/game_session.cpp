@@ -61,6 +61,7 @@ GameSession Game::joinGame(const JoinGameDTO& dto,const std::shared_ptr<OutQueue
 
 GameSession Game::addPlayer(const std::string& playerName,const PlayerData& data,const std::shared_ptr<OutQueue>& output,const std::string& successMsg) {
     GameSession session{};
+    session.map = mapForSession();
     session.userName = playerName;
     session.status = playerManager.addPlayer(playerName, data, output);
 
@@ -97,6 +98,7 @@ GameSession Game::resumeGame(const ResumeGameDTO& dto, const std::shared_ptr<Out
     session.playerId = session.status.playerId;
     session.worldId = worldId;
     session.input = input;
+    session.map = mapForSession();
     return session;
 }
 

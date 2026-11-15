@@ -15,6 +15,11 @@ GameSetup makeDefaultGameSetup(uint8_t worldId) {
         if (level < DUNGEON_ROOM_COUNT) {
             room.passages.nextRoom = terrain.baseAt({21, 29}).value();
         }
+        room.traps.push_back(TrapData{0, terrain.baseAt({12, 14}).value(), Direction::Down,TrapType::Spikes, TrapState::Inactive, 16});
+        room.traps.push_back(TrapData{0, terrain.baseAt({8, 0}).value(), Direction::Right,TrapType::WallFlame, TrapState::Inactive, 64});
+        for (const auto& trap: room.traps) {
+            room.reservedPositions.push_back(trap.pos);
+        }
         setup.layout.emplace(level, std::move(room));
     }
     setup.entrance.emplace();
@@ -24,12 +29,18 @@ GameSetup makeDefaultGameSetup(uint8_t worldId) {
     setup.farm.terrain = terrain;
     setup.farm.spawn = setup.entrance->returnPosition;
     setup.farm.reservedPositions = {setup.farm.spawn, setup.entrance->position};
+    setup.farm.townDoor = terrain.baseAt({3, 26}).value();
+    setup.farm.townReturn = terrain.baseAt({4, 26}).value();
+    setup.farm.beds = {terrain.baseAt({4, 4}).value()};
+    setup.townConfig.map = {32, 24, entity_dimensions::TILE_SIZE};
+    setup.townConfig.connections = {{"farm", {2, 12}}, {"dungeon", {29, 12}}};
     return setup;
 }
 
 GameSetup makeFarmGameSetup(uint8_t worldId, const FarmLayout& farm) {
     auto setup = makeDefaultGameSetup(worldId);
     setup.farm = farm;
+    setup.townConfig = {};
     setup.entrance.reset();
     if (farm.mineDoor) {
         setup.entrance.emplace();

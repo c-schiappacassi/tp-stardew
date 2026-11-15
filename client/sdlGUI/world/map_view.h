@@ -6,6 +6,7 @@
 #include "farm/farm_view.h"
 #include "protocol_types.h"
 #include "mines/mine_view.h"
+#include "town/town_view.h"
 
 class MapView : public ZoneView {
 private:
@@ -13,15 +14,17 @@ private:
     // TODO: mover las Views al map cuando tenga todo para el constructor(Background incluido)
     MinesView mines;
     FarmView farm;
+    TownView town;
 
     ZoneView* current_view() {
         if (current == Zone::Dungeon) return &mines;
         if (current == Zone::Farm) return &farm;
+        if (current == Zone::Town) return &town;
         return nullptr;
     }
 
 public:
-    MapView(const ConstMapData& data, AssetManager& assets) : mines(data.levels, assets), farm(data.farm, assets) {}
+    MapView(const ConstMapData& data, AssetManager& assets) : mines(data.levels, assets), farm(data.farm, assets), town(data.town, assets) {}
 
     void update(const State& data) {
         const PlayerDataLocal& local = data.get_local();

@@ -8,11 +8,13 @@
 #include <string>
 
 #include "player/player_record.h"
-#include "player_factory.h"
-#include "player_updates.h"
-#include "player_status.h"
-#include "player_actions.h"
+#include "game/time/day_cycle.h"
+#include "ports/combatant.h"
 #include "ports/player_spawn_source.h"
+#include "player_actions.h"
+#include "player_factory.h"
+#include "player_status.h"
+#include "player_updates.h"
 
 class PlayerManager {
 private:
@@ -25,15 +27,22 @@ private:
     PlayerActions actions;
     const PlayerSpawnSource& spawns;
     const MovementRules& movement;
+    DayCycle day;
+    bool combatBonusUnlocked = false;
 
 public:
     explicit PlayerManager(const PlayerConfig& config,const MovementRules& movement,const ZoneDataSource& zones,PlayerInteractions& interactions,const PlayerSpawnSource& spawns,uint8_t maxPlayers = 4);
-    
+
     ServerStatus addPlayer(const std::string& name,const PlayerData& appearance,const std::shared_ptr<OutQueue>& output);
     ServerStatus resumePlayer(const std::string& name, const std::shared_ptr<OutQueue>& output);
     std::optional<PlayerData> dataFor(const std::string& name) const;
     bool isMultiplayer() const;
     std::vector<CollisionBounds> getCollisionBounds(Zone zone) const;
+    std::vector<Combatant> getCombatants();
+    void applyCombatBonus();
+    bool advanceDay(std::chrono::milliseconds elapsed);
+    bool isDayEnded() const;
+    bool hasConnectedPlayers() const;
     void disconnectPlayer(uint16_t playerId);
     void closeOutputs();
     void updateToolStates(std::chrono::steady_clock::time_point now);

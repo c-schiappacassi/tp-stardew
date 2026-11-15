@@ -12,6 +12,16 @@ bool Game::loadFarm(uint8_t selectedWorldId, const FarmLayout& layout) {
     return !configured && world.loadFarm(selectedWorldId, layout);
 }
 
+bool Game::loadTown(const TownConfig& config) {
+    std::lock_guard<std::mutex> lock(mtx);
+    return !configured && world.loadTown(config);
+}
+
+std::shared_ptr<const ConstMapData> Game::mapForSession() {
+    if (!constMap) constMap = std::make_shared<const ConstMapData>(world.buildConstMap());
+    return constMap;
+}
+
 const std::string& Game::getId() const {
     return id;
 }

@@ -13,14 +13,19 @@ private:
     ProtocolBase base;
 
     Position receivePosition();
-    void sendPosition(const Position& pos);
+    void writePosition(MessageBuffer& out, const Position& pos);
 
-    void sendColor(const Color& color);
+    void writeColor(MessageBuffer& out, const Color& color);
     Color receiveColor();
 
     Stack receiveStack();
 
     MineralData receiveMineralData();
+    EnemySnapshot receiveEnemyData();
+    ProjectileData receiveProjectileData();
+    TrapData receiveTrapData();
+    LootData receiveLootData();
+    DungeonCombatData receiveCombatData();
     LevelData receiveLevelData();
     MineData receiveMineData();
     ZoneData receiveZoneData(Zone currentZone);
@@ -32,10 +37,20 @@ private:
 
     CropData receiveCropData();
     AnimalData receiveAnimalData();
-    DecorationData receiveDecorationData();
+    DecorData receiveDecorationData();
     FarmData receiveFarmData();
+
+    BackgroundData receiveBackgroundData();
+
 public:
-    explicit ClientProtocol(Socket& socket);
+    explicit ClientProtocol(Socket&& socket);
+
+    ClientProtocol(const ClientProtocol&) = delete;
+    ClientProtocol& operator=(const ClientProtocol&) = delete;
+    ClientProtocol(ClientProtocol&&) = default;
+    ClientProtocol& operator=(ClientProtocol&&) = default;
+
+    void shutdown();
 
     void send(const CommandDTO& dto);
     void send(const SelectSlotDTO& dto);
@@ -44,6 +59,7 @@ public:
     void send(const ResumeGameDTO& dto);
     void send(const MoveDTO& dto);
     void send(const InteractDTO& dto);
+    void send(const DayOkDTO& dto);
     void send(const DonateDTO& dto);
     void send(const ChatDTO& dto);
     void send(const UseItemDTO& dto);
@@ -52,6 +68,7 @@ public:
     void send(const ListGamesDTO& dto);
     void send(const CheckCodeDTO& dto);
 
+    void recv(ConstMapData& map);
     void recv(ServerStatus& status);
     void recv(qtStatus& status);
 };

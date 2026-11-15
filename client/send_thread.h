@@ -2,7 +2,6 @@
 
 #include <atomic>
 #include <memory>
-#include <sys/socket.h>
 #include "thread.h"
 #include "queue.h"
 #include "dtos.h"
@@ -12,13 +11,12 @@ class SendThread : public Thread {
 private:
     Queue<std::shared_ptr<CommandDTO>>& send_queue;
     ClientProtocol& protocolo;
-    Socket& socket;
     std::atomic<bool>& connected;
 
 public:
     SendThread(Queue<std::shared_ptr<CommandDTO>>& queue, ClientProtocol& prot,
-               Socket& socket, std::atomic<bool>& connected):
-            send_queue(queue), protocolo(prot), socket(socket), connected(connected) {}
+               std::atomic<bool>& connected):
+            send_queue(queue), protocolo(prot), connected(connected) {}
 
     void run() override {
         try {
@@ -30,7 +28,7 @@ public:
         } catch (const std::exception&) {
             connected = false;
             try {
-                socket.shutdown(SHUT_RDWR);
+                protocolo.shutdown();
             } catch (const std::exception&) {
             }
         }

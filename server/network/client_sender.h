@@ -12,10 +12,9 @@ class ClientSender : public Thread {
 private:
     ServerProtocol& protocol;
     std::shared_ptr<OutQueue> output;
-    Socket& socket;
 
 public:
-    ClientSender(ServerProtocol& protocol, std::shared_ptr<OutQueue> output, Socket& socket);
+    ClientSender(ServerProtocol& protocol, std::shared_ptr<OutQueue> output);
     void run() override;
 };
 

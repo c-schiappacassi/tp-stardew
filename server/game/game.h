@@ -24,6 +24,9 @@ class Game:public Thread {
         bool configured = false;
         WorldManager world;
         PlayerManager playerManager;
+        std::shared_ptr<const ConstMapData> constMap;
+
+        std::shared_ptr<const ConstMapData> mapForSession();
 
         void processCommands();
         void sendStatus();
@@ -33,6 +36,7 @@ class Game:public Thread {
         void closeAll();
         ServerStatus buildStatus() const;
         GameSession addPlayer(const std::string& playerName,const PlayerData& data,const std::shared_ptr<OutQueue>& output,const std::string& successMsg);
+    
     public:
         Game(const std::string& id,const std::string& name,uint8_t worldId,const PlayerConfig& playerConfig = {},const DungeonConfig& dungeonConfig = {},const FarmConfig& farmConfig = FarmConfig{},uint8_t maxPlayers = 4);
 
@@ -47,6 +51,7 @@ class Game:public Thread {
         std::optional<GameInfoDTO> infoFor(const std::string& userName) const;
         bool loadDungeon(uint8_t selectedWorldId,const std::map<uint8_t, DungeonRoomLayout>& layout);
         bool loadFarm(uint8_t selectedWorldId, const FarmLayout& layout);
+        bool loadTown(const TownConfig& config);
         bool configureDungeonEntrance(const DungeonEntrance& entrance);
 
         void run() override;

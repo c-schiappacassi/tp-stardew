@@ -1,49 +1,35 @@
 #include "protocol_base.h"
 
 #include <arpa/inet.h>
+#include <sys/socket.h>
 
 #include <cstdint>
 #include <limits>
 #include <string>
+#include <utility>
 
 #include "protocol_errors.h"
 
-ProtocolBase::ProtocolBase(Socket& socket) : socket(socket) {}
 
-void ProtocolBase::sendBytes(const void* data, unsigned int size) {
-    if (socket.sendall(data, size) == 0) {
+ProtocolBase::ProtocolBase(Socket&& socket) : socket(std::move(socket)) {}
+
+void ProtocolBase::send(const MessageBuffer& message) {
+    if (message.size() == 0) {
+        return;
+    }
+    if (message.size() > std::numeric_limits<unsigned int>::max()) {
+        throw ProtocolError("mensaje demasiado largo");
+    }
+    if (socket.sendall(message.bytes(), static_cast<unsigned int>(message.size())) == 0) {
         throw ConnectionClosed();
     }
 }
+
+void ProtocolBase::shutdown() { socket.shutdown(SHUT_RDWR); }
 
 void ProtocolBase::receiveBytes(void* data, unsigned int size) {
     if (socket.recvall(data, size) == 0) {
         throw ConnectionClosed();
-    }
-}
-
-
-void ProtocolBase::sendUint8(const uint8_t value) {
-    sendBytes(&value, sizeof(value));
-}
-
-void ProtocolBase::sendUint16(const uint16_t value) {
-    const uint16_t send = htons(value);
-    sendBytes(&send, sizeof(send));
-}
-
-void ProtocolBase::sendUint32(const uint32_t value) {
-    const uint32_t send = htonl(value);
-    sendBytes(&send, sizeof(send));
-}
-
-void ProtocolBase::sendString(const std::string& value) {
-    if (value.size() > std::numeric_limits<uint16_t>::max()) {
-        throw ProtocolError("string demasiado largo");
-    }
-    sendUint16(static_cast<uint16_t>(value.size()));
-    if (!value.empty()) {
-        sendBytes(value.data(), static_cast<unsigned int>(value.size()));
     }
 }
 

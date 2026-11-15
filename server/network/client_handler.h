@@ -20,7 +20,6 @@ private:
     using Receiver = std::function<std::shared_ptr<CommandDTO>()>;
     using Action = std::function<void()>;
 
-    Socket socket;
     ServerProtocol protocol;
     GameManager& manager;
     std::shared_ptr<OutQueue> outQueue;

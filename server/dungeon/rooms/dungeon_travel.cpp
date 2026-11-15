@@ -7,21 +7,17 @@ const DungeonRoom* DungeonTravel::findRoom(const std::map<uint8_t, DungeonRoom>&
 }
 
 bool DungeonTravel::spawnPlayer(Player& player, const std::map<uint8_t, DungeonRoom>& rooms) const {
-    if (!player.canAct()) {
-        return false;
-    }
-
     const auto* first = findRoom(rooms, 1);
     if (!first || !first->getPassages() ||
         !first->canWalk(player.getCollisionBounds(first->getPassages()->entry))) {
         return false;
     }
 
-    return player.changeLocation(Zone::Dungeon, 1, first->getPassages()->entry);
+    return player.restoreLocation(Zone::Dungeon, 1, first->getPassages()->entry);
 }
 
 bool DungeonTravel::enter(Player& player, const std::map<uint8_t, DungeonRoom>& rooms) const {
-    return player.getZone() != Zone::Dungeon && spawnPlayer(player, rooms);
+    return player.canAct() && player.getZone() != Zone::Dungeon && spawnPlayer(player, rooms);
 }
 
 bool DungeonTravel::advanceRoom(Player& player, const std::map<uint8_t, DungeonRoom>& rooms) const {

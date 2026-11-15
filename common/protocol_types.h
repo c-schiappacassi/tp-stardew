@@ -7,7 +7,7 @@ enum class MessageType : uint8_t {
     JoinGame = 0x02,
     ListGames = 0x03,  // lo usamos para cuando hay que retomar una partida
     ResumeGame = 0x04, // llamamos a todas las partidas y vemos si entre ellas
-                       // esta la aprtida a la que nos queremos reunir
+                        // esta la aprtida a la que nos queremos reunir
     CheckCode = 0x05,
     ExitGame = 0x06,
 
@@ -33,9 +33,9 @@ enum class MessageType : uint8_t {
     CommunityState = 0x88, // avance de las misiones
 };
 
-enum class StatusCode : uint8_t {
-    Ok = 0,
-    Error = 1
+enum class StatusCode : uint8_t { 
+    Ok = 0, 
+    Error = 1 
 };
 
 enum class Direction : uint8_t {
@@ -86,6 +86,10 @@ enum class EnemyState : uint8_t {
     Attacking = 2,
     Dead = 3,
 };
+
+enum class FlameType : uint8_t { Blue = 0, Green = 1, Common };
+enum class TrapType : uint8_t { Spikes = 0, WallFlame = 1 };
+enum class TrapState : uint8_t { Inactive = 0, Warning = 1, Active = 2 };
 
 // PLANTS
 enum class CropType : uint8_t {
@@ -180,6 +184,10 @@ enum class ItemId : uint16_t {
     Painting = 56
 };
 
+enum class EmoteId : uint16_t {
+    Alert
+};
+
 // CHEATS
 enum class CheatType : uint8_t {
     SetLife = 1,
@@ -190,23 +198,104 @@ enum class CheatType : uint8_t {
 };
 
 // TODO: completar
-enum class TileTextureId{
+enum class TileTextureId : uint8_t{
     Grass,
     Dirt,
+    StoneCliftTop,
+    StoneCliftSide,
+    StoneCliftTopRightCorner,
+    StoneCliftBottom,
+    StoneCliftBottomRigthCorner,
+    DungeonWall,
+    DungeonWallCorner,
+    StonePath,
+    ConnctionStonePathGrassCorner,
+    ConnctionStonePathGrassLeftSide,
+    ConnctionStonePathGrassTop,
+    ConnctionStonePathGrassBottom,
+    WateredDirt,
+    TilledDirt
 };
 
-enum class DecorId{
+enum class DecorId : uint8_t{
     MapleTree,
     PineTree,
+    MushroomTree,
+    PinkTree,
+    YellowTree,
+    BlueTree,
+    PinkFlowerGrass,
+    OrangeFlowerGrass,
+    OrangeGrass,
+    VelvetGrass,
+    BlueGrass,
+    PlainGrass,
+    RedGrass,
+    SimpleBush,
+    RedBBerryBush,
+    PinkBush,
+    PurpleBerryBush,
+    BlueBush,
+    BigRedBush,
+    StreatLamp,
+    FenceFront,
+    FenceBack,
+    PinkFlower,
+    BlueFlower,
+    WeirdGreenPlant,
+    SmallFern,
+    BigFern,
+    PinkMushrom,
+    YellowMushrom,
+    BabyRedMushrom,
+    BigRedMushroom,
+    DungeonPilar,
+    DungeonTorch,
+    DungeonChain,
+    DungeonWindow,
+    DungeonWallCrack,
+    SpiderWeb,
+    CornerSpiderWeb,
+    PottedPlants,
+    SmallBlueFlower,
 };
 
 
-enum class FurnitureId{
+enum class PortalId : uint8_t{
+    FarmToMine,
+    ToNextLevel, // en todos los niveles excepto el que quedo ultimo
+    MineToFarm, // en todos los niveles
+};
+
+
+enum class FurnitureId : uint8_t{
     Chair,
     Table,
+    Bed,
+    BedSheet,
+    Bonsai,
+    PottedTree,
+    BlueArmCouch,
+    Tv,
+    BeigeRug,
+    ClockFirePlace,
+    BlueRug,
+    CatFirePlace,
+    SimpleFirePlace,
+    BlueJunimoPushee,
+    GreenJunimoPushee,
+    YellowJunimoPushee,
+    PinkJunimoPushee,
+    SimpleLamp,
+    BookShelf,
+    SquareLamp,
+    RoundTable,
+    GreenStool,
+    BrownSofa,
+    BrownArmCouch,
 };
 
-enum class BuildingId{
+enum class BuildingId : uint8_t{
     FarmHouse,
     StoneCabin,
     WoodCabin,
@@ -215,5 +304,5 @@ enum class BuildingId{
     PierresShop,
     RobinsShop,
     ClintsShop,
-    ComunityCenter
+    ComunityCenter,
 };

@@ -18,7 +18,8 @@ int main(int argc, char* argv[]) {
         const int result = QApplication::exec();
         if (menu.gameStatus()) {
             std::cout << "Partida: " << menu.gameStatus()->gameId << '\n';
-            Game game(net, menu.userName(), *menu.gameStatus() /*, status inicial unico */); 
+            const ConstMapData map = net.recvMap();
+            Game game(net, menu.userName(), *menu.gameStatus(), map);
             game.exe();
         }
         return result;

@@ -10,6 +10,9 @@
 #include "../../render_info.h"
 
 #include "ore_view.h"
+#include "enemy_view.h"
+#include "trap_view.h"
+#include "projectile_view.h"
 #include "position.h"
 
 
@@ -17,9 +20,9 @@ class LevelView : public BackgroundZoneView {
     uint8_t number;
     Position stairs_up, stairs_down;
     std::unordered_map<uint32_t, OreView> ores;
-    // TODO:
-    // std::unordered_map<uint32_t, EnemyView> enemies;
-    // std::unordered_map<uint32_t, TrapView> traps;
+    std::unordered_map<uint32_t, EnemyView> enemies;
+    std::unordered_map<uint32_t, TrapView> traps;
+    std::unordered_map<uint32_t, ProjectileView> projectiles;
     // std::unordered_map<uint32_t, ChestView> chest; // para animar que se abre, pero ver lo de adentro va a ser cosa de hud
 protected:
     void collect_entities(const RenderInfo& ctx, std::vector<Drawable>& out,  uint64_t& tie) override;
