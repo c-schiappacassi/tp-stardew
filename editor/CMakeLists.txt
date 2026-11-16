@@ -10,6 +10,9 @@ target_sources(taller_editor
     zone/side_bar.cpp
     zone/sprites.cpp
     zone/zone_tab.cpp
+    model/world_map.cpp
+    model/zone_map.cpp
+    zone/zone_canvas.cpp
     PUBLIC
     # .h files
     editor_constants.h
@@ -21,6 +24,10 @@ target_sources(taller_editor
     zone/side_bar.h
     zone/sprites.h
     zone/zone_tab.h
+    model/world_map.h
+    model/zone_map.h
+    zone/tool.h
+    zone/zone_canvas.h
     )
 
 target_include_directories(taller_editor PRIVATE ${CMAKE_CURRENT_SOURCE_DIR})

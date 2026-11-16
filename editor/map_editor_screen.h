@@ -2,6 +2,7 @@
 #define MAP_EDITOR_SCREEN_H
 
 #include <QWidget>
+#include "model/world_map.h"
 #include "zone/sprites.h"
 
 class MapEditorScreen : public QWidget {
@@ -15,6 +16,7 @@ signals:
 
 private:
     Sprites sprites;
+    WorldMap map;
 };
 
 #endif  // MAP_EDITOR_SCREEN_H

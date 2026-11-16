@@ -16,6 +16,8 @@ public:
 
     const QPixmap& floor(TileTextureId floor) const;
     const QPixmap& element(ElementId element) const;
+    const QPixmap& moveIcon() const;
+    const QPixmap& eraseIcon() const;
 
 private:
     const QPixmap& sheet(const std::string& path);
@@ -23,6 +25,8 @@ private:
     std::map<std::string, QPixmap> sheets;
     std::map<TileTextureId, QPixmap> floors;
     std::vector<std::pair<ElementId, QPixmap>> elements;
+    QPixmap moveCursor;
+    QPixmap eraseCross;
 };
 
 #endif  // SPRITES_H

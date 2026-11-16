@@ -36,9 +36,9 @@ MapEditorScreen::MapEditorScreen(QWidget* parent): QWidget(parent) {
     backButton->setFixedSize(backSize);
 
     QTabWidget* tabs = new QTabWidget(this);
-    tabs->addTab(new ZoneTab(sprites, allFloors(), allElements(), this), "Farm");
-    tabs->addTab(new ZoneTab(sprites, allFloors(), allElements(), this), "Town");
-    tabs->addTab(new ZoneTab(sprites, allFloors(), allElements(), this), "Dungeon levels");
+    tabs->addTab(new ZoneTab(map.farm, sprites, allFloors(), allElements(), this), "Farm");
+    tabs->addTab(new ZoneTab(map.town, sprites, allFloors(), allElements(), this), "Town");
+    tabs->addTab(new ZoneTab(map.mineLevels[0], sprites, allFloors(), allElements(), this), "Dungeon levels");
     tabs->setStyleSheet(TABS_STYLE);
 
     QVBoxLayout* layout = new QVBoxLayout(this);

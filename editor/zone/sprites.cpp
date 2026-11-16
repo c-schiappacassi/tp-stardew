@@ -16,6 +16,8 @@ Sprites::Sprites() {
         const QPixmap sprite = sheet(info.sheet).copy(info.spriteX, info.spriteY, info.spriteWidth, info.spriteHeight);
         elements.emplace_back(info.element, sprite);
     }
+    moveCursor = sheet("menus/cursors.png").copy(0, 0, TILE_PIXELS, TILE_PIXELS);
+    eraseCross = sheet("menus/cursors.png").copy(268, 470, TILE_PIXELS, TILE_PIXELS);
 }
 
 const QPixmap& Sprites::floor(TileTextureId floor) const { return floors.at(floor); }
@@ -27,6 +29,14 @@ const QPixmap& Sprites::element(ElementId element) const {
         }
     }
     throw std::out_of_range("elemento sin sprite");
+}
+
+const QPixmap& Sprites::moveIcon() const {
+    return moveCursor;
+}
+
+const QPixmap& Sprites::eraseIcon() const {
+    return eraseCross;
 }
 
 const QPixmap& Sprites::sheet(const std::string& path) {
