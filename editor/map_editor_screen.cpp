@@ -14,6 +14,7 @@ MapEditorScreen::MapEditorScreen(QWidget* parent): QWidget(parent) {
     tabs->addTab(new QWidget(this), "Farm");
     tabs->addTab(new QWidget(this), "Town");
     tabs->addTab(new QWidget(this), "Dungeon levels");
+    tabs->setStyleSheet(TABS_STYLE);
 
     QVBoxLayout* layout = new QVBoxLayout(this);
     layout->addWidget(tabs, 1);
