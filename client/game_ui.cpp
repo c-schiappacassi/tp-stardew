@@ -5,6 +5,8 @@
 #include "sdlGUI/ui/layers/hud_layer.h"
 #include "sdlGUI/ui/layers/ready_to_sleep_layer.h"
 #include "sdlGUI/ui/sdl_input.h"
+#include "sdlGUI/ui/layers/quit_layer.h"
+#include "sdlGUI/ui/layers/minimap_layer.h"
 
 namespace {
     constexpr int WINDOW_W = 1280;
@@ -18,6 +20,7 @@ GameUI::GameUI(const std::string& local_player, const std::string& gameId, const
         sdl(SDL_INIT_VIDEO),
         window(std::string(WINDOW_TITLE) + " | Codigo: " + gameId,   SDL_WINDOWPOS_UNDEFINED, SDL_WINDOWPOS_UNDEFINED, WINDOW_W, WINDOW_H,  SDL_WINDOW_RESIZABLE),
         renderer(window, -1, SDL_RENDERER_ACCELERATED),
+        // TODO: al asset manager le llega la ruta del minimap para cargar, por ahora hardcodeo en sprites_defs.h
         asset_manager(renderer, ASSETS_ROOT),
         cam(WINDOW_W, WINDOW_H, CAMERA_ZOOM),
         local_player(local_player),
@@ -31,6 +34,13 @@ GameUI::GameUI(const std::string& local_player, const std::string& gameId, const
     ChatLayer& chat = ui.emplace<ChatLayer>(local_player);
     ui.bind_open(Key::T, chat);
     ui.emplace<ReadyToSleepLayer>(ui, local_player);
+    QuitLayer& ingame_quit = ui.emplace<QuitLayer>(ui, local_player);
+    ui.bind_open(Key::Escape, ingame_quit);
+
+    // TODO: minimap
+    //MinimapLayer& minimap = ui.emplace<MinimapLayer>(ui, local_player);
+    //ui.bind_open(Key::M, ingame_quit);
+
 }
 
 std::vector<std::shared_ptr<CommandDTO>> GameUI::poll_input() {

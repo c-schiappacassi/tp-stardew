@@ -127,4 +127,6 @@ public:
             }
         }
     }
+
+    void request_quit() { quit = true; }
 };

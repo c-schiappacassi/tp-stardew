@@ -46,9 +46,12 @@ target_sources(taller_client
     sdlGUI/ui/ui_layer.h
     sdlGUI/ui/ui_manager.h
     sdlGUI/ui/world_input.h
+    sdlGUI/ui/layers/modal_layer.h
     sdlGUI/ui/layers/chat_layer.h
     sdlGUI/ui/layers/ready_to_sleep_layer.h
     sdlGUI/ui/layers/hud_layer.h
+    sdlGUI/ui/layers/quit_layer.h
+    sdlGUI/ui/layers/minimap_layer.h
 
     sdlGUI/world/player_view.h
     sdlGUI/world/world_view.h
@@ -63,10 +66,13 @@ target_sources(taller_client
     sdlGUI/world/interiors/interiors_view.h
 
     sdlGUI/world/hud/hud_view.h
+    sdlGUI/world/hud/dialog_view.h
+    sdlGUI/world/hud/minimap_view.h
     sdlGUI/world/hud/chat_view.h
     sdlGUI/world/hud/hotbar_view.h
     sdlGUI/world/hud/bar_view.h
     sdlGUI/world/hud/ready_to_sleep_view.h
+    sdlGUI/world/hud/quit_view.h
     sdlGUI/world/hud/pixel_font.h
 
     sdlGUI/world/mines/level_view.h

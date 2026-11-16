@@ -27,6 +27,7 @@ enum class SpriteId : uint16_t {
     MenuTiles,
     InGameUI,
     Clock,
+    Minimap,
 
     BronwCow,
     WhiteCow,
@@ -92,6 +93,7 @@ enum class UiSpriteId : uint8_t {
     ChatBox,
     DialogBox,
     OkButton,
+    CancelButton    
 };
 
 struct Drawable {

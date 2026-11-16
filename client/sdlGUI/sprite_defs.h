@@ -69,6 +69,7 @@ namespace SpriteDefs {
         {SpriteId::Cursors,      "menus/cursors.png"},
         {SpriteId::Emotes,      "misc/emotes.png"},
         {SpriteId::ChatBox,      "menus/chat_box.png"},
+        {SpriteId::Minimap, "minimaps/placeholder_minimap.jpg"},
 
         // farmer
         {SpriteId::FarmerBase,   "characters/farmer_base.png"},
@@ -386,6 +387,7 @@ namespace SpriteDefs {
         {UiSpriteId::ChatBox,            SpriteId::ChatBox,     0,   0, 75, 14},
         {UiSpriteId::DialogBox, SpriteId::MenuTiles, 0, 256, 60, 60},
         {UiSpriteId::OkButton,  SpriteId::Cursors, 128, 256, 64, 64},
+        {UiSpriteId::CancelButton, SpriteId::Cursors, 192, 256, 64, 64},
     };
 
     // Clips
