@@ -163,7 +163,7 @@ enum class ItemId : uint16_t {
     PotatoSeed = 12,
     PumpkinSeed = 13,
 
-    Strawberry = 20, // usamos cultivo + calidad
+    Strawberry = 20,
     Scallion = 21,
     Potato = 22,
     Pumpkin = 23,
@@ -176,9 +176,32 @@ enum class ItemId : uint16_t {
     Milk = 40,
     Egg = 41,
 
-    // TODO: podemos agregar mas cosas al shop
     Chest = 50,
 
+    Chair,
+    Table,
+    Bed,
+    BedSheet,
+    Bonsai,
+    PottedTree,
+    BlueArmCouch,
+    Tv,
+    BeigeRug,
+    ClockFirePlace,
+    BlueRug,
+    CatFirePlace,
+    SimpleFirePlace,
+    BlueJunimoPushee,
+    GreenJunimoPushee,
+    YellowJunimoPushee,
+    PinkJunimoPushee,
+    SimpleLamp,
+    BookShelf,
+    SquareLamp,
+    RoundTable,
+    GreenStool,
+    BrownSofa,
+    BrownArmCouch,
 };
 
 enum class EmoteId : uint16_t {

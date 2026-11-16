@@ -80,7 +80,8 @@ namespace SpriteDefs {
         // items y mas
         {SpriteId::Ores,         "caverns/mines.png"},
         {SpriteId::Crops,        "farm/crops/crops.png"},
-        {SpriteId::Harvest , "farm/crops/harvested_crops_seed_packets_minerals_food_equipment_miscellaneous_objects.png"},
+        {SpriteId::Harvest , "farm/harvested_crops_seed_packets_minerals_food_equipment_miscellaneous_objects.png"},
+        {SpriteId::Craftables, "misc/craftables.png"},
 
         //animals
         {SpriteId::BronwCow,     "farm/animals/cow_brown.png"},
@@ -123,9 +124,17 @@ namespace SpriteDefs {
 
         // interiors
         {SpriteId::PlayerHouseInterior, "farm/interior.png"},
+        {SpriteId::MarniesInterior, "farm/interior.png"},
+        {SpriteId::PierresInterior, "farm/interior.png"},
+        {SpriteId::ClintsInterior, "farm/interior.png"},
+        {SpriteId::RobinsInterior, "farm/interior.png"},
+        {SpriteId::ComunityCenterInterior, "farm/interior.png"},
 
         // npcs
-        {SpriteId::Marnie, "market/npcs/marnie.png"}
+        {SpriteId::Marnie, "market/npcs/marnie.png"},
+        {SpriteId::Pierre , "market/npcs/pierre.png"},
+        {SpriteId::Clint, "market/npcs/clint.png"},
+        {SpriteId::Robin, "market/npcs/robin.png"},
     };
 
     // Ores
@@ -178,13 +187,21 @@ namespace SpriteDefs {
 
     struct InteriorDef  { InteriorId id;    SpriteRect rect; };
     inline constexpr InteriorDef INTERIORS[] = {
-        {InteriorId::PlayerHouse , {SpriteId::PlayerHouseInterior, 0, 0, 272, 272}}
+        {InteriorId::PlayerHouse , {SpriteId::PlayerHouseInterior, 0, 0, 272, 272}},
+        {InteriorId::PierresShop , {SpriteId::PierresInterior, 0, 0, 272, 272}},
+        {InteriorId::MarniesShop , {SpriteId::MarniesInterior, 0, 0, 272, 272}},
+        {InteriorId::ClintsShop , {SpriteId::ClintsInterior, 0, 0, 272, 272}},
+        {InteriorId::RobinsShop , {SpriteId::RobinsInterior, 0, 0, 272, 272}},
+        {InteriorId::ComunityCenter , {SpriteId::ComunityCenterInterior, 0, 0, 272, 272}},
     };
     
 
     struct NpcDef  { NpcId id;    SpriteRect rect; };
     inline constexpr NpcDef NPCS[] = {
-        {NpcId::Marnie , {SpriteId::Marnie, 0, 0, 16, 32}}
+        {NpcId::Marnie , {SpriteId::Marnie, 0, 0, 16, 32}},
+        {NpcId::Pierre , {SpriteId::Pierre, 0, 0, 16, 32}},
+        {NpcId::Clint , {SpriteId::Clint, 0, 0, 16, 32}},
+        {NpcId::Robin , {SpriteId::Robin, 0, 0, 16, 32}},
     };
     
 
@@ -316,6 +333,39 @@ namespace SpriteDefs {
         {ItemId::Gold,        SpriteId::Ores,     94, 108, 16, 16},
         {ItemId::Milk,        SpriteId::Harvest,     290, 112, 13, 16},
         {ItemId::Egg,        SpriteId::Harvest,     224, 113, 16, 16},
+        {ItemId::StrawberrySeed,     SpriteId::Harvest,    256,  320, 16, 16},
+        {ItemId::ScallionSeed,       SpriteId::Harvest,    176,  320, 16, 16},
+        {ItemId::PotatoSeed,         SpriteId::Harvest,    304,  304, 16, 16},
+        {ItemId::PumpkinSeed,        SpriteId::Harvest,    160,  320, 16, 16},
+        {ItemId::Strawberry,         SpriteId::Harvest,    240,  256, 16, 16},
+        {ItemId::Scallion,           SpriteId::Harvest,    256,  256, 16, 16},
+        {ItemId::Potato,             SpriteId::Harvest,      0,  128, 16, 16},
+        {ItemId::Pumpkin,            SpriteId::Harvest,    192,  176, 16, 16},
+        {ItemId::Chest,              SpriteId::Craftables,  32,  520, 16, 24},
+        {ItemId::Chair,              SpriteId::Furniture,   0,    0, 16, 32},
+        {ItemId::Table,              SpriteId::Furniture,   0,  569, 32, 39},
+        {ItemId::Bed,                SpriteId::Furniture,   0, 1032, 32, 55},
+        {ItemId::BedSheet,           SpriteId::Furniture,  32, 1032, 32, 55},
+        {ItemId::Bonsai,             SpriteId::Furniture, 514,  633, 32, 48},
+        {ItemId::PottedTree,         SpriteId::Furniture, 514,  585, 32, 48},
+        {ItemId::BlueArmCouch,       SpriteId::Furniture,   0,  144, 32, 32},
+        {ItemId::Tv,                 SpriteId::Furniture, 259,  832, 26, 32},
+        {ItemId::BeigeRug,           SpriteId::Furniture, 229,  871, 24, 20},
+        {ItemId::ClockFirePlace,     SpriteId::Furniture, 160,  938, 32, 70},
+        {ItemId::BlueRug,            SpriteId::Furniture, 149,  867, 37, 28},
+        {ItemId::CatFirePlace,       SpriteId::Furniture, 128,  925, 32, 51},
+        {ItemId::SimpleFirePlace,    SpriteId::Furniture,   0,  896, 32, 80},
+        {ItemId::BlueJunimoPushee,   SpriteId::Furniture,  16,  880, 16, 16},
+        {ItemId::GreenJunimoPushee,  SpriteId::Furniture,   0,  880, 16, 16},
+        {ItemId::YellowJunimoPushee, SpriteId::Furniture,  32,  880, 16, 16},
+        {ItemId::PinkJunimoPushee,   SpriteId::Furniture,  48,  880, 16, 16},
+        {ItemId::SimpleLamp,         SpriteId::Furniture,  49,  733, 16, 34},
+        {ItemId::BookShelf,          SpriteId::Furniture,  80,  640, 32, 48},
+        {ItemId::SquareLamp,         SpriteId::Furniture,  80,  729, 16, 39},
+        {ItemId::RoundTable,         SpriteId::Furniture, 224,  570, 32, 38},
+        {ItemId::GreenStool,         SpriteId::Furniture, 480,   47, 16, 17},
+        {ItemId::BrownSofa,          SpriteId::Furniture,   0,  256, 48, 32},
+        {ItemId::BrownArmCouch,      SpriteId::Furniture, 384,  144, 32, 32},
     };
 
     struct EmoteDef { EmoteId id; SpriteId sprite; uint16_t x, y, w, h; };

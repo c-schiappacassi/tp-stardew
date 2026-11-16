@@ -65,10 +65,19 @@ enum class SpriteId : uint16_t {
     Emotes,
 
     PlayerHouseInterior,
+    MarniesInterior,
+    PierresInterior,
+    ClintsInterior,
+    RobinsInterior,
+    ComunityCenterInterior,
 
     Marnie,
+    Pierre,
+    Clint,
+    Robin,
     
-    Harvest
+    Harvest,
+    Craftables
 };
 
 enum class UiSpriteId : uint8_t {
