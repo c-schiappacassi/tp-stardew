@@ -3,14 +3,14 @@ target_sources(taller_editor
     # .cpp files
     main.cpp
     main_window.cpp
-    create_map_screen.cpp
+    map_editor_screen.cpp
     sprite_button.cpp
     start_screen.cpp
     PUBLIC
     # .h files
     editor_constants.h
     main_window.h
-    create_map_screen.h
+    map_editor_screen.h
     sprite_button.h
     start_screen.h
     )

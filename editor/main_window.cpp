@@ -3,7 +3,7 @@
 #include <QStackedWidget>
 
 #include "editor_constants.h"
-#include "create_map_screen.h"
+#include "map_editor_screen.h"
 #include "start_screen.h"
 
 MainWindow::MainWindow(QWidget* parent): QMainWindow(parent), stack(new QStackedWidget(this)) {
@@ -14,12 +14,12 @@ MainWindow::MainWindow(QWidget* parent): QMainWindow(parent), stack(new QStacked
     setCentralWidget(stack);
 
     StartScreen* startScreen = new StartScreen(this);
-    CreateMapScreen* createMapScreen = new CreateMapScreen(this);
+    MapEditorScreen* mapEditorScreen = new MapEditorScreen(this);
 
     stack->addWidget(startScreen);
-    stack->addWidget(createMapScreen);
+    stack->addWidget(mapEditorScreen);
 
-    connect(startScreen, &StartScreen::createMapRequested, this, [this, createMapScreen]() { stack->setCurrentWidget(createMapScreen); });
+    connect(startScreen, &StartScreen::createMapRequested, this, [this, mapEditorScreen]() { stack->setCurrentWidget(mapEditorScreen); });
     //TODO: editMapRequested -> selector de mapas y cargarlo
-    connect(createMapScreen, &CreateMapScreen::backRequested, this, [this, startScreen]() { stack->setCurrentWidget(startScreen); });
+    connect(mapEditorScreen, &MapEditorScreen::backRequested, this, [this, startScreen]() { stack->setCurrentWidget(startScreen); });
 }
