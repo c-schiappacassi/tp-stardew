@@ -12,11 +12,13 @@
 #include <vector>
 
 #include "config/toml_helpers.h"
+#include "config/town_toml_reader.h"
 #include "entities/collision_box.h"
 #include "entities/collision_bounds.h"
 #include "entities/entity_dimensions.h"
 #include "farm/animals/animal_species.h"
 #include "farm/decorations/decoration.h"
+#include "town/town_map.h"
 
 namespace {
 
@@ -381,7 +383,7 @@ void validateInitialPlacements(const FarmLayout& layout,
             invalid("farm.furniture", "mueble superpuesto o fuera del mapa");
         }
         occupiedBounds.push_back(bounds);
-        blocksMovement.push_back(spawn.item != ItemId::Rug);
+        blocksMovement.push_back(spawn.item != ItemId::BeigeRug && spawn.item != ItemId::BlueRug);
     }
 
     const auto playerBounds = playerBox.at(layout.spawn);
@@ -459,19 +461,86 @@ FarmLayout readFarmLayout(const toml::table& root,
         invalid("farm.town_return", "requiere door_town");
     }
 
-    farmEntries(farm, "beds", [&](const auto& entry, const auto& field) {
-        const auto base = farmBaseAt(&entry, layout.terrain, width, height, field);
-        const auto conflicts = [&](const Position& other) {
-            return layout.terrain.sameBaseCell(base, other);
-        };
-        if (std::any_of(layout.beds.begin(), layout.beds.end(), conflicts) ||
-            (layout.mineDoor && conflicts(*layout.mineDoor)) ||
-            (layout.townDoor && conflicts(*layout.townDoor))) {
-            invalid(field, "la cama coincide con otra cama o una puerta");
+    if (farm.contains("beds")) {
+        invalid("farm.beds", "las camas fijas deben configurarse dentro de farm.interiors");
+    }
+    std::optional<TownMap> exteriorTown;
+    farmEntries(farm, "interiors", [&](const auto& entry, const auto& field) {
+        InteriorLayout room;
+        room.location.interior_id = static_cast<InteriorId>(integer(
+            entry, "interior_id", static_cast<int>(InteriorId::ComunityCenter), field + ".interior_id"));
+        room.location.house_index = static_cast<uint8_t>(integer(
+            entry, "house_index", 3, field + ".house_index"));
+        const ZoneMap* exterior = &layout.terrain;
+        int exteriorWidth = width;
+        int exteriorHeight = height;
+        if (entry.contains("outside_zone")) {
+            const auto zone = string(entry, "outside_zone", field + ".outside_zone");
+            if (zone == "town") {
+                if (!exteriorTown) {
+                    exteriorTown.emplace();
+                    if (!exteriorTown->initialize(TownTomlReader{}.read(root))) {
+                        invalid(field, "el pueblo exterior es invalido");
+                    }
+                }
+                room.outside.zone = Zone::Town;
+                exterior = &exteriorTown->getMap();
+                exteriorWidth = exteriorTown->getWidth();
+                exteriorHeight = exteriorTown->getHeight();
+            } else if (zone != "farm") {
+                invalid(field + ".outside_zone", "se esperaba farm o town");
+            }
         }
-        layout.beds.push_back(base);
-        reserveFarmPosition(layout, base);
-    }, false, 4);
+        room.outside.position = farmBaseAt(entry.get("door"), *exterior, exteriorWidth, exteriorHeight, field + ".door");
+        room.returnPosition = farmBaseAt(entry.get("return"), *exterior, exteriorWidth, exteriorHeight, field + ".return");
+        const int roomWidth = static_cast<int>(integer(entry, "width", 256, field + ".width"));
+        const int roomHeight = static_cast<int>(integer(entry, "height", 256, field + ".height"));
+        if (roomWidth == 0 || roomHeight == 0) invalid(field, "el interior no puede estar vacio");
+        const auto* areas = entry.get("walkable_areas");
+        std::vector<std::vector<bool>> floor(roomHeight, std::vector<bool>(roomWidth, !areas));
+        if (areas) {
+            const auto* array = areas->as_array();
+            if (!array) invalid(field + ".walkable_areas", "se esperaba una lista de rectangulos");
+            for (const auto& area: *array) {
+                const auto& rect = tableAt(&area, field + ".walkable_areas");
+                const int x = static_cast<int>(integer(rect, "x", roomWidth - 1, field + ".walkable_areas.x"));
+                const int y = static_cast<int>(integer(rect, "y", roomHeight - 1, field + ".walkable_areas.y"));
+                const int w = static_cast<int>(integer(rect, "width", roomWidth - x, field + ".walkable_areas.width"));
+                const int h = static_cast<int>(integer(rect, "height", roomHeight - y, field + ".walkable_areas.height"));
+                if (w == 0 || h == 0) invalid(field, "area caminable vacia");
+                for (int row = y; row < y + h; ++row) {
+                    for (int col = x; col < x + w; ++col) floor[row][col] = true;
+                }
+            }
+        }
+        room.terrain = ZoneMap{floor, TILE_SIZE};
+        room.entry = farmBaseAt(entry.get("entry"), room.terrain, roomWidth, roomHeight, field + ".entry");
+        room.exit = farmBaseAt(entry.get("exit"), room.terrain, roomWidth, roomHeight, field + ".exit");
+        const auto* beds = entry.get("beds");
+        if (beds) {
+            const auto* array = beds->as_array();
+            if (!array || array->size() > 4) invalid(field + ".beds", "se esperaba una lista de hasta 4 camas");
+            for (const auto& bed: *array) {
+                room.beds.push_back(farmBaseAt(&bed, room.terrain, roomWidth, roomHeight, field + ".beds"));
+            }
+        }
+        room.background.interior = InteriorBackgroundData{
+            Position{0, 0}, room.location.interior_id, std::nullopt};
+        const auto conflicts = [&](const Position& other) {
+            return exterior->sameBaseCell(room.outside.position, other);
+        };
+        if ((room.outside.zone == Zone::Farm && layout.mineDoor && conflicts(*layout.mineDoor)) ||
+            (room.outside.zone == Zone::Farm && layout.townDoor && conflicts(*layout.townDoor)) ||
+            std::any_of(layout.interiors.begin(), layout.interiors.end(), [&](const auto& other) {
+                return (room.outside.zone == other.outside.zone && conflicts(other.outside.position)) ||
+                       other.location == room.location;
+            })) invalid(field, "interior o puerta repetidos");
+        if (room.outside.zone == Zone::Farm) {
+            reserveFarmPosition(layout, room.outside.position);
+            reserveFarmPosition(layout, room.returnPosition);
+        }
+        layout.interiors.push_back(std::move(room));
+    }, false, 9);
 
     farmEntries(farm, "reserved_positions",
         [&](const auto& entry, const auto& field) {

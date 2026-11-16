@@ -10,10 +10,13 @@ Decoration::Decoration(EntityId id, const Position& position, ItemId item):
 }
 
 bool Decoration::isDecoration(ItemId item) {
-    return item == ItemId::Table || item == ItemId::Chair || item == ItemId::Lamp ||item == ItemId::Rug || item == ItemId::Plant || item == ItemId::Painting;
+    return item >= ItemId::Chair && item <= ItemId::BrownArmCouch &&
+           item != ItemId::Bed && item != ItemId::BedSheet;
 }
 
 EntityId Decoration::getId() const { return id; }
 const Position& Decoration::getPosition() const { return position; }
 ItemId Decoration::getItem() const { return item; }
-bool Decoration::blocksMovement() const { return item != ItemId::Rug; }
+bool Decoration::blocksMovement() const {
+    return item != ItemId::BeigeRug && item != ItemId::BlueRug;
+}

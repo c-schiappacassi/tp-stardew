@@ -157,6 +157,16 @@ PlayerData ClientProtocol::receivePlayerData() {
     data.hairColor = receiveColor();
     data.pantsColor = receiveColor();
     data.currentZone = static_cast<Zone>(base.receiveUint8());
+    if (data.currentZone > Zone::InsideHouse) throw ProtocolError("Zona desconocida");
+    if (data.currentZone == Zone::InsideHouse) {
+        InteriorLocation inside;
+        inside.interior_id = static_cast<InteriorId>(base.receiveUint8());
+        inside.house_index = base.receiveUint8();
+        if (inside.interior_id > InteriorId::ComunityCenter) {
+            throw ProtocolError("Interior desconocido");
+        }
+        data.interior = inside;
+    }
     const uint16_t heldItem = base.receiveUint16();
     if (heldItem != 0) data.heldItem = static_cast<ItemId>(heldItem);
     return data;
@@ -427,6 +437,7 @@ void ClientProtocol::recv(ServerStatus& status) {
 
     status.localPlayer = receivePlayerDataLocal();
     status.dayEnded = base.receiveUint8() != 0;
+    status.dayConfirmationRequired = base.receiveUint8() != 0;
 }
 
 // qtStatus { status, errorMsg, successMsg, games }
@@ -524,5 +535,6 @@ void ClientProtocol::recv(ConstMapData& map) {
     map.robins  = receiveBackgroundData();
     map.clints  = receiveBackgroundData();
     map.marnies = receiveBackgroundData();
+    map.community_center = receiveBackgroundData();
     map.town    = receiveBackgroundData();
 }

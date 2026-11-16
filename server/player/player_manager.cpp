@@ -44,7 +44,7 @@ ServerStatus PlayerManager::addPlayer(const std::string& name,const PlayerData& 
     auto it =players.emplace(playerId, PlayerRecord{playerId, name, output, true, std::move(player)}).first;
     ++nextPlayerId;
 
-    auto status = playerStatus.buildForPlayer(players, it->second);
+    auto status = playerStatus.buildForPlayer(players, it->second, &day);
     status.dayEnded = day.hasEnded();
     return status;
 }
@@ -90,7 +90,7 @@ ServerStatus PlayerManager::resumePlayer(const std::string& name,const std::shar
         record.connected = true;
         record.output = output;
         record.player.setMovement(Direction::None);
-        auto status = playerStatus.buildForPlayer(players, record);
+        auto status = playerStatus.buildForPlayer(players, record, &day);
         status.dayEnded = day.hasEnded();
         return status;
     }
@@ -131,7 +131,7 @@ void PlayerManager::advancePlayers(int normalStep) {
 void PlayerManager::publishStatus(const ServerStatus& base) const {
     auto status = base;
     status.dayEnded = day.hasEnded();
-    playerStatus.publish(players, status);
+    playerStatus.publish(players, status, &day);
 }
 
 void PlayerManager::handleCommand(const PlayerCommand& command) {

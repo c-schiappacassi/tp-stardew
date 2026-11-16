@@ -194,6 +194,7 @@ struct ConstMapData{
     BackgroundData robins;
     BackgroundData clints;
     BackgroundData marnies;
+    BackgroundData community_center;
     BackgroundData town;
 };
 
@@ -210,6 +211,13 @@ struct Stack {
     Quality qual;
 };
 
+struct InteriorLocation {
+    InteriorId interior_id = InteriorId::PlayerHouse;
+    uint8_t house_index = 0;
+
+    bool operator==(const InteriorLocation&) const = default;
+};
+
 struct PlayerData{
     std::string characterName;
     Position pos{0,0};
@@ -221,6 +229,7 @@ struct PlayerData{
     Color hairColor{0, 0, 0};
     Color pantsColor{0, 0, 0};
     Zone currentZone = Zone::Farm;
+    std::optional<InteriorLocation> interior;
     std::optional<ItemId> heldItem;
 };
 
@@ -388,6 +397,7 @@ struct ServerStatus {
     std::map<std::string, PlayerData> players;
     PlayerDataLocal localPlayer;
     bool dayEnded = false;
+    bool dayConfirmationRequired = false;
 };
 
 struct qtStatus {

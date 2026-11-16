@@ -25,6 +25,7 @@ private:
 public:
     explicit DayCycle(std::chrono::milliseconds duration);
     bool hasEnded() const;
+    bool requiresConfirmation(uint16_t playerId, const Player& player) const;
     void acknowledge(uint16_t playerId, const Player& player);
     void forgetConfirmation(uint16_t playerId);
     bool advance(std::chrono::milliseconds time, std::span<const Participant> players,const PlayerSpawnSource& spawns);

@@ -18,7 +18,6 @@ bool FarmManager::initialize(const FarmLayout& layout, EntityIdGenerator& entity
     }
     prepared.spawnPosition = layout.spawn;
     prepared.background = layout.background;
-    prepared.beds = layout.beds;
     prepared.initialized = true;
     *this = std::move(prepared);
     entityIds = preparedIds;
@@ -26,16 +25,6 @@ bool FarmManager::initialize(const FarmLayout& layout, EntityIdGenerator& entity
 }
 
 bool FarmManager::isInitialized() const { return initialized; }
-
-bool FarmManager::useBed(Player& player) const {
-    if (!initialized || player.getZone() != Zone::Farm) return false;
-    for (const auto& bed: beds) {
-        if (space.getMap().sameBaseCell(player.getPosition(), bed)) {
-            return player.sleep();
-        }
-    }
-    return false;
-}
 
 bool FarmManager::spawnPlayer(Player& player) const {
     if (!initialized) {

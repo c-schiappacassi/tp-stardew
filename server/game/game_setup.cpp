@@ -31,7 +31,23 @@ GameSetup makeDefaultGameSetup(uint8_t worldId) {
     setup.farm.reservedPositions = {setup.farm.spawn, setup.entrance->position};
     setup.farm.townDoor = terrain.baseAt({3, 26}).value();
     setup.farm.townReturn = terrain.baseAt({4, 26}).value();
-    setup.farm.beds = {terrain.baseAt({4, 4}).value()};
+    for (uint8_t index = 0; index < setup.farm.playerHouses; ++index) {
+        InteriorLayout house;
+        house.location = {InteriorId::PlayerHouse, index};
+        std::vector<std::vector<bool>> floor(17, std::vector<bool>(17, false));
+        for (int row = 4; row <= 13; ++row) {
+            for (int col = 1; col <= 15; ++col) floor[row][col] = true;
+        }
+        for (int row = 14; row <= 16; ++row) floor[row][3] = true;
+        house.terrain = ZoneMap{floor, entity_dimensions::TILE_SIZE};
+        house.outside.position = terrain.baseAt({6, 6 + index * 5}).value();
+        house.returnPosition = terrain.baseAt({7, 6 + index * 5}).value();
+        house.entry = house.terrain.baseAt({13, 3}).value();
+        house.exit = house.terrain.baseAt({15, 3}).value();
+        house.beds = {house.terrain.baseAt({6, 12}).value()};
+        house.background.interior = InteriorBackgroundData{Position{0, 0}, InteriorId::PlayerHouse, std::nullopt};
+        setup.farm.interiors.push_back(std::move(house));
+    }
     setup.townConfig.map = {32, 24, entity_dimensions::TILE_SIZE};
     setup.townConfig.connections = {{"farm", {2, 12}}, {"dungeon", {29, 12}}};
     return setup;

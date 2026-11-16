@@ -25,6 +25,7 @@ Player::Player(
         state(initialData.state),
         dir(initialData.dir),
         zone(initialData.currentZone),
+        interior(initialData.interior),
         hairModel(initialData.hairModel),
         shirtModel(initialData.shirtModel),
         pantsModel(initialData.pantsModel),
@@ -139,6 +140,7 @@ PlayerData Player::getPublicData() const {
     data.state = state;
     data.dir = dir;
     data.currentZone = zone;
+    data.interior = interior;
     const Stack* item = getSelectedItem();
     if (item != nullptr) {
         data.heldItem = item->item_id;
@@ -283,6 +285,14 @@ bool Player::isResting() const {
     return state == PlayerState::Sleeping || state == PlayerState::Unconscious;
 }
 
+bool Player::isSleeping() const { return state == PlayerState::Sleeping; }
+
+bool Player::canUseBed() const { return bedReady && canAct(); }
+
+void Player::leaveBedArea() { bedReady = true; }
+
+const std::optional<InteriorLocation>& Player::getInterior() const { return interior; }
+
 uint16_t Player::receiveDamage(uint16_t damage, std::chrono::steady_clock::time_point now) {
     if (!canBeAttacked() || damage == 0 || now < nextDamageTime) {
         return 0;
@@ -341,29 +351,37 @@ void Player::wakeUp() {
     health = rested ? maxHealth : std::max<uint16_t>(1, maxHealth / 2);
     energy = rested ? maxEnergy : std::max<uint16_t>(1, maxEnergy / 2);
     state = PlayerState::Idle;
+    bedReady = false;
     movementDirection = Direction::None;
     nextActionTime = {};
     nextDamageTime = {};
 }
 
-bool Player::changeLocation(Zone destination,uint8_t level,const Position& target) {
-    if (!canAct() || !restoreLocation(destination, level, target)) {
+bool Player::changeLocation(Zone destination,uint8_t level,const Position& target,
+                            std::optional<InteriorLocation> inside) {
+    if (!canAct() || !restoreLocation(destination, level, target, inside)) {
         return false;
     }
     state = PlayerState::Idle;
     return true;
 }
 
-bool Player::restoreLocation(Zone destination, uint8_t level, const Position& target) {
+bool Player::restoreLocation(Zone destination, uint8_t level, const Position& target,
+                             std::optional<InteriorLocation> inside) {
     if (target.getX() < 0 || target.getY() < 0) {
         return false;
     }
 
+    if ((destination == Zone::InsideHouse) != inside.has_value() ||
+        (inside && inside->interior_id > InteriorId::ComunityCenter)) {
+        return false;
+    }
     if (destination == Zone::Dungeon) {
         if (level == 0) {
             return false;
         }
-    } else if (destination == Zone::Farm || destination == Zone::Town) {
+    } else if (destination == Zone::Farm || destination == Zone::Town ||
+               destination == Zone::InsideHouse) {
         if (level != 0) {
             return false;
         }
@@ -374,6 +392,7 @@ bool Player::restoreLocation(Zone destination, uint8_t level, const Position& ta
 
     pos = target;
     zone = destination;
+    interior = inside;
     dungeonLevel = level;
     movementDirection = Direction::None;
     if (state == PlayerState::Walking) state = PlayerState::Idle;

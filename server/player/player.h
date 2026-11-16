@@ -14,6 +14,7 @@ private:
     Direction dir;
     Direction movementDirection = Direction::None;
     Zone zone;
+    std::optional<InteriorLocation> interior;
     uint8_t dungeonLevel = 0;
     uint16_t hairModel;
     uint16_t shirtModel;
@@ -31,6 +32,7 @@ private:
     std::chrono::steady_clock::time_point nextActionTime{};
     std::chrono::steady_clock::time_point nextDamageTime{};
     bool combatBonus = false;
+    bool bedReady = true;
 
 public:
     Player(const PlayerData& initialData, uint8_t inventoryCapacity, uint16_t maxHealth,
@@ -59,6 +61,10 @@ public:
     bool canAct() const;
     bool canBeAttacked() const;
     bool isResting() const;
+    bool isSleeping() const;
+    bool canUseBed() const;
+    void leaveBedArea();
+    const std::optional<InteriorLocation>& getInterior() const;
     uint16_t receiveDamage(uint16_t damage, std::chrono::steady_clock::time_point now);
     uint16_t getSwordDamage() const;
     uint16_t getSwordRange() const;
@@ -67,8 +73,8 @@ public:
     void passOut();
     bool sleep();
     void wakeUp();
-    bool changeLocation(Zone destination, uint8_t level, const Position& target);
-    bool restoreLocation(Zone destination, uint8_t level, const Position& target);
+    bool changeLocation(Zone destination, uint8_t level, const Position& target,std::optional<InteriorLocation> inside = std::nullopt);
+    bool restoreLocation(Zone destination, uint8_t level, const Position& target,std::optional<InteriorLocation> inside = std::nullopt);
     void faceTarget(const Position& target);
     void faceDirection(Direction direction);
     int getMovementStep(int normalStep) const;

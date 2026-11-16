@@ -69,6 +69,12 @@ bool hasMatchingZoneData(const PlayerDataLocal& data) {
             return std::holds_alternative<MineData>(data.zoneData);
         case Zone::Town:
             return std::holds_alternative<std::monostate>(data.zoneData);
+        case Zone::InsideHouse: {
+            const auto* inside = std::get_if<InteriorData>(&data.zoneData);
+            return inside && data.interior &&
+                   inside->interior_id == data.interior->interior_id &&
+                   inside->house_index == data.interior->house_index;
+        }
     }
     return false;
 }
@@ -155,6 +161,13 @@ void ServerProtocol::writePlayerData(MessageBuffer& out, const PlayerData& data)
     writeColor(out, data.hairColor);
     writeColor(out, data.pantsColor);
     out.putUint8(static_cast<uint8_t>(data.currentZone));
+    if (data.currentZone == Zone::InsideHouse) {
+        if (!data.interior || data.interior->interior_id > InteriorId::ComunityCenter) {
+            throw ProtocolError("Ubicacion interior desconocida");
+        }
+        out.putUint8(static_cast<uint8_t>(data.interior->interior_id));
+        out.putUint8(data.interior->house_index);
+    }
     out.putUint16(data.heldItem ? static_cast<uint16_t>(*data.heldItem) : 0);
 }
 
@@ -304,6 +317,20 @@ void ServerProtocol::writeBackgroundData(MessageBuffer& out, const BackgroundDat
         writePosition(out, portal.pos);
         out.putUint8(static_cast<uint8_t>(portal.id));
     }
+    out.putUint8(bg.interior ? 1 : 0);
+    if (bg.interior) {
+        validatePosition(bg.interior->pos);
+        if (bg.interior->interior_id > InteriorId::ComunityCenter) {
+            throw ProtocolError("Interior desconocido");
+        }
+        writePosition(out, bg.interior->pos);
+        out.putUint8(static_cast<uint8_t>(bg.interior->interior_id));
+        out.putUint8(bg.interior->npc ? 1 : 0);
+        if (bg.interior->npc) {
+            writePosition(out, bg.interior->npc->pos);
+            out.putUint8(static_cast<uint8_t>(bg.interior->npc->id));
+        }
+    }
 }
 
 void ServerProtocol::sendConstMap(const ConstMapData& map) {
@@ -320,6 +347,7 @@ void ServerProtocol::sendConstMap(const ConstMapData& map) {
     writeBackgroundData(out, map.robins);
     writeBackgroundData(out, map.clints);
     writeBackgroundData(out, map.marnies);
+    writeBackgroundData(out, map.community_center);
     writeBackgroundData(out, map.town);
     base.send(out);
 }
@@ -338,6 +366,16 @@ void ServerProtocol::writeZoneData(MessageBuffer& out, Zone currentZone,const Zo
         }
         case Zone::Town:
             return;
+        case Zone::InsideHouse: {
+            const auto* inside = std::get_if<InteriorData>(&zoneData);
+            if (!inside) throw ProtocolError("Faltan los datos del interior");
+            validateCount(inside->furniture.size(), MAX_U16, "muebles del interior");
+            out.putUint8(static_cast<uint8_t>(inside->interior_id));
+            out.putUint8(inside->house_index);
+            out.putUint16(static_cast<uint16_t>(inside->furniture.size()));
+            for (const auto& furniture: inside->furniture) writeFurnitureData(out, furniture);
+            return;
+        }
     }
 }
 
@@ -474,6 +512,7 @@ void ServerProtocol::sendStatus(const ServerStatus& status) {
 
     writePlayerDataLocal(out, status.localPlayer);
     out.putUint8(status.dayEnded ? 1 : 0);
+    out.putUint8(status.dayConfirmationRequired ? 1 : 0);
     base.send(out);
 }
 

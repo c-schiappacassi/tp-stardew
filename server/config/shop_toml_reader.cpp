@@ -6,19 +6,12 @@
 #include <string>
 
 #include "config/toml_helpers.h"
+#include "farm/decorations/decoration.h"
 
 ItemId ShopTomlReader::itemFromId(uint16_t id, const std::string& field) {
-    switch (id) {
-        case 50: return ItemId::Chest;
-        case 51: return ItemId::Table;
-        case 52: return ItemId::Chair;
-        case 53: return ItemId::Lamp;
-        case 54: return ItemId::Rug;
-        case 55: return ItemId::Plant;
-        case 56: return ItemId::Painting;
-        default:
-            toml_helpers::invalid(field, "ID de producto desconocido");
-    }
+    const auto item = static_cast<ItemId>(id);
+    if (item == ItemId::Chest || Decoration::isDecoration(item)) return item;
+    toml_helpers::invalid(field, "ID de producto desconocido o mueble fijo");
 }
 
 RobinShopConfig ShopTomlReader::read(const toml::table& root) const {

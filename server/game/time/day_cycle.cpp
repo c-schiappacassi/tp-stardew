@@ -16,8 +16,12 @@ DayCycle::DayCycle(std::chrono::milliseconds duration): duration(duration) {
 
 bool DayCycle::hasEnded() const { return ended; }
 
+bool DayCycle::requiresConfirmation(uint16_t playerId, const Player& player) const {
+    return player.isSleeping() && !confirmations.contains(playerId);
+}
+
 void DayCycle::acknowledge(uint16_t playerId, const Player& player) {
-    if (player.isResting()) {
+    if (player.isSleeping()) {
         confirmations.insert(playerId);
     }
 }
@@ -33,7 +37,7 @@ bool DayCycle::advance(std::chrono::milliseconds time,std::span<const Participan
     for (const auto& participant: players) {
         if (participant.connected) {
             connected = true;
-            allIncapacitated &= !participant.player.canBeAttacked();
+            allIncapacitated &= participant.player.isResting();
         }
     }
     if (!connected) {
@@ -52,7 +56,7 @@ bool DayCycle::advance(std::chrono::milliseconds time,std::span<const Participan
         return false;
     }
     for (const auto& participant: players) {
-        if (participant.connected && !confirmations.contains(participant.id)) {
+        if (participant.connected && requiresConfirmation(participant.id, participant.player)) {
             return false;
         }
     }
@@ -62,7 +66,7 @@ bool DayCycle::advance(std::chrono::milliseconds time,std::span<const Participan
     for (const auto& participant: players) {
         prepared.push_back(participant.player);
         prepared.back().wakeUp();
-        if (!spawns.recoverPlayer(prepared.back())) {
+        if (!spawns.recoverPlayer(prepared.back(), participant.id)) {
             return false;
         }
     }

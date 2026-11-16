@@ -54,6 +54,7 @@ target_sources(taller_tests
     ../server/dungeon/mining/mineral_placement.cpp
     ../server/world/world_manager.cpp
     ../server/world/world_travel.cpp
+    ../server/world/interiors/interior_manager.cpp
     ../server/town/town_map.cpp
     ../server/game/time/day_cycle.cpp
     ../server/farm/farm_config.cpp

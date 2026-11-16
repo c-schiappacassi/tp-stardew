@@ -12,13 +12,16 @@
 #include "player/ports/player_spawn_source.h"
 #include "player/ports/zone_data_source.h"
 #include "world_travel.h"
+#include "interiors/interior_manager.h"
 #include "town/town_map.h"
 
 class WorldManager final : public MovementRules, public ZoneDataSource, public PlayerInteractions,public PlayerSpawnSource {
 private:
     DungeonManager dungeon;
     FarmManager farm;
+    uint32_t farmSeed;
     TownMap town;
+    InteriorManager interiors;
     EntityIdGenerator entityIds;
     std::optional<uint8_t> loadedWorld;
     WorldTravel travel;
@@ -30,7 +33,7 @@ public:
     bool loadTown(const TownConfig& config);
     void finishDay();
     bool spawnPlayer(Player& player) const override;
-    bool recoverPlayer(Player& player) const override;
+    bool recoverPlayer(Player& player, uint16_t playerId = 0) const override;
     const FarmManager& getFarm() const;
     void update(std::chrono::milliseconds elapsed, const std::vector<CollisionBounds>& farmPlayers = {}, const std::vector<Combatant>& players = {},std::chrono::steady_clock::time_point now = std::chrono::steady_clock::now());
     bool combatCompleted() const;

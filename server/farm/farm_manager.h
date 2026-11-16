@@ -21,7 +21,6 @@ private:
     uint32_t seed;
     bool initialized = false;
     Position spawnPosition{0, 0};
-    std::vector<Position> beds;
     std::vector<FarmBackgroundTile> background;
     FarmSpace space;
     CropManager cropManager;
@@ -36,7 +35,6 @@ public:
     bool initialize(const FarmLayout& layout, EntityIdGenerator& entityIds);
     bool isInitialized() const;
     bool spawnPlayer(Player& player) const;
-    bool useBed(Player& player) const;
     bool useSelectedItem(Player& player, Direction direction, EntityIdGenerator& entityIds,std::chrono::steady_clock::time_point now);
     bool setMap(const ZoneMap& map);
     bool setReservedPositions(const std::vector<Position>& positions);

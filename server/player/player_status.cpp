@@ -1,4 +1,5 @@
 #include "player_status.h"
+#include "game/time/day_cycle.h"
 
 PlayerStatus::PlayerStatus(const ZoneDataSource& zones): zones(zones) {}
 
@@ -18,28 +19,35 @@ void PlayerStatus::fillPublicData(ServerStatus& status,const std::map<uint16_t, 
             player.getDungeonLevel() != viewer.getDungeonLevel()) {
             continue;
         }
+        if (viewer.getZone() == Zone::InsideHouse &&
+            player.getInterior() != viewer.getInterior()) {
+            continue;
+        }
 
         status.players.emplace(record.name, player.getPublicData());
     }
 }
 
-void PlayerStatus::completeLocalData(ServerStatus& status,const PlayerRecord& record,bool includeBroken) const {
+void PlayerStatus::completeLocalData(ServerStatus& status,const PlayerRecord& record,bool includeBroken,
+                                     const DayCycle* day) const {
     status.playerId = record.id;
     status.localPlayer = record.player.getLocalData();
     zones.completeZoneData(record.player, status.localPlayer, includeBroken);
+    status.dayConfirmationRequired = day && day->requiresConfirmation(record.id, record.player);
 }
 
-ServerStatus PlayerStatus::buildForPlayer(const std::map<uint16_t, PlayerRecord>& players,const PlayerRecord& record) const {
+ServerStatus PlayerStatus::buildForPlayer(const std::map<uint16_t, PlayerRecord>& players,const PlayerRecord& record,
+                                         const DayCycle* day) const {
     ServerStatus status{};
     status.status = StatusCode::Ok;
 
     fillPublicData(status, players, record);
-    completeLocalData(status, record, false);
+    completeLocalData(status, record, false, day);
 
     return status;
 }
 
-void PlayerStatus::publish(const std::map<uint16_t, PlayerRecord>& players,const ServerStatus& base) const {
+void PlayerStatus::publish(const std::map<uint16_t, PlayerRecord>& players,const ServerStatus& base,const DayCycle* day) const {
     ServerStatus status = base;
 
     for (const auto& [id, record] : players) {
@@ -47,7 +55,7 @@ void PlayerStatus::publish(const std::map<uint16_t, PlayerRecord>& players,const
             continue;
         }
         fillPublicData(status, players, record);
-        completeLocalData(status, record, true);
+        completeLocalData(status, record, true, day);
 
         try {
             record.output->push(status);

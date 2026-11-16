@@ -33,6 +33,7 @@ target_sources(taller_server
         player/player_manager.cpp
         world/world_manager.cpp
         world/world_travel.cpp
+        world/interiors/interior_manager.cpp
         game/time/day_cycle.cpp
         town/town_map.cpp
         player/player_updates.cpp

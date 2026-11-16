@@ -21,12 +21,12 @@ price = 300
 rotates = true
 
 [[shops.robin.products]]
-item_id = 53
+item_id = 68
 price = 400
 rotates = true
 
 [[shops.robin.products]]
-item_id = 54
+item_id = 59
 price = 200
 rotates = true
 
@@ -36,7 +36,7 @@ price = 350
 rotates = true
 
 [[shops.robin.products]]
-item_id = 56
+item_id = 69
 price = 600
 rotates = true
 
@@ -55,7 +55,12 @@ door_mines = { x = 0, y = 0 }
 mine_return = { x = 13, y = 2 }
 door_town = { x = 14, y = 10 }
 town_return = { x = 13, y = 10 }
-beds = [{ x = 2, y = 3 }, { x = 3, y = 3 }]
+# Puertas exteriores y geometria de cada interior, en tiles.
+# interior_id: 0 = casa; house_index distingue las casas.
+interiors = [
+    { interior_id = 0, house_index = 0, door = { x = 2, y = 3 }, return = { x = 2, y = 4 }, width = 17, height = 17, walkable_areas = [{ x = 1, y = 4, width = 15, height = 10 }, { x = 3, y = 14, width = 1, height = 3 }], entry = { x = 3, y = 13 }, exit = { x = 3, y = 15 }, beds = [{ x = 12, y = 6 }] },
+    { interior_id = 0, house_index = 1, door = { x = 3, y = 3 }, return = { x = 3, y = 4 }, width = 17, height = 17, walkable_areas = [{ x = 1, y = 4, width = 15, height = 10 }, { x = 3, y = 14, width = 1, height = 3 }], entry = { x = 3, y = 13 }, exit = { x = 3, y = 15 }, beds = [{ x = 12, y = 6 }] },
+]
 
 background_default = { texture_id = 1, state = "walkable" }
 background_overrides = [
@@ -139,7 +144,7 @@ animals = [
 furniture = [
     { item_id = 51, position = { x = 10, y = 3 } },
     { item_id = 52, position = { x = 11, y = 3 } },
-    { item_id = 54, position = { x = 11, y = 6 } },
+    { item_id = 59, position = { x = 11, y = 6 } },
 ]
 
 
