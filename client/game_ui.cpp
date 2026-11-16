@@ -3,6 +3,7 @@
 #include "sdlGUI/render_info.h"
 #include "sdlGUI/ui/layers/chat_layer.h"
 #include "sdlGUI/ui/layers/hud_layer.h"
+#include "sdlGUI/ui/layers/ready_to_sleep_layer.h"
 #include "sdlGUI/ui/sdl_input.h"
 
 namespace {
@@ -23,12 +24,13 @@ GameUI::GameUI(const std::string& local_player, const std::string& gameId, const
         world(local_player, map_data, asset_manager),
         ui(local_player) {
     
-    // agregar las capas de ui y ver de moverlar
+    // TODO: agregar las capas de ui y ver de moverlas? maybe
     SDL_StartTextInput();
 
     ui.emplace<HudLayer>();
     ChatLayer& chat = ui.emplace<ChatLayer>(local_player);
     ui.bind_open(Key::T, chat);
+    ui.emplace<ReadyToSleepLayer>(ui, local_player);
 }
 
 std::vector<std::shared_ptr<CommandDTO>> GameUI::poll_input() {

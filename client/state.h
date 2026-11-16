@@ -8,8 +8,9 @@ class State {
 private:
     std::map<std::string, PlayerData> players;
     PlayerDataLocal local;
+    bool day_confirmation = false; 
 public:
-    void update(const ServerStatus& s) { players = s.players; local = s.localPlayer;}
+    void update(const ServerStatus& s) { players = s.players; local = s.localPlayer; day_confirmation = s.dayConfirmationRequired;}
     const std::map<std::string, PlayerData>& get_players() const { return players; }
     const PlayerDataLocal& get_local() const { return local; }
     const ZoneData& get_local_zone() const { return local.zoneData; }
@@ -17,4 +18,5 @@ public:
         auto it = players.find(name);
         return it == players.end() ? nullptr : &it->second;
     }
+    bool day_confirmation_required() const { return day_confirmation; }
 };

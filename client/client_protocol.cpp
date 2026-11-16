@@ -236,6 +236,8 @@ FarmData ClientProtocol::receiveFarmData() {
     for (uint16_t i = 0; i < n; ++i) farm.animals.push_back(receiveAnimalData());
     n = base.receiveUint16();
     for (uint16_t i = 0; i < n; ++i) farm.tilledSoil.push_back(receivePosition());
+    n = base.receiveUint16();
+    for (uint16_t i = 0; i < n; ++i) farm.furniture.push_back(receiveFurnitureData());
     return farm;
 }
 

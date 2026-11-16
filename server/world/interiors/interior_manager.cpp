@@ -9,7 +9,7 @@
 #include "player/player.h"
 
 namespace {
-const CollisionBox BED_BOX{32, 32};
+const CollisionBox BED_BOX{22, 32};
 
 bool validPosition(const Position& pos) {
     return pos.getX() >= 0 && pos.getY() >= 0 &&
@@ -21,7 +21,7 @@ bool canApproachBed(const InteriorLayout& room, const Position& pos, const Posit
     const int dx = bed.getX() - pos.getX();
     const int dy = bed.getY() - pos.getY();
     const int steps = std::max(std::abs(dx), std::abs(dy));
-    if (steps > 32) return false;
+    if (steps > 22) return false;
     const CollisionBox playerBox{entity_dimensions::PLAYER};
     for (int step = 0; step <= steps; ++step) {
         const Position point{pos.getX() + dx * step / std::max(1, steps),pos.getY() + dy * step / std::max(1, steps)};

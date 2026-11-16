@@ -381,11 +381,11 @@ namespace SpriteDefs {
         {UiSpriteId::HotbarSlot,         SpriteId::MenuTiles,  64, 128, 64, 64},
         {UiSpriteId::HotbarSlotOutline,  SpriteId::MenuTiles, 128, 128, 64, 64},
         {UiSpriteId::HotbarSlotSelected, SpriteId::MenuTiles,   0, 896, 64, 64},
-
         {UiSpriteId::EnergyBar,          SpriteId::Cursors,   256, 408, 12, 56},
         {UiSpriteId::HealthBar,          SpriteId::Cursors,   268, 408, 12, 56},
-
         {UiSpriteId::ChatBox,            SpriteId::ChatBox,     0,   0, 75, 14},
+        {UiSpriteId::DialogBox, SpriteId::MenuTiles, 0, 256, 60, 60},
+        {UiSpriteId::OkButton,  SpriteId::Cursors, 128, 256, 64, 64},
     };
 
     // Clips

@@ -20,12 +20,13 @@ enum class SpriteId : uint16_t {
     Pants,
     Shirts,
     Tools,
-    Clock,
     Weapons,
-    InGameUI,
     Ores,
-    MenuTiles,
     Crops,
+
+    MenuTiles,
+    InGameUI,
+    Clock,
 
     BronwCow,
     WhiteCow,
@@ -88,7 +89,9 @@ enum class UiSpriteId : uint8_t {
     HotbarSlotSelected,
     EnergyBar,
     HealthBar,
-    ChatBox
+    ChatBox,
+    DialogBox,
+    OkButton,
 };
 
 struct Drawable {

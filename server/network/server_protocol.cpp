@@ -277,6 +277,10 @@ void ServerProtocol::writeFarmData(MessageBuffer& out, const FarmData& farm) {
     for (const auto& position : farm.tilledSoil) {
         writePosition(out, position);
     }
+    out.putUint16(static_cast<uint16_t>(farm.furniture.size()));
+    for (const auto& furniture : farm.furniture) {
+        writeFurnitureData(out, furniture);
+    }
 }
 
 void ServerProtocol::writeBackgroundData(MessageBuffer& out, const BackgroundData& bg) {
