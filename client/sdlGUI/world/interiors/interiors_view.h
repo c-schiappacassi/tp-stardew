@@ -18,12 +18,13 @@ class InteriorsView : public ZoneView {
 
 public:
      InteriorsView(const ConstMapData& data, AssetManager& assets) {
-        for (std::size_t i = 0; i < data.farm_houses.size(); ++i)
+        for (std::size_t i = 0; i < data.farm_houses.size(); ++i){
             houses.try_emplace(static_cast<uint8_t>(i), data.farm_houses[i], assets);
-            shops.try_emplace(InteriorId::PierresShop, data.pierres, assets);
-            shops.try_emplace(InteriorId::RobinsShop, data.robins, assets);
-            shops.try_emplace(InteriorId::ClintsShop, data.clints, assets);
-            shops.try_emplace(InteriorId::MarniesShop, data.marnies, assets);
+        }
+        shops.try_emplace(InteriorId::PierresShop, data.pierres, assets);
+        shops.try_emplace(InteriorId::RobinsShop, data.robins, assets);
+        shops.try_emplace(InteriorId::ClintsShop, data.clints, assets);
+        shops.try_emplace(InteriorId::MarniesShop, data.marnies, assets);
     }
 
     void update(const InteriorData& d) {

@@ -60,7 +60,7 @@ private:
 public:
     explicit Background(const BackgroundData& data, AssetManager& assets) {
         if (data.interior) {
-            interior.emplace(InteriorSprite{data.interior->pos, assets.get_sprite(data.interior->id)});
+            interior.emplace(InteriorSprite{data.interior->pos, assets.get_sprite(data.interior->interior_id)});
         }
 
         floor.reserve(data.floor.size());

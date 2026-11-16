@@ -63,6 +63,7 @@ enum class SpriteId : uint16_t {
 
     Cursors,
     Emotes,
+    ChatBox,
 
     PlayerHouseInterior,
     MarniesInterior,
@@ -86,7 +87,8 @@ enum class UiSpriteId : uint8_t {
     HotbarSlotOutline,
     HotbarSlotSelected,
     EnergyBar,
-    HealthBar
+    HealthBar,
+    ChatBox
 };
 
 struct Drawable {

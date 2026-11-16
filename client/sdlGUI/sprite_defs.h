@@ -68,6 +68,7 @@ namespace SpriteDefs {
         {SpriteId::MenuTiles,    "menus/menutiles.png"},
         {SpriteId::Cursors,      "menus/cursors.png"},
         {SpriteId::Emotes,      "misc/emotes.png"},
+        {SpriteId::ChatBox,      "menus/chat_box.png"},
 
         // farmer
         {SpriteId::FarmerBase,   "characters/farmer_base.png"},
@@ -383,6 +384,8 @@ namespace SpriteDefs {
 
         {UiSpriteId::EnergyBar,          SpriteId::Cursors,   256, 408, 12, 56},
         {UiSpriteId::HealthBar,          SpriteId::Cursors,   268, 408, 12, 56},
+
+        {UiSpriteId::ChatBox,            SpriteId::ChatBox,     0,   0, 75, 14},
     };
 
     // Clips

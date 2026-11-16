@@ -27,12 +27,11 @@ target_sources(taller_client
     # .h files
     game.h
     game_ui.h
-    input_translator.h
     network.h
     recv_thread.h
     send_thread.h
     state.h
-
+    
     sdlGUI/asset_manager.h
     sdlGUI/render_info.h
     sdlGUI/utils.h
@@ -41,6 +40,14 @@ target_sources(taller_client
     sdlGUI/sync_views.h
     sdlGUI/draw_region.h
     sdlGUI/sprite_defs.h
+
+    sdlGUI/ui/input_event.h
+    sdlGUI/ui/sdl_input.h
+    sdlGUI/ui/ui_layer.h
+    sdlGUI/ui/ui_manager.h
+    sdlGUI/ui/world_input.h
+    sdlGUI/ui/layers/chat_layer.h
+    sdlGUI/ui/layers/hud_layer.h
 
     sdlGUI/world/player_view.h
     sdlGUI/world/world_view.h
@@ -55,6 +62,7 @@ target_sources(taller_client
     sdlGUI/world/interiors/interiors_view.h
 
     sdlGUI/world/hud/hud_view.h
+    sdlGUI/world/hud/chat_view.h
     sdlGUI/world/hud/hotbar_view.h
     sdlGUI/world/hud/bar_view.h
     sdlGUI/world/hud/pixel_font.h

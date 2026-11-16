@@ -7,7 +7,6 @@
 #include "../camera.h"
 #include "../sync_views.h"
 #include "../render_info.h"
-#include "hud/hud_view.h"
 
 #include "map_view.h"
 #include "player_view.h"
@@ -16,7 +15,6 @@ class WorldView {
 private:
     std::string local_name;
     std::map<std::string, PlayerView> player_views;
-    HudView player_hud;
     MapView map;
 
     void update_players_and_list(const std::map<std::string, PlayerData>& players_data) {
@@ -28,7 +26,6 @@ public:
     
     void update(const State& state) {
         this->update_players_and_list(state.get_players());
-        this->player_hud.update(state.get_local());
         this->map.update(state);
     }
 
@@ -53,7 +50,5 @@ public:
         for (const Drawable& d: drawables) {
             d.view->draw(ctx);
         }
-
-        this->player_hud.draw(ctx);
     }
 };

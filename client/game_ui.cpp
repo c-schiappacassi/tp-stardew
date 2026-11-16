@@ -1,6 +1,9 @@
 #include "game_ui.h"
 
 #include "sdlGUI/render_info.h"
+#include "sdlGUI/ui/layers/chat_layer.h"
+#include "sdlGUI/ui/layers/hud_layer.h"
+#include "sdlGUI/ui/sdl_input.h"
 
 namespace {
     constexpr int WINDOW_W = 1280;
@@ -18,11 +21,29 @@ GameUI::GameUI(const std::string& local_player, const std::string& gameId, const
         cam(WINDOW_W, WINDOW_H, CAMERA_ZOOM),
         local_player(local_player),
         world(local_player, map_data, asset_manager),
-        input(local_player) {}
+        ui(local_player) {
+    
+    // agregar las capas de ui y ver de moverlar
+    SDL_StartTextInput();
 
-std::vector<std::shared_ptr<CommandDTO>> GameUI::poll_input() { return input.poll(); }
+    ui.emplace<HudLayer>();
+    ChatLayer& chat = ui.emplace<ChatLayer>(local_player);
+    ui.bind_open(Key::T, chat);
+}
 
-bool GameUI::quit_requested() const { return input.quit_requested(); }
+std::vector<std::shared_ptr<CommandDTO>> GameUI::poll_input() {
+    std::vector<std::shared_ptr<CommandDTO>> out;
+    SDL_Event e;
+    while (SDL_PollEvent(&e)) {
+        if (const auto event = sdl_input::translate(e)) {
+            ui.dispatch(*event, out);
+        }
+    }
+    ui.end_frame(out);
+    return out;
+}
+
+bool GameUI::quit_requested() const { return ui.quit_requested(); }
 
 void GameUI::update_camera(const State& state) {
     const SDL2pp::Point size = renderer.GetOutputSize();
@@ -41,9 +62,11 @@ void GameUI::update(const State& state, long long it) {
     renderer.Clear();
 
     world.update(state);
+    ui.update(state);
 
     RenderInfo ctx{renderer, asset_manager, state, cam, currentZone, it};
     world.draw(ctx);
+    ui.draw(ctx);
 
     renderer.Present();
 }
