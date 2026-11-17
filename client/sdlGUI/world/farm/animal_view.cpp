@@ -50,7 +50,7 @@ void AnimalView::draw(const RenderInfo& ctx) {
     draw_sprite(ctx, frame.sprite, origin, frame.flip);
 
     if (this->needs_interaction){
-        SDL2pp::Point origin_emote = ctx.cam.world_to_screen(pos.getX() , pos.getY() - frame.sprite.height);
+        SDL2pp::Point origin_emote = ctx.cam.world_to_screen(pos.getX() , pos.getY() - (frame.sprite.height * 0.75));
         const Sprite& emote = ctx.assets.get_sprite(EmoteId::Alert);
         draw_sprite(ctx, emote, origin_emote);
     }
