@@ -5,8 +5,8 @@
 
 
 namespace {
-    constexpr int WINDOW_W = 1280;
-    constexpr int WINDOW_H = 720;
+    constexpr int WINDOW_W = 1920;
+    constexpr int WINDOW_H = 1280;
     constexpr int CAMERA_ZOOM = 3;
     constexpr const char* WINDOW_TITLE = "Stardew Valley";
     constexpr const char* ASSETS_ROOT = ASSETS_DIR;

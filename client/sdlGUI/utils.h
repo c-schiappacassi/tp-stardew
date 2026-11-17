@@ -91,6 +91,7 @@ enum class UiSpriteId : uint8_t {
     EnergyBar,
     HealthBar,
     ChatBox,
+    ChatTypeBox,
     DialogBox,
     OkButton,
     CancelButton,

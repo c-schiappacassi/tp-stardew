@@ -1,73 +1,107 @@
 #pragma once
-
+#include <chrono>
 #include <cstddef>
 #include <memory>
 #include <string>
 #include <utility>
 
-#include "../ui_layer.h"
+#include "../../render_info.h"
 #include "../../world/hud/chat_view.h"
+#include "../ui_layer.h"
+#include "state.h"
 
 class ChatLayer : public UiLayer {
 private:
-    static constexpr std::size_t MAX_LEN = 100;
+    using Clock = std::chrono::steady_clock;
+
+    static constexpr std::chrono::milliseconds PEEK_DURATION{5000};
+    static constexpr std::size_t MAX_INPUT_CHAT = 100;
 
     std::string player_name;
-    std::string buffer;
+    ChatView view;
 
-    void append(const std::string& utf8) {
-        for (const char ch: utf8) {
-            const auto c = static_cast<unsigned char>(ch);
-            if (c < 32 || c > 126) {
-                continue;
-            }
-            if (buffer.size() >= MAX_LEN) {
-                break;
-            }
-            buffer.push_back(static_cast<char>(c));
+    std::string input;
+    std::size_t seen_messages = 0;
+    Clock::time_point peek_until{};
+
+    bool peeking() const { return Clock::now() < peek_until; }
+
+    static std::string trim(const std::string& s) {
+        const auto first = s.find_first_not_of(' ');
+        if (first == std::string::npos) {
+            return {};
         }
+        const auto last = s.find_last_not_of(' ');
+        return s.substr(first, last - first + 1);
     }
 
-    void submit(Out& out) {
-        if (buffer.find_first_not_of(' ') == std::string::npos) {
+    void send(Out& out) {
+        const std::string text = trim(input);
+        if (text.empty()) {
             return;
         }
         auto dto = std::make_shared<ChatDTO>(player_name);
-        dto->text = buffer;
+        dto->text = text;
         out.push_back(dto);
+    }
+
+    void append(const std::string& typed) {
+        for (const char c: typed) {
+            if (input.size() >= MAX_INPUT_CHAT) {
+                break;
+            }
+            if (c >= 32 && c < 127) {
+                input.push_back(c);
+            }
+        }
     }
 
 public:
     explicit ChatLayer(std::string name): player_name(std::move(name)) {}
 
-    const std::string& text() const { return buffer; }
+    bool visible() const override { return focused() || peeking(); }
 
-    bool visible() const override { return focused(); }
+    void on_focus() override { input.clear(); }
 
-    void on_focus() override { buffer.clear(); }
-    void on_blur() override { buffer.clear(); }
+    void on_blur() override {
+        input.clear();
+        peek_until = Clock::time_point{};
+    }
+
+    void update(const State& state) override {
+        const std::size_t total = state.get_chat_history().size();
+        if (total > seen_messages) {
+            peek_until = Clock::now() + PEEK_DURATION;
+        }
+        seen_messages = total;
+    }
 
     Focus handle(const InputEvent& e, Out& out) override {
         switch (e.type) {
-            case InputEvent::Type::Text: append(e.text); break;
+            case InputEvent::Type::Text:
+                append(e.text);
+                break;
+
             case InputEvent::Type::KeyDown:
-                switch (e.key) {
-                    case Key::Escape: return Focus::Release;
-                    case Key::Enter:
-                        submit(out);
+                if (e.key == Key::Backspace) {
+                    if (!input.empty()) {
+                        input.pop_back();
+                    }
+                } else if (!e.repeat) {
+                    if (e.key == Key::Escape) {
                         return Focus::Release;
-                    case Key::Backspace:
-                        if (!buffer.empty()) {
-                            buffer.pop_back();
-                        }
-                        break;
-                    default: break;
+                    }
+                    if (e.key == Key::Enter) {
+                        send(out);
+                        return Focus::Release;
+                    }
                 }
                 break;
+
             default: break;
         }
         return Focus::Keep;
     }
 
-    void draw(const RenderInfo& ctx) override { ChatView{}.draw(ctx, buffer); }
+    void draw(const RenderInfo& ctx) override { view.draw(ctx, input, focused()); }
 };

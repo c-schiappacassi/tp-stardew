@@ -241,6 +241,10 @@ struct GameInfoDTO {
     bool isMultiplayer = false;
 };
 
+struct ChatMessageData {
+    std::string sender;
+    std::string text;
+};
 
 struct PlayerDataLocal : public PlayerData {
     std::map<uint8_t, Stack> items;
@@ -252,8 +256,7 @@ struct PlayerDataLocal : public PlayerData {
     uint16_t maxEnergy = 0;
     ZoneData zoneData{std::monostate{}};
     CombatProgressData combatProgress;
-
-    // TODO: enviar la max cap del inventario (9 y con la recompenza sube a 10)
+    std::vector<ChatMessageData> newMessages;
 
     PlayerDataLocal() = default;
     explicit PlayerDataLocal(const PlayerData& publicData): PlayerData(publicData) {}
@@ -393,6 +396,8 @@ struct CheckCodeDTO : public CommandDTO {
 
 // seguir completando server status
 
+
+
 struct ServerStatus {
     StatusCode status = StatusCode::Ok;
     std::string errorMsg;
@@ -405,6 +410,7 @@ struct ServerStatus {
     bool dayEnded = false;
     bool dayConfirmationRequired = false;
     uint16_t timeOfDayMinutes = game_time::START_MINUTES;
+    uint8_t cap_inventory; // Para la hotbar, con la recompensa del centro comunitario pasa de 9 -> 10
 };
 
 struct qtStatus {
