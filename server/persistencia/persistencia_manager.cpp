@@ -1,134 +1,168 @@
 #include "persistencia_manager.h"
 
-#include "persistencia/partida_toml_writer.h"
-
 #include <algorithm>
+#include <filesystem>
 #include <fstream>
 #include <stdexcept>
-#include <system_error>
+#include <utility>
 
 #include <toml++/toml.hpp>
 
-PersistenciaManager::PersistenciaManager(std::filesystem::path directorio):
-    directorio(std::move(directorio)), archivoIndice(this->directorio / "partidas.toml") {
+
+PersistenciaManager::PersistenciaManager(
+    const std::string& ruta)
+    : rutaIndice(ruta) {
     cargarIndice();
 }
 
+
 void PersistenciaManager::cargarIndice() {
-    std::lock_guard<std::mutex> lock(mtx);
-    if (!std::filesystem::exists(archivoIndice)) return;
+    partidas.clear();
 
-    const toml::table root = toml::parse_file(archivoIndice.string());
-    const auto* array = root.get_as<toml::array>("partidas");
-    if (!array) return;
+    if (!std::filesystem::exists(rutaIndice)) {
+        return;
+    }
 
-    for (const auto& node: *array) {
-        const auto* table = node.as_table();
-        if (!table) continue;
+    toml::table archivo = toml::parse_file(rutaIndice);
 
-        const auto id = table->get_as<std::string>("id");
-        const auto nombre = table->get_as<std::string>("nombre_granja");
-        if (!id || !nombre) continue;
+    auto* lista = archivo["partidas"].as_array();
+
+    if (lista == nullptr) {
+        throw std::runtime_error(
+            "El indice de partidas no es valido");
+    }
+
+    for (const auto& elemento : *lista) {
+        const auto* tabla = elemento.as_table();
+
+        if (tabla == nullptr) {
+            throw std::runtime_error(
+                "Partida invalida en el indice");
+        }
 
         PartidaIndexDTO partida;
-        partida.id = id->get();
-        partida.nombreGranja = nombre->get();
-        if (const auto* usuarios = table->get_as<toml::array>("usuarios")) {
-            for (const auto& usuario: *usuarios) {
-                if (const auto valor = usuario.value<std::string>()) {
-                    partida.usuarios.push_back(*valor);
-                }
-            }
+
+        auto id = (*tabla)["id"].value<std::string>();
+        auto nombre = (*tabla)["nombreGranja"].value<std::string>();
+        const auto* usuarios = (*tabla)["usuarios"].as_array();
+
+        if (!id || !nombre || usuarios == nullptr) {
+            throw std::runtime_error(
+                "Faltan datos en una partida");
         }
-        partidas[partida.id] = std::move(partida);
+
+        partida.id = *id;
+        partida.nombreGranja = *nombre;
+
+        for (const auto& usuario : *usuarios) {
+            auto nombreUsuario = usuario.value<std::string>();
+
+            if (!nombreUsuario) {
+                throw std::runtime_error(
+                    "Usuario invalido en el indice");
+            }
+
+            partida.usuarios.push_back(*nombreUsuario);
+        }
+
+        partidas.push_back(std::move(partida));
     }
 }
+
 
 void PersistenciaManager::guardarIndice() const {
-    std::filesystem::create_directories(directorio);
-
-    toml::table root;
+    toml::table archivo;
     toml::array lista;
-    for (const auto& [id, partida]: partidas) {
-        toml::table entrada;
-        entrada.insert("id", id);
-        entrada.insert("nombre_granja", partida.nombreGranja);
+
+    for (const auto& partida : partidas) {
+        toml::table tabla;
+
+        tabla.insert("id", partida.id);
+        tabla.insert("nombreGranja", partida.nombreGranja);
+
         toml::array usuarios;
-        for (const auto& usuario: partida.usuarios) usuarios.push_back(usuario);
-        entrada.insert("usuarios", std::move(usuarios));
-        lista.push_back(std::move(entrada));
-    }
-    root.insert("partidas", std::move(lista));
 
-    const auto temporal = archivoIndice.string() + ".tmp";
-    {
-        std::ofstream salida(temporal, std::ios::trunc);
-        if (!salida) throw std::runtime_error("No se pudo crear el indice de partidas");
-        salida << root;
-        salida.flush();
-        if (!salida) throw std::runtime_error("No se pudo escribir el indice de partidas");
+        for (const auto& usuario : partida.usuarios) {
+            usuarios.push_back(usuario);
+        }
+
+        tabla.insert("usuarios", std::move(usuarios));
+
+        lista.push_back(std::move(tabla));
     }
 
-    std::error_code error;
-    std::filesystem::rename(temporal, archivoIndice, error);
-    if (error) {
-        // En Windows rename no reemplaza un destino existente.
-        std::filesystem::remove(archivoIndice, error);
-        error.clear();
-        std::filesystem::rename(temporal, archivoIndice, error);
+    archivo.insert("partidas", std::move(lista));
+
+    std::ofstream salida(rutaIndice, std::ios::trunc);
+
+    if (!salida.is_open()) {
+        throw std::runtime_error(
+            "No se pudo abrir el indice para guardar");
     }
-    if (error) {
-        std::filesystem::remove(temporal);
-        throw std::runtime_error("No se pudo actualizar el indice de partidas: " + error.message());
+
+    salida << archivo;
+
+    if (!salida) {
+        throw std::runtime_error(
+            "No se pudo escribir el indice de partidas");
     }
 }
 
-void PersistenciaManager::registrarPartida(const std::string& id,
-                                            const std::string& nombreGranja,
-                                            const std::string& usuario) {
-    std::lock_guard<std::mutex> lock(mtx);
-    auto& partida = partidas[id];
-    partida.id = id;
-    partida.nombreGranja = nombreGranja;
-    if (std::find(partida.usuarios.begin(), partida.usuarios.end(), usuario) == partida.usuarios.end()) {
-        partida.usuarios.push_back(usuario);
+
+std::vector<PartidaIndexDTO>
+PersistenciaManager::obtenerPartidas() const {
+    return partidas;
+}
+
+
+
+void PersistenciaManager::registrarPartida(
+    const std::string& id,
+    const std::string& nombreGranja,
+    const std::string& usuario) {
+
+    for (const auto& partida : partidas) {
+        if (partida.id == id) {
+            throw std::runtime_error(
+                "Ya existe una partida con ese ID");
+        }
     }
+
+    PartidaIndexDTO nuevaPartida;
+
+    nuevaPartida.id = id;
+    nuevaPartida.nombreGranja = nombreGranja;
+    nuevaPartida.usuarios.push_back(usuario);
+
+    partidas.push_back(std::move(nuevaPartida));
+
     guardarIndice();
 }
 
-void PersistenciaManager::registrarUsuario(const std::string& id,
-                                            const std::string& usuario) {
-    std::lock_guard<std::mutex> lock(mtx);
-    const auto it = partidas.find(id);
-    if (it == partidas.end()) return;
-    auto& usuarios = it->second.usuarios;
-    if (std::find(usuarios.begin(), usuarios.end(), usuario) == usuarios.end()) {
-        usuarios.push_back(usuario);
-        guardarIndice();
+
+void PersistenciaManager::registrarUsuario(
+    const std::string& id,
+    const std::string& usuario) {
+
+    for (auto& partida : partidas) {
+        if (partida.id == id) {
+
+            auto it = std::find(
+                partida.usuarios.begin(),
+                partida.usuarios.end(),
+                usuario);
+
+            if (it != partida.usuarios.end()) {
+                return;
+            }
+
+            partida.usuarios.push_back(usuario);
+
+            guardarIndice();
+            return;
+        }
     }
-}
 
-void PersistenciaManager::persistirPartida(const PersistenciaDTO& partida) {
-    if (partida.id.empty() || partida.id.find_first_of("/\\") != std::string::npos ||
-        partida.id == "." || partida.id == "..") {
-        throw std::invalid_argument("El ID de partida no es valido para usarlo como nombre de archivo");
-    }
-
-    PartidaTomlWriter writer;
-    writer.write(partida, directorio / (partida.id + ".toml"));
-
-    std::lock_guard<std::mutex> lock(mtx);
-    auto& entrada = partidas[partida.id];
-    entrada.id = partida.id;
-    entrada.nombreGranja = partida.nombreGranja;
-    entrada.usuarios = partida.usuarios;
-    guardarIndice();
-}
-
-std::vector<PartidaIndexDTO> PersistenciaManager::obtenerPartidas() const {
-    std::lock_guard<std::mutex> lock(mtx);
-    std::vector<PartidaIndexDTO> resultado;
-    resultado.reserve(partidas.size());
-    for (const auto& [id, partida]: partidas) resultado.push_back(partida);
-    return resultado;
+    throw std::runtime_error(
+        "No existe la partida indicada");
 }
