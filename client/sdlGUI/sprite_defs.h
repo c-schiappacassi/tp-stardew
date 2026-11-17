@@ -388,6 +388,7 @@ namespace SpriteDefs {
         {UiSpriteId::DialogBox, SpriteId::MenuTiles, 0, 256, 60, 60},
         {UiSpriteId::OkButton,  SpriteId::Cursors, 128, 256, 64, 64},
         {UiSpriteId::CancelButton, SpriteId::Cursors, 192, 256, 64, 64},
+        {UiSpriteId::PlayerHead, SpriteId::FarmerBase, 0, 0, 16, 15},
     };
 
     // Clips

@@ -4,12 +4,10 @@
 #include <utility>
 
 #include "../../world/hud/quit_view.h"
-#include "../ui_manager.h"
 #include "modal_layer.h"
 
 class QuitLayer : public ModalLayer {
 private:
-    UiManager& ui;
     std::string player_name;
     QuitView view;
     bool confirmed = false;
@@ -18,7 +16,6 @@ private:
         if (confirmed) return;
         confirmed = true;
         out.push_back(std::make_shared<DisconnectDTO>(player_name));
-        ui.request_quit();
     }
 
 protected:
@@ -37,9 +34,10 @@ protected:
     }
 
 public:
-    QuitLayer(UiManager& ui, std::string name) : ui(ui), player_name(std::move(name)) {}
+    explicit QuitLayer(std::string name) : player_name(std::move(name)) {}
 
     bool visible() const override { return focused(); }
+    bool wants_quit() const override { return confirmed; }
     void on_focus() override { confirmed = false; }
 
     void draw(const RenderInfo& ctx) override {

@@ -12,6 +12,7 @@ target_sources(taller_client
 
     sdlGUI/world/hud/hotbar_view.cpp
     sdlGUI/world/hud/bar_view.cpp
+    sdlGUI/world/hud/minimap_view.cpp
 
     sdlGUI/world/mines/ore_view.cpp
     sdlGUI/world/mines/level_view.cpp

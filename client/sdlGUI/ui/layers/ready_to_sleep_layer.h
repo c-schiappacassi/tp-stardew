@@ -4,17 +4,16 @@
 #include <utility>
 
 #include "../../world/hud/ready_to_sleep_view.h"
-#include "../ui_manager.h"
 #include "modal_layer.h"
 #include "state.h"
 
 class ReadyToSleepLayer : public ModalLayer {
 private:
-    UiManager& ui;
     std::string player_name;
     ReadyToSleepView view;
     bool open = false;
     bool confirmed = false;
+    FocusWish wish = FocusWish::None;
 
     void confirm(Out& out) {
         if (confirmed) return;
@@ -34,20 +33,22 @@ protected:
     }
 
 public:
-    ReadyToSleepLayer(UiManager& ui, std::string name) : ui(ui), player_name(std::move(name)) {}
+    explicit ReadyToSleepLayer(std::string name) : player_name(std::move(name)) {}
 
     bool visible() const override { return open; }
+    FocusWish focus_wish() const override { return wish; }
 
     void update(const State& state) override {
+        wish = FocusWish::None;
         const bool required = state.day_confirmation_required();
         if (required && !open) {
             open = true;
             confirmed = false;
-            ui.focus(*this);
+            wish = FocusWish::Acquire;
         } else if (!required && open) {
             open = false;
             confirmed = false;
-            ui.release(*this);
+            wish = FocusWish::Release;
         }
     }
 

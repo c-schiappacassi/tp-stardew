@@ -93,7 +93,8 @@ enum class UiSpriteId : uint8_t {
     ChatBox,
     DialogBox,
     OkButton,
-    CancelButton    
+    CancelButton,
+    PlayerHead
 };
 
 struct Drawable {

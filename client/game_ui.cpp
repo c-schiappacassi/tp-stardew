@@ -1,12 +1,8 @@
 #include "game_ui.h"
 
 #include "sdlGUI/render_info.h"
-#include "sdlGUI/ui/layers/chat_layer.h"
-#include "sdlGUI/ui/layers/hud_layer.h"
-#include "sdlGUI/ui/layers/ready_to_sleep_layer.h"
 #include "sdlGUI/ui/sdl_input.h"
-#include "sdlGUI/ui/layers/quit_layer.h"
-#include "sdlGUI/ui/layers/minimap_layer.h"
+
 
 namespace {
     constexpr int WINDOW_W = 1280;
@@ -27,20 +23,7 @@ GameUI::GameUI(const std::string& local_player, const std::string& gameId, const
         world(local_player, map_data, asset_manager),
         ui(local_player) {
     
-    // TODO: agregar las capas de ui y ver de moverlas? maybe
     SDL_StartTextInput();
-
-    ui.emplace<HudLayer>();
-    ChatLayer& chat = ui.emplace<ChatLayer>(local_player);
-    ui.bind_open(Key::T, chat);
-    ui.emplace<ReadyToSleepLayer>(ui, local_player);
-    QuitLayer& ingame_quit = ui.emplace<QuitLayer>(ui, local_player);
-    ui.bind_open(Key::Escape, ingame_quit);
-
-    // TODO: minimap
-    //MinimapLayer& minimap = ui.emplace<MinimapLayer>(ui, local_player);
-    //ui.bind_open(Key::M, ingame_quit);
-
 }
 
 std::vector<std::shared_ptr<CommandDTO>> GameUI::poll_input() {

@@ -10,6 +10,7 @@ class State;
 struct RenderInfo;
 
 enum class Focus { Keep, Release };
+enum class FocusWish { None, Acquire, Release };
 
 class UiLayer {
     friend class UiManager;
@@ -29,6 +30,10 @@ public:
 
     virtual void on_focus() {}
     virtual void on_blur() {}
+
+    virtual FocusWish focus_wish() const { return FocusWish::None; }
+
+    virtual bool wants_quit() const { return false; }
 
     bool focused() const { return has_focus; }
 };

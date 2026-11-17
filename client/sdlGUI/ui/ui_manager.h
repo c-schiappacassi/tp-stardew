@@ -5,11 +5,18 @@
 #include <memory>
 #include <string>
 #include <utility>
+#include <algorithm>
 #include <vector>
 
 #include "input_event.h"
 #include "ui_layer.h"
 #include "world_input.h"
+
+#include "layers/chat_layer.h"
+#include "layers/hud_layer.h"
+#include "layers/minimap_layer.h"
+#include "layers/quit_layer.h"
+#include "layers/ready_to_sleep_layer.h"
 
 class UiManager {
 public:
@@ -38,12 +45,6 @@ private:
         }
     }
 
-public:
-    explicit UiManager(std::string player_name): world(std::move(player_name)) {}
-
-    UiManager(const UiManager&) = delete;
-    UiManager& operator=(const UiManager&) = delete;
-
     template <class Layer, class... Args>
     Layer& emplace(Args&&... args) {
         auto layer = std::make_unique<Layer>(std::forward<Args>(args)...);
@@ -53,6 +54,26 @@ public:
     }
 
     void bind_open(Key key, UiLayer& layer) { openers[key] = &layer; }
+
+public:
+    explicit UiManager(const std::string& player_name): world(player_name) {
+        emplace<HudLayer>();
+
+        MinimapLayer& minimap = emplace<MinimapLayer>();
+        bind_open(Key::M, minimap);
+
+        ChatLayer& chat = emplace<ChatLayer>(player_name);
+        bind_open(Key::T, chat);
+
+        emplace<ReadyToSleepLayer>(player_name);
+
+        QuitLayer& quit_layer = emplace<QuitLayer>(player_name);
+        bind_open(Key::Escape, quit_layer);
+    }
+
+    UiManager(const UiManager&) = delete;
+    UiManager& operator=(const UiManager&) = delete;
+
 
     void focus(UiLayer& layer) {
         if (focused == &layer) {
@@ -80,10 +101,6 @@ public:
             release_focus();
         }
     }
-
-    bool input_captured() const { return focused != nullptr; }
-
-    bool quit_requested() const { return quit; }
 
     void dispatch(const InputEvent& e, Out& out) {
         switch (e.type) {
@@ -114,12 +131,6 @@ public:
         swallow = 0;
     }
 
-    void update(const State& state) {
-        for (auto& layer: layers) {
-            layer->update(state);
-        }
-    }
-
     void draw(const RenderInfo& ctx) {
         for (auto& layer: layers) {
             if (layer->visible()) {
@@ -128,5 +139,21 @@ public:
         }
     }
 
-    void request_quit() { quit = true; }
+    bool input_captured() const { return focused != nullptr; }
+
+    bool quit_requested() const {
+        return quit || std::any_of(layers.begin(), layers.end(),
+                [](const auto& layer) { return layer->wants_quit(); });
+    }
+
+    void update(const State& state) {
+        for (auto& layer: layers) {
+            layer->update(state);
+            switch (layer->focus_wish()) {
+                case FocusWish::Acquire: focus(*layer); break;
+                case FocusWish::Release: release(*layer); break;
+                case FocusWish::None: break;
+            }
+        }
+    }
 };

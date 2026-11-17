@@ -1,4 +1,3 @@
-// sdlGUI/world/furniture_view.h
 #pragma once
 #include <optional>
 
