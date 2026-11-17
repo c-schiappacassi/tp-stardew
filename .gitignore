@@ -48,3 +48,6 @@ build
 .qtcreator/
 build-server/
 build-editor/
+
+# mapas deleditor
+maps/custom/

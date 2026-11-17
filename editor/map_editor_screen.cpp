@@ -3,11 +3,17 @@
 #include <QPixmap>
 #include <QTabWidget>
 #include <QVBoxLayout>
+#include <QHBoxLayout>
+#include <QFileDialog>
+#include <QMessageBox>
+#include <QPushButton>
+#include <QDir>
 
 #include "editor_constants.h"
 #include "sprite_button.h"
 #include "zone/zone_tab.h"
 #include "model/zone_options.h"
+#include "model/map_wriiter.h"
 
 namespace {
 const QRect backNormalRect(296, 252, 66, 28);
@@ -35,9 +41,32 @@ MapEditorScreen::MapEditorScreen(QWidget* parent): QWidget(parent) {
     tabs->addTab(levels, "Dungeon levels");
     tabs->setStyleSheet(TABS_STYLE);
 
+    QPushButton* saveButton = new QPushButton("SAVE", this);
+    saveButton->setStyleSheet(BUTTON_STYLE);
+
+    QHBoxLayout* buttons = new QHBoxLayout();
+    buttons->addStretch(1);
+    buttons->addWidget(saveButton);
+    buttons->addWidget(backButton);
+
     QVBoxLayout* layout = new QVBoxLayout(this);
     layout->addWidget(tabs, 1);
-    layout->addWidget(backButton, 0, Qt::AlignRight);
+    layout->addLayout(buttons);
 
+    connect(saveButton, &QPushButton::clicked, this, &MapEditorScreen::saveMap);
     connect(backButton, &QAbstractButton::clicked, this, &MapEditorScreen::backRequested);
+}
+
+void MapEditorScreen::saveMap() {
+    QDir().mkpath(CUSTOM_MAPS_PATH);
+    QString path = QFileDialog::getSaveFileName(this, "Save map", CUSTOM_MAPS_PATH, "TOML map (*.toml)");
+    if (path.isEmpty()) {
+        return;
+    }
+    if (!path.endsWith(".toml")) {
+        path += ".toml";
+    }
+    if (!writeMap(map, path.toStdString())) {
+        QMessageBox::warning(this, "Save map", "Could not save the map in " + path);
+    }
 }

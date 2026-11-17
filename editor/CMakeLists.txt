@@ -14,6 +14,7 @@ target_sources(taller_editor
     model/zone_map.cpp
     zone/zone_canvas.cpp
     model/zone_options.cpp
+    model/map_wriiter.cpp
     PUBLIC
     # .h files
     editor_constants.h
@@ -30,8 +31,12 @@ target_sources(taller_editor
     zone/tool.h
     zone/zone_canvas.h
     model/zone_options.h
+    model/map_wriiter.h
     )
 
 target_include_directories(taller_editor PRIVATE ${CMAKE_CURRENT_SOURCE_DIR})
 
-target_compile_definitions(taller_editor PRIVATE ASSETS_DIR="${PROJECT_SOURCE_DIR}/common/assets")
+target_compile_definitions(taller_editor PRIVATE
+        ASSETS_DIR="${PROJECT_SOURCE_DIR}/common/assets"
+        MAPS_DIR="${PROJECT_SOURCE_DIR}/maps"
+)

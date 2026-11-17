@@ -15,6 +15,7 @@ signals:
     void backRequested();
 
 private:
+    void saveMap();
     Sprites sprites;
     WorldMap map;
 };
