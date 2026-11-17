@@ -12,6 +12,7 @@
 #include "game.h"
 #include "game_types.h"
 #include "game_setup.h"
+#include "persistencia/persistencia_manager.h"
 
 class GameManager {
 private:
@@ -22,9 +23,13 @@ private:
     PlayerConfig playerConfig;
     std::optional<FarmLayout> farmLayout;
     TownConfig townConfig;
+    PersistenciaManager persistencia;
 
 public:
-    explicit GameManager(const DungeonConfig& dungeonConfig = {}, const PlayerConfig& playerConfig = {},const std::optional<FarmLayout>& farmLayout = std::nullopt, const TownConfig& townConfig = {}):dungeonConfig(dungeonConfig), playerConfig(playerConfig), farmLayout(farmLayout), townConfig(townConfig) {}
+    explicit GameManager(const DungeonConfig& dungeonConfig = {},
+                         const PlayerConfig& playerConfig = {},
+                         const std::optional<FarmLayout>& farmLayout = std::nullopt,
+                         const TownConfig& townConfig = {});
     ~GameManager();
 
     GameSession createGame(const CreateGameDTO& dto, const std::shared_ptr<OutQueue>& output);
