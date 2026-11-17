@@ -15,6 +15,7 @@ const QString TABS_STYLE = R"(
     QTabBar::tab { background: #d4a463; color: #4a2a0a; border: 4px solid #55281c; border-bottom: none;
                    padding: 8px 16px; margin-right: 2px; font-weight: bold; font-size: 14px; }
     QTabBar::tab:selected { background: #f6d7a0; }
+    QTabBar::tab:bottom { border-top: none; }
     QTabBar::tab:hover:!selected { background: #dcb072; }
 
     QListWidget { background: #f6d7a0; border: 4px solid #81411c; color: #4a2a0a; font-size: 14px; outline: 0; }
