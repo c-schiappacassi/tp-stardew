@@ -21,6 +21,7 @@ WorldData GameTomlReader::read(const std::string& path) const {
         world.config.robin = ShopTomlReader{}.read(root);
         world.config.dungeon = DungeonTomlReader{}.read(root);
         CombatTomlReader{}.read(root, world.config.dungeon, world.config.player);
+        world.config.farm = FarmConfig{std::chrono::milliseconds{world.config.player.dayDurationMs}};
 
         if (root.contains("town")) {
             world.config.town = TownTomlReader{}.read(root);

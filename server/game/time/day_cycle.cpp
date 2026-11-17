@@ -7,6 +7,7 @@
 
 #include "player/player.h"
 #include "player/ports/player_spawn_source.h"
+#include "game_time.h"
 
 DayCycle::DayCycle(std::chrono::milliseconds duration): duration(duration) {
     if (duration.count() <= 0) {
@@ -16,14 +17,25 @@ DayCycle::DayCycle(std::chrono::milliseconds duration): duration(duration) {
 
 bool DayCycle::hasEnded() const { return ended; }
 
+std::chrono::milliseconds DayCycle::remainingTime() const { return duration - elapsed; }
+
+uint16_t DayCycle::timeOfDayMinutes() const {
+    const auto minutes = game_time::START_MINUTES + elapsed.count() * game_time::DAY_MINUTES / duration.count();
+    return static_cast<uint16_t>(minutes % game_time::MINUTES_PER_24_HOURS);
+}
+
 bool DayCycle::requiresConfirmation(uint16_t playerId, const Player& player) const {
-    return player.isSleeping() && !confirmations.contains(playerId);
+    return (player.isSleeping() || (ended && player.isResting())) && !confirmations.contains(playerId);
 }
 
 void DayCycle::acknowledge(uint16_t playerId, const Player& player) {
-    if (player.isSleeping()) {
+    if (requiresConfirmation(playerId, player)) {
         confirmations.insert(playerId);
     }
+}
+
+bool DayCycle::cancel(uint16_t playerId, Player& player) {
+    return !ended && !confirmations.contains(playerId) && player.cancelSleep();
 }
 
 void DayCycle::forgetConfirmation(uint16_t playerId) { confirmations.erase(playerId); }
@@ -37,7 +49,8 @@ bool DayCycle::advance(std::chrono::milliseconds time,std::span<const Participan
     for (const auto& participant: players) {
         if (participant.connected) {
             connected = true;
-            allIncapacitated &= participant.player.isResting();
+            allIncapacitated &= participant.player.isResting() &&
+                (!participant.player.isSleeping() || confirmations.contains(participant.id));
         }
     }
     if (!connected) {

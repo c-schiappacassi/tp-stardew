@@ -27,6 +27,10 @@ GameSetup makeDefaultGameSetup(uint8_t worldId) {
     setup.entrance->position = terrain.baseAt({3, 3}).value();
     setup.entrance->returnPosition = terrain.baseAt({4, 3}).value();
     setup.farm.terrain = terrain;
+    for (const auto& base : terrain.walkableBasePositions()) {
+        const auto cell = terrain.baseCellAt(base).value();
+        setup.farm.background.push_back({Position{cell.second, cell.first}, static_cast<uint16_t>(TileTextureId::Dirt)});
+    }
     setup.farm.spawn = setup.entrance->returnPosition;
     setup.farm.reservedPositions = {setup.farm.spawn, setup.entrance->position};
     setup.farm.townDoor = terrain.baseAt({3, 26}).value();

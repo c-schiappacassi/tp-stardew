@@ -12,12 +12,17 @@ FarmManager::FarmManager(const FarmConfig& config, uint32_t seed):config(config)
 
 bool FarmManager::initialize(const FarmLayout& layout, EntityIdGenerator& entityIds) {
     FarmManager prepared{config, seed};
+    prepared.background = layout.background;
+    for (const auto& tile : layout.background) {
+        if (tile.textureId == static_cast<uint16_t>(TileTextureId::Dirt)) {
+            prepared.dirtCells.emplace(tile.tile.getY(), tile.tile.getX());
+        }
+    }
     auto preparedIds = entityIds;
     if (!FarmLoader{}.load(layout, prepared, preparedIds)) {
         return false;
     }
     prepared.spawnPosition = layout.spawn;
-    prepared.background = layout.background;
     prepared.initialized = true;
     *this = std::move(prepared);
     entityIds = preparedIds;
@@ -87,6 +92,8 @@ const std::vector<FarmBackgroundTile>& FarmManager::getBackground() const {
 bool FarmManager::canWalk(const CollisionBounds& bounds) const { return space.canWalk(bounds); }
 
 bool FarmManager::tillSoil(const Position& position) {
+    const auto cell = space.cellAt(position);
+    if (!cell || !dirtCells.contains(*cell)) return false;
     return cropManager.tillSoil(position, space);
 }
 
@@ -118,8 +125,8 @@ std::optional<FarmProduct> FarmManager::collectFromAnimal(EntityId id) {
     return animalManager.collect(id);
 }
 
-bool FarmManager::placeDecoration(EntityId id, const Position& position, ItemId item) {
-    return decorationManager.place(id, position, item, space);
+bool FarmManager::placeDecoration(EntityId id, const Position& position, ItemId item, Direction direction) {
+    return decorationManager.place(id, position, item, space, direction);
 }
 
 std::optional<ItemId> FarmManager::removeDecoration(EntityId id) {
@@ -135,6 +142,11 @@ void FarmManager::update(std::chrono::milliseconds elapsed) {
     }
     cropManager.update(elapsed);
     animalManager.update(elapsed, space);
+}
+
+void FarmManager::finishDay(std::chrono::milliseconds remainingTime) {
+    update(remainingTime);
+    cropManager.finishDay();
 }
 
 const Crop* FarmManager::findCrop(EntityId id) const { return cropManager.find(id); }

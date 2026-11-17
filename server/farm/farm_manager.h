@@ -3,6 +3,7 @@
 #include <map>
 #include <optional>
 #include <random>
+#include <set>
 #include <vector>
 #include "animals/animal_manager.h"
 #include "crops/crop_manager.h"
@@ -22,6 +23,7 @@ private:
     bool initialized = false;
     Position spawnPosition{0, 0};
     std::vector<FarmBackgroundTile> background;
+    std::set<ZoneMap::Cell> dirtCells;
     FarmSpace space;
     CropManager cropManager;
     AnimalManager animalManager;
@@ -48,12 +50,13 @@ public:
     bool addAnimal(EntityId id, const Position& position, AnimalType type);
     bool moveAnimal(EntityId id, const Position& position);
     bool removeAnimal(EntityId id);
-    bool placeDecoration(EntityId id, const Position& position, ItemId item);
+    bool placeDecoration(EntityId id, const Position& position, ItemId item, Direction direction = Direction::Down);
     std::optional<ItemId> removeDecoration(EntityId id);
     bool waterCrop(EntityId id);
     std::optional<FarmProduct> harvestCrop(EntityId id, double luck = 1.0);
     std::optional<FarmProduct> collectFromAnimal(EntityId id);
     void update(std::chrono::milliseconds elapsed);
+    void finishDay(std::chrono::milliseconds remainingTime);
     FarmData getPublicData() const;
     std::vector<Position> getTilledPositions() const;
     const Crop* findCrop(EntityId id) const;

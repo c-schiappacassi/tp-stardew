@@ -16,6 +16,7 @@ GameSession GameManager::createGame(const CreateGameDTO& dto,
     GameSetup setup = farmLayout ? makeFarmGameSetup(dto.worldId, *farmLayout) :makeDefaultGameSetup(dto.worldId);
     setup.dungeonConfig = dungeonConfig;
     setup.playerConfig = playerConfig;
+    setup.farmConfig = FarmConfig{std::chrono::milliseconds{playerConfig.dayDurationMs}};
     if (townConfig.map.width != 0) setup.townConfig = townConfig;
     auto game = std::make_unique<Game>(id, dto.gameName, setup.worldId,
                                        setup.playerConfig, setup.dungeonConfig, setup.farmConfig,setup.farm.playerHouses);

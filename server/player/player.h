@@ -72,6 +72,7 @@ public:
     void applyCombatBonus();
     void passOut();
     bool sleep();
+    bool cancelSleep();
     void wakeUp();
     bool changeLocation(Zone destination, uint8_t level, const Position& target,std::optional<InteriorLocation> inside = std::nullopt);
     bool restoreLocation(Zone destination, uint8_t level, const Position& target,std::optional<InteriorLocation> inside = std::nullopt);

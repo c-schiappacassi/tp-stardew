@@ -36,6 +36,7 @@ public:
     std::chrono::milliseconds getGrowthElapsed() const;
     CropData getPublicData() const;
     void update(std::chrono::milliseconds elapsed);
+    void finishDay();
     bool water();
     std::optional<FarmProduct> getHarvest(double luck = 1.0) const;
     std::optional<FarmProduct> harvest(double luck = 1.0);

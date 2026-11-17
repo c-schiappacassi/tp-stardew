@@ -34,6 +34,7 @@ void PlayerStatus::completeLocalData(ServerStatus& status,const PlayerRecord& re
     status.localPlayer = record.player.getLocalData();
     zones.completeZoneData(record.player, status.localPlayer, includeBroken);
     status.dayConfirmationRequired = day && day->requiresConfirmation(record.id, record.player);
+    if (day) status.timeOfDayMinutes = day->timeOfDayMinutes();
 }
 
 ServerStatus PlayerStatus::buildForPlayer(const std::map<uint16_t, PlayerRecord>& players,const PlayerRecord& record,

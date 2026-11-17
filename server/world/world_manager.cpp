@@ -89,7 +89,8 @@ bool WorldManager::loadTown(const TownConfig& config) {
     return true;
 }
 
-void WorldManager::finishDay() {
+void WorldManager::finishDay(std::chrono::milliseconds remainingTime) {
+    if (farm.isInitialized()) farm.finishDay(remainingTime);
     travel.finishDay();
     dungeon.update(std::chrono::milliseconds{0}, {}, entityIds, std::chrono::steady_clock::now());
 }

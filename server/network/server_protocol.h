@@ -52,6 +52,7 @@ public:
     MoveDTO receiveMove();
     InteractDTO receiveInteract();
     DayOkDTO receiveDayOk();
+    DayCancelDTO receiveDayCancel();
     DonateDTO receiveDonate();
     ChatDTO receiveChat();
     UseItemDTO receiveUseItem();

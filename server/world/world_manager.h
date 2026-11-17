@@ -31,7 +31,7 @@ public:
     ConstMapData buildConstMap() const;
     bool loadFarm(uint8_t worldId, const FarmLayout& layout);
     bool loadTown(const TownConfig& config);
-    void finishDay();
+    void finishDay(std::chrono::milliseconds remainingTime = std::chrono::milliseconds{0});
     bool spawnPlayer(Player& player) const override;
     bool recoverPlayer(Player& player, uint16_t playerId = 0) const override;
     const FarmManager& getFarm() const;

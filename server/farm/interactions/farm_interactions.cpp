@@ -80,7 +80,7 @@ bool FarmInteractions::placeSelectedItem(Player& player, FarmManager& farm,
     }
     const auto id = entityIds.getNextId();
     const bool placed = cropType ? farm.plant(id, *position, *cropType) :
-        farm.placeDecoration(id, *position, item);
+        farm.placeDecoration(id, *position, item, direction);
     if (!placed) {
         return false;
     }

@@ -28,6 +28,7 @@ ClientHandler::ClientHandler(Socket&& socket, GameManager& manager):
         {MessageType::SelectSlot, receiver(&ServerProtocol::receiveSelectSlot)},
         {MessageType::Interact,   receiver(&ServerProtocol::receiveInteract)},
         {MessageType::DayOk,      receiver(&ServerProtocol::receiveDayOk)},
+        {MessageType::DayCancel,  receiver(&ServerProtocol::receiveDayCancel)},
         {MessageType::UseItem,    receiver(&ServerProtocol::receiveUseItem)},
         {MessageType::Donate,     receiver(&ServerProtocol::receiveDonate)},
         {MessageType::Chat,       receiver(&ServerProtocol::receiveChat)},

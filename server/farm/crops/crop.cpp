@@ -91,6 +91,11 @@ void Crop::update(std::chrono::milliseconds elapsed) {
     }
 }
 
+void Crop::finishDay() {
+    if (isWatered()) quality.recordWaterRequest();
+    remainingWaterTime = std::chrono::milliseconds{0};
+}
+
 bool Crop::water() {
     if (harvested || isReady() || isWatered()) {
         return false;

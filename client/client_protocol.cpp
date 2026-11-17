@@ -283,6 +283,7 @@ void ClientProtocol::send(const CommandDTO& dto) {
         case MessageType::Move: send(static_cast<const MoveDTO&>(dto)); break;
         case MessageType::Interact: send(static_cast<const InteractDTO&>(dto)); break;
         case MessageType::DayOk:send(static_cast<const DayOkDTO&>(dto));break;
+        case MessageType::DayCancel:send(static_cast<const DayCancelDTO&>(dto));break;
         case MessageType::Donate: send(static_cast<const DonateDTO&>(dto)); break;
         case MessageType::Chat: send(static_cast<const ChatDTO&>(dto)); break;
         case MessageType::UseItem: send(static_cast<const UseItemDTO&>(dto)); break;
@@ -364,6 +365,13 @@ void ClientProtocol::send(const DayOkDTO& dto) {
     base.send(out);
 }
 
+void ClientProtocol::send(const DayCancelDTO& dto) {
+    MessageBuffer out;
+    out.putUint8(static_cast<uint8_t>(MessageType::DayCancel));
+    out.putString(dto.userName);
+    base.send(out);
+}
+
 void ClientProtocol::send(const ChatDTO& dto) {
     MessageBuffer out;
     out.putUint8(static_cast<uint8_t>(MessageType::Chat));
@@ -420,7 +428,7 @@ void ClientProtocol::send(const CheckCodeDTO& dto) {
 // RECEIVERS
 
 // ServerStatus { status, errorMsg, successMsg, gameId, playerId, worldId,
-//                players, localPlayer, dayEnded }
+//                players, localPlayer, dayEnded, dayConfirmationRequired, timeOfDayMinutes }
 
 void ClientProtocol::recv(ServerStatus& status) {
     status.status = static_cast<StatusCode>(base.receiveUint8());
@@ -440,6 +448,7 @@ void ClientProtocol::recv(ServerStatus& status) {
     status.localPlayer = receivePlayerDataLocal();
     status.dayEnded = base.receiveUint8() != 0;
     status.dayConfirmationRequired = base.receiveUint8() != 0;
+    status.timeOfDayMinutes = base.receiveUint16();
 }
 
 // qtStatus { status, errorMsg, successMsg, games }

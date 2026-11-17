@@ -1,4 +1,5 @@
 #include <chrono>
+#include <algorithm>
 #include <iostream>
 #include <thread>
 
@@ -25,14 +26,17 @@ void Game::sendStatus() {
 
 void Game::advanceWorld(std::chrono::milliseconds elapsed) {
     std::lock_guard<std::mutex> lock(mtx);
+    const auto activeTime = playerManager.isDayEnded() ? std::chrono::milliseconds{0} :
+        std::min(elapsed, playerManager.remainingDayTime());
+    const auto remainingTime = playerManager.remainingDayTime() - activeTime;
     if (!playerManager.isDayEnded() && playerManager.hasConnectedPlayers()) {
-        world.update(elapsed, playerManager.getCollisionBounds(Zone::Farm),playerManager.getCombatants());
+        world.update(activeTime, playerManager.getCollisionBounds(Zone::Farm),playerManager.getCombatants());
     }
     if (world.combatCompleted()) {
         playerManager.applyCombatBonus();
     }
     if (playerManager.advanceDay(elapsed)) {
-        world.finishDay();
+        world.finishDay(remainingTime);
     }
 }
 

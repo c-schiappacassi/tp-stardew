@@ -44,7 +44,7 @@ rotates = true
 # FARM
 
 # Escenario ampliado de farm (16x12). Coordenadas en tiles de 16x16.
-# texture_id = 1: pasto; texture_id = 0: piedra.
+# texture_id = 0: pasto; texture_id = 1: tierra cultivable (TileTextureId::Dirt).
 
 [farm]
 width = 16
@@ -329,7 +329,7 @@ sword_energy_cost = 2
 sword_interval_ms = 500
 damage_grace_ms = 350
 passout_gold_percent = 10
-day_duration_ms = 900000
+day_duration_ms = 840000
 
 [combat]
 skeleton_revive_ms = 7000

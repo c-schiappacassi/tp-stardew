@@ -64,6 +64,7 @@ public:
     void send(const MoveDTO& dto);
     void send(const InteractDTO& dto);
     void send(const DayOkDTO& dto);
+    void send(const DayCancelDTO& dto);
     void send(const DonateDTO& dto);
     void send(const ChatDTO& dto);
     void send(const UseItemDTO& dto);

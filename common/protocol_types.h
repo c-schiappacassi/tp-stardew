@@ -21,6 +21,7 @@ enum class MessageType : uint8_t {
     Donate = 0x17,       // para completar las misiones
     ItemTransfer = 0x18, // inventario a cofre
     SelectSlot = 0x19,
+    DayCancel = 0x1A,
 
     Status = 0x80,
     GameList = 0x81,

@@ -12,6 +12,7 @@
 
 #include "position.h"
 #include "protocol_types.h"
+#include "game_time.h"
 
 // AUXILIARES
 
@@ -329,6 +330,11 @@ struct DayOkDTO: public CommandDTO {
     MessageType type() const override { return MessageType::DayOk; }
 };
 
+struct DayCancelDTO: public CommandDTO {
+    explicit DayCancelDTO(const std::string& name): CommandDTO(name) {}
+    MessageType type() const override { return MessageType::DayCancel; }
+};
+
 struct DonateDTO : public CommandDTO {
     uint8_t slot;
     uint32_t quantity;
@@ -398,6 +404,7 @@ struct ServerStatus {
     PlayerDataLocal localPlayer;
     bool dayEnded = false;
     bool dayConfirmationRequired = false;
+    uint16_t timeOfDayMinutes = game_time::START_MINUTES;
 };
 
 struct qtStatus {

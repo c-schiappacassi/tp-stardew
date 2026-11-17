@@ -42,6 +42,7 @@ public:
     void applyCombatBonus();
     bool advanceDay(std::chrono::milliseconds elapsed);
     bool isDayEnded() const;
+    std::chrono::milliseconds remainingDayTime() const;
     bool hasConnectedPlayers() const;
     void disconnectPlayer(uint16_t playerId);
     void closeOutputs();

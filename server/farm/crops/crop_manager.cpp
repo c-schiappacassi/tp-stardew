@@ -81,6 +81,10 @@ void CropManager::update(std::chrono::milliseconds elapsed) {
     }
 }
 
+void CropManager::finishDay() {
+    for (auto& [id, crop] : crops) crop.finishDay();
+}
+
 const Crop* CropManager::find(EntityId id) const {
     const auto it = crops.find(id);
     if (it == crops.end()) {

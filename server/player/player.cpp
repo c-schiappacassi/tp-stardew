@@ -346,6 +346,14 @@ bool Player::sleep() {
     return true;
 }
 
+bool Player::cancelSleep() {
+    if (!isSleeping()) return false;
+    state = PlayerState::Idle;
+    movementDirection = Direction::None;
+    bedReady = false;
+    return true;
+}
+
 void Player::wakeUp() {
     const bool rested = state == PlayerState::Sleeping;
     health = rested ? maxHealth : std::max<uint16_t>(1, maxHealth / 2);

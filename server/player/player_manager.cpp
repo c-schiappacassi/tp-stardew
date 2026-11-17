@@ -153,6 +153,11 @@ void PlayerManager::handleCommand(const PlayerCommand& command) {
         return;
     }
 
+    if (command.command->type() == MessageType::DayCancel) {
+        day.cancel(command.playerId, it->second.player);
+        return;
+    }
+
     if (!day.hasEnded()) {
         actions.execute(it->second.player, *command.command, command.playerId);
     }
@@ -185,6 +190,8 @@ bool PlayerManager::advanceDay(std::chrono::milliseconds elapsed) {
 }
 
 bool PlayerManager::isDayEnded() const { return day.hasEnded(); }
+
+std::chrono::milliseconds PlayerManager::remainingDayTime() const { return day.remainingTime(); }
 
 bool PlayerManager::hasConnectedPlayers() const {
     for (const auto& [id, record]: players) {

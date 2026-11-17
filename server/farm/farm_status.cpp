@@ -5,11 +5,8 @@
 
 namespace {
 std::optional<FurnitureId> toFurnitureId(ItemId item) {
-    switch (item) {
-        case ItemId::Chair: return FurnitureId::Chair;
-        case ItemId::Table: return FurnitureId::Table;
-        default:            return std::nullopt;
-    }
+    if (!Decoration::isDecoration(item)) return std::nullopt;
+    return static_cast<FurnitureId>(static_cast<uint16_t>(item) - static_cast<uint16_t>(ItemId::Chair));
 }
 }  // namespace
 
@@ -28,7 +25,7 @@ FarmData FarmStatus::build(const FarmManager& farm) {
         data.id = id;
         data.pos = decoration.getPosition();
         data.type = *type;
-        data.dir = Direction::Down;
+        data.dir = decoration.getDirection();
         result.furniture.push_back(data);
     }
     result.tilledSoil = farm.getTilledPositions();

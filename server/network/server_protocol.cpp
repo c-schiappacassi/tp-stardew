@@ -458,6 +458,8 @@ InteractDTO ServerProtocol::receiveInteract() {
 
 DayOkDTO ServerProtocol::receiveDayOk() { return DayOkDTO{base.receiveString()}; }
 
+DayCancelDTO ServerProtocol::receiveDayCancel() { return DayCancelDTO{base.receiveString()}; }
+
 DonateDTO ServerProtocol::receiveDonate() {
     DonateDTO dto(base.receiveString());
     dto.slot = base.receiveUint8();
@@ -517,6 +519,7 @@ void ServerProtocol::sendStatus(const ServerStatus& status) {
     writePlayerDataLocal(out, status.localPlayer);
     out.putUint8(status.dayEnded ? 1 : 0);
     out.putUint8(status.dayConfirmationRequired ? 1 : 0);
+    out.putUint16(status.timeOfDayMinutes);
     base.send(out);
 }
 
