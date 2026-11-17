@@ -18,18 +18,7 @@ GameManager::GameManager(const DungeonConfig& dungeonConfig,
       playerConfig(playerConfig),
       farmLayout(farmLayout),
       townConfig(townConfig) {
-    for (const auto& partida : persistencia.obtenerPartidas()) {
-        const std::string prefijo = "game-";
-        if (partida.id.rfind(prefijo, 0) == 0) {
-            try {
-                nextId = std::max(
-                    nextId,
-                    static_cast<std::size_t>(
-                        std::stoull(partida.id.substr(prefijo.size())) + 1));
-            } catch (const std::exception&) {
-            }
-        }
-    }
+  
 }
 
 GameSession GameManager::createGame(const CreateGameDTO& dto,
@@ -62,7 +51,6 @@ GameSession GameManager::createGame(const CreateGameDTO& dto,
 
     if (session.status.status == StatusCode::Ok) {
         game->start();
-        persistencia.registrarPartida(id, dto.gameName, dto.userName);
         games.emplace(id, std::move(game));
         ++nextId;
     }
@@ -81,9 +69,7 @@ GameSession GameManager::joinGame(const JoinGameDTO& dto,
         return session;
     }
     GameSession session = it->second->joinGame(dto, output);
-    if (session.status.status == StatusCode::Ok) {
-        persistencia.registrarUsuario(dto.code, dto.userName);
-    }
+
     return session;
 }
 

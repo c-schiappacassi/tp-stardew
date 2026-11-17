@@ -12,7 +12,6 @@
 #include "game.h"
 #include "game_types.h"
 #include "game_setup.h"
-#include "persistencia/persistencia_manager.h"
 
 class GameManager {
 private:
@@ -23,7 +22,6 @@ private:
     PlayerConfig playerConfig;
     std::optional<FarmLayout> farmLayout;
     TownConfig townConfig;
-    PersistenciaManager persistencia;
 
 public:
     explicit GameManager(const DungeonConfig& dungeonConfig = {},
