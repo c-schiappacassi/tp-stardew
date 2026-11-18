@@ -1,25 +1,49 @@
 #include "main_window.h"
 
+#include <QDir>
+#include <QFileDialog>
 #include <QStackedWidget>
 
 #include "editor_constants.h"
 #include "map_editor_screen.h"
+#include "model/map_reader.h"
 #include "start_screen.h"
 
-MainWindow::MainWindow(QWidget* parent): QMainWindow(parent), stack(new QStackedWidget(this)) {
+MainWindow::MainWindow(QWidget* parent): QMainWindow(parent), stack(new QStackedWidget(this)), startScreen(new StartScreen(this)) {
     setWindowTitle("Stardew Valley - Editor de mapas");
     setMinimumSize(1600, 900);
     resize(1920, 1200);
     setStyleSheet(QString("MainWindow { border-image: url(\"%1day_sky.png\") 0 0 0 0 stretch stretch; }").arg(MENUS_PATH));
     setCentralWidget(stack);
 
-    StartScreen* startScreen = new StartScreen(this);
-    MapEditorScreen* mapEditorScreen = new MapEditorScreen(this);
-
     stack->addWidget(startScreen);
-    stack->addWidget(mapEditorScreen);
 
-    connect(startScreen, &StartScreen::createMapRequested, this, [this, mapEditorScreen]() { stack->setCurrentWidget(mapEditorScreen); });
-    //TODO: editMapRequested -> selector de mapas y cargarlo
-    connect(mapEditorScreen, &MapEditorScreen::backRequested, this, [this, startScreen]() { stack->setCurrentWidget(startScreen); });
+    connect(startScreen, &StartScreen::createMapRequested, this, [this]() { openEditor(WorldMap()); });
+    connect(startScreen, &StartScreen::editMapRequested, this, &MainWindow::editExistingMap);
+}
+
+void MainWindow::openEditor(const WorldMap& map) {
+    closeEditor();
+    editor = new MapEditorScreen(map, this);
+    stack->addWidget(editor);
+    stack->setCurrentWidget(editor);
+    connect(editor, &MapEditorScreen::backRequested, this, &MainWindow::closeEditor);
+}
+
+void MainWindow::editExistingMap() {
+    QDir().mkpath(CUSTOM_MAPS_PATH);
+    const QString path = QFileDialog::getOpenFileName(this, "Edit map", CUSTOM_MAPS_PATH, "TOML map (*.toml)");
+    if (path.isEmpty()) {
+        return;
+    }
+    openEditor(readMap(path.toStdString()));
+}
+
+void MainWindow::closeEditor() {
+    stack->setCurrentWidget(startScreen);
+    if (editor) {
+        stack->removeWidget(editor);
+        editor->deleteLater();
+        editor = nullptr;
+    }
 }

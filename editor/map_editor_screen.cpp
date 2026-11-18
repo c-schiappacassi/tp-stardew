@@ -21,7 +21,7 @@ const QRect backHoverRect(296, 280, 66, 26);
 const QSize backSize(160, 68);
 }
 
-MapEditorScreen::MapEditorScreen(QWidget* parent): QWidget(parent) {
+MapEditorScreen::MapEditorScreen(const WorldMap& startingMap, QWidget* parent): QWidget(parent), map(startingMap) {
     const QPixmap titleSheet(MENUS_PATH + "title_screen.png");
     SpriteButton* backButton = new SpriteButton(titleSheet.copy(backNormalRect), titleSheet.copy(backHoverRect), this);
     backButton->setFixedSize(backSize);

@@ -9,7 +9,7 @@ class MapEditorScreen : public QWidget {
     Q_OBJECT
 
 public:
-    explicit MapEditorScreen(QWidget* parent = nullptr);
+    explicit MapEditorScreen(const WorldMap& startingMap, QWidget* parent = nullptr);
 
 signals:
     void backRequested();
