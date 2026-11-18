@@ -70,6 +70,7 @@ namespace SpriteDefs {
         {SpriteId::Emotes,      "misc/emotes.png"},
         {SpriteId::ChatBox,      "menus/chat_box.png"},
         {SpriteId::Minimap, "minimaps/placeholder_minimap.jpg"},
+        {SpriteId::InfoSing, "menus/clock.png"},
 
         // farmer
         {SpriteId::FarmerBase,   "characters/farmer_base.png"},
@@ -390,6 +391,8 @@ namespace SpriteDefs {
         {UiSpriteId::OkButton,  SpriteId::Cursors, 128, 256, 64, 64},
         {UiSpriteId::CancelButton, SpriteId::Cursors, 192, 256, 64, 64},
         {UiSpriteId::PlayerHead, SpriteId::FarmerBase, 0, 0, 16, 15},
+        {UiSpriteId::InfoSing, SpriteId::InfoSing, 0, 0, 72, 59},
+        {UiSpriteId::InfoSingArrow, SpriteId::InfoSing, 72, 0, 7, 19},
     };
 
     // Clips
@@ -453,8 +456,7 @@ namespace SpriteDefs {
     };
 
     // Farmer
-    inline constexpr ClipSetInfo FARMER_SET{ SpriteId::FarmerBase, Dimentions::FARMER_COLS, Dimentions::FARMER_CELL_W, Dimentions::FARMER_CELL_H,
-                                             -Dimentions::FARMER_CELL_W / 2, -Dimentions::FARMER_FEET_Y};
+    inline constexpr ClipSetInfo FARMER_SET{ SpriteId::FarmerBase, Dimentions::FARMER_COLS, Dimentions::FARMER_CELL_W, Dimentions::FARMER_CELL_H,-Dimentions::FARMER_CELL_W / 2, -Dimentions::FARMER_FEET_Y};
     inline constexpr bool FARMER_MIRROR_LEFT = true;
 
     inline constexpr ClipDef<PlayerState> FARMER_CLIPS[] = {
@@ -463,10 +465,21 @@ namespace SpriteDefs {
         clip(PlayerState::Idle, Direction::Right, false, {{6, 200}}),
         clip(PlayerState::Idle, Direction::Up,    false, {{12, 200}}),
 
-        clip(PlayerState::Walking, Direction::Down,  true, {{0, 200}, {1, 200}, {0, 200}, {2, 200}}),
-        clip(PlayerState::Walking, Direction::Left,  true, {{6, 200}, {7, 200}, {6, 200}, {8, 200}}),
-        clip(PlayerState::Walking, Direction::Right, true, {{6, 200}, {7, 200}, {6, 200}, {8, 200}}),
-        clip(PlayerState::Walking, Direction::Up,    true, {{12, 200}, {13, 200}, {12, 200}, {14, 200}}),
+        // TODO: PlayerState::Unconscious Y PlayerState::Sleeping
+        clip(PlayerState::Sleeping, Direction::Down,  true, {{16, 1000}}),
+        clip(PlayerState::Sleeping, Direction::Left,  true, {{16, 1000}}),
+        clip(PlayerState::Sleeping, Direction::Right, true, {{16, 1000}}),
+        clip(PlayerState::Sleeping, Direction::Up,    true, {{16, 1000}}),
+
+        clip(PlayerState::Unconscious, Direction::Down,  false, {{4, 150}, {5, 300}}),
+        clip(PlayerState::Unconscious, Direction::Left,  false, {{4, 150}, {5, 300}}),
+        clip(PlayerState::Unconscious, Direction::Right, false, {{4, 150}, {5, 300}}),
+        clip(PlayerState::Unconscious, Direction::Up,    false, {{4, 150}, {5, 300}}),
+
+        clip(PlayerState::Walking, Direction::Down,  true, {{1, 200}, {0, 200}, {2, 200}, {0, 200}}),
+        clip(PlayerState::Walking, Direction::Left,  true, {{7, 200}, {6, 200}, {8, 200}, {6, 200}}),
+        clip(PlayerState::Walking, Direction::Right, true, {{7, 200}, {6, 200}, {8, 200}, {6, 200}}),
+        clip(PlayerState::Walking, Direction::Up,    true, {{13, 200}, {12, 200}, {14, 200}, {12, 200}}),
 
         clip_run(PlayerState::UsingTool, Direction::Down,  false, 66, 5, 100),
         clip_run(PlayerState::UsingTool, Direction::Right, false, 48, 5, 100),
@@ -501,6 +514,13 @@ namespace SpriteDefs {
         { 12, {{ 0,  0}, { 0,  0}, { 0, 0}} },
         { 13, {{ 0,  1}, { 0,  0}, { 0, 0}} },
         { 14, {{ 0,  1}, { 0,  0}, { 0, 0}} },
+
+        // Sleeping
+        { 16, {{ 0,  1}, { 0,  1}, { 0, 0}} },
+
+        // Unconscious
+        {  4, {{ 0,  4}, { 0,  4}, { 0, 1}} },
+        {  5, {{ 0,  5}, { 0,  5}, { 0, 1}} },
 
         // Using tool up
         { 36, {{  0,  0}, {  0,  0}, {0, 0}} },

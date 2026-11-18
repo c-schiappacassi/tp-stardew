@@ -10,7 +10,7 @@ private:
     HudView hud;
 
 public:
-    void update(const State& state) override { hud.update(state.get_local()); }
+    void update(const State& state) override { hud.update(state.get_local(), state.get_local_time(), state.get_alerts() ); }
 
     void draw(const RenderInfo& ctx) override { hud.draw(ctx); }
 };

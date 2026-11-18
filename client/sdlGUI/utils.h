@@ -66,6 +66,7 @@ enum class SpriteId : uint16_t {
     Cursors,
     Emotes,
     ChatBox,
+    InfoSing,
 
     PlayerHouseInterior,
     MarniesInterior,
@@ -95,7 +96,9 @@ enum class UiSpriteId : uint8_t {
     DialogBox,
     OkButton,
     CancelButton,
-    PlayerHead
+    PlayerHead,
+    InfoSing,
+    InfoSingArrow
 };
 
 struct Drawable {
