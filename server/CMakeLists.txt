@@ -17,6 +17,8 @@ target_sources(taller_server
         network/client_handler.cpp
         network/client_sender.cpp
         network/server_protocol.cpp
+        chat/player_chat.cpp
+        chat/chat_command_parser.cpp
         game/game.cpp
         game/game_setup.cpp
         game/game_manager.cpp
@@ -101,6 +103,9 @@ target_sources(taller_server
         network/client_handler.h
         network/client_sender.h
         network/server_protocol.h
+        chat/player_chat.h
+        chat/chat_commands.h
+        chat/chat_command_parser.h
         game/game.h
         game/game_manager.h
         game/game_types.h

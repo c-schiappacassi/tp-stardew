@@ -1,11 +1,13 @@
 #include "player_manager.h"
 
-PlayerManager::PlayerManager(const PlayerConfig& config,const MovementRules& movement,const ZoneDataSource& zones,PlayerInteractions& interactions,const PlayerSpawnSource& spawns,uint8_t maxPlayers):
+#include <utility>
+
+PlayerManager::PlayerManager(const PlayerConfig& config,const MovementRules& movement,const ZoneDataSource& zones,PlayerInteractions& interactions,const PlayerSpawnSource& spawns,uint8_t maxPlayers,ChatServices chatServices):
         maxPlayers(maxPlayers),
         factory(config),
         updates(movement),
         playerStatus(zones),
-        actions(interactions), spawns(spawns), movement(movement),day(std::chrono::milliseconds{config.dayDurationMs}) {}
+        actions(interactions), chat(std::move(chatServices)), spawns(spawns), movement(movement),day(std::chrono::milliseconds{config.dayDurationMs}) {}
 
 
 ServerStatus PlayerManager::addPlayer(const std::string& name,const PlayerData& appearance,const std::shared_ptr<OutQueue>& output) {
@@ -51,9 +53,11 @@ ServerStatus PlayerManager::addPlayer(const std::string& name,const PlayerData& 
 void PlayerManager::disconnectPlayer(uint16_t playerId) {
     const auto it = players.find(playerId);
     if (it != players.end()) {
+        if (it->second.connected) chat.onDisconnect(playerId);
         it->second.connected = false;
         day.forgetConfirmation(playerId);
         it->second.output.reset();
+        it->second.chatMessages.clear();
         it->second.player.setMovement(Direction::None);
     }
 }
@@ -128,7 +132,7 @@ void PlayerManager::advancePlayers(int normalStep) {
     updates.advancePlayers(players, normalStep); 
 }
 
-void PlayerManager::publishStatus(const ServerStatus& base) const {
+void PlayerManager::publishStatus(const ServerStatus& base) {
     auto status = base;
     status.dayEnded = day.hasEnded();
     playerStatus.publish(players, status, &day);
@@ -148,6 +152,12 @@ void PlayerManager::handleCommand(const PlayerCommand& command) {
         return;
     }
 
+    if (command.command->type() == MessageType::Chat) {
+        chat.handle(players, command.playerId, static_cast<const ChatDTO&>(*command.command).text,
+                    day.hasEnded());
+        return;
+    }
+
     if (command.command->type() == MessageType::DayOk) {
         day.acknowledge(command.playerId, it->second.player);
         return;
@@ -159,6 +169,10 @@ void PlayerManager::handleCommand(const PlayerCommand& command) {
     }
 
     if (!day.hasEnded()) {
+        if (command.command->type() == MessageType::Interact &&
+            chat.interact(it->second, static_cast<const InteractDTO&>(*command.command).dir, false)) {
+            return;
+        }
         actions.execute(it->second.player, *command.command, command.playerId);
     }
 }

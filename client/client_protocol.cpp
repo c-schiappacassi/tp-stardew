@@ -204,6 +204,15 @@ PlayerDataLocal ClientProtocol::receivePlayerDataLocal() {
     localData.combatProgress.orcs = base.receiveUint8() != 0;
     localData.combatProgress.skull = base.receiveUint8() != 0;
 
+    const uint16_t messageCount = base.receiveUint16();
+    localData.newMessages.reserve(messageCount);
+    for (uint16_t i = 0; i < messageCount; ++i) {
+        ChatMessageData message;
+        message.sender = base.receiveString();
+        message.text = base.receiveString();
+        localData.newMessages.push_back(std::move(message));
+    }
+
     return localData;
 }
 

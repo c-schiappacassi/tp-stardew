@@ -1,4 +1,9 @@
 #include "player_status.h"
+
+#include <algorithm>
+#include <cstddef>
+#include <limits>
+
 #include "game/time/day_cycle.h"
 
 PlayerStatus::PlayerStatus(const ZoneDataSource& zones): zones(zones) {}
@@ -48,18 +53,22 @@ ServerStatus PlayerStatus::buildForPlayer(const std::map<uint16_t, PlayerRecord>
     return status;
 }
 
-void PlayerStatus::publish(const std::map<uint16_t, PlayerRecord>& players,const ServerStatus& base,const DayCycle* day) const {
-    ServerStatus status = base;
-
-    for (const auto& [id, record] : players) {
+void PlayerStatus::publish(std::map<uint16_t, PlayerRecord>& players,const ServerStatus& base,const DayCycle* day) const {
+    for (auto& [id, record] : players) {
         if (!record.connected) {
             continue;
         }
+        ServerStatus status = base;
         fillPublicData(status, players, record);
         completeLocalData(status, record, true, day);
 
+        const auto messageCount = std::min(record.chatMessages.size(),static_cast<std::size_t>(std::numeric_limits<uint16_t>::max()));
+        const auto messagesEnd = record.chatMessages.begin() + static_cast<std::ptrdiff_t>(messageCount);
+        status.localPlayer.newMessages.assign(record.chatMessages.begin(), messagesEnd);
+
         try {
             record.output->push(status);
+            record.chatMessages.erase(record.chatMessages.begin(), messagesEnd);
         } catch (const ClosedQueue&) {
             
         }

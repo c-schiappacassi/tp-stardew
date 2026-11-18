@@ -2,6 +2,7 @@
 #define PLAYER_RECORD_H
 
 #include <cstdint>
+#include <deque>
 #include <memory>
 #include <string>
 
@@ -14,6 +15,7 @@ struct PlayerRecord {
     std::shared_ptr<OutQueue> output;
     bool connected;
     Player player;
+    std::deque<ChatMessageData> chatMessages{};
 };
 
 #endif

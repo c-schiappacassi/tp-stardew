@@ -91,6 +91,7 @@ void validateStatus(const ServerStatus& status) {
 
     validateCount(status.players.size(), MAX_U16, "jugadores");
     validateCount(local.items.size(), MAX_U8, "items");
+    validateCount(local.newMessages.size(), MAX_U16, "mensajes de chat");
     const auto* farm = std::get_if<FarmData>(&local.zoneData);
     if (farm) {
         validateFarmCounts(*farm);
@@ -403,6 +404,11 @@ void ServerProtocol::writePlayerDataLocal(MessageBuffer& out, const PlayerDataLo
     out.putUint8(localData.combatProgress.vampires ? 1 : 0);
     out.putUint8(localData.combatProgress.orcs ? 1 : 0);
     out.putUint8(localData.combatProgress.skull ? 1 : 0);
+    out.putUint16(static_cast<uint16_t>(localData.newMessages.size()));
+    for (const auto& message : localData.newMessages) {
+        out.putString(message.sender);
+        out.putString(message.text);
+    }
 }
 
 // RECEIVERS (the type byte --> consumed by receiveType())
