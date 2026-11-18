@@ -9,6 +9,7 @@
 class ShopTomlReader {
 public:
     RobinShopConfig read(const toml::table& root) const;
+    MarketConfig readMarket(const toml::table& root) const;
 
 private:
     static ItemId itemFromId(uint16_t id, const std::string& field);

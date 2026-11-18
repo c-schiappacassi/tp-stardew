@@ -37,6 +37,7 @@ void Game::advanceWorld(std::chrono::milliseconds elapsed) {
     }
     if (playerManager.advanceDay(elapsed)) {
         world.finishDay(remainingTime);
+        merchants->finishDay();
     }
 }
 

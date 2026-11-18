@@ -1,5 +1,7 @@
 #include "config/farm_toml_reader.h"
 
+#include "commerce/shop_products.h"
+
 #include <algorithm>
 #include <cstddef>
 #include <cstdint>
@@ -526,6 +528,12 @@ FarmLayout readFarmLayout(const toml::table& root,
         }
         room.background.interior = InteriorBackgroundData{
             Position{0, 0}, room.location.interior_id, std::nullopt};
+        if (const auto* npc = entry.get("npc")) {
+            const auto merchant = shop_products::merchantForInterior(room.location.interior_id);
+            if (!merchant) invalid(field + ".npc", "el interior no corresponde a una tienda");
+            room.background.interior->npc = NpcData{
+                farmBaseAt(npc, room.terrain, roomWidth, roomHeight, field + ".npc"), *merchant};
+        }
         const auto conflicts = [&](const Position& other) {
             return exterior->sameBaseCell(room.outside.position, other);
         };

@@ -2,8 +2,8 @@
 gold_drop = 100
 
 [shops.robin]
-# despues cuando sumemos mas deco vamos a aumentar a 7 que es lo que pide la consigna (por ahora 6 que es lo que tenemos)!
-daily_rotation_count = 6
+# Siete decoraciones por dia el cofre siempre esta disponible.
+daily_rotation_count = 7
 
 [[shops.robin.products]]
 item_id = 50
@@ -40,6 +40,33 @@ item_id = 69
 price = 600
 rotates = true
 
+[[shops.robin.products]]
+item_id = 56
+price = 450
+rotates = true
+
+[[shops.robin.products]]
+item_id = 72
+price = 150
+rotates = true
+
+
+# Precios unitarios del mercado; los cultivos y animales usan FarmConfig.
+[shops.pierre]
+products = [
+    { item_id = 10, price = 10 },
+    { item_id = 11, price = 5 },
+    { item_id = 12, price = 8 },
+    { item_id = 13, price = 20 },
+]
+
+[shops.clint]
+products = [
+    { item_id = 30, price = 10 },
+    { item_id = 31, price = 40 },
+    { item_id = 32, price = 50 },
+    { item_id = 33, price = 80 },
+]
 
 # FARM
 
@@ -60,6 +87,10 @@ town_return = { x = 13, y = 10 }
 interiors = [
     { interior_id = 0, house_index = 0, door = { x = 2, y = 3 }, return = { x = 2, y = 4 }, width = 17, height = 17, walkable_areas = [{ x = 1, y = 4, width = 15, height = 10 }, { x = 3, y = 14, width = 1, height = 3 }], entry = { x = 3, y = 13 }, exit = { x = 3, y = 15 }, beds = [{ x = 12, y = 6 }] },
     { interior_id = 0, house_index = 1, door = { x = 3, y = 3 }, return = { x = 3, y = 4 }, width = 17, height = 17, walkable_areas = [{ x = 1, y = 4, width = 15, height = 10 }, { x = 3, y = 14, width = 1, height = 3 }], entry = { x = 3, y = 13 }, exit = { x = 3, y = 15 }, beds = [{ x = 12, y = 6 }] },
+    { interior_id = 1, house_index = 0, outside_zone = "town", door = { x = 5, y = 12 }, return = { x = 5, y = 13 }, width = 17, height = 17, entry = { x = 8, y = 13 }, exit = { x = 8, y = 15 }, npc = { x = 8, y = 6 } },
+    { interior_id = 2, house_index = 0, outside_zone = "town", door = { x = 8, y = 12 }, return = { x = 8, y = 13 }, width = 17, height = 17, entry = { x = 8, y = 13 }, exit = { x = 8, y = 15 }, npc = { x = 8, y = 6 } },
+    { interior_id = 3, house_index = 0, outside_zone = "town", door = { x = 20, y = 12 }, return = { x = 20, y = 13 }, width = 17, height = 17, entry = { x = 8, y = 13 }, exit = { x = 8, y = 15 }, npc = { x = 8, y = 6 } },
+    { interior_id = 4, house_index = 0, outside_zone = "town", door = { x = 26, y = 12 }, return = { x = 26, y = 13 }, width = 17, height = 17, entry = { x = 8, y = 13 }, exit = { x = 8, y = 15 }, npc = { x = 8, y = 6 } },
 ]
 
 background_default = { texture_id = 1, state = "walkable" }

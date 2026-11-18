@@ -7,6 +7,7 @@
 
 #include "entities/collision_box.h"
 #include "player/player.h"
+#include "commerce/shop_products.h"
 
 namespace {
 const CollisionBox BED_BOX{22, 32};
@@ -44,6 +45,8 @@ ZoneMap walkingMap(const InteriorLayout& room) {
     for (const auto& pos: positions) {
         const auto cell = room.terrain.baseCellAt(pos).value();
         floor[cell.first][cell.second] = room.terrain.isWalkable(playerBox.at(pos)) &&
+            (!room.background.interior || !room.background.interior->npc ||
+             !playerBox.at(room.background.interior->npc->pos).intersects(playerBox.at(pos))) &&
             std::none_of(room.beds.begin(), room.beds.end(), [&](const auto& bed) {
                 return BED_BOX.at(bed).intersects(playerBox.at(pos));
             });
@@ -67,10 +70,21 @@ bool InteriorManager::initialize(const std::vector<InteriorLayout>& layouts) {
             !room.terrain.isWalkable(playerBox.at(room.entry)) ||
             !room.terrain.isWalkable(playerBox.at(room.exit)) ||
             !room.terrain.hasBasePath(room.entry, room.exit)) return false;
+        if (room.background.interior && room.background.interior->npc) {
+            const auto& npc = *room.background.interior->npc;
+            const auto expected = shop_products::merchantForInterior(room.location.interior_id);
+            const auto bounds = playerBox.at(npc.pos);
+            if (!expected || *expected != npc.id || !validPosition(npc.pos) ||
+                !room.terrain.isWalkable(bounds) ||
+                bounds.intersects(playerBox.at(room.entry)) ||
+                bounds.intersects(playerBox.at(room.exit))) return false;
+        }
         std::vector<CollisionBounds> beds;
         for (const auto& bed: room.beds) {
             const auto bounds = BED_BOX.at(bed);
             if (!validPosition(bed) || !room.terrain.isWalkable(bounds) ||
+                (room.background.interior && room.background.interior->npc &&
+                 bounds.intersects(playerBox.at(room.background.interior->npc->pos))) ||
                 bounds.intersects(playerBox.at(room.entry)) ||
                 bounds.intersects(playerBox.at(room.exit)) ||
                 std::any_of(beds.begin(), beds.end(), [&](const auto& other) {
@@ -105,6 +119,8 @@ const InteriorLayout* InteriorManager::find(const InteriorLocation& location) co
 bool InteriorManager::canWalk(const InteriorLocation& location, const CollisionBounds& bounds) const {
     const auto* room = find(location);
     return room && room->terrain.isWalkable(bounds) &&
+           (!room->background.interior || !room->background.interior->npc ||
+            !CollisionBox{entity_dimensions::PLAYER}.at(room->background.interior->npc->pos).intersects(bounds)) &&
            std::none_of(room->beds.begin(), room->beds.end(), [&](const auto& bed) {
                return BED_BOX.at(bed).intersects(bounds);
            });

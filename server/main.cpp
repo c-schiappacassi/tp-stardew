@@ -45,7 +45,8 @@ int main(int argc, char* argv[]) {
             world.config.dungeon,
             world.config.player,
             world.farm,
-            world.config.town
+            world.config.town,
+            world.config.market
         );
 
         Socket listener(argv[1]);
