@@ -24,6 +24,7 @@ RobinShopConfig ShopTomlReader::read(const toml::table& root) const {
     const auto& robin = tableAt(shops.get("robin"), "shops.robin");
 
     RobinShopConfig config;
+    config.products.clear();
     config.dailyRotationCount = static_cast<uint8_t>(integer(
         robin, "daily_rotation_count", std::numeric_limits<uint8_t>::max(),
         "shops.robin.daily_rotation_count"));
@@ -77,5 +78,39 @@ RobinShopConfig ShopTomlReader::read(const toml::table& root) const {
                 "no puede superar la cantidad de productos que rotan");
     }
 
+    return config;
+}
+
+MarketConfig ShopTomlReader::readMarket(const toml::table& root) const {
+    MarketConfig config;
+    config.robin = read(root);
+    const auto readPrices = [&](const char* shop, std::vector<ShopItemPrice>& prices) {
+        const auto& shops = toml_helpers::tableAt(root.get("shops"), "shops");
+        const auto* shopNode = shops.get(shop);
+        if (!shopNode) return;
+        const std::string field = std::string("shops.") + shop + ".products";
+        const auto& shopTable = toml_helpers::tableAt(shopNode, std::string("shops.") + shop);
+        const auto* node = shopTable.get("products");
+        if (!node || !node->is_array()) toml_helpers::invalid(field, "se esperaba una lista");
+        std::set<ItemId> registered;
+        for (const auto& entry : *node->as_array()) {
+            const auto& product = toml_helpers::tableAt(&entry, field);
+            const auto item = static_cast<ItemId>(toml_helpers::integer(product, "item_id",
+                std::numeric_limits<uint16_t>::max(), field + ".item_id"));
+            const auto price = static_cast<uint32_t>(toml_helpers::integer(product, "price",
+                std::numeric_limits<uint32_t>::max(), field + ".price"));
+            if (!registered.insert(item).second) toml_helpers::invalid(field, "producto repetido");
+            bool found = false;
+            for (auto& configured : prices) {
+                if (configured.item == item) {
+                    configured.price = price;
+                    found = true;
+                }
+            }
+            if (!found) toml_helpers::invalid(field, "producto no admitido por este comerciante");
+        }
+    };
+    readPrices("pierre", config.seeds);
+    readPrices("clint", config.minerals);
     return config;
 }

@@ -19,6 +19,10 @@ target_sources(taller_server
         network/server_protocol.cpp
         chat/player_chat.cpp
         chat/chat_command_parser.cpp
+        commerce/merchant_chat.cpp
+        commerce/shop_products.cpp
+        player/player_trade.cpp
+        world/world_commerce.cpp
         game/game.cpp
         game/game_setup.cpp
         game/game_manager.cpp
@@ -107,6 +111,9 @@ target_sources(taller_server
         chat/player_chat.h
         chat/chat_commands.h
         chat/chat_command_parser.h
+        commerce/merchant_chat.h
+        commerce/shop_config.h
+        commerce/shop_products.h
         game/game.h
         game/game_manager.h
         game/game_types.h

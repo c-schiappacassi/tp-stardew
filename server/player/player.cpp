@@ -323,6 +323,12 @@ uint32_t Player::addGold(uint32_t amount) {
     return received;
 }
 
+bool Player::spendGold(uint32_t amount) {
+    if (gold < amount) return false;
+    gold -= amount;
+    return true;
+}
+
 void Player::applyCombatBonus() {
     if (combatBonus) {
         return;

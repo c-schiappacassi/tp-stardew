@@ -2,13 +2,14 @@
 
 #include <utility>
 
-Game::Game(const std::string& id,const std::string& name,uint8_t worldId,const PlayerConfig& playerConfig,const DungeonConfig& dungeonConfig,const FarmConfig& farmConfig,uint8_t maxPlayers,ChatServices chatServices):
+Game::Game(const std::string& id,const std::string& name,uint8_t worldId,const PlayerConfig& playerConfig,const DungeonConfig& dungeonConfig,const FarmConfig& farmConfig,uint8_t maxPlayers,ChatServices chatServices,const MarketConfig& marketConfig):
     id(id),
     name(name),
     worldId(worldId),
     input(std::make_shared<CommandQueue>()),
     world(dungeonConfig, std::random_device{}(), farmConfig),
-    playerManager(playerConfig, world, world, world, world, maxPlayers, std::move(chatServices)) {}
+    merchants(std::make_shared<MerchantChat>(world, marketConfig)),
+    playerManager(playerConfig, world, world, world, world, maxPlayers,ChatServices{chatServices.merchants ? std::move(chatServices.merchants) : merchants,std::move(chatServices.cheats)}) {}
 
 bool Game::loadFarm(uint8_t selectedWorldId, const FarmLayout& layout) {
     std::lock_guard<std::mutex> lock(mtx);

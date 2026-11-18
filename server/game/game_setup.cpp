@@ -2,6 +2,7 @@
 
 #include <utility>
 #include "entities/entity_dimensions.h"
+#include "commerce/shop_products.h"
 
 GameSetup makeDefaultGameSetup(uint8_t worldId) {
     GameSetup setup;
@@ -54,6 +55,23 @@ GameSetup makeDefaultGameSetup(uint8_t worldId) {
     }
     setup.townConfig.map = {32, 24, entity_dimensions::TILE_SIZE};
     setup.townConfig.connections = {{"farm", {2, 12}}, {"dungeon", {29, 12}}};
+    const InteriorId shops[]{InteriorId::MarniesShop, InteriorId::PierresShop,
+                             InteriorId::RobinsShop, InteriorId::ClintsShop};
+    const int columns[]{5, 8, 20, 26};
+    for (std::size_t index = 0; index < 4; ++index) {
+        InteriorLayout shop;
+        shop.location = {shops[index], 0};
+        shop.terrain = ZoneMap{std::vector<std::vector<bool>>(17, std::vector<bool>(17, true)),
+                               entity_dimensions::TILE_SIZE};
+        shop.outside.zone = Zone::Town;
+        shop.outside.position = terrain.baseAt({12, columns[index]}).value();
+        shop.returnPosition = terrain.baseAt({13, columns[index]}).value();
+        shop.entry = shop.terrain.baseAt({13, 8}).value();
+        shop.exit = shop.terrain.baseAt({15, 8}).value();
+        shop.background.interior = InteriorBackgroundData{Position{0, 0}, shops[index],
+            NpcData{shop.terrain.baseAt({6, 8}).value(), *shop_products::merchantForInterior(shops[index])}};
+        setup.farm.interiors.push_back(std::move(shop));
+    }
     return setup;
 }
 

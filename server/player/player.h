@@ -70,6 +70,9 @@ public:
     uint16_t getSwordDamage() const;
     uint16_t getSwordRange() const;
     uint32_t addGold(uint32_t amount);
+    bool spendGold(uint32_t amount);
+    bool buyItem(const Stack& stack, uint32_t price);
+    bool sellItems(const std::vector<std::pair<uint8_t, uint16_t>>& quantities, uint32_t price);
     void applyCombatBonus();
     void passOut();
     bool sleep();

@@ -22,12 +22,14 @@ private:
     PlayerConfig playerConfig;
     std::optional<FarmLayout> farmLayout;
     TownConfig townConfig;
+    MarketConfig marketConfig;
 
 public:
     explicit GameManager(const DungeonConfig& dungeonConfig = {},
                          const PlayerConfig& playerConfig = {},
                          const std::optional<FarmLayout>& farmLayout = std::nullopt,
-                         const TownConfig& townConfig = {});
+                         const TownConfig& townConfig = {},
+                         const MarketConfig& marketConfig = {});
     ~GameManager();
 
     GameSession createGame(const CreateGameDTO& dto, const std::shared_ptr<OutQueue>& output);

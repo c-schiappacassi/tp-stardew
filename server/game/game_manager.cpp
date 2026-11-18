@@ -13,11 +13,13 @@
 GameManager::GameManager(const DungeonConfig& dungeonConfig,
                          const PlayerConfig& playerConfig,
                          const std::optional<FarmLayout>& farmLayout,
-                         const TownConfig& townConfig)
+                         const TownConfig& townConfig,
+                         const MarketConfig& marketConfig)
     : dungeonConfig(dungeonConfig),
       playerConfig(playerConfig),
       farmLayout(farmLayout),
-      townConfig(townConfig) {
+      townConfig(townConfig),
+      marketConfig(marketConfig) {
   
 }
 
@@ -32,7 +34,7 @@ GameSession GameManager::createGame(const CreateGameDTO& dto,
     setup.farmConfig = FarmConfig{std::chrono::milliseconds{playerConfig.dayDurationMs}};
     if (townConfig.map.width != 0) setup.townConfig = townConfig;
     auto game = std::make_unique<Game>(id, dto.gameName, setup.worldId,
-                                       setup.playerConfig, setup.dungeonConfig, setup.farmConfig,setup.farm.playerHouses);
+                                       setup.playerConfig, setup.dungeonConfig, setup.farmConfig,setup.farm.playerHouses,ChatServices{}, marketConfig);
     if (!game->loadDungeon(setup.worldId, setup.layout)) {
         throw std::invalid_argument("No se pudo cargar la mazmorra de la partida");
     }

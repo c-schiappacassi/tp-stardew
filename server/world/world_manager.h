@@ -35,6 +35,9 @@ public:
     bool spawnPlayer(Player& player) const override;
     bool recoverPlayer(Player& player, uint16_t playerId = 0) const override;
     const FarmManager& getFarm() const;
+    std::optional<NpcData> nearbyMerchant(const Player& player, Direction direction = Direction::None) const;
+    bool buyAnimals(AnimalSpecies species, uint16_t quantity);
+    bool sellAnimals(AnimalSpecies species, uint16_t quantity);
     void update(std::chrono::milliseconds elapsed, const std::vector<CollisionBounds>& farmPlayers = {}, const std::vector<Combatant>& players = {},std::chrono::steady_clock::time_point now = std::chrono::steady_clock::now());
     bool combatCompleted() const;
     std::optional<DungeonCombatData> getCombatData(uint8_t room) const;

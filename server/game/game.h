@@ -12,6 +12,7 @@
 #include "world/world_manager.h"
 #include "player/player_manager.h"
 #include "player/player_config.h"
+#include "commerce/merchant_chat.h"
 
 class Game:public Thread {
 
@@ -23,6 +24,7 @@ class Game:public Thread {
         mutable std::mutex mtx;
         bool configured = false;
         WorldManager world;
+        std::shared_ptr<MerchantChat> merchants;
         PlayerManager playerManager;
         std::shared_ptr<const ConstMapData> constMap;
 
@@ -38,7 +40,7 @@ class Game:public Thread {
         GameSession addPlayer(const std::string& playerName,const PlayerData& data,const std::shared_ptr<OutQueue>& output,const std::string& successMsg);
     
     public:
-        Game(const std::string& id,const std::string& name,uint8_t worldId,const PlayerConfig& playerConfig = {},const DungeonConfig& dungeonConfig = {},const FarmConfig& farmConfig = FarmConfig{},uint8_t maxPlayers = 4,ChatServices chatServices = {});
+        Game(const std::string& id,const std::string& name,uint8_t worldId,const PlayerConfig& playerConfig = {},const DungeonConfig& dungeonConfig = {},const FarmConfig& farmConfig = FarmConfig{},uint8_t maxPlayers = 4,ChatServices chatServices = {},const MarketConfig& marketConfig = {});
 
         const std::string& getId() const;
         std::string getName() const;
