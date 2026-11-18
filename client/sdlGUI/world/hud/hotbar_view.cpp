@@ -36,14 +36,6 @@ namespace {
         const int h = SLOT_PX * u + 2 * pad;
         return Layout{u, SDL2pp::Rect((screen.x - w) / 2, screen.y - h - BOTTOM_MARGIN * u, w, h), slots};
     }
-
-    SDL2pp::Rect icon_rect(const Sprite& icon, const SDL2pp::Rect& slot_rect, int u) {
-        const int box = ICON_BOX * u;
-        const int longest = std::max(icon.width, icon.height);
-        const int w = std::max(1, icon.width * box / longest);
-        const int h = std::max(1, icon.height * box / longest);
-        return SDL2pp::Rect(slot_rect.x + (slot_rect.w - w) / 2, slot_rect.y + (slot_rect.h - h) / 2, w, h);
-    }
 }
 
 void HotbarView::update(const PlayerDataLocal& local) {
@@ -54,7 +46,7 @@ void HotbarView::update(const PlayerDataLocal& local) {
 
 void HotbarView::draw_stack(const RenderInfo& ctx, const Stack& stack, const SDL2pp::Rect& slot_rect, int u) {
     if (const Sprite* icon = ctx.assets.find_sprite(stack.item_id)) {
-        draw_sprite_in(ctx, *icon, icon_rect(*icon, slot_rect, u));
+        draw_sprite_fit(ctx, *icon, slot_rect, ICON_BOX * u);
     }
 
     if (stack.quantity > 1) {

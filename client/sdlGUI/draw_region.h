@@ -1,5 +1,6 @@
 #pragma once
 
+#include <algorithm>
 #include <optional>
 
 #include <SDL2/SDL.h>
@@ -24,6 +25,17 @@ inline void draw_scaled(const RenderInfo& ctx, SpriteId sprite_id, const SDL2pp:
 
 inline void draw_sprite_in(const RenderInfo& ctx, const Sprite& s, const SDL2pp::Rect& dst, bool flip = false, std::optional<SDL_Color> tint = std::nullopt) {
     draw_scaled(ctx, s.sprite_id, s.src(), dst, flip, tint);
+}
+
+inline SDL2pp::Rect fit_sprite_in(const Sprite& s, const SDL2pp::Rect& area, int box) {
+    const int longest = std::max(1, static_cast<int>(std::max(s.width, s.height)));
+    const int w = std::max(1, s.width * box / longest);
+    const int h = std::max(1, s.height * box / longest);
+    return SDL2pp::Rect(area.x + (area.w - w) / 2, area.y + (area.h - h) / 2, w, h);
+}
+
+inline void draw_sprite_fit(const RenderInfo& ctx, const Sprite& s, const SDL2pp::Rect& area, int box, bool flip = false, std::optional<SDL_Color> tint = std::nullopt) {
+    draw_sprite_in(ctx, s, fit_sprite_in(s, area, box), flip, tint);
 }
 
 inline void draw_region(const RenderInfo& ctx, SpriteId sprite_id, const SDL2pp::Rect& src, const SDL2pp::Point& origin, int dx = 0, int dy = 0, bool flip = false, std::optional<SDL_Color> tint = std::nullopt) {

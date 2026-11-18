@@ -39,7 +39,7 @@ private:
 
 public:
     State() {
-        // todo esto es para los alerts, abril dijo que en realidad se hace con el consepto de "Subscriber", pero que acá es overkill
+        // todo esto es para los alerts, abril dijo que en realidad se hace con el concepto de "Subscriber", pero que acá es overkill
         crop_to_item.emplace(CropType::Potato, ItemId::Potato);
         crop_to_item.emplace(CropType::Pumpkin, ItemId::Pumpkin);
         crop_to_item.emplace(CropType::Scallion, ItemId::Scallion);

@@ -9,6 +9,7 @@ target_sources(taller_client
 
     sdlGUI/world/player_view.cpp
     sdlGUI/world/furniture_view.cpp
+    sdlGUI/world/item_view.cpp
 
     sdlGUI/world/hud/hotbar_view.cpp
     sdlGUI/world/hud/bar_view.cpp
@@ -59,6 +60,7 @@ target_sources(taller_client
     sdlGUI/world/world_view.h
     sdlGUI/world/map_view.h
     sdlGUI/world/zone_view.h
+    sdlGUI/world/item_view.h
     sdlGUI/world/entity_view.h
     sdlGUI/world/furniture_view.h
     sdlGUI/world/background.h

@@ -8,6 +8,7 @@
 
 #include "../background_zone_view.h"
 #include "../furniture_view.h"
+#include "../item_view.h"
 #include "../../sync_views.h"
 #include "../../draw_region.h"
 #include "../lighting.h"   
@@ -45,6 +46,7 @@ inline void FarmView::update(const FarmData& farm) {
     sync_views(crops, farm.crops, id_of);
     sync_views(animals, farm.animals, id_of);
     sync_views(furniture, farm.furniture, id_of);
+    update_loot(farm.loot);
 
     std::set<std::pair<int, int>> watered;
     for (const auto& crop : farm.crops) {
