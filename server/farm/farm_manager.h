@@ -12,6 +12,7 @@
 #include "interactions/farm_interactions.h"
 #include "loading/farm_layout.h"
 #include "spatial/farm_space.h"
+#include "items/ground_items.h"
 
 class Player;
 class EntityIdGenerator;
@@ -29,6 +30,7 @@ private:
     AnimalManager animalManager;
     DecorationManager decorationManager;
     FarmInteractions interactions;
+    GroundItems groundItems;
 
 public:
     explicit FarmManager(const FarmConfig& config = FarmConfig{},
@@ -38,6 +40,7 @@ public:
     bool isInitialized() const;
     bool spawnPlayer(Player& player) const;
     bool useSelectedItem(Player& player, Direction direction, EntityIdGenerator& entityIds,std::chrono::steady_clock::time_point now);
+    bool collectNearbyItems(Player& player);
     bool setMap(const ZoneMap& map);
     bool setReservedPositions(const std::vector<Position>& positions);
     void setObstacles(const std::vector<CollisionBounds>& bounds);
@@ -55,8 +58,10 @@ public:
     bool waterCrop(EntityId id);
     std::optional<FarmProduct> harvestCrop(EntityId id, double luck = 1.0);
     std::optional<FarmProduct> collectFromAnimal(EntityId id);
-    void update(std::chrono::milliseconds elapsed);
-    void finishDay(std::chrono::milliseconds remainingTime);
+    void update(std::chrono::milliseconds elapsed, EntityIdGenerator& entityIds);
+    void finishDay(std::chrono::milliseconds remainingTime, EntityIdGenerator& entityIds);
+    GroundItems& getGroundItems();
+    const GroundItems& getGroundItems() const;
     FarmData getPublicData() const;
     std::vector<Position> getTilledPositions() const;
     const Crop* findCrop(EntityId id) const;

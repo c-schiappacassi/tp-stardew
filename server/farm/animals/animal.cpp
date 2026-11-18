@@ -25,6 +25,8 @@ uint32_t Animal::getAvailableProducts() const { return availableProducts; }
 
 bool Animal::needsInteraction() const { return false; }
 
+bool Animal::dropsProductsAutomatically() const { return false; }
+
 AnimalState Animal::getState() const {
     if (movement.isWalking()) {
         return AnimalState::Walking;

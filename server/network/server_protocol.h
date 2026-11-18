@@ -21,6 +21,7 @@ private:
 
     void writeStack(MessageBuffer& out, const Stack& stack);
     void writeMineralData(MessageBuffer& out, const MineralData& mineral);
+    void writeLootData(MessageBuffer& out, const std::vector<LootData>& loot);
     void writeCombatData(MessageBuffer& out, const DungeonCombatData& combat);
     void writeLevelData(MessageBuffer& out, const LevelData& level);
     void writeMineData(MessageBuffer& out, const MineData& mine);

@@ -16,6 +16,15 @@
 
 // AUXILIARES
 
+struct LootData {
+    uint32_t id = 0;
+    Position pos{0, 0};
+    ItemId item = ItemId::Silver;
+    uint32_t quantity = 1;
+    Quality quality = Quality::None;
+    LootKind kind = LootKind::Item;
+};
+
 // Farm
 struct CropData{
     uint32_t id = 0;
@@ -47,6 +56,7 @@ struct FarmData{
     std::vector<AnimalData> animals;
     std::vector<Position> tilledSoil;
     std::vector<FurnitureData> furniture;
+    std::vector<LootData> loot;
 };
 
 struct InteriorData {
@@ -86,13 +96,6 @@ struct TrapData {
     TrapType type = TrapType::Spikes;
     TrapState state = TrapState::Inactive;
     uint16_t range = 0;
-};
-
-struct LootData {
-    uint32_t id = 0;
-    Position pos{0, 0};
-    ItemId item = ItemId::Silver;
-    uint16_t quantity = 1;
 };
 
 struct CombatProgressData {

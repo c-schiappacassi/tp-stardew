@@ -1,7 +1,5 @@
 #include "farm_interactions.h"
 
-#include <limits>
-
 #include "entities/entity_id_generator.h"
 #include "farm/farm_constants.h"
 #include "farm/farm_manager.h"
@@ -22,17 +20,10 @@ std::optional<CropType> cropTypeForSeed(ItemId item) {
             return std::nullopt;
     }
 }
+}  // namespace
 
-bool addProductToInventory(Player& player, const FarmProduct& product) {
-    if (product.quantity > std::numeric_limits<uint16_t>::max()) {
-        return false;
-    }
-    const Stack stack{product.item, static_cast<uint16_t>(product.quantity), product.quality};
-    return player.addItem(stack);
-}
-}
-
-bool FarmInteractions::useShovel(Player& player, FarmManager& farm, Direction direction) const {
+bool FarmInteractions::useShovel(Player& player, FarmManager& farm, Direction direction,
+    EntityIdGenerator& entityIds) const {
     const auto position = targeting.findAdjacentPosition(player, direction, farm.getMap(),
         CollisionBox{entity_dimensions::CROP});
     if (!position) {
@@ -40,7 +31,8 @@ bool FarmInteractions::useShovel(Player& player, FarmManager& farm, Direction di
     }
     for (const auto& [id, decoration] : farm.getDecorations()) {
         if (farm.getMap().sameBaseCell(decoration.getPosition(), *position)) {
-            if (!player.addItem(Stack{decoration.getItem(), 1, Quality::None})) {
+            if (!farm.getGroundItems().drop(decoration.getPosition(), decoration.getItem(),
+                    1, Quality::None, entityIds)) {
                 return false;
             }
             farm.removeDecoration(id);
@@ -55,10 +47,14 @@ bool FarmInteractions::waterCrop(Player& player, FarmManager& farm, Direction di
     return crop && farm.waterCrop(crop->getId());
 }
 
-bool FarmInteractions::collectProduct(Player& player, FarmManager& farm,
-    Direction direction) const {
+bool FarmInteractions::collectProduct(Player& player, FarmManager& farm, Direction direction, EntityIdGenerator& entityIds) const {
     const auto target = targeting.findCollectionTarget(player, farm, direction);
-    if (!target || !addProductToInventory(player, target->product)) {
+    if (!target) {
+        return false;
+    }
+    const auto& product = target->product;
+    if (!farm.getGroundItems().drop(target->position, product.item, product.quantity,
+            product.quality, entityIds)) {
         return false;
     }
     if (target->source == FarmProductSource::Animal) {
@@ -92,19 +88,19 @@ bool FarmInteractions::applySelectedItem(Player& player, FarmManager& farm,
     EntityIdGenerator& entityIds, Direction direction) const {
     const auto* selectedItem = player.getSelectedItem();
     if (!selectedItem) {
-        return collectProduct(player, farm, direction);
+        return collectProduct(player, farm, direction, entityIds);
     }
     const auto item = selectedItem->item_id;
     switch (item) {
         case ItemId::WateringCan:
             return waterCrop(player, farm, direction);
         case ItemId::Shovel:
-            return useShovel(player, farm, direction);
+            return useShovel(player, farm, direction, entityIds);
         default:
             if (cropTypeForSeed(item) || Decoration::isDecoration(item)) {
                 return placeSelectedItem(player, farm, entityIds, direction, item);
             }
-            return collectProduct(player, farm, direction);
+            return collectProduct(player, farm, direction, entityIds);
     }
 }
 

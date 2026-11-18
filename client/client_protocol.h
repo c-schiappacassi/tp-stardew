@@ -25,6 +25,7 @@ private:
     ProjectileData receiveProjectileData();
     TrapData receiveTrapData();
     LootData receiveLootData();
+    std::vector<LootData> receiveLoot();
     DungeonCombatData receiveCombatData();
     LevelData receiveLevelData();
     MineData receiveMineData();

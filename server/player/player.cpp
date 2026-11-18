@@ -125,6 +125,8 @@ bool Player::addItem(const Stack& stack) {
     return inventory.add(stack); 
 }
 
+uint16_t Player::addItemUpTo(const Stack& stack) { return inventory.addUpTo(stack); }
+
 bool Player::removeItem(uint8_t slot, uint16_t quantity) {
     return inventory.remove(slot, quantity);
 }
@@ -315,8 +317,10 @@ uint16_t Player::getSwordDamage() const {
 
 uint16_t Player::getSwordRange() const { return config.swordRange; }
 
-void Player::addGold(uint32_t amount) {
-    gold += std::min(amount, std::numeric_limits<uint32_t>::max() - gold);
+uint32_t Player::addGold(uint32_t amount) {
+    const auto received = std::min(amount, std::numeric_limits<uint32_t>::max() - gold);
+    gold += received;
+    return received;
 }
 
 void Player::applyCombatBonus() {

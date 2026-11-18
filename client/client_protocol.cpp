@@ -92,7 +92,22 @@ LootData ClientProtocol::receiveLootData() {
     loot.id = base.receiveUint32();
     loot.pos = receivePosition();
     loot.item = static_cast<ItemId>(base.receiveUint16());
-    loot.quantity = base.receiveUint16();
+    loot.quantity = base.receiveUint32();
+    loot.quality = static_cast<Quality>(base.receiveUint8());
+    loot.kind = static_cast<LootKind>(base.receiveUint8());
+    if (loot.id == 0 || loot.quantity == 0 || loot.kind > LootKind::Gold) {
+        throw ProtocolError("Objeto en el piso invalido");
+    }
+    return loot;
+}
+
+std::vector<LootData> ClientProtocol::receiveLoot() {
+    const auto count = base.receiveUint16();
+    std::vector<LootData> loot;
+    loot.reserve(count);
+    for (uint16_t i = 0; i < count; ++i) {
+        loot.push_back(receiveLootData());
+    }
     return loot;
 }
 
@@ -115,11 +130,7 @@ DungeonCombatData ClientProtocol::receiveCombatData() {
     for (uint16_t i = 0; i < count; ++i) {
         combat.traps.push_back(receiveTrapData());
     }
-    count = base.receiveUint16();
-    combat.loot.reserve(count);
-    for (uint16_t i = 0; i < count; ++i) {
-        combat.loot.push_back(receiveLootData());
-    }
+    combat.loot = receiveLoot();
     return combat;
 }
 
@@ -247,6 +258,7 @@ FarmData ClientProtocol::receiveFarmData() {
     for (uint16_t i = 0; i < n; ++i) farm.tilledSoil.push_back(receivePosition());
     n = base.receiveUint16();
     for (uint16_t i = 0; i < n; ++i) farm.furniture.push_back(receiveFurnitureData());
+    farm.loot = receiveLoot();
     return farm;
 }
 

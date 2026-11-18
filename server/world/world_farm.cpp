@@ -1,5 +1,7 @@
 #include "world_manager.h"
 
+#include "player/player.h"
+
 bool WorldManager::loadFarm(uint8_t worldId, const FarmLayout& layout) {
     if (loadedWorld && *loadedWorld != worldId) {
         return false;
@@ -33,10 +35,19 @@ const FarmManager& WorldManager::getFarm() const { return farm; }
 void WorldManager::update(std::chrono::milliseconds elapsed,const std::vector<CollisionBounds>& farmPlayers,const std::vector<Combatant>& players,std::chrono::steady_clock::time_point now) {
     if (farm.isInitialized()) {
         farm.setObstacles(farmPlayers);
-        farm.update(elapsed);
+        farm.update(elapsed, entityIds);
     }
     for (const auto& combatant: players) {
         if (combatant.player) interiors.useBed(*combatant.player);
     }
     dungeon.update(elapsed, players, entityIds, now);
+    
+    for (const auto& actor: players) {
+        if (!actor.player) continue;
+        if (actor.player->getZone() == Zone::Farm) {
+            farm.collectNearbyItems(*actor.player);
+        } else if (actor.player->getZone() == Zone::Dungeon) {
+            dungeon.collectNearbyItems(*actor.player);
+        }
+    }
 }

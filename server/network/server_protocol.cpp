@@ -31,11 +31,21 @@ void validatePosition(const Position& pos) {
     }
 }
 
+void validateLoot(const std::vector<LootData>& loot) {
+    validateCount(loot.size(), MAX_U16, "objetos en el piso");
+    for (const auto& item: loot) {
+        validatePosition(item.pos);
+        if (item.id == 0 || item.quantity == 0 || item.kind > LootKind::Gold) {
+            throw ProtocolError("Objeto en el piso invalido");
+        }
+    }
+}
+
 void validateCombat(const DungeonCombatData& combat) {
     validateCount(combat.enemies.size(), MAX_U16, "enemigos");
     validateCount(combat.projectiles.size(), MAX_U16, "proyectiles");
     validateCount(combat.traps.size(), MAX_U16, "trampas");
-    validateCount(combat.loot.size(), MAX_U16, "botines");
+    validateLoot(combat.loot);
     for (const auto& enemy: combat.enemies) {
         validatePosition(enemy.pos);
         if (enemy.dir > Direction::Right || enemy.type > EnemyType::Skull ||
@@ -55,9 +65,6 @@ void validateCombat(const DungeonCombatData& combat) {
             trap.type > TrapType::WallFlame || trap.state > TrapState::Active) {
             throw ProtocolError("Estado de trampa desconocido");
         }
-    }
-    for (const auto& loot: combat.loot) {
-        validatePosition(loot.pos);
     }
 }
 
@@ -95,6 +102,7 @@ void validateStatus(const ServerStatus& status) {
     const auto* farm = std::get_if<FarmData>(&local.zoneData);
     if (farm) {
         validateFarmCounts(*farm);
+        validateLoot(farm->loot);
     }
     const auto* mine = std::get_if<MineData>(&local.zoneData);
     if (mine) {
@@ -227,12 +235,18 @@ void ServerProtocol::writeCombatData(MessageBuffer& out, const DungeonCombatData
         out.putUint8(static_cast<uint8_t>(trap.state));
         out.putUint16(trap.range);
     }
-    out.putUint16(static_cast<uint16_t>(combat.loot.size()));
-    for (const auto& loot: combat.loot) {
+    writeLootData(out, combat.loot);
+}
+
+void ServerProtocol::writeLootData(MessageBuffer& out, const std::vector<LootData>& items) {
+    out.putUint16(static_cast<uint16_t>(items.size()));
+    for (const auto& loot: items) {
         out.putUint32(loot.id);
         writePosition(out, loot.pos);
         out.putUint16(static_cast<uint16_t>(loot.item));
-        out.putUint16(loot.quantity);
+        out.putUint32(loot.quantity);
+        out.putUint8(static_cast<uint8_t>(loot.quality));
+        out.putUint8(static_cast<uint8_t>(loot.kind));
     }
 }
 
@@ -282,6 +296,7 @@ void ServerProtocol::writeFarmData(MessageBuffer& out, const FarmData& farm) {
     for (const auto& furniture : farm.furniture) {
         writeFurnitureData(out, furniture);
     }
+    writeLootData(out, farm.loot);
 }
 
 void ServerProtocol::writeBackgroundData(MessageBuffer& out, const BackgroundData& bg) {

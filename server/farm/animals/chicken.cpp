@@ -14,6 +14,8 @@ AnimalSpecies Chicken::getSpecies() const { return AnimalSpecies::Chicken; }
 
 ItemId Chicken::getProduct() const { return ItemId::Egg; }
 
+bool Chicken::dropsProductsAutomatically() const { return true; }
+
 void Chicken::updateProduction(std::chrono::milliseconds elapsed) {
     advanceProduction(elapsed, ProductionMode::Accumulate);
 }

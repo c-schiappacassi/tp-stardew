@@ -42,6 +42,7 @@ public:
     AnimalType getType() const;
     uint32_t getAvailableProducts() const;
     virtual bool needsInteraction() const;
+    virtual bool dropsProductsAutomatically() const;
     virtual AnimalSpecies getSpecies() const = 0;
     virtual ItemId getProduct() const = 0;
     virtual AnimalState getState() const;

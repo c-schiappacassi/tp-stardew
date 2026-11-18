@@ -10,5 +10,6 @@ public:
 
     AnimalSpecies getSpecies() const override;
     ItemId getProduct() const override;
+    bool dropsProductsAutomatically() const override;
     void updateProduction(std::chrono::milliseconds elapsed) override;
 };

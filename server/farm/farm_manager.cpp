@@ -52,6 +52,15 @@ bool FarmManager::useSelectedItem(Player& player, Direction direction, EntityIdG
     return interactions.interact(player, *this, entityIds, direction, now);
 }
 
+bool FarmManager::collectNearbyItems(Player& player) {
+    if (!initialized || player.getZone() != Zone::Farm) {
+        return false;
+    }
+    return groundItems.collect(player, [&](const Position& position) {
+        return FarmTargeting{}.hasClearPath(player.getPosition(), position, getMap());
+    });
+}
+
 bool FarmManager::setReservedPositions(const std::vector<Position>& positions) {
     if (cropManager.hasTilledSoil()) {
         return false;
@@ -133,7 +142,7 @@ std::optional<ItemId> FarmManager::removeDecoration(EntityId id) {
     return decorationManager.remove(id, space);
 }
 
-void FarmManager::update(std::chrono::milliseconds elapsed) {
+void FarmManager::update(std::chrono::milliseconds elapsed, EntityIdGenerator& entityIds) {
     if (elapsed.count() < 0) {
         throw std::invalid_argument("Tiempo negativo");
     }
@@ -141,11 +150,11 @@ void FarmManager::update(std::chrono::milliseconds elapsed) {
         return;
     }
     cropManager.update(elapsed);
-    animalManager.update(elapsed, space);
+    animalManager.update(elapsed, space, groundItems, entityIds);
 }
 
-void FarmManager::finishDay(std::chrono::milliseconds remainingTime) {
-    update(remainingTime);
+void FarmManager::finishDay(std::chrono::milliseconds remainingTime, EntityIdGenerator& entityIds) {
+    update(remainingTime, entityIds);
     cropManager.finishDay();
 }
 
@@ -167,3 +176,6 @@ const std::map<EntityId, Decoration>& FarmManager::getDecorations() const {
 }
 
 const FarmConfig& FarmManager::getConfig() const { return config; }
+
+GroundItems& FarmManager::getGroundItems() { return groundItems; }
+const GroundItems& FarmManager::getGroundItems() const { return groundItems; }

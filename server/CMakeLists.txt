@@ -23,6 +23,7 @@ target_sources(taller_server
         game/game_setup.cpp
         game/game_manager.cpp
         inventory/inventory.cpp
+        items/ground_items.cpp
         player/player.cpp
         dungeon/mining/mineral.cpp
         dungeon/rooms/dungeon_room.cpp
@@ -111,6 +112,7 @@ target_sources(taller_server
         game/game_types.h
         player/player_record.h
         inventory/inventory.h
+        items/ground_items.h
         player/player.h
         entities/entity_id.h
         entities/collision_box.h

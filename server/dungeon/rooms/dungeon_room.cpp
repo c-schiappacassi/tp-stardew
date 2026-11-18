@@ -97,14 +97,15 @@ DungeonCombatData DungeonRoom::getCombatData() const {
     for (const auto& [id, trap]: combat.traps) {
         data.traps.push_back(trap.data);
     }
-    for (const auto& [id, loot]: combat.loot) {
-        data.loot.push_back(loot);
-    }
+    data.loot = groundItems.getPublicData();
     return data;
 }
 
 RoomCombat& DungeonRoom::getCombat() { return combat; }
 const RoomCombat& DungeonRoom::getCombat() const { return combat; }
+
+GroundItems& DungeonRoom::getGroundItems() { return groundItems; }
+const GroundItems& DungeonRoom::getGroundItems() const { return groundItems; }
 
 bool DungeonRoom::setMap(const ZoneMap& map) {
     if (map.isEmpty() || (passages && !geometry.arePassagesValid(number, map, *passages))) {

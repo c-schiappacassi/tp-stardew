@@ -42,6 +42,7 @@ public:
     void advance(int step);
     bool selectSlot(uint8_t slot);
     bool addItem(const Stack& stack);
+    uint16_t addItemUpTo(const Stack& stack);
     bool removeItem(uint8_t slot, uint16_t quantity);
     const Stack* getSelectedItem() const;
     uint8_t getSelectedSlot() const;
@@ -68,7 +69,7 @@ public:
     uint16_t receiveDamage(uint16_t damage, std::chrono::steady_clock::time_point now);
     uint16_t getSwordDamage() const;
     uint16_t getSwordRange() const;
-    void addGold(uint32_t amount);
+    uint32_t addGold(uint32_t amount);
     void applyCombatBonus();
     void passOut();
     bool sleep();

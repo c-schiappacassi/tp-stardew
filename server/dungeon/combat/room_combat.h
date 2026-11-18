@@ -26,6 +26,5 @@ struct RoomCombat {
     std::map<uint32_t, Enemy> enemies;
     std::map<uint32_t, Projectile> projectiles;
     std::map<uint32_t, Trap> traps;
-    std::map<uint32_t, LootData> loot;
     uint16_t pendingAmbushes = 0;
 };

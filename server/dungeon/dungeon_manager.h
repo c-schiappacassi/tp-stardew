@@ -29,7 +29,9 @@ public:
     bool canWalk(uint8_t number, const CollisionBounds& bounds) const;
     std::optional<MineData> getMineData(uint8_t number, bool includeBroken = false) const;
     std::vector<PortalData> getPortals(uint8_t number) const;
-    bool mineMineral(Player& player,EntityId id,std::chrono::steady_clock::time_point now = std::chrono::steady_clock::now());
+    bool mineMineral(Player& player,EntityId id, EntityIdGenerator& ids,std::chrono::steady_clock::time_point now = std::chrono::steady_clock::now());
+    std::vector<LootData> getGroundItems(uint8_t number) const;
+    bool collectNearbyItems(Player& player);
     bool useSelectedItem(Player& player,Direction direction,std::chrono::steady_clock::time_point now, EntityIdGenerator& ids,uint16_t playerId);
     void update(std::chrono::milliseconds elapsed, const std::vector<Combatant>& players,EntityIdGenerator& ids, std::chrono::steady_clock::time_point now);
     void onTravel(uint16_t playerId, uint8_t room, bool survived);

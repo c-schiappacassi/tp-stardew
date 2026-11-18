@@ -77,10 +77,6 @@ bool DungeonCombat::attack(Player& player, uint16_t id, DungeonRoom& room, Direc
     return sword_combat::attack(context, player, id, room, direction);
 }
 
-bool DungeonCombat::collectLoot(Player& player, DungeonRoom& room) {
-    return sword_combat::collectLoot(player, room);
-}
-
 void DungeonCombat::silverMined(DungeonRoom& room) {
     auto& pending = room.getCombat().pendingAmbushes;
     if (generator.roll(config.miningAmbushChance) && pending < 8) {

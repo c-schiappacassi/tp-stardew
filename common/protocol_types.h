@@ -118,6 +118,11 @@ enum class Quality : uint8_t {
     Perfect = 6     // x8
 };
 
+enum class LootKind : uint8_t {
+    Item = 0,
+    Gold = 1
+};
+
 // ANIMALS
 enum class AnimalType : uint8_t {
     BrownCow,

@@ -21,10 +21,10 @@ Inventory::Inventory(uint8_t capacity, uint16_t stackLimit):capacity(capacity), 
 }
 
 bool Inventory::canAdd(const Stack& stack) const {
-    if (stack.quantity == 0) {
-        return false;
-    }
+    return stack.quantity != 0 && availableSpace(stack) >= stack.quantity;
+}
 
+uint32_t Inventory::availableSpace(const Stack& stack) const {
     const uint16_t limit = getStackLimit(stack.item_id);
     uint32_t available = 0;
 
@@ -36,13 +36,18 @@ bool Inventory::canAdd(const Stack& stack) const {
         } else if (it->second.item_id == stack.item_id && it->second.qual == stack.qual) {
             available += limit - it->second.quantity;
         }
-
-        if (available >= stack.quantity) {
-            return true;
-        }
     }
 
-    return false;
+    return available;
+}
+
+uint16_t Inventory::addUpTo(const Stack& stack) {
+    const auto amount = static_cast<uint16_t>(std::min<uint32_t>(
+        stack.quantity, availableSpace(stack)));
+    if (amount != 0) {
+        add(Stack{stack.item_id, amount, stack.qual});
+    }
+    return amount;
 }
 
 bool Inventory::add(const Stack& stack) {
