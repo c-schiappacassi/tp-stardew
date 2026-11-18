@@ -14,6 +14,7 @@
 #include "zone/zone_tab.h"
 #include "model/zone_options.h"
 #include "model/map_wriiter.h"
+#include "model/map_validator.h"
 
 namespace {
 const QRect backNormalRect(296, 252, 66, 28);
@@ -58,6 +59,16 @@ MapEditorScreen::MapEditorScreen(const WorldMap& startingMap, QWidget* parent): 
 }
 
 void MapEditorScreen::saveMap() {
+    const std::vector<std::string> errors = validateMap(map);
+    if (!errors.empty()) {
+        QString message = "The map can't be saved yet:\n";
+        for (const std::string& error: errors) {
+            message += "\n- " + QString::fromStdString(error);
+        }
+        QMessageBox::warning(this, "Save map", message);
+        return;
+    }
+
     QDir().mkpath(CUSTOM_MAPS_PATH);
     QString path = QFileDialog::getSaveFileName(this, "Save map", CUSTOM_MAPS_PATH, "TOML map (*.toml)");
     if (path.isEmpty()) {

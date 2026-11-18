@@ -16,6 +16,7 @@ target_sources(taller_editor
     model/zone_options.cpp
     model/map_wriiter.cpp
     model/map_reader.cpp
+    model/map_validator.cpp
     PUBLIC
     # .h files
     editor_constants.h
@@ -34,6 +35,7 @@ target_sources(taller_editor
     model/zone_options.h
     model/map_wriiter.h
     model/map_reader.h
+    model/map_validator.h
     )
 
 target_include_directories(taller_editor PRIVATE ${CMAKE_CURRENT_SOURCE_DIR})
