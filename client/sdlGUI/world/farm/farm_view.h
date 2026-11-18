@@ -10,6 +10,7 @@
 #include "../furniture_view.h"
 #include "../../sync_views.h"
 #include "../../draw_region.h"
+#include "../lighting.h"   
 #include "crop_view.h"
 #include "animal_view.h"
 
@@ -29,6 +30,7 @@ private:
 protected:
     void collect_entities(const RenderInfo& ctx, std::vector<Drawable>& out, uint64_t& tie) override;
     void draw_floor_overlay(const RenderInfo& ctx) override;
+    SDL_Color ambient_light(const RenderInfo& ctx) override { return lighting::outdoor_ambient(ctx); }
 
 public:
     FarmView(const BackgroundData& data, AssetManager& assets);
@@ -75,3 +77,4 @@ inline void FarmView::collect_entities(const RenderInfo& ctx, std::vector<Drawab
     collect_from(ctx, animals, out, tie);
     collect_from(ctx, furniture, out, tie);
 }
+

@@ -7,11 +7,16 @@
 #include "protocol_types.h"
 #include "mines/mine_view.h"
 #include "town/town_view.h"
+#include "game_time.h"
 #include "interiors/interiors_view.h"
+#include "lighting.h"
+
 
 class MapView : public ZoneView {
 private:
     Zone current = Zone::Farm;
+    uint16_t current_time = game_time::START_MINUTES;
+    
     // TODO: mover las Views al map cuando tenga todo para el constructor(Background incluido)
     MinesView mines;
     FarmView farm;
@@ -25,13 +30,13 @@ private:
         if (current == Zone::InsideHouse) return &interiors;
         return nullptr;
     }
-
 public:
     MapView(const ConstMapData& data, AssetManager& assets) : mines(data.levels, assets), farm(data.farm, assets), town(data.town, assets), interiors(data, assets) {}
 
     void update(const State& data) {
         const PlayerDataLocal& local = data.get_local();
         current = local.currentZone ;
+        current_time = data.get_local_time();
 
         if (const auto* mine = std::get_if<MineData>(&local.zoneData)) {
             mines.update(*mine);
@@ -48,5 +53,10 @@ public:
 
     void collect_drawables(const RenderInfo& ctx, std::vector<Drawable>& out) override {
         if (ZoneView* view = current_view()) view->collect_drawables(ctx, out);
+    }
+
+    SDL_Color ambient_light(const RenderInfo& ctx) override {
+        if (ZoneView* view = current_view()) return view->ambient_light(ctx);
+        return lighting::DAYLIGHT;
     }
 };

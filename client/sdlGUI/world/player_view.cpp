@@ -99,13 +99,7 @@ void PlayerView::draw_layers_in_order(const RenderInfo& ctx, const farmer::DrawP
 }
 
 void PlayerView::draw(const RenderInfo& ctx) {
-    // TODO: cargar clip de durmiendo? no se si vale la pena 
-    const PlayerState anim_state =
-        (state == PlayerState::Sleeping || state == PlayerState::Unconscious)
-            ? PlayerState::Idle
-            : state;
-
-    ClipId clip_id{SpriteId::FarmerBase, Action{anim_state}, facing};
+    ClipId clip_id{SpriteId::FarmerBase, Action{state}, facing};
     if (state == PlayerState::UsingTool && held_item) {
         ClipId with_item = clip_id;
         with_item.item_id = held_item;
@@ -131,4 +125,17 @@ void PlayerView::draw(const RenderInfo& ctx) {
         body.width,
         frame.flip
     });
+}
+
+std::optional<lighting::Light> PlayerView::light(const RenderInfo& ctx) const {
+    const int zoom = ctx.cam.get_zoom();
+    const int radius = lighting::PLAYER_GLOW_RADIUS * zoom;
+    if (!ctx.cam.is_visible(pos.getX(), pos.getY(), radius)) return std::nullopt;
+
+    const SDL2pp::Point feet = ctx.cam.world_to_screen(pos.getX(), pos.getY());
+    return lighting::Light{
+        SDL2pp::Point(feet.x, feet.y + lighting::PLAYER_GLOW_OFFSET_Y * zoom),
+        radius,
+        lighting::PLAYER_GLOW_COLOR,
+        lighting::PLAYER_GLOW_INTENSITY};
 }

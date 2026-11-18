@@ -9,6 +9,7 @@
 
 #include "../animator.h"
 #include "entity_view.h"
+#include "lighting.h"
 #include "../draw_region.h"
 #include "../render_info.h"
 #include "../utils.h"
@@ -74,8 +75,9 @@ public:
 
     void update(const PlayerData& data);
 
-    // Devuelve nullopt si el jugador está fuera de la cámara.
     std::optional<float> depth(const RenderInfo& ctx) const override;
 
     void draw(const RenderInfo& ctx) override;
+
+    std::optional<lighting::Light> light(const RenderInfo& ctx) const;
 };

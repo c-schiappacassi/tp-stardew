@@ -8,7 +8,7 @@
 
 // TODO: organizar mejor este archivo
 
-namespace Dimentions {
+namespace Dimentions {    
     constexpr uint16_t FARMER_COLS    = 6;
     constexpr uint16_t FARMER_CELL_W  = 16;
     constexpr uint16_t FARMER_CELL_H  = 32;
@@ -60,6 +60,7 @@ namespace Dimentions {
 }
 
 namespace SpriteDefs {
+    inline constexpr bool FURNITURE_MIRROR_LEFT = true;
 
     struct TextureDef { SpriteId id; const char* path; };
 
@@ -109,6 +110,7 @@ namespace SpriteDefs {
         {SpriteId::Furniture,       "farm/environment/furniture.png"},
         {SpriteId::LevelPortals,    "caverns/level_portals.png"},
         {SpriteId::TilledDirt,      "farm/environment/tilled_dirt.png"},
+        {SpriteId::LightGlow,      "misc/sconce_light.png"},
     
 
         // monsters

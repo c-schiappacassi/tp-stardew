@@ -72,9 +72,10 @@ public:
             props.emplace_back(d.pos, assets.get_sprite(d.id));
         for (const BuildingData& b : data.buildings)
             props.emplace_back(b.pos, assets.get_sprite(b.id));
-        for (const StaticFurnitureData& f : data.furniture)
-            props.emplace_back(f.pos, assets.get_sprite(f.id, f.dir));
-
+        for (const StaticFurnitureData& f : data.furniture) {
+            const FlippableSprite& fs = assets.get_sprite(f.id, f.dir);
+            props.emplace_back(f.pos, fs.sprite, fs.flip);
+        }
         if (data.interior && data.interior->npc) {
             const NpcData& npc = *data.interior->npc;
             props.emplace_back(npc.pos, assets.get_sprite(npc.id));

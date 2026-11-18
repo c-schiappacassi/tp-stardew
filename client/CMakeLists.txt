@@ -55,6 +55,7 @@ target_sources(taller_client
     sdlGUI/ui/layers/minimap_layer.h
 
     sdlGUI/world/player_view.h
+    sdlGUI/world/lighting.h
     sdlGUI/world/world_view.h
     sdlGUI/world/map_view.h
     sdlGUI/world/zone_view.h

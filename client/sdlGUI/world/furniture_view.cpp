@@ -11,7 +11,7 @@ void FurnitureView::update(const FurnitureData& data) {
 }
 
 std::optional<float> FurnitureView::depth(const RenderInfo& ctx) const {
-    const Sprite& sprite = ctx.assets.get_sprite(type, dir);
+    const Sprite& sprite = ctx.assets.get_sprite(type, dir).sprite;
     const int radius = sprite.height * ctx.cam.get_zoom();
 
     if (!ctx.cam.is_visible(pos.getX(), pos.getY(), radius)) {
@@ -23,6 +23,6 @@ std::optional<float> FurnitureView::depth(const RenderInfo& ctx) const {
 }
 
 void FurnitureView::draw(const RenderInfo& ctx) {
-    const Sprite& sprite = ctx.assets.get_sprite(type, dir);
-    draw_sprite(ctx, sprite, ctx.cam.world_to_screen(pos.getX(), pos.getY()));
+    const FlippableSprite& f = ctx.assets.get_sprite(type, dir);
+    draw_sprite(ctx, f.sprite, ctx.cam.world_to_screen(pos.getX(), pos.getY()), f.flip);
 }

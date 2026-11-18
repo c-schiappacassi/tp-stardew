@@ -28,7 +28,8 @@ enum class SpriteId : uint16_t {
     InGameUI,
     Clock,
     Minimap,
-
+    LightGlow,
+    
     BronwCow,
     WhiteCow,
     BronwChicken,
@@ -116,6 +117,11 @@ struct Sprite {
 
     SDL2pp::Rect src() const { return SDL2pp::Rect(x, y, width, height); }
     int dx(bool flip) const { return flip ? -(offset_x + static_cast<int>(width)) : offset_x; }
+};
+
+struct FlippableSprite {
+    Sprite sprite;
+    bool flip = false;
 };
 
 struct Offset { int8_t x = 0; int8_t y = 0; }; 

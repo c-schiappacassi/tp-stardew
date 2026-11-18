@@ -7,6 +7,7 @@
 #include "../camera.h"
 #include "../sync_views.h"
 #include "../render_info.h"
+#include "lighting.h"
 
 #include "map_view.h"
 #include "player_view.h"
@@ -15,6 +16,7 @@ class WorldView {
 private:
     std::string local_name;
     std::map<std::string, PlayerView> player_views;
+    LightMap light_map;
     MapView map;
 
     void update_players_and_list(const std::map<std::string, PlayerData>& players_data) {
@@ -50,5 +52,11 @@ public:
         for (const Drawable& d: drawables) {
             d.view->draw(ctx);
         }
+
+        std::vector<lighting::Light> lights;
+        for (auto& [name, view] : player_views) {
+            if (const auto l = view.light(ctx)) lights.push_back(*l);
+        }
+        light_map.draw(ctx, map.ambient_light(ctx), lights);
     }
 };
