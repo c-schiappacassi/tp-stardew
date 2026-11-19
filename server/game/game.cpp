@@ -46,6 +46,11 @@ std::shared_ptr<CommandQueue> Game::getInputQueue() const {
     return input;
 }
 
+void Game::setSaveCallback(std::function<void(const PersistenceDTO&)> callback) {
+    std::lock_guard<std::mutex> lock(mtx);
+    saveCallback = std::move(callback);
+}
+
 PersistenceDTO Game::getPersistenceData() const {
     std::lock_guard<std::mutex> lock(mtx);
 
@@ -82,7 +87,6 @@ PersistenceDTO Game::getPersistenceData() const {
         snapshot.animalProductionProgress[animal->getId()] = static_cast<uint64_t>(elapsed);
         snapshot.animalAvailableProducts[animal->getId()] = animal->getAvailableProducts();
     }
-
     return snapshot;
 }
 

@@ -63,20 +63,15 @@ GameSession GameManager::createGame(const CreateGameDTO& dto,
     GameSession session = game->createGame(dto, output);
 
     if (session.status.status == StatusCode::Ok) {
-        GameIndexDTO entry;
-        entry.id = id;
-        entry.farmName = dto.gameName;
-        entry.users.push_back(dto.userName);
-        entry.isMultiplayer = false;
-        GameIndexPlayerDTO preview;
-        preview.characterName = dto.characterName;
-        preview.hairModel = dto.hairModel;
-        preview.shirtModel = dto.shirtModel;
-        preview.pantsModel = dto.pantsModel;
-        preview.hairColor = dto.hairColor;
-        preview.pantsColor = dto.pantsColor;
-        entry.playerPreviews.emplace(dto.userName, preview);
-        persistence.registerGame(entry);
+        // creamos archivo cuando se crea el juego ya y despues devolvenos
+        {
+            std::lock_guard<std::mutex> saveLock(persistenceMtx);
+            persistence.createGame(game->getPersistenceData());
+        }
+        game->setSaveCallback([this](const PersistenceDTO& data) {
+            std::lock_guard<std::mutex> saveLock(persistenceMtx);
+            persistence.saveGame(data);
+        });
         game->start();
         games.emplace(id, std::move(game));
         ++nextId;
@@ -97,26 +92,10 @@ GameSession GameManager::joinGame(const JoinGameDTO& dto,
     }
     GameSession session = it->second->joinGame(dto, output);
     if (session.status.status == StatusCode::Ok) {
-        GameIndexDTO entry;
-        for (const GameIndexDTO& candidate : persistence.getGames()) {
-            if (candidate.id == dto.code) {
-                entry = candidate;
-                break;
-            }
+        {
+            std::lock_guard<std::mutex> saveLock(persistenceMtx);
+            persistence.saveGame(it->second->getPersistenceData());
         }
-        if (std::find(entry.users.begin(), entry.users.end(), dto.userName) == entry.users.end()) {
-            entry.users.push_back(dto.userName);
-        }
-        entry.isMultiplayer = entry.users.size() > 1;
-        GameIndexPlayerDTO preview;
-        preview.characterName = dto.characterName;
-        preview.hairModel = dto.hairModel;
-        preview.shirtModel = dto.shirtModel;
-        preview.pantsModel = dto.pantsModel;
-        preview.hairColor = dto.hairColor;
-        preview.pantsColor = dto.pantsColor;
-        entry.playerPreviews[dto.userName] = preview;
-        persistence.updateGameIndex(entry);
     }
     return session;
 }

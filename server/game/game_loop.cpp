@@ -24,7 +24,7 @@ void Game::sendStatus() {
     world.afterStatusPublished();
 }
 
-void Game::advanceWorld(std::chrono::milliseconds elapsed) {
+bool Game::advanceWorld(std::chrono::milliseconds elapsed) {
     std::lock_guard<std::mutex> lock(mtx);
     const auto activeTime = playerManager.isDayEnded() ? std::chrono::milliseconds{0} :
         std::min(elapsed, playerManager.remainingDayTime());
@@ -39,7 +39,9 @@ void Game::advanceWorld(std::chrono::milliseconds elapsed) {
         world.finishDay(remainingTime);
         merchants->finishDay();
         ++currentDay;
+        return true;
     }
+    return false;
 }
 
 void Game::processCommands() {
@@ -60,7 +62,14 @@ void Game::run() {
             updateToolStates();
             processCommands();
             advancePlayers();
-            advanceWorld(clock.advance());
+            const bool dayCompleted = advanceWorld(clock.advance());
+            if (dayCompleted && saveCallback) {
+                try {
+                    saveCallback(getPersistenceData());
+                } catch (const std::exception& e) {
+                    std::cerr << "Error al guardar la partida " << id << ": " << e.what() << "\n";
+                }
+            }
             if (should_keep_running()) {
                 sendStatus();
             }

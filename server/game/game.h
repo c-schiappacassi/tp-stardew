@@ -1,6 +1,7 @@
 #pragma once
 
 #include <cstdint>
+#include <functional>
 #include <map>
 #include <memory>
 #include <mutex>
@@ -29,13 +30,14 @@ class Game:public Thread {
         std::shared_ptr<MerchantChat> merchants;
         PlayerManager playerManager;
         std::shared_ptr<const ConstMapData> constMap;
+        std::function<void(const PersistenceDTO&)> saveCallback;
 
         std::shared_ptr<const ConstMapData> mapForSession();
 
         void processCommands();
         void sendStatus();
         void advancePlayers();
-        void advanceWorld(std::chrono::milliseconds elapsed);
+        bool advanceWorld(std::chrono::milliseconds elapsed);
         void updateToolStates();
         void closeAll();
         ServerStatus buildStatus() const;
@@ -48,6 +50,7 @@ class Game:public Thread {
         std::string getName() const;
         uint8_t getWorldId() const;
         PersistenceDTO getPersistenceData() const;
+        void setSaveCallback(std::function<void(const PersistenceDTO&)> callback);
         std::shared_ptr<CommandQueue> getInputQueue() const;
 
         GameSession createGame(const CreateGameDTO& dto,const std::shared_ptr<OutQueue>& output);

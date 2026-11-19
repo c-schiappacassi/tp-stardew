@@ -25,6 +25,7 @@ private:
     TownConfig townConfig;
     MarketConfig marketConfig;
     PersistenceManager persistence;
+    std::mutex persistenceMtx;
 
 public:
     explicit GameManager(const DungeonConfig& dungeonConfig = {},
