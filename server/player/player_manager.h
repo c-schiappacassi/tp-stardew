@@ -40,6 +40,7 @@ public:
     ServerStatus resumePlayer(const std::string& name, const std::shared_ptr<OutQueue>& output);
     std::optional<PlayerData> dataFor(const std::string& name) const;
     std::map<std::string, PlayerDataLocal> getPersistencePlayers() const;
+    void restorePlayers(const std::map<std::string, PlayerDataLocal>& saved);
     bool isMultiplayer() const;
     std::vector<CollisionBounds> getCollisionBounds(Zone zone) const;
     std::vector<Combatant> getCombatants();

@@ -86,4 +86,5 @@ public:
 
     PlayerData getPublicData() const;
     PlayerDataLocal getLocalData() const;
+    void restoreData(const PlayerDataLocal& saved);
 };

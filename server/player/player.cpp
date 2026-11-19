@@ -465,3 +465,29 @@ int Player::getMovementStep(int normalStep) const {
 
     return normalStep;
 }
+
+void Player::restoreData(const PlayerDataLocal& saved) {
+    if (saved.current_slot >= inventory.getCapacity() || saved.maxHealth == 0 ||
+        saved.maxEnergy == 0 || saved.health > saved.maxHealth || saved.energy > saved.maxEnergy) {
+        throw std::invalid_argument("Invalid saved player stats");
+    }
+    inventory.restoreSlots(saved.items);
+    characterName = saved.characterName;
+    pos = saved.pos;
+    state = saved.state;
+    dir = saved.dir;
+    movementDirection = Direction::None;
+    zone = saved.currentZone;
+    interior = saved.interior;
+    hairModel = saved.hairModel;
+    shirtModel = saved.shirtModel;
+    pantsModel = saved.pantsModel;
+    hairColor = saved.hairColor;
+    pantsColor = saved.pantsColor;
+    currentSlot = saved.current_slot;
+    gold = saved.gold;
+    health = saved.health;
+    maxHealth = saved.maxHealth;
+    energy = saved.energy;
+    maxEnergy = saved.maxEnergy;
+}

@@ -223,3 +223,20 @@ bool PlayerManager::hasConnectedPlayers() const {
     }
     return false;
 }
+
+void PlayerManager::restorePlayers(const std::map<std::string, PlayerDataLocal>& saved) {
+    if (!players.empty() || saved.size() > maxPlayers || saved.size() > UINT16_MAX) {
+        throw std::runtime_error("Cannot restore player roster");
+    }
+    std::map<uint16_t, PlayerRecord> restored;
+    uint16_t id = 1;
+    for (const auto& [username, data] : saved) {
+        if (username.empty()) throw std::runtime_error("Empty username in save");
+        Player player = factory.create(static_cast<const PlayerData&>(data));
+        player.restoreData(data);
+        restored.emplace(id, PlayerRecord{id, username, nullptr, false, std::move(player)});
+        ++id;
+    }
+    players = std::move(restored);
+    nextPlayerId = id;
+}
