@@ -5,19 +5,19 @@
 #include <utility>
 
 const toml::table& PersistenceDeserializer::requiredTable(const toml::table& table,
-                                                          const std::string& key) {
+                                                          const char* key) {
     const toml::table* result = table[key].as_table();
     if (!result) {
-        throw std::runtime_error("Missing or invalid TOML table: " + key);
+        throw std::runtime_error(std::string("Missing or invalid TOML table: ") + key);
     }
     return *result;
 }
 
 const toml::array& PersistenceDeserializer::requiredArray(const toml::table& table,
-                                                          const std::string& key) {
+                                                          const char* key) {
     const toml::array* result = table[key].as_array();
     if (!result) {
-        throw std::runtime_error("Missing or invalid TOML array: " + key);
+        throw std::runtime_error(std::string("Missing or invalid TOML array: ") + key);
     }
     return *result;
 }

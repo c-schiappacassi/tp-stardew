@@ -16,8 +16,8 @@ public:
     static GameIndexDTO deserializeIndex(const toml::table& table);
 
 private:
-    static const toml::table& requiredTable(const toml::table& table, const std::string& key);
-    static const toml::array& requiredArray(const toml::table& table, const std::string& key);
+    static const toml::table& requiredTable(const toml::table& table, const char* key);
+    static const toml::array& requiredArray(const toml::table& table, const char* key);
     static int64_t integer(const toml::table& table, const std::string& key,
                            int64_t min, int64_t max);
     static bool boolean(const toml::table& table, const std::string& key);
