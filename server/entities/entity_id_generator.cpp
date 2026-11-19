@@ -14,3 +14,6 @@ EntityId EntityIdGenerator::generate() {
 EntityId EntityIdGenerator::getNextId() const {
     return nextId;
 }
+void EntityIdGenerator::ensureNextId(EntityId minimum) {
+    if (nextId != 0 && nextId < minimum) nextId = minimum;
+}

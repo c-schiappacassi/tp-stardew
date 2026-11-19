@@ -11,4 +11,5 @@ public:
 
     EntityId generate();
     EntityId getNextId() const;
+    void ensureNextId(EntityId minimum);
 };
