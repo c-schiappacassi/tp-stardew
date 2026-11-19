@@ -118,3 +118,12 @@ uint8_t Inventory::getCapacity() const {
 const std::map<uint8_t, Stack>& Inventory::getItems() const {
     return slots;
 }
+
+void Inventory::restoreSlots(const std::map<uint8_t, Stack>& saved) {
+    for (const auto& [slot, stack] : saved) {
+        if (slot >= capacity || stack.quantity == 0 || stack.quantity > getStackLimit(stack.item_id)) {
+            throw std::invalid_argument("Invalid saved inventory slot");
+        }
+    }
+    slots = saved;
+}

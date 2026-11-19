@@ -22,4 +22,5 @@ public:
     bool dropGold(const Position& position, uint32_t quantity, EntityIdGenerator& ids);
     bool collect(Player& player, const std::function<bool(const Position&)>& hasClearPath);
     std::vector<LootData> getPublicData() const;
+    void restoreItems(const std::vector<LootData>& saved);
 };

@@ -22,4 +22,5 @@ public:
     uint8_t getCapacity() const;
     const Stack* getSlot(uint8_t slot) const;
     const std::map<uint8_t, Stack>& getItems() const;
+    void restoreSlots(const std::map<uint8_t, Stack>& saved);
 };

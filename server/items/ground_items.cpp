@@ -83,3 +83,13 @@ std::vector<LootData> GroundItems::getPublicData() const {
     }
     return result;
 }
+
+void GroundItems::restoreItems(const std::vector<LootData>& saved) {
+    std::map<EntityId, LootData> restored;
+    for (const LootData& item : saved) {
+        if (item.id == 0 || item.quantity == 0 || !restored.emplace(item.id, item).second) {
+            throw std::invalid_argument("Invalid saved ground item");
+        }
+    }
+    items = std::move(restored);
+}
