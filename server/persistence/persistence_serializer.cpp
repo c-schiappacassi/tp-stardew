@@ -37,38 +37,38 @@ toml::table PersistenceSerializer::boolMap(const std::map<uint32_t, bool>& value
 }
 
 toml::table PersistenceSerializer::position(const Position& pos) {
-    return {{"x", pos.getX()}, {"y", pos.getY()}};
+    return toml::table{{"x", pos.getX()}, {"y", pos.getY()}};
 }
 
 toml::table PersistenceSerializer::color(const Color& value) {
-    return {{"r", static_cast<int64_t>(value.r)}, {"g", static_cast<int64_t>(value.g)}, {"b", static_cast<int64_t>(value.b)}};
+    return toml::table{{"r", static_cast<int64_t>(value.r)}, {"g", static_cast<int64_t>(value.g)}, {"b", static_cast<int64_t>(value.b)}};
 }
 
 toml::table PersistenceSerializer::stack(const Stack& value) {
-    return {{"itemId", static_cast<int64_t>(value.item_id)},
+    return toml::table{{"itemId", static_cast<int64_t>(value.item_id)},
             {"quantity", static_cast<int64_t>(value.quantity)},
             {"quality", static_cast<int64_t>(value.qual)}};
 }
 
 toml::table PersistenceSerializer::furniture(const FurnitureData& value) {
-    return {{"id", static_cast<int64_t>(value.id)}, {"pos", position(value.pos)},
+    return toml::table{{"id", static_cast<int64_t>(value.id)}, {"pos", position(value.pos)},
             {"type", static_cast<int64_t>(value.type)}, {"dir", static_cast<int64_t>(value.dir)}};
 }
 
 toml::table PersistenceSerializer::loot(const LootData& value) {
-    return {{"id", static_cast<int64_t>(value.id)}, {"pos", position(value.pos)},
+    return toml::table{{"id", static_cast<int64_t>(value.id)}, {"pos", position(value.pos)},
             {"item", static_cast<int64_t>(value.item)}, {"quantity", static_cast<int64_t>(value.quantity)},
             {"quality", static_cast<int64_t>(value.quality)}, {"kind", static_cast<int64_t>(value.kind)}};
 }
 
 toml::table PersistenceSerializer::crop(const CropData& value) {
-    return {{"id", static_cast<int64_t>(value.id)}, {"pos", position(value.pos)},
+    return toml::table{{"id", static_cast<int64_t>(value.id)}, {"pos", position(value.pos)},
             {"type", static_cast<int64_t>(value.type)}, {"state", static_cast<int64_t>(value.state)},
             {"wattered", value.wattered}};
 }
 
 toml::table PersistenceSerializer::animal(const AnimalData& value) {
-    return {{"id", static_cast<int64_t>(value.id)}, {"pos", position(value.pos)},
+    return toml::table{{"id", static_cast<int64_t>(value.id)}, {"pos", position(value.pos)},
             {"dir", static_cast<int64_t>(value.dir)}, {"type", static_cast<int64_t>(value.type)},
             {"state", static_cast<int64_t>(value.state)},
             {"needsInteraction", value.needs_interaction}};
@@ -113,7 +113,7 @@ toml::table PersistenceSerializer::farm(const FarmData& value) {
 }
 
 toml::table PersistenceSerializer::enemy(const EnemySnapshot& value) {
-    return {{"id", static_cast<int64_t>(value.id)}, {"pos", position(value.pos)},
+    return toml::table{{"id", static_cast<int64_t>(value.id)}, {"pos", position(value.pos)},
             {"dir", static_cast<int64_t>(value.dir)}, {"type", static_cast<int64_t>(value.type)},
             {"state", static_cast<int64_t>(value.state)}, {"health", static_cast<int64_t>(value.health)},
             {"maxHealth", static_cast<int64_t>(value.maxHealth)}, {"frenzied", value.frenzied},
@@ -121,12 +121,12 @@ toml::table PersistenceSerializer::enemy(const EnemySnapshot& value) {
 }
 
 toml::table PersistenceSerializer::projectile(const ProjectileData& value) {
-    return {{"id", static_cast<int64_t>(value.id)}, {"pos", position(value.pos)},
+    return toml::table{{"id", static_cast<int64_t>(value.id)}, {"pos", position(value.pos)},
             {"type", static_cast<int64_t>(value.type)}};
 }
 
 toml::table PersistenceSerializer::trap(const TrapData& value) {
-    return {{"id", static_cast<int64_t>(value.id)}, {"pos", position(value.pos)},
+    return toml::table{{"id", static_cast<int64_t>(value.id)}, {"pos", position(value.pos)},
             {"dir", static_cast<int64_t>(value.dir)}, {"type", static_cast<int64_t>(value.type)},
             {"state", static_cast<int64_t>(value.state)}, {"range", static_cast<int64_t>(value.range)}};
 }
@@ -159,7 +159,7 @@ toml::table PersistenceSerializer::combat(const DungeonCombatData& value) {
 }
 
 toml::table PersistenceSerializer::mineral(const MineralData& value) {
-    return {{"id", static_cast<int64_t>(value.id)}, {"pos", position(value.pos)},
+    return toml::table{{"id", static_cast<int64_t>(value.id)}, {"pos", position(value.pos)},
             {"type", static_cast<int64_t>(value.type)}, {"state", static_cast<int64_t>(value.state)}};
 }
 
@@ -177,7 +177,7 @@ toml::table PersistenceSerializer::level(const LevelData& value) {
 }
 
 toml::table PersistenceSerializer::mine(const MineData& value) {
-    return {{"currentLevel", static_cast<int64_t>(value.current_level)},
+    return toml::table{{"currentLevel", static_cast<int64_t>(value.current_level)},
             {"currentLevelData", level(value.current_level_data)}};
 }
 
@@ -195,19 +195,19 @@ toml::table PersistenceSerializer::interior(const InteriorData& value) {
 
 toml::table PersistenceSerializer::zone(const ZoneData& value) {
     if (const FarmData* data = std::get_if<FarmData>(&value)) {
-        return {{"type", "farm"}, {"data", farm(*data)}};
+        return toml::table{{"type", "farm"}, {"data", farm(*data)}};
     }
     if (const MineData* data = std::get_if<MineData>(&value)) {
-        return {{"type", "mine"}, {"data", mine(*data)}};
+        return toml::table{{"type", "mine"}, {"data", mine(*data)}};
     }
     if (const InteriorData* data = std::get_if<InteriorData>(&value)) {
-        return {{"type", "interior"}, {"data", interior(*data)}};
+        return toml::table{{"type", "interior"}, {"data", interior(*data)}};
     }
-    return {{"type", "none"}};
+    return toml::table{{"type", "none"}};
 }
 
 toml::table PersistenceSerializer::combatProgress(const CombatProgressData& value) {
-    return {{"skeletons", value.skeletons}, {"vampires", value.vampires},
+    return toml::table{{"skeletons", value.skeletons}, {"vampires", value.vampires},
             {"orcs", value.orcs}, {"skull", value.skull}};
 }
 
@@ -273,7 +273,7 @@ toml::table PersistenceSerializer::communityProgress(const std::map<std::string,
 
 
 toml::table PersistenceSerializer::serialize(const GameIndexDTO& dto) {
-    return {{"id", dto.id}, {"farmName", dto.farmName},
+    return toml::table{{"id", dto.id}, {"farmName", dto.farmName},
             {"users", strings(dto.users)}};
 }
 
