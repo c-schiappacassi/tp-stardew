@@ -229,3 +229,14 @@
  
 - Client:
     - sound manager
+
+# 6ra Reunión 10-11-2026
+
+### Preguntas
+- en la ultima semana de tp, no se pueden implementar nuevas features?
+- el video se tiene que tener terminado para la semana que viene?
+- la docu se entraga al mismo tiempo que el vid o tenemos un tiempo despues?
+- Docu era: diseño y manual de usuario nada más?
+
+TODO: nuestro:
+    - sdl pantalla de noche/carga cuando duerme un jugador y espera al resto.

@@ -399,8 +399,6 @@ struct CheckCodeDTO : public CommandDTO {
 
 // seguir completando server status
 
-
-
 struct ServerStatus {
     StatusCode status = StatusCode::Ok;
     std::string errorMsg;
@@ -413,7 +411,6 @@ struct ServerStatus {
     bool dayEnded = false;
     bool dayConfirmationRequired = false;
     uint16_t timeOfDayMinutes = game_time::START_MINUTES;
-    uint8_t cap_inventory; // Para la hotbar, con la recompensa del centro comunitario pasa de 9 -> 10
 };
 
 struct qtStatus {

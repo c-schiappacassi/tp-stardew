@@ -39,7 +39,6 @@ namespace {
 void HotbarView::update(const PlayerDataLocal& local) {
     items = local.items;
     current_slot = local.current_slot;
-    // this.cap = local.cap
 }
 
 void HotbarView::draw_stack(const RenderInfo& ctx, const Stack& stack, const SDL2pp::Rect& slot_rect, int u) {
