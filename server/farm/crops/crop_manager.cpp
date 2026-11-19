@@ -93,3 +93,8 @@ const Crop* CropManager::find(EntityId id) const {
         return &it->second;
     }
 }
+
+Crop* CropManager::findMutable(EntityId id) {
+    const auto it = crops.find(id);
+    return it == crops.end() ? nullptr : &it->second;
+}

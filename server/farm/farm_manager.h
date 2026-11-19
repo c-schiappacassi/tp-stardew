@@ -63,6 +63,12 @@ public:
     GroundItems& getGroundItems();
     const GroundItems& getGroundItems() const;
     FarmData getPublicData() const;
+    void restoreData(const FarmData& saved,
+                     const std::map<uint32_t, uint64_t>& growth,
+                     const std::map<uint32_t, uint64_t>& water,
+                     const std::map<uint32_t, bool>& harvested,
+                     const std::map<uint32_t, uint64_t>& production,
+                     const std::map<uint32_t, uint32_t>& products);
     std::vector<Position> getTilledPositions() const;
     const Crop* findCrop(EntityId id) const;
     const Animal* findAnimal(EntityId id) const;

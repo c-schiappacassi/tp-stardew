@@ -29,6 +29,7 @@ public:
     bool move(EntityId id, const Position& position, FarmPlacement& placement);
     bool remove(EntityId id, FarmPlacement& placement);
     std::optional<FarmProduct> collect(EntityId id);
+    Animal* findMutable(EntityId id);
     const Animal* find(EntityId id) const;
     std::vector<const Animal*> getAnimals() const;
 };

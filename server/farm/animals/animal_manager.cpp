@@ -119,3 +119,8 @@ std::vector<const Animal*> AnimalManager::getAnimals() const {
 
     return result;
 }
+
+Animal* AnimalManager::findMutable(EntityId id) {
+    const auto it = animals.find(id);
+    return it == animals.end() ? nullptr : it->second.get();
+}

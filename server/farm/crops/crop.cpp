@@ -132,3 +132,13 @@ std::optional<FarmProduct> Crop::harvest(double luck) {
     }
     return product;
 }
+
+void Crop::restoreProgress(std::chrono::milliseconds growth, std::chrono::milliseconds water, bool wasHarvested) {
+    if (growth.count() < 0 || water.count() < 0 || growth > growthDuration ||
+        water > definition.wateringInterval) {
+        throw std::invalid_argument("Invalid saved crop progress");
+    }
+    growthElapsed = growth;
+    remainingWaterTime = water;
+    harvested = wasHarvested;
+}

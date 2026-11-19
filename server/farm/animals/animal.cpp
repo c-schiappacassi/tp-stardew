@@ -22,7 +22,6 @@ Direction Animal::getDirection() const { return movement.getDirection(); }
 AnimalType Animal::getType() const { return type; }
 
 uint32_t Animal::getAvailableProducts() const { return availableProducts; }
-
 std::chrono::milliseconds Animal::getProductionElapsed() const { return productionElapsed; }
 
 bool Animal::needsInteraction() const { return false; }
@@ -85,4 +84,12 @@ std::optional<FarmProduct> Animal::collect() {
     auto result = getProduction();
     availableProducts = 0;
     return result;
+}
+
+void Animal::restoreProgress(std::chrono::milliseconds elapsed, uint32_t products) {
+    if (elapsed.count() < 0 || elapsed >= productionInterval) {
+        throw std::invalid_argument("Invalid saved animal progress");
+    }
+    productionElapsed = elapsed;
+    availableProducts = products;
 }
