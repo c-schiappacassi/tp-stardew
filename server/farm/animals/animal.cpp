@@ -23,6 +23,8 @@ AnimalType Animal::getType() const { return type; }
 
 uint32_t Animal::getAvailableProducts() const { return availableProducts; }
 
+std::chrono::milliseconds Animal::getProductionElapsed() const { return productionElapsed; }
+
 bool Animal::needsInteraction() const { return false; }
 
 bool Animal::dropsProductsAutomatically() const { return false; }

@@ -41,6 +41,7 @@ public:
     Direction getDirection() const;
     AnimalType getType() const;
     uint32_t getAvailableProducts() const;
+    std::chrono::milliseconds getProductionElapsed() const;
     virtual bool needsInteraction() const;
     virtual bool dropsProductsAutomatically() const;
     virtual AnimalSpecies getSpecies() const = 0;

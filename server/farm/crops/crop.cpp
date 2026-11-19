@@ -25,6 +25,7 @@ bool Crop::isReady() const { return !harvested && growthElapsed >= growthDuratio
 bool Crop::isHarvested() const { return harvested; }
 bool Crop::isWatered() const { return remainingWaterTime.count() > 0 && !isReady() && !harvested; }
 std::chrono::milliseconds Crop::getGrowthElapsed() const { return growthElapsed; }
+std::chrono::milliseconds Crop::getRemainingWaterTime() const { return remainingWaterTime; }
 
 CropState Crop::getState() const {
     if (isReady()) {

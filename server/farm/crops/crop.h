@@ -34,6 +34,7 @@ public:
     bool isHarvested() const;
     bool isWatered() const;
     std::chrono::milliseconds getGrowthElapsed() const;
+    std::chrono::milliseconds getRemainingWaterTime() const;
     CropData getPublicData() const;
     void update(std::chrono::milliseconds elapsed);
     void finishDay();
