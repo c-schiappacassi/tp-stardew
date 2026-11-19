@@ -28,6 +28,7 @@ private:
     PlayerActions actions;
     PlayerChat chat;
     const PlayerSpawnSource& spawns;
+    const ZoneDataSource& zones;
     const MovementRules& movement;
     DayCycle day;
     bool combatBonusUnlocked = false;
@@ -38,6 +39,7 @@ public:
     ServerStatus addPlayer(const std::string& name,const PlayerData& appearance,const std::shared_ptr<OutQueue>& output);
     ServerStatus resumePlayer(const std::string& name, const std::shared_ptr<OutQueue>& output);
     std::optional<PlayerData> dataFor(const std::string& name) const;
+    std::map<std::string, PlayerDataLocal> getPersistencePlayers() const;
     bool isMultiplayer() const;
     std::vector<CollisionBounds> getCollisionBounds(Zone zone) const;
     std::vector<Combatant> getCombatants();

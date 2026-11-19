@@ -7,7 +7,7 @@ PlayerManager::PlayerManager(const PlayerConfig& config,const MovementRules& mov
         factory(config),
         updates(movement),
         playerStatus(zones),
-        actions(interactions), chat(std::move(chatServices)), spawns(spawns), movement(movement),day(std::chrono::milliseconds{config.dayDurationMs}) {}
+        actions(interactions), chat(std::move(chatServices)), spawns(spawns), zones(zones), movement(movement),day(std::chrono::milliseconds{config.dayDurationMs}) {}
 
 
 ServerStatus PlayerManager::addPlayer(const std::string& name,const PlayerData& appearance,const std::shared_ptr<OutQueue>& output) {
@@ -109,6 +109,16 @@ std::optional<PlayerData> PlayerManager::dataFor(const std::string& name) const 
         }
     }
     return std::nullopt;
+}
+
+std::map<std::string, PlayerDataLocal> PlayerManager::getPersistencePlayers() const {
+    std::map<std::string, PlayerDataLocal> result;
+    for (const auto& [id, record] : players) {
+        PlayerDataLocal data = record.player.getLocalData();
+        zones.completeZoneData(record.player, data, true);
+        result.emplace(record.name, std::move(data));
+    }
+    return result;
 }
 
 bool PlayerManager::isMultiplayer() const { return players.size() > 1; }
