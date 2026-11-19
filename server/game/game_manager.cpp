@@ -63,7 +63,6 @@ GameSession GameManager::createGame(const CreateGameDTO& dto,
     GameSession session = game->createGame(dto, output);
 
     if (session.status.status == StatusCode::Ok) {
-        // creamos archivo cuando se crea el juego ya y despues devolvenos
         {
             std::lock_guard<std::mutex> saveLock(persistenceMtx);
             persistence.createGame(game->getPersistenceData());
@@ -100,17 +99,52 @@ GameSession GameManager::joinGame(const JoinGameDTO& dto,
     return session;
 }
 
-GameSession GameManager::resumeGame(const ResumeGameDTO& dto, const std::shared_ptr<OutQueue>& output) {
+GameSession GameManager::resumeGame(const ResumeGameDTO& dto,
+                                    const std::shared_ptr<OutQueue>& output) {
     std::lock_guard<std::mutex> lock(mtx);
-
     auto it = games.find(dto.gameId);
-    if (it == games.end()) {
-        GameSession session{};
-        session.status.status = StatusCode::Error;
-        session.status.errorMsg = "No existe esa partida";
+    if (it != games.end()) return it->second->resumeGame(dto, output);
+
+    GameSession failure{};
+    failure.status.status = StatusCode::Error;
+    failure.status.errorMsg = "No se pudo recuperar la partida";
+    if (!persistence.gameExists(dto.gameId)) return failure;
+
+    try {
+        PersistenceDTO saved = persistence.loadGame(dto.gameId);
+        if (!saved.players.contains(dto.userName)) {
+            failure.status.errorMsg = "No tenes un jugador en esta partida";
+            return failure;
+        }
+        GameSetup setup = farmLayout ? makeFarmGameSetup(saved.mapId, *farmLayout) :
+                                      makeDefaultGameSetup(saved.mapId);
+        setup.dungeonConfig = dungeonConfig;
+        setup.playerConfig = playerConfig;
+        setup.farmConfig = FarmConfig{std::chrono::milliseconds{playerConfig.dayDurationMs}};
+        if (townConfig.map.width != 0) setup.townConfig = townConfig;
+        auto game = std::make_unique<Game>(saved.id, saved.farmName, saved.mapId,
+            setup.playerConfig, setup.dungeonConfig, setup.farmConfig,
+            setup.farm.playerHouses, ChatServices{}, marketConfig);
+        if (!game->loadDungeon(setup.worldId, setup.layout) ||
+            !game->loadFarm(setup.worldId, setup.farm) ||
+            (setup.townConfig.map.width != 0 && !game->loadTown(setup.townConfig)) ||
+            (setup.entrance && !game->configureDungeonEntrance(*setup.entrance))) {
+            throw std::runtime_error("Saved game map could not be initialized");
+        }
+        game->restorePersistenceData(saved);
+        GameSession session = game->resumeGame(dto, output);
+        if (session.status.status != StatusCode::Ok) return session;
+        game->setSaveCallback([this](const PersistenceDTO& data) {
+            std::lock_guard<std::mutex> saveLock(persistenceMtx);
+            persistence.saveGame(data);
+        });
+        game->start();
+        games.emplace(dto.gameId, std::move(game));
         return session;
+    } catch (const std::exception& e) {
+        failure.status.errorMsg = std::string("Error al recuperar la partida: ") + e.what();
+        return failure;
     }
-    return it->second->resumeGame(dto, output);
 }
 
 bool GameManager::codeExists(const std::string& code) {

@@ -114,3 +114,15 @@ bool Game::loadDungeon(uint8_t selectedWorldId,
     }
     return world.loadDungeon(selectedWorldId, layout);
 }
+
+void Game::restorePersistenceData(const PersistenceDTO& saved) {
+    std::lock_guard<std::mutex> lock(mtx);
+    if (configured || saved.id != id || saved.mapId != worldId || saved.currentDay == 0) {
+        throw std::runtime_error("Cannot restore game with mismatched identity or state");
+    }
+    world.restoreFarm(saved);
+    playerManager.restorePlayers(saved.players);
+    name = saved.farmName;
+    currentDay = saved.currentDay;
+    configured = true;
+}

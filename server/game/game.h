@@ -50,6 +50,7 @@ class Game:public Thread {
         std::string getName() const;
         uint8_t getWorldId() const;
         PersistenceDTO getPersistenceData() const;
+        void restorePersistenceData(const PersistenceDTO& saved);
         void setSaveCallback(std::function<void(const PersistenceDTO&)> callback);
         std::shared_ptr<CommandQueue> getInputQueue() const;
 
