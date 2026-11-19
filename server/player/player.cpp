@@ -475,6 +475,7 @@ void Player::restoreData(const PlayerDataLocal& saved) {
     characterName = saved.characterName;
     pos = saved.pos;
     state = saved.state;
+    bedReady = false;
     dir = saved.dir;
     movementDirection = Direction::None;
     zone = saved.currentZone;
