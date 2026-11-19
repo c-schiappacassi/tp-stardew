@@ -61,7 +61,6 @@ std::vector<GameIndexDTO> PersistenceReader::readIndex() const {
         validateId(dto.id);
         result.push_back(dto);
     }
-
     return result;
 }
 

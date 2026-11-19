@@ -272,9 +272,30 @@ toml::table PersistenceSerializer::communityProgress(const std::map<std::string,
 }
 
 
+toml::table PersistenceSerializer::indexPlayer(const GameIndexPlayerDTO& value) {
+    toml::table result;
+    result.insert("characterName", value.characterName);
+    result.insert("hairModel", static_cast<int64_t>(value.hairModel));
+    result.insert("shirtModel", static_cast<int64_t>(value.shirtModel));
+    result.insert("pantsModel", static_cast<int64_t>(value.pantsModel));
+    result.insert("hairColor", color(value.hairColor));
+    result.insert("pantsColor", color(value.pantsColor));
+    return result;
+}
+
 toml::table PersistenceSerializer::serialize(const GameIndexDTO& dto) {
-    return toml::table{{"id", dto.id}, {"farmName", dto.farmName},
-            {"users", strings(dto.users)}};
+    toml::table result;
+    result.insert("id", dto.id);
+    result.insert("farmName", dto.farmName);
+    result.insert("users", strings(dto.users));
+    result.insert("isMultiplayer", dto.isMultiplayer);
+
+    toml::table previews;
+    for (const auto& [userName, player] : dto.playerPreviews) {
+        previews.insert(userName, indexPlayer(player));
+    }
+    result.insert("playerPreviews", std::move(previews));
+    return result;
 }
 
 toml::table PersistenceSerializer::serialize(const PersistenceDTO& dto) {

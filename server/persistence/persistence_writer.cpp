@@ -55,7 +55,6 @@ void PersistenceWriter::writeToml(const std::filesystem::path& path,
                 throw std::runtime_error("Cannot close TOML file: " + temporary.string());
             }
         }
-
         std::filesystem::rename(temporary, path);
     } catch (...) {
         std::error_code error;

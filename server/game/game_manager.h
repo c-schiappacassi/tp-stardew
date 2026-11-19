@@ -12,6 +12,7 @@
 #include "game.h"
 #include "game_types.h"
 #include "game_setup.h"
+#include "../persistence/persistence_manager.h"
 
 class GameManager {
 private:
@@ -23,6 +24,7 @@ private:
     std::optional<FarmLayout> farmLayout;
     TownConfig townConfig;
     MarketConfig marketConfig;
+    PersistenceManager persistence;
 
 public:
     explicit GameManager(const DungeonConfig& dungeonConfig = {},

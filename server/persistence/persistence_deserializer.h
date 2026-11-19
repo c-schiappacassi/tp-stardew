@@ -27,6 +27,7 @@ private:
     static std::map<uint32_t, uint32_t> uint32Map(const toml::table& table);
     static std::map<uint32_t, bool> boolMap(const toml::table& table);
 
+    static GameIndexPlayerDTO indexPlayer(const toml::table& table);
     static Position position(const toml::table& table);
     static Color color(const toml::table& table);
     static Stack stack(const toml::table& table);

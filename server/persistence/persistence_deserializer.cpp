@@ -378,11 +378,35 @@ PersistenceDeserializer::communityProgress(const toml::table& table) {
     return result;
 }
 
+GameIndexPlayerDTO PersistenceDeserializer::indexPlayer(const toml::table& table) {
+    GameIndexPlayerDTO result;
+    result.characterName = string(table, "characterName");
+    result.hairModel = static_cast<uint16_t>(integer(table, "hairModel", 0, UINT16_MAX));
+    result.shirtModel = static_cast<uint16_t>(integer(table, "shirtModel", 0, UINT16_MAX));
+    result.pantsModel = static_cast<uint16_t>(integer(table, "pantsModel", 0, UINT16_MAX));
+    result.hairColor = color(requiredTable(table, "hairColor"));
+    result.pantsColor = color(requiredTable(table, "pantsColor"));
+    return result;
+}
+
 GameIndexDTO PersistenceDeserializer::deserializeIndex(const toml::table& table) {
     GameIndexDTO result;
     result.id = string(table, "id");
     result.farmName = string(table, "farmName");
     result.users = strings(requiredArray(table, "users"));
+    result.isMultiplayer = boolean(table, "isMultiplayer");
+    const toml::table& previews = requiredTable(table, "playerPreviews");
+    for (const auto& [userName, node] : previews) {
+        if (!node.is_table()) {
+            throw std::runtime_error("Invalid player preview in persistence index");
+        }
+        result.playerPreviews.emplace(std::string(userName.str()), indexPlayer(*node.as_table()));
+    }
+    for (const std::string& userName : result.users) {
+        if (result.playerPreviews.find(userName) == result.playerPreviews.end()) {
+            throw std::runtime_error("Missing player preview in index for: " + userName);
+        }
+    }
     return result;
 }
 

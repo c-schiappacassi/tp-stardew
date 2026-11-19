@@ -1,6 +1,7 @@
 #pragma once
 
 #include <filesystem>
+#include <optional>
 #include <string>
 #include <vector>
 
@@ -15,6 +16,9 @@ public:
 
     std::vector<GameIndexDTO> getGames() const;
     bool gameExists(const std::string& gameId) const;
+    std::vector<GameInfoDTO> listGamesFor(const std::string& userName) const;
+    void registerGame(const GameIndexDTO& game);
+    void updateGameIndex(const GameIndexDTO& game);
 
     void createGame(const PersistenceDTO& game);
     PersistenceDTO loadGame(const std::string& gameId) const;
@@ -26,4 +30,5 @@ private:
     std::vector<GameIndexDTO> games;
 
     void saveIndex() const;
+    static GameIndexDTO indexFromGame(const PersistenceDTO& game);
 };

@@ -19,8 +19,19 @@ GameManager::GameManager(const DungeonConfig& dungeonConfig,
       playerConfig(playerConfig),
       farmLayout(farmLayout),
       townConfig(townConfig),
-      marketConfig(marketConfig) {
-  
+      marketConfig(marketConfig),
+      persistence("saves") {
+    for (const GameIndexDTO& game : persistence.getGames()) {
+        const std::string prefix = "game-";
+        if (game.id.compare(0, prefix.size(), prefix) != 0) continue;
+        try {
+            std::size_t parsed = 0;
+            unsigned long long number = std::stoull(game.id.substr(prefix.size()), &parsed);
+            if (parsed == game.id.size() - prefix.size() && number >= nextId) {
+                nextId = static_cast<std::size_t>(number + 1);
+            }
+        } catch (const std::exception&) {}
+    }
 }
 
 GameSession GameManager::createGame(const CreateGameDTO& dto,
@@ -52,6 +63,20 @@ GameSession GameManager::createGame(const CreateGameDTO& dto,
     GameSession session = game->createGame(dto, output);
 
     if (session.status.status == StatusCode::Ok) {
+        GameIndexDTO entry;
+        entry.id = id;
+        entry.farmName = dto.gameName;
+        entry.users.push_back(dto.userName);
+        entry.isMultiplayer = false;
+        GameIndexPlayerDTO preview;
+        preview.characterName = dto.characterName;
+        preview.hairModel = dto.hairModel;
+        preview.shirtModel = dto.shirtModel;
+        preview.pantsModel = dto.pantsModel;
+        preview.hairColor = dto.hairColor;
+        preview.pantsColor = dto.pantsColor;
+        entry.playerPreviews.emplace(dto.userName, preview);
+        persistence.registerGame(entry);
         game->start();
         games.emplace(id, std::move(game));
         ++nextId;
@@ -71,7 +96,28 @@ GameSession GameManager::joinGame(const JoinGameDTO& dto,
         return session;
     }
     GameSession session = it->second->joinGame(dto, output);
-
+    if (session.status.status == StatusCode::Ok) {
+        GameIndexDTO entry;
+        for (const GameIndexDTO& candidate : persistence.getGames()) {
+            if (candidate.id == dto.code) {
+                entry = candidate;
+                break;
+            }
+        }
+        if (std::find(entry.users.begin(), entry.users.end(), dto.userName) == entry.users.end()) {
+            entry.users.push_back(dto.userName);
+        }
+        entry.isMultiplayer = entry.users.size() > 1;
+        GameIndexPlayerDTO preview;
+        preview.characterName = dto.characterName;
+        preview.hairModel = dto.hairModel;
+        preview.shirtModel = dto.shirtModel;
+        preview.pantsModel = dto.pantsModel;
+        preview.hairColor = dto.hairColor;
+        preview.pantsColor = dto.pantsColor;
+        entry.playerPreviews[dto.userName] = preview;
+        persistence.updateGameIndex(entry);
+    }
     return session;
 }
 
@@ -90,20 +136,13 @@ GameSession GameManager::resumeGame(const ResumeGameDTO& dto, const std::shared_
 
 bool GameManager::codeExists(const std::string& code) {
     std::lock_guard<std::mutex> lock(mtx);
-    return games.find(code) != games.end();
+    return games.find(code) != games.end() || persistence.gameExists(code);
 }
 
 std::vector<GameInfoDTO> GameManager::listGames(const std::string& userName) {
     std::lock_guard<std::mutex> lock(mtx);
 
-    std::vector<GameInfoDTO> result;
-    for (const auto& entry: games) {
-        std::optional<GameInfoDTO> info = entry.second->infoFor(userName);
-        if (info) {
-            result.push_back(*info);
-        }
-    }
-    return result;
+    return persistence.listGamesFor(userName);
 }
 
 void GameManager::stopAll() {

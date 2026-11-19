@@ -21,6 +21,7 @@ private:
     static toml::table uint32Map(const std::map<uint32_t, uint32_t>& values);
     static toml::table boolMap(const std::map<uint32_t, bool>& values);
 
+    static toml::table indexPlayer(const GameIndexPlayerDTO& value);
     static toml::table position(const Position& pos);
     static toml::table color(const Color& value);
     static toml::table stack(const Stack& value);
