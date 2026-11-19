@@ -8,6 +8,7 @@
 #include <string>
 
 #include "game_types.h"
+#include "persistence/persistence_dto.h"
 #include "thread.h"
 #include "world/world_manager.h"
 #include "player/player_manager.h"
@@ -20,6 +21,7 @@ class Game:public Thread {
         std::string id;
         std::string name;
         uint8_t worldId;
+        uint32_t currentDay = 1;
         std::shared_ptr<CommandQueue> input;
         mutable std::mutex mtx;
         bool configured = false;
@@ -45,6 +47,7 @@ class Game:public Thread {
         const std::string& getId() const;
         std::string getName() const;
         uint8_t getWorldId() const;
+        PersistenceDTO getPersistenceData() const;
         std::shared_ptr<CommandQueue> getInputQueue() const;
 
         GameSession createGame(const CreateGameDTO& dto,const std::shared_ptr<OutQueue>& output);
