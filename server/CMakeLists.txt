@@ -89,6 +89,11 @@ target_sources(taller_server
         config/dungeon_toml_reader.cpp
         config/town_toml_reader.cpp
         config/farm_toml_reader.cpp
+        persistence/persistence_serializer.cpp
+        persistence/persistence_deserializer.cpp
+        persistence/persistence_reader.cpp
+        persistence/persistence_writer.cpp
+        persistence/persistence_manager.cpp
     PUBLIC
     # .h files
         dungeon/enemies/enemy.h
@@ -194,6 +199,13 @@ target_sources(taller_server
         config/dungeon_toml_reader.h
         config/town_toml_reader.h
         config/farm_toml_reader.h
+        persistence/persistence_serializer.h
+        persistence/persistence_deserializer.h
+        persistence/persistence_reader.h
+        persistence/persistence_writer.h
+        persistence/persistence_manager.h
+        persistence/persistence_dto.h
+        persistence/persistence_index.h
 )
 
 target_include_directories(taller_server PRIVATE ${CMAKE_CURRENT_SOURCE_DIR})
