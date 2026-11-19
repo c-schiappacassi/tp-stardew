@@ -164,3 +164,15 @@ const CombatProgressData& WorldManager::getCombatProgress() const {
 void WorldManager::afterStatusPublished() { 
     dungeon.removeBrokenMinerals(); 
 }
+
+void WorldManager::restoreFarm(const PersistenceDTO& saved) {
+    farm.restoreData(saved.farm, saved.cropGrowthProgress, saved.cropWaterRemainingTime,
+                     saved.harvestedCrops, saved.animalProductionProgress, saved.animalAvailableProducts);
+    uint32_t maximum = 0;
+    for (const auto& item : saved.farm.crops) maximum = std::max(maximum, item.id);
+    for (const auto& item : saved.farm.animals) maximum = std::max(maximum, item.id);
+    for (const auto& item : saved.farm.furniture) maximum = std::max(maximum, item.id);
+    for (const auto& item : saved.farm.loot) maximum = std::max(maximum, item.id);
+    if (maximum == UINT32_MAX) throw std::runtime_error("Saved entity ID exhausted");
+    entityIds.ensureNextId(maximum + 1);
+}

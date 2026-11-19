@@ -1,6 +1,7 @@
 #pragma once
 
 #include <optional>
+#include "persistence/persistence_dto.h"
 
 #include "dungeon/dungeon_entrance.h"
 #include "dungeon/dungeon_manager.h"
@@ -35,6 +36,7 @@ public:
     bool spawnPlayer(Player& player) const override;
     bool recoverPlayer(Player& player, uint16_t playerId = 0) const override;
     const FarmManager& getFarm() const;
+    void restoreFarm(const PersistenceDTO& saved);
     std::optional<NpcData> nearbyMerchant(const Player& player, Direction direction = Direction::None) const;
     bool buyAnimals(AnimalSpecies species, uint16_t quantity);
     bool sellAnimals(AnimalSpecies species, uint16_t quantity);
