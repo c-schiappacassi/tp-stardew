@@ -64,10 +64,9 @@ inline void FarmView::update(const FarmData& farm) {
 inline void FarmView::draw_floor_overlay(const RenderInfo& ctx) {
     const Sprite& dry = ctx.assets.get_sprite(TileTextureId::TilledDirt);
     const Sprite& wet = ctx.assets.get_sprite(TileTextureId::WateredDirt);
-    const int radius = TILE_TO_PIXEL * ctx.cam.get_zoom();
 
     for (const SoilTile& t : soil) {
-        if (!ctx.cam.is_visible(t.x, t.y, radius)) continue;
+        if (!on_screen(ctx, t.x, t.y, TILE_TO_PIXEL)) continue;
         const SDL2pp::Point origin = ctx.cam.world_to_screen(t.x, t.y);
         draw_sprite(ctx, dry, origin);
         if (t.watered) draw_sprite(ctx, wet, origin);

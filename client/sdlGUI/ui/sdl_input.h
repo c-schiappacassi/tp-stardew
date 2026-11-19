@@ -37,6 +37,11 @@ inline std::optional<InputEvent> translate(const SDL_Event& e) {
         case SDL_TEXTINPUT: return InputEvent::typed(e.text.text);
         case SDL_MOUSEBUTTONDOWN: return InputEvent::mouse_down(button_from_sdl(e.button.button), e.button.x, e.button.y);
         case SDL_MOUSEBUTTONUP: return InputEvent::mouse_up(button_from_sdl(e.button.button), e.button.x, e.button.y);
+        case SDL_MOUSEWHEEL: {
+            int amount = e.wheel.y;
+            if (e.wheel.direction == SDL_MOUSEWHEEL_FLIPPED) amount = -amount;
+            return InputEvent::mouse_wheel(amount);
+        }
         case SDL_WINDOWEVENT:
             if (e.window.event == SDL_WINDOWEVENT_FOCUS_LOST) {
                 return InputEvent::focus_lost();

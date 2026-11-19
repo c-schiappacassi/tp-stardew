@@ -38,6 +38,7 @@ target_sources(taller_client
     sdlGUI/render_info.h
     sdlGUI/utils.h
     sdlGUI/animator.h
+    sdlGUI/clip_player.h
     sdlGUI/camera.h
     sdlGUI/sync_views.h
     sdlGUI/draw_region.h

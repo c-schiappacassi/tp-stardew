@@ -26,7 +26,6 @@ public:
     };
 
 private:
-    static constexpr int REFERENCE_HEIGHT = 720;
     static constexpr int BOX_CORNER = 16;
     static constexpr int PAD_X = 20;
     static constexpr int PAD_Y = 16;
@@ -43,13 +42,14 @@ private:
     static void draw_button(const RenderInfo& ctx, UiSpriteId id, const SDL2pp::Rect& r, bool hover) {
         const int grow = hover ? r.w / 20 : 0;
         const SDL2pp::Rect dst(r.x - grow, r.y - grow, r.w + 2 * grow, r.h + 2 * grow);
-        draw_sprite_in(ctx, ctx.assets.get_sprite(id), dst);
+        draw_ui(ctx, id, dst);
     }
 
 public:
     static Layout layout(const RenderInfo& ctx, const Spec& spec) {
-        const SDL2pp::Point screen = ctx.r.GetOutputSize();
-        const int u = std::max(1, screen.y / REFERENCE_HEIGHT);
+        const UiFrame f = ui_frame(ctx);
+        const SDL2pp::Point screen = f.size;
+        const int u = f.u;
         const int px = TEXT_SIZE * u;
         const int btn = BUTTON_SIZE * u;
         const int gap = BUTTON_GAP * u;
@@ -73,12 +73,12 @@ public:
 
         const int w = inner_w + 2 * (BOX_CORNER + PAD_X) * u;
         const int h = inner_h + 2 * (BOX_CORNER + PAD_Y) * u;
-        const SDL2pp::Rect box((screen.x - w) / 2, (screen.y - h) / 2, w, h);
+        const SDL2pp::Rect box = centered_rect(screen, w, h);
 
         std::vector<SDL2pp::Rect> btn_rects;
         btn_rects.reserve(btn_count);
         if (btn_count > 0) {
-            int bx = box.x + (w - buttons_w) / 2;
+            int bx = box.x + centered_offset(w, buttons_w);
             const int by = box.y + h - (BOX_CORNER + PAD_Y) * u - btn;
             for (int i = 0; i < btn_count; ++i) {
                 btn_rects.emplace_back(bx, by, btn, btn);
@@ -90,23 +90,16 @@ public:
     }
 
     void draw(const RenderInfo& ctx, const Spec& spec, const Layout& l, const std::vector<bool>& hovered) const {
-        const SDL2pp::Point screen = ctx.r.GetOutputSize();
+        dim_screen(ctx, DIM_ALPHA);
 
-        ctx.r.SetDrawBlendMode(SDL_BLENDMODE_BLEND);
-        ctx.r.SetDrawColor(0, 0, 0, DIM_ALPHA);
-        ctx.r.FillRect(SDL2pp::Rect(0, 0, screen.x, screen.y));
-        ctx.r.SetDrawBlendMode(SDL_BLENDMODE_NONE);
-
-        const Sprite& frame = ctx.assets.get_sprite(UiSpriteId::DialogBox);
-        draw_texture_box(ctx, frame.sprite_id, frame.src(), l.box, BOX_CORNER, l.u);
+        draw_ui_box(ctx, UiSpriteId::DialogBox, l.box, BOX_CORNER, l.u);
 
         const int px = TEXT_SIZE * l.u;
         const int shadow = std::max(1, px / 2);
         int y = l.text_y;
         for (const auto& line : spec.lines) {
-            const int x = l.box.x + (l.box.w - pixel_font::width(line, px)) / 2;
-            pixel_font::draw(ctx, line, x + shadow, y + shadow, px, SHADOW_COLOR);
-            pixel_font::draw(ctx, line, x, y, px, TEXT_COLOR);
+            draw_text_in(ctx, line, SDL2pp::Rect(l.box.x, y, l.box.w, 0), px, HAlign::Center, VAlign::Top,
+                         TEXT_COLOR, 0, 0, SHADOW_COLOR, shadow);
             y += pixel_font::height(px) + LINE_GAP * l.u;
         }
 

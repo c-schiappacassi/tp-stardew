@@ -20,22 +20,19 @@ SDL2pp::Rect MinimapView::to_screen(const SDL2pp::Rect& r, const SDL2pp::Rect& m
 }
 
 SDL2pp::Rect MinimapView::fit(const SDL2pp::Point& screen, const SDL2pp::Point& tex) {
-    const double scale = std::min(screen.x * SCREEN_FILL / tex.x, screen.y * SCREEN_FILL / tex.y);
-    const int w = std::max(1, static_cast<int>(tex.x * scale));
-    const int h = std::max(1, static_cast<int>(tex.y * scale));
-    return SDL2pp::Rect((screen.x - w) / 2, (screen.y - h) / 2, w, h);
+    const SDL2pp::Point size = fit_size(tex.x, tex.y, static_cast<int>(screen.x * SCREEN_FILL), static_cast<int>(screen.y * SCREEN_FILL));
+    return centered_rect(screen, size.x, size.y);
 }
 
 void MinimapView::draw_head(const RenderInfo& ctx, const SDL2pp::Point& center, int size, const Marker& m, const Sprite& head) {
     const int w = size;
     const int h = std::max(1, w * head.height / head.width);
-    const int x = center.x - w / 2;
-    const int y = center.y - h / 2;
-    draw_sprite_in(ctx, head, SDL2pp::Rect(x, y, w, h));
+    const SDL2pp::Rect head_rect = rect_centered_on(center, w, h);
+    draw_sprite_in(ctx, head, head_rect);
 
     const int hair_h = head.height - farmer::HAIR_BASE.y;
-    const SDL2pp::Rect src((m.hair_model % farmer::HAIR_PER_ROW) * farmer::CELL_W,  (m.hair_model / farmer::HAIR_PER_ROW) * farmer::HAIR_BLOCK_H, farmer::CELL_W, hair_h);
-    const SDL2pp::Rect dst(x + farmer::HAIR_BASE.x * w / head.width, y + farmer::HAIR_BASE.y * h / head.height, w, hair_h * h / head.height);
+    const SDL2pp::Rect src = farmer::hair_src(m.hair_model, 0, hair_h);
+    const SDL2pp::Rect dst(head_rect.x + farmer::HAIR_BASE.x * w / head.width, head_rect.y + farmer::HAIR_BASE.y * h / head.height, w, hair_h * h / head.height);
     draw_scaled(ctx, SpriteId::Hairstyles, src, dst, false, m.hair_color);
 }
 
@@ -56,10 +53,7 @@ void MinimapView::update(const std::map<std::string, PlayerData>& players) {
 void MinimapView::draw(const RenderInfo& ctx) const {
     const SDL2pp::Point screen = ctx.r.GetOutputSize();
 
-    ctx.r.SetDrawBlendMode(SDL_BLENDMODE_BLEND);
-    ctx.r.SetDrawColor(0, 0, 0, DIM_ALPHA);
-    ctx.r.FillRect(SDL2pp::Rect(0, 0, screen.x, screen.y));
-    ctx.r.SetDrawBlendMode(SDL_BLENDMODE_NONE);
+    dim_screen(ctx, DIM_ALPHA);
 
     const SDL2pp::Point tex = ctx.assets.get_texture(SpriteId::Minimap).GetSize();
     if (tex.x <= 0 || tex.y <= 0)  return;

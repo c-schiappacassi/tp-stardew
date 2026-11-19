@@ -3,8 +3,12 @@
 #include <algorithm>
 #include <cstddef>
 #include <cmath>
+#include <optional>
 #include <stdexcept>
+#include "render_info.h"
 #include "utils.h"
+
+#include "constants.h"
 
 class Animator {
 private:

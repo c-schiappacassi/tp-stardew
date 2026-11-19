@@ -6,6 +6,7 @@
 
 #include <SDL2pp/SDL2pp.hh>
 
+#include "../draw_region.h"
 #include "../render_info.h"
 #include "game_time.h"
 
@@ -98,10 +99,9 @@ public:
         SDL2pp::Texture& glow = ctx.assets.get_texture(SpriteId::LightGlow);
         glow.SetBlendMode(additive_blend());
         for (const lighting::Light& l : lights) {
-            glow.SetColorMod(scaled(l.color.r, l.intensity), scaled(l.color.g, l.intensity), scaled(l.color.b, l.intensity));
-            ctx.r.Copy(glow, SDL2pp::NullOpt, SDL2pp::Rect(l.center.x - l.radius, l.center.y - l.radius, l.radius * 2, l.radius * 2));
+            ScopedTint tint(glow, SDL_Color{scaled(l.color.r, l.intensity), scaled(l.color.g, l.intensity), scaled(l.color.b, l.intensity), 255});
+            ctx.r.Copy(glow, SDL2pp::NullOpt, rect_centered_on(l.center, 2 * l.radius, 2 * l.radius));
         }
-        glow.SetColorMod(255, 255, 255);
 
         ctx.r.SetTarget();
         ctx.r.Copy(*target);

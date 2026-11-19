@@ -3,7 +3,7 @@
 
 #include "../../utils.h"
 #include "../entity_view.h"
-#include "../../animator.h"
+#include "../../clip_player.h"
 
 #include "position.h"
 #include "protocol_types.h"
@@ -14,9 +14,7 @@ private:
     Position pos{0, 0};
     FlameType type;
 
-    Animator anim;
-    std::optional<ClipId> current_clip;
-    long long last_it = -1;
+    ClipPlayer clip_player;
 
 public:
     explicit ProjectileView(const ProjectileData& data);

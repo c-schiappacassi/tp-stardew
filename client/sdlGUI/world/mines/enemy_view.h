@@ -3,7 +3,7 @@
 
 #include "../../utils.h"
 #include "../entity_view.h"
-#include "../../animator.h"
+#include "../../clip_player.h"
 
 #include "position.h"
 #include "protocol_types.h"
@@ -18,9 +18,7 @@ private:
     EnemyState state;
     bool frenzied = false;
     
-    Animator anim;
-    std::optional<ClipId> current_clip;
-    long long last_it = -1;
+    ClipPlayer clip_player;
 public: 
     explicit EnemyView(const EnemySnapshot& data);
     void update(const EnemySnapshot& data);

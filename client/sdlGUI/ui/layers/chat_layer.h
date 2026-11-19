@@ -16,6 +16,7 @@ private:
 
     static constexpr std::chrono::milliseconds PEEK_DURATION{5000};
     static constexpr std::size_t MAX_INPUT_CHAT = 100;
+    static constexpr int WHEEL_LINES = 2;
 
     std::string player_name;
     ChatView view;
@@ -23,6 +24,9 @@ private:
     std::string input;
     std::size_t seen_messages = 0;
     Clock::time_point peek_until{};
+
+    std::size_t scroll = 0;
+    std::size_t max_scroll = 0;
 
     bool peeking() const { return Clock::now() < peek_until; }
 
@@ -55,16 +59,22 @@ private:
             }
         }
     }
+    
+    void scroll_by(int lines) {
+        const long next = static_cast<long>(scroll) + lines;
+        scroll = static_cast<std::size_t>(std::clamp<long>(next, 0, static_cast<long>(max_scroll)));
+    }
 
 public:
     explicit ChatLayer(std::string name): player_name(std::move(name)) {}
 
     bool visible() const override { return focused() || peeking(); }
 
-    void on_focus() override { input.clear(); }
+    void on_focus() override { input.clear(); scroll = 0; }
 
     void on_blur() override {
         input.clear();
+        scroll = 0;
         peek_until = Clock::time_point{};
     }
 
@@ -82,19 +92,20 @@ public:
                 append(e.text);
                 break;
 
+            case InputEvent::Type::MouseWheel:
+                scroll_by(e.y_wheel * WHEEL_LINES);
+                break;
+
             case InputEvent::Type::KeyDown:
                 if (e.key == Key::Backspace) {
-                    if (!input.empty()) {
-                        input.pop_back();
-                    }
+                    if (!input.empty()) input.pop_back();
+                } else if (e.key == Key::Up) {
+                    scroll_by(1);
+                } else if (e.key == Key::Down) {
+                    scroll_by(-1);
                 } else if (!e.repeat) {
-                    if (e.key == Key::Escape) {
-                        return Focus::Release;
-                    }
-                    if (e.key == Key::Enter) {
-                        send(out);
-                        return Focus::Release;
-                    }
+                    if (e.key == Key::Escape) return Focus::Release;
+                    if (e.key == Key::Enter) { send(out); return Focus::Release; }
                 }
                 break;
 
@@ -103,5 +114,7 @@ public:
         return Focus::Keep;
     }
 
-    void draw(const RenderInfo& ctx) override { view.draw(ctx, input, focused()); }
+    void draw(const RenderInfo& ctx) override {
+        max_scroll = view.draw(ctx, input, focused(), scroll);
+    }
 };

@@ -13,7 +13,7 @@ private:
 public:
     explicit TileView(const TileData& data, AssetManager& assets): pos(data.pos), texture_sprite(assets.get_sprite(data.id)){};
     void draw(const RenderInfo& ctx){
-        draw_sprite(ctx, this->texture_sprite, ctx.cam.world_to_screen(pos.getX(), pos.getY()));
+        draw_sprite_at(ctx, this->texture_sprite, pos);
     };
 };
 
@@ -28,15 +28,11 @@ public:
         : pos(pos), sprite(sprite), flip(flip) {}
 
     void draw(const RenderInfo& ctx) override {
-        draw_sprite(ctx, sprite, ctx.cam.world_to_screen(pos.getX(), pos.getY()), flip);
+        draw_sprite_at(ctx, sprite, pos, flip);
     }
 
     std::optional<float> depth(const RenderInfo& ctx) const override {
-        const int radius = sprite.height * ctx.cam.get_zoom();
-        if (!ctx.cam.is_visible(pos.getX(), pos.getY(), radius)) {
-            return std::nullopt;
-        }
-        return static_cast<float>(pos.getY());
+        return depth_if_visible(ctx, pos, sprite.height);
     }
 };
 
@@ -89,7 +85,7 @@ public:
 
     void draw(const RenderInfo& ctx) {
         if (interior) {
-            draw_sprite(ctx, interior->sprite, ctx.cam.world_to_screen(interior->pos.getX(), interior->pos.getY()));
+            draw_sprite_at(ctx, interior->sprite, interior->pos);
         }
         for (TileView& t : floor)
             t.draw(ctx);

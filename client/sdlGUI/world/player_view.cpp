@@ -3,7 +3,7 @@
 namespace {
     SDL2pp::Rect hair_src(uint16_t model, Direction dir) {
         const int row = dir == Direction::Up ? 2 : (dir == Direction::Down ? 0 : 1);
-        return SDL2pp::Rect((model % farmer::HAIR_PER_ROW) * farmer::CELL_W, (model / farmer::HAIR_PER_ROW) * farmer::HAIR_BLOCK_H + row * farmer::CELL_H, farmer::CELL_W, farmer::CELL_H);
+        return farmer::hair_src(model, row);
     }
 
     SDL2pp::Rect shirt_src(uint16_t model, Direction dir) {
@@ -45,28 +45,15 @@ void PlayerView::update(const PlayerData& data) {
     shirt_model = data.shirtModel;
     pant_model = data.pantsModel;
     pant_color = to_sdl(data.pantsColor);
+
+    if (data.heldItem != held_item) {
+        clip_player.reset();
+    }
     held_item = data.heldItem;
 }
 
 std::optional<float> PlayerView::depth(const RenderInfo& ctx) const {
-    const int radius = farmer::CELL_H * ctx.cam.get_zoom();
-    if (!ctx.cam.is_visible(pos.getX(), pos.getY(), radius)) {
-        return std::nullopt;
-    }
-    return static_cast<float>(pos.getY());
-}
-
-void PlayerView::tick(const RenderInfo& ctx, const ClipId& clip_id) {
-    if (!current_clip || !(*current_clip == clip_id) || current_tool != held_item) {
-        current_clip = clip_id;
-        current_tool = held_item;
-        anim.reset();
-    }
-
-    if (last_it >= 0 && ctx.it > last_it) {
-        anim.update(static_cast<float>(ctx.it - last_it) * TICK_MS);
-    }
-    last_it = ctx.it;
+    return depth_if_visible(ctx, pos, farmer::CELL_H);
 }
 
 void PlayerView::draw_layers_in_order(const RenderInfo& ctx, const farmer::DrawPlayerData& d) {
@@ -105,32 +92,32 @@ void PlayerView::draw(const RenderInfo& ctx) {
         with_item.item_id = held_item;
         if (ctx.assets.has_clip(with_item)) clip_id = with_item;
     }
-    tick(ctx, clip_id);
 
-    const Clip& clip = ctx.assets.get_clip(clip_id);
-    const AnimatedFrame& frame = anim.get_current_frame(clip);
+    const AnimatedFrame* frame = clip_player.frame(ctx, clip_id);
+    if (!frame) return;
 
-    const Sprite& body = frame.sprite;
+    const Sprite& body = frame->sprite;
     const int zoom = ctx.cam.get_zoom();
     const SDL2pp::Point anchor = ctx.cam.world_to_screen(pos.getX(), pos.getY());
-    const SDL2pp::Point origin(anchor.GetX() + body.dx(frame.flip) * zoom, anchor.GetY() + body.offset_y * zoom);
+    const SDL2pp::Point origin(anchor.GetX() + body.dx(frame->flip) * zoom,
+                               anchor.GetY() + body.offset_y * zoom);
 
     draw_layers_in_order(ctx, farmer::DrawPlayerData{
         anchor,
         origin,
         body.src(),
         arms_src(body),
-        frame.offsets,
-        anim.get_current_frame_index(clip),
+        frame->offsets,
+        clip_player.frame_index(),
         body.width,
-        frame.flip
+        frame->flip
     });
 }
 
 std::optional<lighting::Light> PlayerView::light(const RenderInfo& ctx) const {
     const int zoom = ctx.cam.get_zoom();
     const int radius = lighting::PLAYER_GLOW_RADIUS * zoom;
-    if (!ctx.cam.is_visible(pos.getX(), pos.getY(), radius)) return std::nullopt;
+    if (!on_screen(ctx, pos, lighting::PLAYER_GLOW_RADIUS)) return std::nullopt;
 
     const SDL2pp::Point feet = ctx.cam.world_to_screen(pos.getX(), pos.getY());
     return lighting::Light{
