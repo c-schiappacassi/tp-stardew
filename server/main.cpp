@@ -10,8 +10,8 @@
 
 int main(int argc, char* argv[]) {
     if (argc < 2) {
-        std::cerr << "Uso: " << argv[0]
-                  << " <puerto> [--world archivo.toml]\n";
+        std::cerr << "Usage: " << argv[0]
+                  << " <port> [--world file.toml]\n";
         return 1;
     }
 
@@ -25,13 +25,13 @@ int main(int argc, char* argv[]) {
                 if (!worldPath.empty() || i + 1 == argc ||
                     std::string(argv[i + 1]).starts_with("--")) {
                     throw std::invalid_argument(
-                        "--world requiere un unico archivo TOML");
+                        "--world requires a single TOML file");
                     }
 
                 worldPath = argv[++i];
             } else {
                 throw std::invalid_argument(
-                    "Argumento desconocido: " + argument);
+                    "Unknown argument: " + argument);
             }
         }
 
@@ -41,19 +41,13 @@ int main(int argc, char* argv[]) {
             world = GameTomlReader{}.read(worldPath);
         }
 
-        GameManager manager(
-            world.config.dungeon,
-            world.config.player,
-            world.farm,
-            world.config.town,
-            world.config.market
-        );
+        GameManager manager(world.config, world.farm);
 
         Socket listener(argv[1]);
         Acceptor acceptor(listener, manager);
         acceptor.start();
 
-        std::cout << "Servidor escuchando en "
+        std::cout << "Server listening on "
                   << argv[1] << '\n';
 
         std::string line;
@@ -67,7 +61,7 @@ int main(int argc, char* argv[]) {
         return 0;
 
     } catch (const std::exception& e) {
-        std::cerr << "Error del servidor: "
+        std::cerr << "Server error: "
                   << e.what() << "\n";
         return 1;
     }

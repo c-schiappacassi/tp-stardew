@@ -1,6 +1,7 @@
 #include "game_setup.h"
 
 #include <utility>
+#include "dungeon/dungeon_config.h"
 #include "entities/entity_dimensions.h"
 #include "commerce/shop_products.h"
 
@@ -55,22 +56,30 @@ GameSetup makeDefaultGameSetup(uint8_t worldId) {
     }
     setup.townConfig.map = {32, 24, entity_dimensions::TILE_SIZE};
     setup.townConfig.connections = {{"farm", {2, 12}}, {"dungeon", {29, 12}}};
-    const InteriorId shops[]{InteriorId::MarniesShop, InteriorId::PierresShop,
-                             InteriorId::RobinsShop, InteriorId::ClintsShop};
-    const int columns[]{5, 8, 20, 26};
-    for (std::size_t index = 0; index < 4; ++index) {
-        InteriorLayout shop;
-        shop.location = {shops[index], 0};
-        shop.terrain = ZoneMap{std::vector<std::vector<bool>>(17, std::vector<bool>(17, true)),
+    struct TownBuilding {
+        InteriorId interior;
+        int doorColumn;
+    };
+    const TownBuilding buildings[]{
+        {InteriorId::MarniesShop, 5}, {InteriorId::PierresShop, 8},
+        {InteriorId::RobinsShop, 20}, {InteriorId::ClintsShop, 26},
+        {InteriorId::ComunityCenter, 14}
+    };
+    for (const auto& building : buildings) {
+        InteriorLayout interior;
+        interior.location = {building.interior, 0};
+        interior.terrain = ZoneMap{std::vector<std::vector<bool>>(17, std::vector<bool>(17, true)),
                                entity_dimensions::TILE_SIZE};
-        shop.outside.zone = Zone::Town;
-        shop.outside.position = terrain.baseAt({12, columns[index]}).value();
-        shop.returnPosition = terrain.baseAt({13, columns[index]}).value();
-        shop.entry = shop.terrain.baseAt({13, 8}).value();
-        shop.exit = shop.terrain.baseAt({15, 8}).value();
-        shop.background.interior = InteriorBackgroundData{Position{0, 0}, shops[index],
-            NpcData{shop.terrain.baseAt({6, 8}).value(), *shop_products::merchantForInterior(shops[index])}};
-        setup.farm.interiors.push_back(std::move(shop));
+        interior.outside.zone = Zone::Town;
+        interior.outside.position = terrain.baseAt({12, building.doorColumn}).value();
+        interior.returnPosition = terrain.baseAt({13, building.doorColumn}).value();
+        interior.entry = interior.terrain.baseAt({13, 8}).value();
+        interior.exit = interior.terrain.baseAt({15, 8}).value();
+        interior.background.interior = InteriorBackgroundData{Position{0, 0}, building.interior, std::nullopt};
+        if (const auto npc = shop_products::merchantForInterior(building.interior)) {
+            interior.background.interior->npc = NpcData{interior.terrain.baseAt({6, 8}).value(), *npc};
+        }
+        setup.farm.interiors.push_back(std::move(interior));
     }
     return setup;
 }

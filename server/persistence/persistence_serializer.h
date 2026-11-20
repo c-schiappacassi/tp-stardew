@@ -42,8 +42,5 @@ private:
     static toml::table zone(const ZoneData& value);
     static toml::table combatProgress(const CombatProgressData& value);
     static toml::table player(const PlayerDataLocal& value);
-    static toml::table communityProgress(
-        const std::map<std::string,
-                       std::map<std::string,
-                                std::map<std::string, uint32_t>>>& values);
+    static toml::table communityProgress(const CommunitySaveData& values);
 };

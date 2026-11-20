@@ -238,6 +238,7 @@ toml::table PersistenceSerializer::player(const PlayerDataLocal& value) {
     }
     result.insert("items", std::move(items));
     result.insert("currentSlot", static_cast<int64_t>(value.current_slot));
+    result.insert("inventoryCapacity", static_cast<int64_t>(value.cap_inventory));
     result.insert("gold", static_cast<int64_t>(value.gold));
     result.insert("health", static_cast<int64_t>(value.health));
     result.insert("maxHealth", static_cast<int64_t>(value.maxHealth));
@@ -253,9 +254,7 @@ toml::table PersistenceSerializer::player(const PlayerDataLocal& value) {
     return result;
 }
 
-toml::table PersistenceSerializer::communityProgress(const std::map<std::string,
-                              std::map<std::string,
-                              std::map<std::string, uint32_t>>>& values) {
+toml::table PersistenceSerializer::communityProgress(const CommunitySaveData& values) {
     toml::table result;
     for (const auto& [task, actions] : values) {
         toml::table actionTable;

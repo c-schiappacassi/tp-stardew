@@ -39,6 +39,23 @@ enum class StatusCode : uint8_t {
     Error = 1 
 };
 
+enum class CommunityBundle : uint8_t { Crops, Metals, Animals, Combat, Money };
+enum class MarketDiscount : uint8_t { None, Pending, Active };
+enum class DonationKind : uint8_t { Item, Coins };
+
+enum class CommunityDonationError : uint8_t {
+    None,
+    InvalidAmount,
+    CannotAct,
+    OutsideCenter,
+    UnsupportedItem,
+    AlreadyComplete,
+    MissingItems,
+    MissingCoins,
+    InventoryChanged,
+    InvalidSlot
+};
+
 enum class Direction : uint8_t {
     None = 0,
     Up = 1,

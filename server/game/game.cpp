@@ -4,14 +4,24 @@
 #include <limits>
 #include <stdexcept>
 
-Game::Game(const std::string& id,const std::string& name,uint8_t worldId,const PlayerConfig& playerConfig,const DungeonConfig& dungeonConfig,const FarmConfig& farmConfig,uint8_t maxPlayers,ChatServices chatServices,const MarketConfig& marketConfig):
+#include "community/chat/community_chat.h"
+#include "persistence/community_persistence.h"
+
+Game::Game(const std::string& id, const std::string& name, uint8_t worldId,
+        const GameConfig& config, uint8_t maxPlayers, ChatServices chatServices):
     id(id),
     name(name),
     worldId(worldId),
     input(std::make_shared<CommandQueue>()),
-    world(dungeonConfig, std::random_device{}(), farmConfig),
-    merchants(std::make_shared<MerchantChat>(world, marketConfig)),
-    playerManager(playerConfig, world, world, world, world, maxPlayers,ChatServices{chatServices.merchants ? std::move(chatServices.merchants) : merchants,std::move(chatServices.cheats)}) {}
+    world(config.dungeon, std::random_device{}(), config.farm),
+    merchants(std::make_shared<MerchantChat>(world, marketPrices, config.market)),
+    community(config.community),
+    communityRewards(community, world, marketPrices),
+    communityChat(std::make_shared<CommunityChat>(community, communityRewards)),
+    playerManager(config.player, world, world, world, world, maxPlayers,
+        ChatServices{chatServices.merchants ? std::move(chatServices.merchants) : merchants,
+                     std::move(chatServices.cheats),
+                     chatServices.community ? std::move(chatServices.community) : communityChat}) {}
 
 bool Game::loadFarm(uint8_t selectedWorldId, const FarmLayout& layout) {
     std::lock_guard<std::mutex> lock(mtx);
@@ -49,17 +59,22 @@ std::shared_ptr<CommandQueue> Game::getInputQueue() const {
 void Game::setSaveCallback(std::function<void(const PersistenceDTO&)> callback) {
     std::lock_guard<std::mutex> lock(mtx);
     saveCallback = std::move(callback);
+    ++saveRequests;
 }
 
 PersistenceDTO Game::getPersistenceData() const {
     std::lock_guard<std::mutex> lock(mtx);
+    return buildPersistenceData();
+}
 
+PersistenceDTO Game::buildPersistenceData() const {
     PersistenceDTO snapshot;
     snapshot.id = id;
     snapshot.farmName = name;
     snapshot.mapId = worldId;
     snapshot.currentDay = currentDay;
     snapshot.players = playerManager.getPersistencePlayers();
+    snapshot.communityCenterActionProgress = CommunityPersistence::save(community, communityRewards);
 
     for (const auto& [userName, player] : snapshot.players) {
         snapshot.users.push_back(userName);
@@ -95,6 +110,7 @@ ServerStatus Game::buildStatus() const {
     status.status = StatusCode::Ok;
     status.gameId = id;
     status.worldId = worldId;
+    status.gameCompleted = community.finished();
     return status;
 }
 
@@ -121,8 +137,10 @@ void Game::restorePersistenceData(const PersistenceDTO& saved) {
         throw std::runtime_error("Cannot restore game with mismatched identity or state");
     }
     world.restoreFarm(saved);
+    CommunityPersistence::restore(community, communityRewards, saved.communityCenterActionProgress);
     playerManager.restorePlayers(saved.players);
     name = saved.farmName;
     currentDay = saved.currentDay;
     configured = true;
+    updateCommunity();
 }

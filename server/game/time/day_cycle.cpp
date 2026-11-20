@@ -11,7 +11,7 @@
 
 DayCycle::DayCycle(std::chrono::milliseconds duration): duration(duration) {
     if (duration.count() <= 0) {
-        throw std::invalid_argument("La duracion del dia debe ser positiva");
+        throw std::invalid_argument("Day duration must be positive");
     }
 }
 
@@ -42,7 +42,7 @@ void DayCycle::forgetConfirmation(uint16_t playerId) { confirmations.erase(playe
 
 bool DayCycle::advance(std::chrono::milliseconds time,std::span<const Participant> players,const PlayerSpawnSource& spawns) {
     if (time.count() < 0) {
-        throw std::invalid_argument("El tiempo no puede retroceder");
+        throw std::invalid_argument("Time cannot move backwards");
     }
     bool connected = false;
     bool allIncapacitated = true;

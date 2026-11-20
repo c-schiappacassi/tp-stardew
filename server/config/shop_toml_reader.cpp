@@ -11,7 +11,7 @@
 ItemId ShopTomlReader::itemFromId(uint16_t id, const std::string& field) {
     const auto item = static_cast<ItemId>(id);
     if (item == ItemId::Chest || Decoration::isDecoration(item)) return item;
-    toml_helpers::invalid(field, "ID de producto desconocido o mueble fijo");
+    toml_helpers::invalid(field, "unknown product ID or fixed furniture");
 }
 
 RobinShopConfig ShopTomlReader::read(const toml::table& root) const {
@@ -31,7 +31,7 @@ RobinShopConfig ShopTomlReader::read(const toml::table& root) const {
 
     const auto* node = robin.get("products");
     if (!node || !node->is_array()) {
-        invalid("shops.robin.products", "se esperaba una lista");
+        invalid("shops.robin.products", "expected an array");
     }
 
     const auto& products = *node->as_array();
@@ -55,15 +55,15 @@ RobinShopConfig ShopTomlReader::read(const toml::table& root) const {
         const bool rotates = boolean(product, "rotates", field + ".rotates");
 
         if (!registered.insert(item).second) {
-            invalid(field, "producto repetido");
+            invalid(field, "duplicate product");
         }
 
         if (item == ItemId::Chest && rotates) {
-            invalid(field, "el cofre no puede rotar");
+            invalid(field, "the chest cannot rotate");
         }
 
         if (item != ItemId::Chest && !rotates) {
-            invalid(field, "las decoraciones deben rotar");
+            invalid(field, "decorations must rotate");
         }
 
         if (rotates) {
@@ -75,7 +75,7 @@ RobinShopConfig ShopTomlReader::read(const toml::table& root) const {
 
     if (config.dailyRotationCount > rotatingProducts) {
         invalid("shops.robin.daily_rotation_count",
-                "no puede superar la cantidad de productos que rotan");
+                "cannot exceed the number of rotating products");
     }
 
     return config;
@@ -91,7 +91,7 @@ MarketConfig ShopTomlReader::readMarket(const toml::table& root) const {
         const std::string field = std::string("shops.") + shop + ".products";
         const auto& shopTable = toml_helpers::tableAt(shopNode, std::string("shops.") + shop);
         const auto* node = shopTable.get("products");
-        if (!node || !node->is_array()) toml_helpers::invalid(field, "se esperaba una lista");
+        if (!node || !node->is_array()) toml_helpers::invalid(field, "expected an array");
         std::set<ItemId> registered;
         for (const auto& entry : *node->as_array()) {
             const auto& product = toml_helpers::tableAt(&entry, field);
@@ -99,7 +99,7 @@ MarketConfig ShopTomlReader::readMarket(const toml::table& root) const {
                 std::numeric_limits<uint16_t>::max(), field + ".item_id"));
             const auto price = static_cast<uint32_t>(toml_helpers::integer(product, "price",
                 std::numeric_limits<uint32_t>::max(), field + ".price"));
-            if (!registered.insert(item).second) toml_helpers::invalid(field, "producto repetido");
+            if (!registered.insert(item).second) toml_helpers::invalid(field, "duplicate product");
             bool found = false;
             for (auto& configured : prices) {
                 if (configured.item == item) {
@@ -107,7 +107,7 @@ MarketConfig ShopTomlReader::readMarket(const toml::table& root) const {
                     found = true;
                 }
             }
-            if (!found) toml_helpers::invalid(field, "producto no admitido por este comerciante");
+            if (!found) toml_helpers::invalid(field, "product not supported by this merchant");
         }
     };
     readPrices("pierre", config.seeds);

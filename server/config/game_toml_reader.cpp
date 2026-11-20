@@ -6,6 +6,7 @@
 #include <toml++/toml.hpp>
 
 #include "config/combat_toml_reader.h"
+#include "config/community_toml_reader.h"
 #include "config/death_toml_reader.h"
 #include "config/dungeon_toml_reader.h"
 #include "config/farm_toml_reader.h"
@@ -19,6 +20,7 @@ WorldData GameTomlReader::read(const std::string& path) const {
         WorldData world;
         world.config.death = DeathTomlReader{}.read(root);
         world.config.market = ShopTomlReader{}.readMarket(root);
+        world.config.community = CommunityTomlReader{}.read(root);
         world.config.robin = world.config.market.robin;
         world.config.dungeon = DungeonTomlReader{}.read(root);
         CombatTomlReader{}.read(root, world.config.dungeon, world.config.player);

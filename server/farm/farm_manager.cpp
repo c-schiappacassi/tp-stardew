@@ -144,7 +144,7 @@ std::optional<ItemId> FarmManager::removeDecoration(EntityId id) {
 
 void FarmManager::update(std::chrono::milliseconds elapsed, EntityIdGenerator& entityIds) {
     if (elapsed.count() < 0) {
-        throw std::invalid_argument("Tiempo negativo");
+        throw std::invalid_argument("Negative time");
     }
     if (elapsed.count() == 0) {
         return;

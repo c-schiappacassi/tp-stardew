@@ -33,7 +33,7 @@ struct PlayerConfig {
         if (!collision.isValid() || swordDamage == 0 || swordRange == 0 ||
             passoutGoldPercent > 100 || dayDurationMs == 0 || sword == tools.end() ||
             sword->second.intervalMs == 0) {
-            throw std::invalid_argument("Configuracion del jugador invalida");
+            throw std::invalid_argument("Invalid player configuration");
         }
     }
 };

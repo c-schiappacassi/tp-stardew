@@ -38,7 +38,12 @@ void PlayerStatus::completeLocalData(ServerStatus& status,const PlayerRecord& re
     status.playerId = record.id;
     status.localPlayer = record.player.getLocalData();
     zones.completeZoneData(record.player, status.localPlayer, includeBroken);
-    status.dayConfirmationRequired = day && day->requiresConfirmation(record.id, record.player);
+    status.community = record.community;
+    status.community.lastDonation = record.lastDonation;
+    status.gameCompleted = status.gameCompleted || status.community.completed;
+    status.dayConfirmationRequired = !status.gameCompleted && day &&
+        day->requiresConfirmation(record.id, record.player);
+    if (status.gameCompleted) status.dayEnded = false;
     if (day) status.timeOfDayMinutes = day->timeOfDayMinutes();
 }
 

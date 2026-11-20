@@ -2,7 +2,8 @@
 
 #include <map>
 
-#include "chat/chat_commands.h"
+#include "chat/services/merchant_chat_service.h"
+#include "market_prices.h"
 #include "shop_config.h"
 
 class WorldManager;
@@ -14,6 +15,7 @@ class MerchantChat final : public MerchantChatService {
     };
 
     WorldManager& world;
+    const MarketPrices& prices;
     MarketConfig config;
     std::map<uint16_t, Conversation> conversations;
     std::vector<RobinProductConfig> robinCatalog;
@@ -25,7 +27,7 @@ class MerchantChat final : public MerchantChatService {
     std::string sell(Player& player, NpcId merchant, const TradeCommand& command);
 
 public:
-    explicit MerchantChat(WorldManager& world, const MarketConfig& config = {});
+    MerchantChat(WorldManager& world, const MarketPrices& prices, const MarketConfig& config = {});
     std::optional<std::vector<ChatMessageData>> interact(const ChatCommandContext& context, Direction direction) override;
     std::vector<ChatMessageData> execute(const ChatCommandContext& context, const TradeCommand& command) override;
     void onDisconnect(uint16_t playerId) noexcept override;

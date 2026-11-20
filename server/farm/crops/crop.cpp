@@ -12,7 +12,7 @@ Crop::Crop(EntityId id, const Position& position, const CropDefinition& definiti
     const bool invalidTolerance = definition.toleratedMissedWaterings != 0 &&definition.wateringInterval.count() >std::numeric_limits<int64_t>::max() / definition.toleratedMissedWaterings;
     if (id == 0 || position.getX() < 0 || position.getY() <= 0 ||
         definition.growthTime.count() <= 0 || definition.regrowthTime.count() < 0 ||invalidTolerance) {
-        throw std::invalid_argument("Identificador, posicion o tiempos de cultivo invalidos");
+        throw std::invalid_argument("Invalid crop identifier, position or times");
     }
     remainingDryTolerance = definition.wateringInterval * definition.toleratedMissedWaterings;
     getProduct();
@@ -56,12 +56,12 @@ ItemId Crop::getProduct() const {
         case CropType::Pumpkin:
             return ItemId::Pumpkin;
     }
-    throw std::invalid_argument("Tipo de cultivo desconocido");
+    throw std::invalid_argument("Unknown crop type");
 }
 
 void Crop::update(std::chrono::milliseconds elapsed) {
     if (elapsed.count() < 0) {
-        throw std::invalid_argument("Tiempo negativo");
+        throw std::invalid_argument("Negative time");
     }
     if (harvested) {
         return;

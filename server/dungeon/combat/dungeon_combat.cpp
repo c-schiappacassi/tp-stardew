@@ -143,7 +143,7 @@ void DungeonCombat::spawnPendingAmbush(DungeonRoom& room, const std::vector<Comb
 
 void DungeonCombat::update(CombatTime elapsed, std::map<uint8_t, DungeonRoom>& rooms,const std::vector<Combatant>& players, EntityIdGenerator& ids,std::chrono::steady_clock::time_point now) {
     if (elapsed.count() < 0) {
-        throw std::invalid_argument("El tiempo no puede retroceder");
+        throw std::invalid_argument("Time cannot move backwards");
     }
     clock += elapsed;
     const CombatTime movementTime{std::min<int64_t>(elapsed.count(), 250)};

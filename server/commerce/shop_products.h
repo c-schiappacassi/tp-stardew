@@ -10,6 +10,7 @@
 namespace shop_products {
 std::string_view name(ItemId item);
 std::optional<ItemId> item(const std::string& name);
+std::optional<ItemId> cropItem(CropType crop);
 std::optional<AnimalSpecies> animal(const std::string& name);
 std::string_view merchantName(NpcId merchant);
 std::optional<NpcId> merchantForInterior(InteriorId interior);

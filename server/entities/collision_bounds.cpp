@@ -24,12 +24,12 @@ bool CollisionBounds::intersects(const CollisionBounds& other) const {
 
 Position CollisionBounds::center() const {
     if (!isValid()) {
-        throw std::invalid_argument("Limites de colision invalidos");
+        throw std::invalid_argument("Invalid collision bounds");
     }
     const int64_t x = std::midpoint(right, left);
     const int64_t y = std::midpoint(bottom, top);
     if (x < std::numeric_limits<int>::min() || x > std::numeric_limits<int>::max() || y < std::numeric_limits<int>::min() || y > std::numeric_limits<int>::max()) {
-        throw std::overflow_error("Centro de colision fuera de rango");
+        throw std::overflow_error("Collision center out of range");
     }
     return Position{static_cast<int>(x), static_cast<int>(y)};
 }

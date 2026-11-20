@@ -52,7 +52,7 @@ ClientHandler::ClientHandler(Socket&& socket, GameManager& manager):
             reply.status = StatusCode::Ok;
             if (!this->manager.codeExists(dto.code)) {
                 reply.status = StatusCode::Error;
-                reply.errorMsg = "codigo invalido";
+                reply.errorMsg = "invalid code";
             }
             protocol.sendQtStatus(reply);
         }},

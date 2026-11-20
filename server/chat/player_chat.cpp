@@ -3,20 +3,27 @@
 #include <algorithm>
 #include <exception>
 #include <utility>
+#include <vector>
+
+#include "chat_command_context.h"
+#include "player/player_record.h"
+#include "services/cheat_chat_service.h"
+#include "services/community_chat_service.h"
+#include "services/merchant_chat_service.h"
 
 PlayerChat::PlayerChat(ChatServices services): services(std::move(services)) {}
 
-bool PlayerChat::interact(PlayerRecord& sender, Direction direction, bool dayEnded) const {
-    if (!services.merchants || dayEnded || !sender.player.canAct() ||
+bool PlayerChat::interact(PlayerRecord& sender, Direction direction, bool actionsBlocked) const {
+    if (!services.merchants || actionsBlocked || !sender.player.canAct() ||
         direction > Direction::Right) return false;
     if (direction == Direction::None) direction = sender.player.getPublicData().dir;
-    const ChatCommandContext context{sender.id, sender.name, sender.player, dayEnded};
+    const ChatCommandContext context{sender.id, sender.name, sender.player, actionsBlocked};
     try {
         const auto responses = services.merchants->interact(context, direction);
         if (!responses) return false;
         sender.chatMessages.insert(sender.chatMessages.end(), responses->begin(), responses->end());
     } catch (const std::exception&) {
-        reply(sender, "No se pudo iniciar la conversacion. Intenta nuevamente.");
+        reply(sender, "Could not start the conversation. Try again.");
     }
     return true;
 }
@@ -24,64 +31,36 @@ bool PlayerChat::interact(PlayerRecord& sender, Direction direction, bool dayEnd
 void PlayerChat::onDisconnect(uint16_t playerId) const noexcept {
     if (services.merchants) services.merchants->onDisconnect(playerId);
     if (services.cheats) services.cheats->onDisconnect(playerId);
+    if (services.community) services.community->onDisconnect(playerId);
 }
 
 void PlayerChat::reply(PlayerRecord& sender, const std::string& text) {
-    sender.chatMessages.push_back({"Servidor", text});
+    sender.chatMessages.push_back({"Server", text});
 }
 
-void PlayerChat::listCheats(PlayerRecord& sender) const {
-    reply(sender, "/cheat vida N | /cheat energia N (0 a 65535)");
-    reply(sender, "/cheat agregar_oro N | /cheat quitar_oro N (1 a 4294967295)");
-    reply(sender, "/cheat completar_bundle identificador | /cheat completar_bundles");
-    reply(sender, "/cheat siguiente_nivel | /cheat cuidar_cultivos | /cheat cuidar_animales");
-    if (!services.cheats) reply(sender, "Los cheats todavia no estan disponibles.");
+void PlayerChat::collectCommunityRewards(PlayerRecord& record, bool actionsBlocked) const {
+    if (!services.community) return;
+    const ChatCommandContext context{record.id, record.name, record.player, actionsBlocked};
+    if (record.connected) {
+        const auto welcome = services.community->locationMessages(context);
+        record.chatMessages.insert(record.chatMessages.end(), welcome.begin(), welcome.end());
+    }
+    const auto messages = services.community->collectRewards(context);
+    record.chatMessages.insert(record.chatMessages.end(), messages.begin(), messages.end());
+    record.community = services.community->state(context);
 }
 
-void PlayerChat::command(std::map<uint16_t, PlayerRecord>& players, PlayerRecord& sender,
-                         const std::string& text, bool dayEnded) const {
-    const auto parsed = ChatCommandParser::parse(text);
-    if (const auto* error = std::get_if<ChatCommandError>(&parsed)) {
-        reply(sender, error->text);
+void PlayerChat::donate(PlayerRecord& record, const DonateDTO& command, bool actionsBlocked) const {
+    if (!services.community) {
+        record.lastDonation = {command.requestId, command.kind, command.slot,
+                               CommunityDonationError::CannotAct, 0};
+        reply(record, "The community center is not available.");
         return;
     }
-    if (std::holds_alternative<ChatCheats>(parsed)) {
-        listCheats(sender);
-        return;
-    }
-    if (std::holds_alternative<ChatPlayers>(parsed)) {
-        reply(sender, "Jugadores conectados:");
-        for (const auto& [id, record] : players) {
-            if (record.connected && record.output) reply(sender, record.name);
-        }
-        return;
-    }
-
-    const ChatCommandContext context{sender.id, sender.name, sender.player, dayEnded};
-    std::vector<ChatMessageData> responses;
-    try {
-        if (const auto* request = std::get_if<TradeCommand>(&parsed)) {
-            if (!services.merchants) {
-                reply(sender, "El comercio todavia no esta disponible.");
-                return;
-            }
-            if (dayEnded || !sender.player.canAct()) {
-                reply(sender, "No podes comerciar en este momento.");
-                return;
-            }
-            responses = services.merchants->execute(context, *request);
-        } else if (const auto* request = std::get_if<CheatCommand>(&parsed)) {
-            if (!services.cheats) {
-                reply(sender, "Los cheats todavia no estan disponibles.");
-                return;
-            }
-            responses = services.cheats->execute(context, *request);
-        }
-    } catch (const std::exception&) {
-        reply(sender, "No se pudo ejecutar el comando. Intenta nuevamente.");
-        return;
-    }
-    sender.chatMessages.insert(sender.chatMessages.end(), responses.begin(), responses.end());
+    const ChatCommandContext context{record.id, record.name, record.player, actionsBlocked};
+    const auto response = services.community->donate(context, command);
+    record.lastDonation = response.receipt;
+    record.chatMessages.insert(record.chatMessages.end(), response.messages.begin(), response.messages.end());
 }
 
 void PlayerChat::privateMessage(std::map<uint16_t, PlayerRecord>& players,PlayerRecord& sender, const std::string& text) {
@@ -89,7 +68,7 @@ void PlayerChat::privateMessage(std::map<uint16_t, PlayerRecord>& players,Player
     std::size_t body = std::string::npos;
     const auto separator = text.find(' ');
     if (separator == std::string::npos || separator == 1) {
-        reply(sender, "Uso: @usuario mensaje");
+        reply(sender, "Usage: @username message");
         return;
     }
     for (auto& [id, record] : players) {
@@ -102,11 +81,11 @@ void PlayerChat::privateMessage(std::map<uint16_t, PlayerRecord>& players,Player
         }
     }
     if (recipient && body == std::string::npos) {
-        reply(sender, "Uso: @usuario mensaje");
+        reply(sender, "Usage: @username message");
         return;
     }
     if (!recipient || !recipient->connected || !recipient->output) {
-        reply(sender, "El jugador no existe o no esta conectado");
+        reply(sender, "The player does not exist or is offline");
         return;
     }
     recipient->chatMessages.push_back({sender.name, text});
@@ -114,18 +93,18 @@ void PlayerChat::privateMessage(std::map<uint16_t, PlayerRecord>& players,Player
 }
 
 void PlayerChat::handle(std::map<uint16_t, PlayerRecord>& players, uint16_t senderId,
-                        const std::string& text, bool dayEnded) const {
+                        const std::string& text, bool actionsBlocked) const {
     const auto senderIt = players.find(senderId);
     if (senderIt == players.end() || !senderIt->second.connected || !senderIt->second.output) return;
     auto& sender = senderIt->second;
     if (text.size() > MAX_LENGTH) {
-        reply(sender, "El mensaje no puede superar los 100 caracteres");
+        reply(sender, "The message cannot exceed 100 characters");
         return;
     }
     if (std::any_of(text.begin(), text.end(), [](unsigned char ch) {
             return ch < 32 || ch == 127;
         })) {
-        reply(sender, "El mensaje contiene caracteres de control");
+        reply(sender, "The message contains control characters");
         return;
     }
     const auto first = text.find_first_not_of(' ');
@@ -137,7 +116,7 @@ void PlayerChat::handle(std::map<uint16_t, PlayerRecord>& players, uint16_t send
         return;
     }
     if (message.front() == '/') {
-        command(players, sender, message, dayEnded);
+        command(players, sender, message, actionsBlocked);
         return;
     }
     for (auto& [id, record] : players) {

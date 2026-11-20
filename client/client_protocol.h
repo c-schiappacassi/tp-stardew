@@ -19,6 +19,8 @@ private:
     Color receiveColor();
 
     Stack receiveStack();
+    std::vector<Stack> receiveCommunityStacks();
+    CommunityStateData receiveCommunityState();
 
     MineralData receiveMineralData();
     EnemySnapshot receiveEnemyData();

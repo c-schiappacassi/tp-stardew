@@ -6,7 +6,7 @@ Decoration::Decoration(EntityId id, const Position& position, ItemId item, Direc
     id(id), position(position), item(item), direction(direction) {
     if (id == 0 || position.getX() < 0 || position.getY() < 0 || !isDecoration(item) ||
         direction < Direction::Up || direction > Direction::Right) {
-        throw std::invalid_argument("Identificador, posicion u objeto decorativo invalidos");
+        throw std::invalid_argument("Invalid decoration identifier, position or item");
     }
 }
 

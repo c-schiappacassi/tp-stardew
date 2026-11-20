@@ -7,7 +7,7 @@
 Animal::Animal(EntityId id, const Position& position, AnimalType type,std::chrono::milliseconds productionInterval, const AnimalMovementConfig& movementConfig):
     id(id), type(type), movement(position, movementConfig), productionInterval(productionInterval) {
     if (id == 0 || productionInterval.count() <= 0) {
-        throw std::invalid_argument("Identificador o tiempo de animal invalidos");
+        throw std::invalid_argument("Invalid animal identifier or time");
     }
 }
 
@@ -46,7 +46,7 @@ void Animal::advanceMovement(FarmPlacement& placement, std::mt19937& random) {
 
 void Animal::advanceProduction(std::chrono::milliseconds elapsed, ProductionMode mode) {
     if (elapsed.count() < 0) {
-        throw std::invalid_argument("Tiempo negativo");
+        throw std::invalid_argument("Negative time");
     }
     uint64_t produced = static_cast<uint64_t>(elapsed / productionInterval);
     const auto remainder = elapsed % productionInterval;

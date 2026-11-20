@@ -22,7 +22,7 @@ void MessageBuffer::putUint32(const uint32_t value) {
 
 void MessageBuffer::putString(const std::string& value) {
     if (value.size() > std::numeric_limits<uint16_t>::max()) {
-        throw ProtocolError("string demasiado largo");
+        throw ProtocolError("string too long");
     }
     putUint16(static_cast<uint16_t>(value.size()));
     data.insert(data.end(), value.begin(), value.end());

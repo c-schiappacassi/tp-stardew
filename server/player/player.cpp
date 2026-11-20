@@ -4,6 +4,7 @@
 #include <cmath>
 #include <limits>
 #include <stdexcept>
+#include <utility>
 
 namespace {
 uint16_t improvedMaximum(uint16_t value) {
@@ -39,7 +40,7 @@ Player::Player(
         maxEnergy(maxEnergy),
         config(config) {
     if (maxHealth == 0 || maxEnergy == 0) {
-        throw std::invalid_argument("Vida y energia maximas deben ser mayores a cero");
+        throw std::invalid_argument("Maximum health and energy must be greater than zero");
     }
     config.validate();
     if (state == PlayerState::Walking) {
@@ -109,32 +110,6 @@ void Player::advance(int step) {
     pos = getNextPosition(step);
  }
 
-bool Player::selectSlot(uint8_t slot) {
-    if (!canAct()) {
-        return false;
-    }
-    if (slot >= inventory.getCapacity()) {
-        return false;
-    }
-
-    currentSlot = slot;
-    return true;
-}
-
-bool Player::addItem(const Stack& stack) { 
-    return inventory.add(stack); 
-}
-
-uint16_t Player::addItemUpTo(const Stack& stack) { return inventory.addUpTo(stack); }
-
-bool Player::removeItem(uint8_t slot, uint16_t quantity) {
-    return inventory.remove(slot, quantity);
-}
-
-const Stack* Player::getSelectedItem() const {
-     return inventory.getSlot(currentSlot); 
-    }
-
 PlayerData Player::getPublicData() const {
     PlayerData data;
     data.characterName = characterName;
@@ -158,6 +133,7 @@ PlayerData Player::getPublicData() const {
 PlayerDataLocal Player::getLocalData() const {
     PlayerDataLocal data(getPublicData());
     data.items = inventory.getItems();
+    data.cap_inventory = inventory.getCapacity();
     data.current_slot = currentSlot;
     data.gold = gold;
     data.health = health;
@@ -205,8 +181,6 @@ bool Player::useTool(std::chrono::steady_clock::time_point now) {
     }
     return true;
 }
-
-uint8_t Player::getSelectedSlot() const { return currentSlot; }
 
 bool Player::canPerformAction(std::chrono::steady_clock::time_point now) const {
     return canAct() && now >= nextActionTime;
@@ -467,11 +441,14 @@ int Player::getMovementStep(int normalStep) const {
 }
 
 void Player::restoreData(const PlayerDataLocal& saved) {
-    if (saved.current_slot >= inventory.getCapacity() || saved.maxHealth == 0 ||
+    const auto capacity = saved.cap_inventory == 0 ? inventory.getCapacity() : saved.cap_inventory;
+    if (saved.current_slot >= capacity || saved.maxHealth == 0 ||
         saved.maxEnergy == 0 || saved.health > saved.maxHealth || saved.energy > saved.maxEnergy) {
         throw std::invalid_argument("Invalid saved player stats");
     }
-    inventory.restoreSlots(saved.items);
+    Inventory restoredInventory(capacity);
+    restoredInventory.restoreSlots(saved.items);
+    inventory = std::move(restoredInventory);
     characterName = saved.characterName;
     pos = saved.pos;
     state = saved.state;

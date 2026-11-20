@@ -16,7 +16,7 @@ uint16_t Inventory::getStackLimit(ItemId item) const {
 Inventory::Inventory(uint8_t capacity, uint16_t stackLimit):capacity(capacity), stackLimit(stackLimit) {
     if (capacity == 0 || stackLimit == 0) {
         throw std::invalid_argument(
-            "Capacidad y limite deben ser mayores a cero");
+            "Capacity and limit must be greater than zero");
     }
 }
 
@@ -115,6 +115,7 @@ const Stack* Inventory::getSlot(uint8_t slot) const {
 uint8_t Inventory::getCapacity() const {
     return capacity;
 }
+
 const std::map<uint8_t, Stack>& Inventory::getItems() const {
     return slots;
 }

@@ -1,10 +1,94 @@
 #include "client_protocol.h"
 
+#include <algorithm>
 #include <cstdint>
+#include <set>
 #include <stdexcept>
 #include <utility>
 
 #include "protocol_errors.h"
+
+namespace {
+constexpr uint8_t BUNDLE_COUNT = 5;
+constexpr uint8_t REQUIREMENT_LIMIT = 10;
+constexpr uint8_t SEED_COUNT = 4;
+
+void requireCommunity(bool condition, const char* message) {
+    if (!condition) throw ProtocolError(message);
+}
+
+bool receiveCommunityFlag(ProtocolBase& in) {
+    const auto value = in.receiveUint8();
+    requireCommunity(value <= 1, "Invalid community flag");
+    return value != 0;
+}
+
+uint8_t receiveCommunityCount(ProtocolBase& in, uint8_t limit) {
+    const auto value = in.receiveUint8();
+    requireCommunity(value <= limit, "Too many community entries");
+    return value;
+}
+
+void validateCommunityQuality(Quality quality) {
+    switch (quality) {
+        case Quality::None:
+        case Quality::Base:
+        case Quality::Good:
+        case Quality::Excellent:
+        case Quality::Incredible:
+        case Quality::Perfect:
+            return;
+    }
+    throw ProtocolError("Invalid community item quality");
+}
+
+void validateCommunityStacks(const std::vector<Stack>& items) {
+    requireCommunity(items.size() <= SEED_COUNT, "Too many community reward items");
+    for (const auto& stack : items) {
+        requireCommunity(stack.quantity != 0, "Empty community reward stack");
+        validateCommunityQuality(stack.qual);
+    }
+}
+
+void validateDonationKind(DonationKind kind) {
+    requireCommunity(kind <= DonationKind::Coins, "Invalid donation kind");
+}
+
+void validateCommunityState(const CommunityStateData& state) {
+    requireCommunity(state.bundles.size() <= BUNDLE_COUNT, "Too many community bundles");
+    requireCommunity(state.discount <= MarketDiscount::Active, "Invalid community discount");
+    requireCommunity(!state.canDonate || (state.insideCenter && !state.completed), "Invalid donation availability");
+    requireCommunity(state.coinsDonated <= state.coinsRequired, "Invalid community coins");
+    if (state.available) {
+        requireCommunity(state.bundles.size() == BUNDLE_COUNT && state.coinsRequired != 0,
+                "Incomplete community state");
+    }
+    std::set<CommunityBundle> seen;
+    for (const auto& bundle : state.bundles) {
+        requireCommunity(bundle.id <= CommunityBundle::Money && seen.insert(bundle.id).second,
+                "Invalid community bundle");
+        requireCommunity(!bundle.rewardGranted || bundle.completed, "Reward granted for an incomplete bundle");
+        requireCommunity(bundle.items.size() <= REQUIREMENT_LIMIT, "Too many community requirements");
+        for (const auto& item : bundle.items) {
+            requireCommunity(item.required != 0 && item.donated <= item.required, "Invalid community requirement");
+            validateCommunityQuality(item.minimumQuality);
+        }
+        validateCommunityStacks(bundle.reward.items);
+    }
+    if (state.completed) {
+        requireCommunity(state.available && std::all_of(state.bundles.begin(), state.bundles.end(),
+            [](const auto& bundle) { return bundle.completed; }), "Invalid completed community state");
+    }
+    validateCommunityStacks(state.pendingItems);
+    if (state.lastDonation) {
+        const auto& receipt = *state.lastDonation;
+        validateDonationKind(receipt.kind);
+        requireCommunity(receipt.error <= CommunityDonationError::InvalidSlot, "Invalid donation result");
+        requireCommunity(receipt.error == CommunityDonationError::None ? receipt.accepted != 0 : receipt.accepted == 0,
+                "Invalid accepted donation amount");
+    }
+}
+}
 
 
 ClientProtocol::ClientProtocol(Socket&& socket) : base(std::move(socket)) {}
@@ -96,7 +180,7 @@ LootData ClientProtocol::receiveLootData() {
     loot.quality = static_cast<Quality>(base.receiveUint8());
     loot.kind = static_cast<LootKind>(base.receiveUint8());
     if (loot.id == 0 || loot.quantity == 0 || loot.kind > LootKind::Gold) {
-        throw ProtocolError("Objeto en el piso invalido");
+        throw ProtocolError("Invalid ground item");
     }
     return loot;
 }
@@ -168,13 +252,13 @@ PlayerData ClientProtocol::receivePlayerData() {
     data.hairColor = receiveColor();
     data.pantsColor = receiveColor();
     data.currentZone = static_cast<Zone>(base.receiveUint8());
-    if (data.currentZone > Zone::InsideHouse) throw ProtocolError("Zona desconocida");
+    if (data.currentZone > Zone::InsideHouse) throw ProtocolError("Unknown zone");
     if (data.currentZone == Zone::InsideHouse) {
         InteriorLocation inside;
         inside.interior_id = static_cast<InteriorId>(base.receiveUint8());
         inside.house_index = base.receiveUint8();
         if (inside.interior_id > InteriorId::ComunityCenter) {
-            throw ProtocolError("Interior desconocido");
+            throw ProtocolError("Unknown interior");
         }
         data.interior = inside;
     }
@@ -204,6 +288,7 @@ PlayerDataLocal ClientProtocol::receivePlayerDataLocal() {
     }
 
     localData.current_slot = base.receiveUint8();
+    localData.cap_inventory = base.receiveUint8();
     localData.gold = base.receiveUint32();
     localData.health = base.receiveUint16();
     localData.maxHealth = base.receiveUint16();
@@ -275,7 +360,7 @@ InteriorData ClientProtocol::receiveInteriorData() {
     InteriorData in;
     in.interior_id = static_cast<InteriorId>(base.receiveUint8());
     if (in.interior_id > InteriorId::ComunityCenter) {
-        throw ProtocolError("Interior desconocido");
+        throw ProtocolError("Unknown interior");
     }
     in.house_index = base.receiveUint8();
     const uint16_t n = base.receiveUint16();
@@ -291,7 +376,7 @@ ZoneData ClientProtocol::receiveZoneData(Zone currentZone) {
         case Zone::Town:    return ZoneData{std::monostate{}};
         case Zone::InsideHouse: return ZoneData{receiveInteriorData()};
     }
-    throw ProtocolError("ZoneData desconocida");
+    throw ProtocolError("Unknown ZoneData");
 }
 
 // SENDERS
@@ -373,9 +458,12 @@ void ClientProtocol::send(const InteractDTO& dto) {
 void ClientProtocol::send(const DonateDTO& dto) {
     MessageBuffer out;
     out.putUint8(static_cast<uint8_t>(MessageType::Donate));
+    validateDonationKind(dto.kind);
     out.putString(dto.userName);
+    out.putUint8(static_cast<uint8_t>(dto.kind));
     out.putUint8(dto.slot);
     out.putUint32(dto.quantity);
+    out.putUint32(dto.requestId);
     base.send(out);
 }
 
@@ -449,7 +537,8 @@ void ClientProtocol::send(const CheckCodeDTO& dto) {
 // RECEIVERS
 
 // ServerStatus { status, errorMsg, successMsg, gameId, playerId, worldId,
-//                players, localPlayer, dayEnded, dayConfirmationRequired, timeOfDayMinutes }
+//                players, localPlayer, dayEnded, dayConfirmationRequired, timeOfDayMinutes,
+//                gameCompleted, community }
 
 void ClientProtocol::recv(ServerStatus& status) {
     status.status = static_cast<StatusCode>(base.receiveUint8());
@@ -470,6 +559,8 @@ void ClientProtocol::recv(ServerStatus& status) {
     status.dayEnded = base.receiveUint8() != 0;
     status.dayConfirmationRequired = base.receiveUint8() != 0;
     status.timeOfDayMinutes = base.receiveUint16();
+    status.gameCompleted = base.receiveUint8() != 0;
+    status.community = receiveCommunityState();
 }
 
 // qtStatus { status, errorMsg, successMsg, games }
@@ -491,14 +582,14 @@ void ClientProtocol::recv(qtStatus& status) {
 NpcData ClientProtocol::receiveNpcData() {
     const Position pos = receivePosition();
     const auto id = static_cast<NpcId>(base.receiveUint8());
-    if (id > NpcId::Clint) throw ProtocolError("NPC desconocido");
+    if (id > NpcId::Clint) throw ProtocolError("Unknown NPC");
     return NpcData{pos, id};
 }
 
 InteriorBackgroundData ClientProtocol::receiveInteriorBackground() {
     const Position pos = receivePosition();
     const auto id = static_cast<InteriorId>(base.receiveUint8());
-    if (id > InteriorId::ComunityCenter) throw ProtocolError("Interior desconocido");
+    if (id > InteriorId::ComunityCenter) throw ProtocolError("Unknown interior");
 
     InteriorBackgroundData interior{pos, id, std::nullopt};
     if (base.receiveUint8() != 0) interior.npc = receiveNpcData();
@@ -510,7 +601,7 @@ BackgroundData ClientProtocol::receiveBackgroundData() {
     BackgroundData bg;
 
     const uint32_t nFloor = base.receiveUint32();
-    if (nFloor > MAX_FLOOR) throw ProtocolError("floor demasiado grande");
+    if (nFloor > MAX_FLOOR) throw ProtocolError("floor too large");
     bg.floor.reserve(nFloor);
     for (uint32_t i = 0; i < nFloor; ++i) {
         TileData t;
@@ -547,7 +638,7 @@ BackgroundData ClientProtocol::receiveBackgroundData() {
         portal.pos = receivePosition();
         portal.id = static_cast<PortalId>(base.receiveUint8());
         if (portal.id > PortalId::MineToFarm) {
-            throw ProtocolError("Tipo de portal desconocido");
+            throw ProtocolError("Unknown portal type");
         }
         bg.portals.push_back(portal);
     }
@@ -569,4 +660,60 @@ void ClientProtocol::recv(ConstMapData& map) {
     map.marnies = receiveBackgroundData();
     map.community_center = receiveBackgroundData();
     map.town    = receiveBackgroundData();
+}
+
+std::vector<Stack> ClientProtocol::receiveCommunityStacks() {
+    const auto count = receiveCommunityCount(base, SEED_COUNT);
+    std::vector<Stack> items;
+    for (uint8_t i = 0; i < count; ++i) items.push_back(receiveStack());
+    return items;
+}
+
+CommunityStateData ClientProtocol::receiveCommunityState() {
+    CommunityStateData state;
+    state.available = receiveCommunityFlag(base);
+    state.insideCenter = receiveCommunityFlag(base);
+    state.canDonate = receiveCommunityFlag(base);
+    state.completed = receiveCommunityFlag(base);
+    state.discount = static_cast<MarketDiscount>(base.receiveUint8());
+    const auto count = receiveCommunityCount(base, BUNDLE_COUNT);
+    for (uint8_t i = 0; i < count; ++i) {
+        CommunityBundleData bundle;
+        bundle.id = static_cast<CommunityBundle>(base.receiveUint8());
+        bundle.completed = receiveCommunityFlag(base);
+        bundle.rewardGranted = receiveCommunityFlag(base);
+        const auto items = receiveCommunityCount(base, REQUIREMENT_LIMIT);
+        for (uint8_t item = 0; item < items; ++item) {
+            const auto id = static_cast<ItemId>(base.receiveUint16());
+            const auto donated = base.receiveUint32();
+            const auto required = base.receiveUint32();
+            const auto quality = static_cast<Quality>(base.receiveUint8());
+            bundle.items.push_back({id, donated, required, quality});
+        }
+        bundle.reward.items = receiveCommunityStacks();
+        bundle.reward.coins = base.receiveUint32();
+        bundle.reward.cows = base.receiveUint8();
+        bundle.reward.chickens = base.receiveUint8();
+        bundle.reward.statsBonusPercent = base.receiveUint8();
+        bundle.reward.marketDiscountNextDay = receiveCommunityFlag(base);
+        state.bundles.push_back(std::move(bundle));
+    }
+    state.coinsDonated = base.receiveUint32();
+    state.coinsRequired = base.receiveUint32();
+    state.combat = {receiveCommunityFlag(base), receiveCommunityFlag(base),
+                    receiveCommunityFlag(base), receiveCommunityFlag(base)};
+    state.pendingItems = receiveCommunityStacks();
+    const auto high = base.receiveUint32();
+    state.pendingCoins = (static_cast<uint64_t>(high) << 32) | base.receiveUint32();
+    if (receiveCommunityFlag(base)) {
+        CommunityDonationReceipt receipt;
+        receipt.requestId = base.receiveUint32();
+        receipt.kind = static_cast<DonationKind>(base.receiveUint8());
+        receipt.slot = base.receiveUint8();
+        receipt.error = static_cast<CommunityDonationError>(base.receiveUint8());
+        receipt.accepted = base.receiveUint32();
+        state.lastDonation = receipt;
+    }
+    validateCommunityState(state);
+    return state;
 }

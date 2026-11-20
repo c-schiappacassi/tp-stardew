@@ -19,20 +19,16 @@ private:
     std::mutex mtx;
     std::size_t nextId = 1;
     std::map<std::string, std::unique_ptr<Game>> games;
-    DungeonConfig dungeonConfig;
-    PlayerConfig playerConfig;
+    GameConfig config;
     std::optional<FarmLayout> farmLayout;
-    TownConfig townConfig;
-    MarketConfig marketConfig;
     PersistenceManager persistence;
     std::mutex persistenceMtx;
 
+    std::unique_ptr<Game> makeGame(const std::string& id, const std::string& name, uint8_t worldId) const;
+
 public:
-    explicit GameManager(const DungeonConfig& dungeonConfig = {},
-                         const PlayerConfig& playerConfig = {},
-                         const std::optional<FarmLayout>& farmLayout = std::nullopt,
-                         const TownConfig& townConfig = {},
-                         const MarketConfig& marketConfig = {});
+    explicit GameManager(const GameConfig& config = {},
+                         const std::optional<FarmLayout>& farmLayout = std::nullopt);
     ~GameManager();
 
     GameSession createGame(const CreateGameDTO& dto, const std::shared_ptr<OutQueue>& output);

@@ -6,7 +6,7 @@ Chicken::Chicken(EntityId id, const Position& position, AnimalType type,
     std::chrono::milliseconds productionInterval, const AnimalMovementConfig& movementConfig):
     Animal(id, position, type, productionInterval, movementConfig) {
     if (animalSpeciesForType(type) != AnimalSpecies::Chicken) {
-        throw std::invalid_argument("La variante no corresponde a una gallina");
+        throw std::invalid_argument("The variant does not belong to a chicken");
     }
 }
 

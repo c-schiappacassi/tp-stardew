@@ -11,6 +11,7 @@
 #include "farm/loading/farm_layout.h"
 #include "town/town_config.h"
 #include "commerce/shop_config.h"
+#include "community/domain/community_config.h"
 
 
 struct DeathConfig {
@@ -20,11 +21,12 @@ struct DeathConfig {
 struct GameConfig {
     DungeonConfig dungeon;
     PlayerConfig player;
-    FarmConfig farm;
+    FarmConfig farm{};
     TownConfig town;
     DeathConfig death;
     RobinShopConfig robin;
     MarketConfig market;
+    CommunityConfig community;
 };
 
 struct WorldData {

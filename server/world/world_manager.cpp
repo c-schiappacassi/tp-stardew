@@ -14,7 +14,7 @@ ConstMapData WorldManager::buildConstMap() const {
     for (const auto& t : farm.getBackground()) {
         const Position px(t.tile.getX() * 16, t.tile.getY() * 16);
         if (t.textureId > static_cast<uint16_t>(TileTextureId::Dirt)) {
-            throw std::runtime_error("texture_id de granja desconocido");
+            throw std::runtime_error("unknown farm texture_id");
         }
         map.farm.floor.push_back({px, static_cast<TileTextureId>(t.textureId)});
     }

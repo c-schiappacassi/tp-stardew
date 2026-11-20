@@ -215,6 +215,53 @@ struct Stack {
     Quality qual;
 };
 
+struct CommunityRequirementData {
+    ItemId item = ItemId::Potato;
+    uint32_t donated = 0;
+    uint32_t required = 0;
+    Quality minimumQuality = Quality::None;
+};
+
+struct CommunityRewardData {
+    std::vector<Stack> items;
+    uint32_t coins = 0;
+    uint8_t cows = 0;
+    uint8_t chickens = 0;
+    uint8_t statsBonusPercent = 0;
+    bool marketDiscountNextDay = false;
+};
+
+struct CommunityBundleData {
+    CommunityBundle id = CommunityBundle::Crops;
+    bool completed = false;
+    bool rewardGranted = false;
+    std::vector<CommunityRequirementData> items;
+    CommunityRewardData reward;
+};
+
+struct CommunityDonationReceipt {
+    uint32_t requestId = 0;
+    DonationKind kind = DonationKind::Item;
+    uint8_t slot = 0;
+    CommunityDonationError error = CommunityDonationError::None;
+    uint32_t accepted = 0;
+};
+
+struct CommunityStateData {
+    bool available = false;
+    bool insideCenter = false;
+    bool canDonate = false;
+    bool completed = false;
+    MarketDiscount discount = MarketDiscount::None;
+    std::vector<CommunityBundleData> bundles;
+    uint32_t coinsDonated = 0;
+    uint32_t coinsRequired = 0;
+    CombatProgressData combat;
+    std::vector<Stack> pendingItems;
+    uint64_t pendingCoins = 0;
+    std::optional<CommunityDonationReceipt> lastDonation;
+};
+
 struct InteriorLocation {
     InteriorId interior_id = InteriorId::PlayerHouse;
     uint8_t house_index = 0;
@@ -251,6 +298,7 @@ struct ChatMessageData {
 
 struct PlayerDataLocal : public PlayerData {
     std::map<uint8_t, Stack> items;
+    uint8_t cap_inventory = 0;
     uint8_t current_slot = 0;
     uint32_t gold = 0;
     uint16_t health = 0;
@@ -274,7 +322,7 @@ struct CommandDTO {
 
     explicit CommandDTO(std::string name) : userName(std::move(name)) {
         if (userName.empty()) {
-            throw std::invalid_argument("userName no puede estar vacio");
+            throw std::invalid_argument("userName cannot be empty");
         }
     }
     virtual ~CommandDTO() = default;
@@ -342,8 +390,10 @@ struct DayCancelDTO: public CommandDTO {
 };
 
 struct DonateDTO : public CommandDTO {
-    uint8_t slot;
-    uint32_t quantity;
+    DonationKind kind = DonationKind::Item;
+    uint8_t slot = 0;
+    uint32_t quantity = 0;
+    uint32_t requestId = 0;
 
     MessageType type() const override { return MessageType::Donate; }
     explicit DonateDTO(const std::string& name) : CommandDTO(name) {}
@@ -411,6 +461,8 @@ struct ServerStatus {
     bool dayEnded = false;
     bool dayConfirmationRequired = false;
     uint16_t timeOfDayMinutes = game_time::START_MINUTES;
+    bool gameCompleted = false;
+    CommunityStateData community;
 };
 
 struct qtStatus {

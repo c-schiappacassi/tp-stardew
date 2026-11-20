@@ -6,7 +6,7 @@ EntityIdGenerator::EntityIdGenerator(EntityId nextId):nextId(nextId) {}
 
 EntityId EntityIdGenerator::generate() {
     if (nextId == 0) {
-        throw std::overflow_error("Se agotaron los identificadores de la partida");
+        throw std::overflow_error("Game entity identifiers exhausted");
     }
     return nextId++;
 }

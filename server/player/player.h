@@ -44,6 +44,8 @@ public:
     bool addItem(const Stack& stack);
     uint16_t addItemUpTo(const Stack& stack);
     bool removeItem(uint8_t slot, uint16_t quantity);
+    bool removeItems(const std::vector<std::pair<uint8_t, uint16_t>>& quantities);
+    const std::map<uint8_t, Stack>& getInventoryItems() const;
     const Stack* getSelectedItem() const;
     uint8_t getSelectedSlot() const;
     bool canPerformAction(std::chrono::steady_clock::time_point now) const;
@@ -70,6 +72,7 @@ public:
     uint16_t getSwordDamage() const;
     uint16_t getSwordRange() const;
     uint32_t addGold(uint32_t amount);
+    uint32_t getGold() const;
     bool spendGold(uint32_t amount);
     bool buyItem(const Stack& stack, uint32_t price);
     bool sellItems(const std::vector<std::pair<uint8_t, uint16_t>>& quantities, uint32_t price);

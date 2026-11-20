@@ -16,6 +16,8 @@ struct PlayerRecord {
     bool connected;
     Player player;
     std::deque<ChatMessageData> chatMessages{};
+    CommunityStateData community{};
+    std::optional<CommunityDonationReceipt> lastDonation{};
 };
 
 #endif

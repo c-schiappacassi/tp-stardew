@@ -4,6 +4,8 @@
 #include <stdexcept>
 #include <utility>
 
+#include "constants.h"
+
 const toml::table& PersistenceDeserializer::requiredTable(const toml::table& table,
                                                           const char* key) {
     const toml::table* result = table[key].as_table();
@@ -342,6 +344,12 @@ PlayerDataLocal PersistenceDeserializer::player(const toml::table& table) {
         result.items.emplace(static_cast<uint8_t>(slot), stack(*node.as_table()));
     }
     result.current_slot = static_cast<uint8_t>(integer(table, "currentSlot", 0, UINT8_MAX));
+    result.cap_inventory = table.contains("inventoryCapacity") ?
+        static_cast<uint8_t>(integer(table, "inventoryCapacity", 1, UINT8_MAX)) : PLAYER_INVENTORY_CAPACITY;
+    if (result.current_slot >= result.cap_inventory ||
+        (!result.items.empty() && result.items.rbegin()->first >= result.cap_inventory)) {
+        throw std::runtime_error("Inventory slot exceeds saved capacity");
+    }
     result.gold = static_cast<uint32_t>(integer(table, "gold", 0, UINT32_MAX));
     result.health = static_cast<uint16_t>(integer(table, "health", 0, UINT16_MAX));
     result.maxHealth = static_cast<uint16_t>(integer(table, "maxHealth", 0, UINT16_MAX));
@@ -357,9 +365,8 @@ PlayerDataLocal PersistenceDeserializer::player(const toml::table& table) {
     return result;
 }
 
-std::map<std::string, std::map<std::string, std::map<std::string, uint32_t>>>
-PersistenceDeserializer::communityProgress(const toml::table& table) {
-    std::map<std::string, std::map<std::string, std::map<std::string, uint32_t>>> result;
+CommunitySaveData PersistenceDeserializer::communityProgress(const toml::table& table) {
+    CommunitySaveData result;
     for (const auto& [task, actions] : table) {
         if (!actions.is_table()) throw std::runtime_error("Invalid community center task");
         std::string taskName(task.str());

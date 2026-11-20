@@ -15,6 +15,7 @@ void Game::updateToolStates() {
 
 void Game::advancePlayers() {
     std::lock_guard<std::mutex> lock(mtx);
+    if (community.finished()) return;
     playerManager.advancePlayers(PLAYER_STEP);
 }
 
@@ -26,19 +27,25 @@ void Game::sendStatus() {
 
 bool Game::advanceWorld(std::chrono::milliseconds elapsed) {
     std::lock_guard<std::mutex> lock(mtx);
+    if (community.finished()) {
+        updateCommunity();
+        return false;
+    }
     const auto activeTime = playerManager.isDayEnded() ? std::chrono::milliseconds{0} :
         std::min(elapsed, playerManager.remainingDayTime());
     const auto remainingTime = playerManager.remainingDayTime() - activeTime;
     if (!playerManager.isDayEnded() && playerManager.hasConnectedPlayers()) {
         world.update(activeTime, playerManager.getCollisionBounds(Zone::Farm),playerManager.getCombatants());
     }
-    if (world.combatCompleted()) {
-        playerManager.applyCombatBonus();
-    }
+    updateCommunity();
+    if (community.finished()) return false;
     if (playerManager.advanceDay(elapsed)) {
         world.finishDay(remainingTime);
+        marketPrices.finishDay();
         merchants->finishDay();
         ++currentDay;
+        ++saveRequests;
+        updateCommunity();
         return true;
     }
     return false;
@@ -48,7 +55,41 @@ void Game::processCommands() {
     PlayerCommand command;
     while (should_keep_running() && input->try_pop(command)) {
         std::lock_guard<std::mutex> lock(mtx);
-        playerManager.handleCommand(command);
+        playerManager.handleCommand(command, community.finished());
+        if (command.command && command.command->type() == MessageType::ExitGame) ++saveRequests;
+        updateCommunity();
+    }
+}
+
+void Game::updateCommunity() {
+    community.observeCombat(world.getCombatProgress());
+    communityRewards.updateMarket();
+    if (community.finished() && !completionHandled) {
+        playerManager.finishGame();
+        completionHandled = true;
+        ++saveRequests;
+    }
+    playerManager.collectCommunityRewards();
+}
+
+void Game::saveIfNeeded(bool force) {
+    try {
+        PersistenceDTO snapshot;
+        std::function<void(const PersistenceDTO&)> callback;
+        SaveRevision revision{};
+        {
+            std::lock_guard<std::mutex> lock(mtx);
+            if (!configured || !saveCallback) return;
+            revision = {saveRequests, community.getRevision(), communityRewards.getRevision()};
+            if (!force && savedRevision && *savedRevision == revision) return;
+            snapshot = buildPersistenceData();
+            callback = saveCallback;
+        }
+        callback(snapshot);
+        std::lock_guard<std::mutex> lock(mtx);
+        savedRevision = revision;
+    } catch (const std::exception& error) {
+        std::cerr << "Error saving game " << id << ": " << error.what() << '\n';
     }
 }
 
@@ -62,14 +103,8 @@ void Game::run() {
             updateToolStates();
             processCommands();
             advancePlayers();
-            const bool dayCompleted = advanceWorld(clock.advance());
-            if (dayCompleted && saveCallback) {
-                try {
-                    saveCallback(getPersistenceData());
-                } catch (const std::exception& e) {
-                    std::cerr << "Error al guardar la partida " << id << ": " << e.what() << "\n";
-                }
-            }
+            advanceWorld(clock.advance());
+            saveIfNeeded();
             if (should_keep_running()) {
                 sendStatus();
             }
@@ -84,11 +119,12 @@ void Game::run() {
     } catch (const ClosedQueue&) {
         // cola cerrada.
     } catch (const std::exception& e) {
-        std::cerr << "Error en Game: " << e.what() << "\n";
+        std::cerr << "Error in Game: " << e.what() << "\n";
     } catch (...) {
-        std::cerr << "Error desconocido en Game\n";
+        std::cerr << "Unknown error in Game\n";
     }
 
+    saveIfNeeded(true);
     closeAll();
 }
 
