@@ -39,6 +39,7 @@ PlayerView::PlayerView(const PlayerData& data) {
 void PlayerView::update(const PlayerData& data) {
     pos = data.pos;
     state = data.state;
+    name = data.characterName;
     if (data.dir != Direction::None) { facing = data.dir; }
     hair_model = data.hairModel;
     hair_color = to_sdl(data.hairColor);
@@ -112,6 +113,18 @@ void PlayerView::draw(const RenderInfo& ctx) {
         body.width,
         frame->flip
     });
+}
+
+void PlayerView::draw_name(const RenderInfo& ctx) const {
+    if (name.empty() || !on_screen(ctx, pos, farmer::CELL_H)) return;
+
+    const int zoom = ctx.cam.get_zoom();
+    const int px = farmer::NAME_SCALE_UP * ui_scale(ctx);
+
+    const SDL2pp::Point feet = ctx.cam.world_to_screen(pos.getX(), pos.getY());
+    const SDL2pp::Rect area(feet.x, feet.y - farmer::NAME_OFFSET * zoom, 0, 0);
+
+    draw_text_in<ChatFont>(ctx, name, area, px, HAlign::Center, VAlign::Bottom, farmer::NAME_COLOR, 0, 0, farmer::NAME_SHADOW, px);
 }
 
 std::optional<lighting::Light> PlayerView::light(const RenderInfo& ctx) const {

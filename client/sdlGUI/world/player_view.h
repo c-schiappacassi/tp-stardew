@@ -18,6 +18,11 @@
 #include "protocol_types.h"
 
 namespace farmer {
+    constexpr int NAME_SCALE_UP = 2 ;
+    constexpr int NAME_OFFSET = 30;
+    constexpr SDL_Color NAME_COLOR{255, 255, 255, 255};
+    constexpr SDL_Color NAME_SHADOW{40, 25, 10, 255};
+
     constexpr int CELL_W = 16;
     constexpr int CELL_H = 32;
 
@@ -61,6 +66,7 @@ private:
     PlayerState state = PlayerState::Idle;
     std::optional<ItemId> held_item;
     std::optional<ItemId> current_tool;
+    std::string name;
 
     uint16_t shirt_model = 0;
     uint16_t pant_model = 0;
@@ -79,6 +85,7 @@ public:
     std::optional<float> depth(const RenderInfo& ctx) const override;
 
     void draw(const RenderInfo& ctx) override;
+    void draw_name(const RenderInfo& ctx) const;
 
     std::optional<lighting::Light> light(const RenderInfo& ctx) const;
 };

@@ -56,6 +56,9 @@ public:
         std::vector<lighting::Light> lights;
         for (auto& [name, view] : player_views) {
             if (const auto l = view.light(ctx)) lights.push_back(*l);
+            if (name != local_name) {
+                view.draw_name(ctx);
+            }
         }
         light_map.draw(ctx, map.ambient_light(ctx), lights);
     }
