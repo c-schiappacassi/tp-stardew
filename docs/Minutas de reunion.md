@@ -237,6 +237,23 @@
 - el video se tiene que tener terminado para la semana que viene?
 - la docu se entraga al mismo tiempo que el vid o tenemos un tiempo despues?
 - Docu era: diseño y manual de usuario nada más?
+- server status change para minimap? -> manda a todos siempre
 
 TODO: nuestro:
     - sdl pantalla de noche/carga cuando duerme un jugador y espera al resto.
+    - cambiar hitbox de combate del player
+    - ajustar colition box de muebles en server
+    - completar minimap
+    - pasar a planta final after cosecha?
+
+TODO: de abril
+- BUG MAX CANT GRANJEROS
+- fix: broadcast general
+- fix: golpe menor cuando poca vida
+- agregar nombre de usuario arriba
+- script: sobre mint 20 o 22
+- cheats: 
+    -   forzar calidad
+    -   kill enemigos para probar minas
+- fix: visual feedback de golpes
+- pantalla fin de juego
