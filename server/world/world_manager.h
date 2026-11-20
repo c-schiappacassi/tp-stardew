@@ -51,4 +51,7 @@ public:
     void completeZoneData(const Player& player, PlayerDataLocal& data,bool includeBroken) const override;
     void interact(Player& player, Direction direction,uint16_t playerId = 0) override;
     void afterStatusPublished();
+    bool teleport(Player& player, uint16_t playerId, Zone destination, uint8_t level = 0,std::optional<InteriorLocation> inside = std::nullopt);
+    std::size_t careCrops();
+    std::size_t careAnimals();
 };

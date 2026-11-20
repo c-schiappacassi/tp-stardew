@@ -15,6 +15,11 @@ void PlayerChat::listCheats(PlayerRecord& sender) const {
     reply(sender, "/cheat add_gold N | /cheat remove_gold N (1 to 4294967295)");
     reply(sender, "/cheat complete_bundle identifier | /cheat complete_bundles");
     reply(sender, "/cheat next_level | /cheat care_crops | /cheat care_animals");
+    reply(sender, "/cheat heal | /cheat end_day (affects all players)");
+    reply(sender, "/cheat give product N [none|base|good|excellent|incredible|perfect]");
+    reply(sender, "/cheat clear_slot N (slots start at 1) | /cheat spawn_animal cow|chicken N");
+    reply(sender, "/cheat warp farm|town|home|center|pierre|marnie|robin|clint|mine [level]");
+    reply(sender, "Bundle names: crops, metals, animals, combat, money. Completing all ends the game.");
     if (!services.cheats) reply(sender, services.community ?
         "Only community center cheats are currently available." : "Cheats are not available yet.");
 }
@@ -58,6 +63,10 @@ void PlayerChat::command(std::map<uint16_t, PlayerRecord>& players, PlayerRecord
             }
             responses = services.community->execute(context, *request);
         } else if (const auto* request = std::get_if<CheatCommand>(&parsed)) {
+            if (actionsBlocked) {
+                reply(sender, "Cheats cannot change the game after the day or game has ended.");
+                return;
+            }
             if (services.community && (request->action == CheatAction::CompleteBundle ||
                                       request->action == CheatAction::CompleteAllBundles)) {
                 responses = services.community->completeCheat(*request);

@@ -48,7 +48,7 @@ std::vector<ChatMessageData> CommunityChat::completeCheat(const CheatCommand& co
     if (command.action == CheatAction::CompleteAllBundles) {
         for (const auto bundle : community_bundle::all) center.complete(bundle);
     } else if (command.action == CheatAction::CompleteBundle) {
-        const auto bundle = community_bundle::fromName(command.bundle);
+        const auto bundle = community_bundle::fromName(command.target);
         if (!bundle) return {CommunityMessages::message("Unknown bundle. Use crops, metals, animals, combat or money.")};
         center.complete(*bundle);
     } else {

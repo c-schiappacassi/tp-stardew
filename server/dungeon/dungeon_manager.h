@@ -40,6 +40,7 @@ public:
     std::optional<DungeonCombatData> getCombatData(uint8_t room) const;
     bool enter(Player& player);
     bool advanceRoom(Player& player);
+    bool teleportToRoom(Player& player, uint8_t number) const;
     bool canExit(const Player& player) const;
     void removeBrokenMinerals();
 };

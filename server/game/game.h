@@ -33,6 +33,7 @@ private:
     std::shared_ptr<CommandQueue> input;
     mutable std::mutex mtx;
     bool configured = false;
+    bool endDayRequested = false;
     WorldManager world;
     MarketPrices marketPrices;
     std::shared_ptr<MerchantChat> merchants;

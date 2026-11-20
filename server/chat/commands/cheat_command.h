@@ -3,6 +3,8 @@
 #include <cstdint>
 #include <string>
 
+#include "protocol_types.h"
+
 enum class CheatAction {
     SetLife,
     SetEnergy,
@@ -12,11 +14,18 @@ enum class CheatAction {
     CompleteAllBundles,
     NextLevel,
     CareCrops,
-    CareAnimals
+    CareAnimals,
+    Heal,
+    GiveItem,
+    ClearSlot,
+    SpawnAnimal,
+    Warp,
+    EndDay
 };
 
 struct CheatCommand {
     CheatAction action;
     uint32_t amount = 0;
-    std::string bundle;
+    std::string target;
+    Quality quality = Quality::None;
 };

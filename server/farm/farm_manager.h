@@ -60,6 +60,8 @@ public:
     std::optional<FarmProduct> collectFromAnimal(EntityId id);
     void update(std::chrono::milliseconds elapsed, EntityIdGenerator& entityIds);
     void finishDay(std::chrono::milliseconds remainingTime, EntityIdGenerator& entityIds);
+    std::size_t careCrops();
+    std::size_t careAnimals(EntityIdGenerator& entityIds);
     GroundItems& getGroundItems();
     const GroundItems& getGroundItems() const;
     FarmData getPublicData() const;

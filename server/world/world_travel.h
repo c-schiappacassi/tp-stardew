@@ -50,4 +50,5 @@ public:
     bool canConnectTown(const TownMap& town, const FarmManager& farm) const;
     bool use(Player& player, uint16_t playerId, DungeonManager& dungeon,const FarmManager& farm, const TownMap& town, const InteriorManager& interiors);
     void finishDay();
+    void onTeleport(uint16_t playerId, const Player& origin, const Player& destination,const FarmManager& farm);
 };

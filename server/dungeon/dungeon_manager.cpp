@@ -146,6 +146,13 @@ bool DungeonManager::advanceRoom(Player& player) {
     return travel.advanceRoom(player, rooms); 
 }
 
+bool DungeonManager::teleportToRoom(Player& player, uint8_t number) const {
+    const auto* room = findRoom(number);
+    if (!room || !room->getPassages() ||
+        !room->canWalk(player.getCollisionBounds(room->getPassages()->entry))) return false;
+    return player.changeLocation(Zone::Dungeon, number, room->getPassages()->entry);
+}
+
 bool DungeonManager::canExit(const Player& player) const {
      return travel.canExit(player, rooms); 
     }

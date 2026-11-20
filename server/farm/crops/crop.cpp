@@ -105,6 +105,13 @@ bool Crop::water() {
     return true;
 }
 
+void Crop::growFully() {
+    if (harvested) return;
+    growthElapsed = growthDuration;
+    remainingWaterTime = std::chrono::milliseconds{0};
+    quality.reset();
+}
+
 std::optional<FarmProduct> Crop::getHarvest(double luck) const {
     const auto result = quality.evaluate(luck);
     if (!isReady()) {

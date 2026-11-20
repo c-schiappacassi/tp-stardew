@@ -81,6 +81,8 @@ public:
     bool sleep();
     bool cancelSleep();
     void wakeUp();
+    void setVitals(uint16_t newHealth, uint16_t newEnergy);
+    void restoreVitals();
     bool changeLocation(Zone destination, uint8_t level, const Position& target,std::optional<InteriorLocation> inside = std::nullopt);
     bool restoreLocation(Zone destination, uint8_t level, const Position& target,std::optional<InteriorLocation> inside = std::nullopt);
     void faceTarget(const Position& target);

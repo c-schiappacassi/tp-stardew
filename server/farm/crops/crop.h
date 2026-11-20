@@ -40,6 +40,7 @@ public:
     void update(std::chrono::milliseconds elapsed);
     void finishDay();
     bool water();
+    void growFully();
     std::optional<FarmProduct> getHarvest(double luck = 1.0) const;
     std::optional<FarmProduct> harvest(double luck = 1.0);
 };

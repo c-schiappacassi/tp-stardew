@@ -31,6 +31,10 @@ bool Game::advanceWorld(std::chrono::milliseconds elapsed) {
         updateCommunity();
         return false;
     }
+    if (endDayRequested) {
+        elapsed = std::max(elapsed, playerManager.remainingDayTime());
+        endDayRequested = false;
+    }
     const auto activeTime = playerManager.isDayEnded() ? std::chrono::milliseconds{0} :
         std::min(elapsed, playerManager.remainingDayTime());
     const auto remainingTime = playerManager.remainingDayTime() - activeTime;

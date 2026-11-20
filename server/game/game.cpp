@@ -5,6 +5,7 @@
 #include <stdexcept>
 
 #include "community/chat/community_chat.h"
+#include "chat/cheat_chat.h"
 #include "persistence/community_persistence.h"
 
 Game::Game(const std::string& id, const std::string& name, uint8_t worldId,
@@ -20,7 +21,8 @@ Game::Game(const std::string& id, const std::string& name, uint8_t worldId,
     communityChat(std::make_shared<CommunityChat>(community, communityRewards)),
     playerManager(config.player, world, world, world, world, maxPlayers,
         ChatServices{chatServices.merchants ? std::move(chatServices.merchants) : merchants,
-                     std::move(chatServices.cheats),
+                     chatServices.cheats ? std::move(chatServices.cheats) :
+                         std::make_shared<CheatChat>(world, [this] { endDayRequested = true; }),
                      chatServices.community ? std::move(chatServices.community) : communityChat}) {}
 
 bool Game::loadFarm(uint8_t selectedWorldId, const FarmLayout& layout) {
