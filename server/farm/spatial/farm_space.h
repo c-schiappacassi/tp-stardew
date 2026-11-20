@@ -31,4 +31,5 @@ public:
         bool blocksMovement = true) override;
     bool move(EntityId id, const Position& base) override;
     bool release(EntityId id) override;
+    void clearOccupants();
 };

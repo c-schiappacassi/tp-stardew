@@ -6,7 +6,7 @@
 
 DungeonRoom::DungeonRoom(uint8_t number) : number(number) {
     if (number < 1 || number > DUNGEON_ROOM_COUNT) {
-        throw std::invalid_argument("El numero de sala debe estar entre 1 y 10");
+        throw std::invalid_argument("Room number must be between 1 and 10");
     }
 }
 
@@ -97,14 +97,15 @@ DungeonCombatData DungeonRoom::getCombatData() const {
     for (const auto& [id, trap]: combat.traps) {
         data.traps.push_back(trap.data);
     }
-    for (const auto& [id, loot]: combat.loot) {
-        data.loot.push_back(loot);
-    }
+    data.loot = groundItems.getPublicData();
     return data;
 }
 
 RoomCombat& DungeonRoom::getCombat() { return combat; }
 const RoomCombat& DungeonRoom::getCombat() const { return combat; }
+
+GroundItems& DungeonRoom::getGroundItems() { return groundItems; }
+const GroundItems& DungeonRoom::getGroundItems() const { return groundItems; }
 
 bool DungeonRoom::setMap(const ZoneMap& map) {
     if (map.isEmpty() || (passages && !geometry.arePassagesValid(number, map, *passages))) {

@@ -41,12 +41,12 @@ TownConfig TownTomlReader::read(const toml::table& root) const {
     if (config.map.width == 0 || config.map.height == 0 ||
         config.map.tileSize == 0) {
         invalid("town.map",
-                "las dimensiones y el tile_size deben ser mayores que cero");
+                "dimensions and tile_size must be greater than zero");
     }
 
     const auto* buildingsNode = town.get("buildings");
     if (!buildingsNode || !buildingsNode->is_array()) {
-        invalid("town.buildings", "se esperaba una lista");
+        invalid("town.buildings", "expected an array");
     }
 
     std::set<std::string> buildingIds;
@@ -66,17 +66,17 @@ TownConfig TownTomlReader::read(const toml::table& root) const {
             integer(building, "height", 65535, field + ".height"));
 
         if (entry.id.empty()) {
-            invalid(field + ".id", "el identificador no puede estar vacio");
+            invalid(field + ".id", "the identifier cannot be empty");
         }
         if (!buildingIds.insert(entry.id).second) {
-            invalid(field + ".id", "edificio repetido");
+            invalid(field + ".id", "duplicate building");
         }
 
         const auto right = static_cast<uint32_t>(entry.position.x) + entry.width;
         const auto bottom = static_cast<uint32_t>(entry.position.y) + entry.height;
         if (entry.width == 0 || entry.height == 0 ||
             right > config.map.width || bottom > config.map.height) {
-            invalid(field, "el edificio no cabe dentro del mapa");
+            invalid(field, "the building does not fit inside the map");
         }
 
         for (const auto& other : config.buildings) {
@@ -88,7 +88,7 @@ TownConfig TownTomlReader::read(const toml::table& root) const {
                 entry.position.x < otherRight && other.position.x < right &&
                 entry.position.y < otherBottom && other.position.y < bottom;
             if (overlaps) {
-                invalid(field, "el edificio se superpone con otro edificio");
+                invalid(field, "the building overlaps another building");
             }
         }
 
@@ -111,7 +111,7 @@ TownConfig TownTomlReader::read(const toml::table& root) const {
 
     const auto* npcsNode = town.get("npcs");
     if (!npcsNode || !npcsNode->is_array()) {
-        invalid("town.npcs", "se esperaba una lista");
+        invalid("town.npcs", "expected an array");
     }
 
     std::set<std::string> npcIds;
@@ -127,17 +127,17 @@ TownConfig TownTomlReader::read(const toml::table& root) const {
         entry.position = readPosition(npc, field);
 
         if (entry.id.empty()) {
-            invalid(field + ".id", "el identificador no puede estar vacio");
+            invalid(field + ".id", "the identifier cannot be empty");
         }
         if (!npcIds.insert(entry.id).second) {
-            invalid(field + ".id", "NPC repetido");
+            invalid(field + ".id", "duplicate NPC");
         }
         if (entry.position.x >= config.map.width ||
             entry.position.y >= config.map.height) {
-            invalid(field + ".position", "posicion fuera del mapa");
+            invalid(field + ".position", "position is outside the map");
         }
         if (pointInsideBuilding(entry.position)) {
-            invalid(field + ".position", "el NPC no puede estar dentro de un edificio");
+            invalid(field + ".position", "the NPC cannot be inside a building");
         }
 
         config.npcs.push_back(std::move(entry));
@@ -145,7 +145,7 @@ TownConfig TownTomlReader::read(const toml::table& root) const {
 
     const auto* connectionsNode = town.get("connections");
     if (!connectionsNode || !connectionsNode->is_array()) {
-        invalid("town.connections", "se esperaba una lista");
+        invalid("town.connections", "expected an array");
     }
 
     std::set<std::string> destinations;
@@ -162,18 +162,18 @@ TownConfig TownTomlReader::read(const toml::table& root) const {
         entry.position = readPosition(connection, field);
 
         if (entry.destination.empty()) {
-            invalid(field + ".destination", "el destino no puede estar vacio");
+            invalid(field + ".destination", "the destination cannot be empty");
         }
         if (!destinations.insert(entry.destination).second) {
-            invalid(field + ".destination", "destino repetido");
+            invalid(field + ".destination", "duplicate destination");
         }
         if (entry.position.x >= config.map.width ||
             entry.position.y >= config.map.height) {
-            invalid(field + ".position", "posicion fuera del mapa");
+            invalid(field + ".position", "position is outside the map");
         }
         if (pointInsideBuilding(entry.position)) {
             invalid(field + ".position",
-                    "la conexion no puede estar dentro de un edificio");
+                    "the connection cannot be inside a building");
         }
 
         config.connections.push_back(std::move(entry));

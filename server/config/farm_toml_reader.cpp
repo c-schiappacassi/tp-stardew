@@ -1,5 +1,7 @@
 #include "config/farm_toml_reader.h"
 
+#include "commerce/shop_products.h"
+
 #include <algorithm>
 #include <cstddef>
 #include <cstdint>
@@ -12,11 +14,13 @@
 #include <vector>
 
 #include "config/toml_helpers.h"
+#include "config/town_toml_reader.h"
 #include "entities/collision_box.h"
 #include "entities/collision_bounds.h"
 #include "entities/entity_dimensions.h"
 #include "farm/animals/animal_species.h"
 #include "farm/decorations/decoration.h"
+#include "town/town_map.h"
 
 namespace {
 
@@ -40,7 +44,7 @@ bool readWalkableState(const toml::table& table,
                        const std::string& field) {
     const auto state = string(table, "state", field + ".state");
     if (state != "walkable" && state != "unwalkable") {
-        invalid(field + ".state", "se esperaba walkable o unwalkable");
+        invalid(field + ".state", "expected walkable or unwalkable");
     }
     return state == "walkable";
 }
@@ -68,12 +72,12 @@ void farmEntries(const toml::table& table,
         return;
     }
     if (!node || !node->is_array()) {
-        invalid(field, "se esperaba una lista");
+        invalid(field, "expected an array");
     }
 
     const auto& array = *node->as_array();
     if (array.size() > limit) {
-        invalid(field, "demasiados elementos");
+        invalid(field, "too many entries");
     }
 
     for (std::size_t i = 0; i < array.size(); ++i) {
@@ -101,7 +105,7 @@ Position farmBaseAt(const toml::node* node,
     const auto base = terrain.baseAt({tile.getY(), tile.getX()});
 
     if (!base || !terrain.isWalkableBase(*base)) {
-        invalid(field, "el tile es void o unwalkable");
+        invalid(field, "the tile is void or unwalkable");
     }
 
     return *base;
@@ -120,7 +124,7 @@ Type farmNamedType(
         }
     }
 
-    invalid(field + ".type", "tipo desconocido: " + name);
+    invalid(field + ".type", "unknown type: " + name);
 }
 
 void reserveFarmPosition(FarmLayout& layout, const Position& base) {
@@ -146,7 +150,7 @@ void readBackground(const toml::table& farm,
 
     if (hasLegacy && (hasDefault || hasOverrides)) {
         invalid("farm.background",
-                "no se puede combinar el formato anterior con default/overrides");
+                "cannot combine the previous format with default/overrides");
     }
 
     if (hasDefault) {
@@ -167,7 +171,7 @@ void readBackground(const toml::table& farm,
                 const auto y = tile.getY();
 
                 if (overridden[y][x]) {
-                    invalid(field, "override de tile repetido");
+                    invalid(field, "duplicate tile override");
                 }
                 overridden[y][x] = true;
 
@@ -177,12 +181,12 @@ void readBackground(const toml::table& farm,
                 bool tileWalkable = defaultAppearance.walkable;
                 if (const auto* stateNode = entry.get("state")) {
                     if (!stateNode->is_string()) {
-                        invalid(field + ".state", "se esperaba un texto");
+                        invalid(field + ".state", "expected a string");
                     }
                     const auto state = *stateNode->template value<std::string>();
                     if (state != "walkable" && state != "unwalkable") {
                         invalid(field + ".state",
-                                "se esperaba walkable o unwalkable");
+                                "expected walkable or unwalkable");
                     }
                     tileWalkable = state == "walkable";
                 }
@@ -205,7 +209,7 @@ void readBackground(const toml::table& farm,
 
     if (hasOverrides) {
         invalid("farm.background_overrides",
-                "requiere background_default");
+                "requires background_default");
     }
 
     std::vector<std::vector<bool>> defined(
@@ -218,7 +222,7 @@ void readBackground(const toml::table& farm,
             const int y = tile.getY();
 
             if (defined[y][x]) {
-                invalid(field, "tile repetido");
+                invalid(field, "duplicate tile");
             }
             defined[y][x] = true;
 
@@ -230,7 +234,7 @@ void readBackground(const toml::table& farm,
     for (int y = 0; y < height; ++y) {
         for (int x = 0; x < width; ++x) {
             if (!defined[y][x]) {
-                invalid("farm.background", "faltan tiles por definir");
+                invalid("farm.background", "missing tile definitions");
             }
         }
     }
@@ -279,11 +283,11 @@ void validateInitialPlacements(const FarmLayout& layout,
     config.validate();
 
     if (!validBase(layout.spawn)) {
-        invalid("farm.spawn", "posicion base invalida");
+        invalid("farm.spawn", "invalid base position");
     }
     for (const auto& base : layout.terrain.walkableBasePositions()) {
         if (!validBase(base)) {
-            invalid("farm", "el mapa contiene una posicion base fuera de rango");
+            invalid("farm", "the map contains an out-of-range base position");
         }
     }
 
@@ -294,12 +298,12 @@ void validateInitialPlacements(const FarmLayout& layout,
 
     for (const auto& base : layout.reservedPositions) {
         if (!validBase(base)) {
-            invalid("farm.reserved_positions", "posicion base invalida");
+            invalid("farm.reserved_positions", "invalid base position");
         }
         const auto bounds = cropBox.at(base);
         if (!walkableBounds(layout.terrain, bounds)) {
             invalid("farm.reserved_positions",
-                    "una posicion reservada no tiene espacio caminable");
+                    "a reserved position has no walkable space");
         }
         reservedBounds.push_back(bounds);
     }
@@ -311,10 +315,10 @@ void validateInitialPlacements(const FarmLayout& layout,
         if (!validBase(base) || !cell ||
             !walkableBounds(layout.terrain, bounds) ||
             intersectsAny(bounds, reservedBounds)) {
-            invalid("farm.tilled_soil", "posicion de suelo labrado invalida u ocupada");
+            invalid("farm.tilled_soil", "invalid or occupied tilled soil position");
         }
         if (!tilledCells.insert(*cell).second) {
-            invalid("farm.tilled_soil", "tile repetido");
+            invalid("farm.tilled_soil", "duplicate tile");
         }
     }
 
@@ -331,14 +335,14 @@ void validateInitialPlacements(const FarmLayout& layout,
     for (const auto& spawn : layout.animals) {
         const auto* definition = findAnimalDefinition(config, spawn.type);
         if (!validBase(spawn.base) || !definition) {
-            invalid("farm.animals", "tipo o posicion de animal no soportado");
+            invalid("farm.animals", "unsupported animal type or position");
         }
 
         const auto bounds = definition->collision.at(spawn.base);
         auto species = animalSpeciesForType(spawn.type);
         if (!canPlace(bounds) || !species ||
             ++animalCounts[*species] > definition->maxCount) {
-            invalid("farm.animals", "animal superpuesto, fuera del mapa o excede el limite");
+            invalid("farm.animals", "animal overlaps, is outside the map or exceeds the limit");
         }
 
         occupiedBounds.push_back(bounds);
@@ -347,24 +351,24 @@ void validateInitialPlacements(const FarmLayout& layout,
 
     for (const auto& spawn : layout.crops) {
         if (!validBase(spawn.base) || !findCropDefinition(config, spawn.type)) {
-            invalid("farm.crops", "tipo o posicion de cultivo no soportado");
+            invalid("farm.crops", "unsupported crop type or position");
         }
 
         const auto cell = layout.terrain.baseCellAt(spawn.base);
         const auto bounds = cropBox.at(spawn.base);
         if (!cell) {
-            invalid("farm.crops", "posicion de cultivo fuera del mapa");
+            invalid("farm.crops", "crop position is outside the map");
         }
 
         if (!tilledCells.contains(*cell)) {
             if (!canPlace(bounds)) {
-                invalid("farm.crops", "no se puede labrar el tile del cultivo");
+                invalid("farm.crops", "cannot till the crop tile");
             }
             tilledCells.insert(*cell);
         }
 
         if (!canPlace(bounds)) {
-            invalid("farm.crops", "cultivo superpuesto o fuera del mapa");
+            invalid("farm.crops", "crop overlaps or is outside the map");
         }
         occupiedBounds.push_back(bounds);
         blocksMovement.push_back(true);
@@ -373,25 +377,25 @@ void validateInitialPlacements(const FarmLayout& layout,
     const CollisionBox decorationBox{entity_dimensions::DECORATION};
     for (const auto& spawn : layout.decorations) {
         if (!validBase(spawn.base) || !Decoration::isDecoration(spawn.item)) {
-            invalid("farm.furniture", "mueble o posicion no soportados");
+            invalid("farm.furniture", "unsupported furniture or position");
         }
 
         const auto bounds = decorationBox.at(spawn.base);
         if (!canPlace(bounds)) {
-            invalid("farm.furniture", "mueble superpuesto o fuera del mapa");
+            invalid("farm.furniture", "furniture overlaps or is outside the map");
         }
         occupiedBounds.push_back(bounds);
-        blocksMovement.push_back(spawn.item != ItemId::Rug);
+        blocksMovement.push_back(spawn.item != ItemId::BeigeRug && spawn.item != ItemId::BlueRug);
     }
 
     const auto playerBounds = playerBox.at(layout.spawn);
     if (!walkableBounds(layout.terrain, playerBounds)) {
-        invalid("farm.spawn", "el jugador no tiene espacio caminable en el spawn");
+        invalid("farm.spawn", "the player has no walkable space at spawn");
     }
 
     for (std::size_t i = 0; i < occupiedBounds.size(); ++i) {
         if (blocksMovement[i] && playerBounds.intersects(occupiedBounds[i])) {
-            invalid("farm.spawn", "el spawn del jugador esta ocupado por una entidad");
+            invalid("farm.spawn", "the player spawn is occupied by an entity");
         }
     }
 }
@@ -407,7 +411,7 @@ FarmLayout readFarmLayout(const toml::table& root,
 
     if (width == 0 || height == 0 ||
         static_cast<std::size_t>(width) * height > MAX_FARM_TILES) {
-        invalid("farm", "dimensiones vacias o demasiado grandes");
+        invalid("farm", "empty or oversized dimensions");
     }
 
     FarmLayout layout;
@@ -424,7 +428,7 @@ FarmLayout readFarmLayout(const toml::table& root,
         const int count = static_cast<int>(integer(
             farm, "player_houses", 4, "farm.player_houses"));
         if (count == 0) {
-            invalid("farm.player_houses", "debe haber entre 1 y 4 casas");
+            invalid("farm.player_houses", "there must be between 1 and 4 houses");
         }
         layout.playerHouses = static_cast<uint8_t>(count);
     }
@@ -441,7 +445,7 @@ FarmLayout readFarmLayout(const toml::table& root,
         reserveFarmPosition(layout, *layout.mineDoor);
         reserveFarmPosition(layout, *layout.mineReturn);
     } else if (farm.contains("mine_return")) {
-        invalid("farm.mine_return", "requiere door_mines");
+        invalid("farm.mine_return", "requires door_mines");
     }
 
     if (farm.contains("door_town")) {
@@ -451,27 +455,100 @@ FarmLayout readFarmLayout(const toml::table& root,
                          height, "farm.town_return")
             : layout.spawn;
         if (layout.mineDoor && layout.terrain.sameBaseCell(*layout.mineDoor, *layout.townDoor)) {
-            invalid("farm.door_town", "no puede coincidir con door_mines");
+            invalid("farm.door_town", "cannot match door_mines");
         }
         reserveFarmPosition(layout, *layout.townDoor);
         reserveFarmPosition(layout, *layout.townReturn);
     } else if (farm.contains("town_return")) {
-        invalid("farm.town_return", "requiere door_town");
+        invalid("farm.town_return", "requires door_town");
     }
 
-    farmEntries(farm, "beds", [&](const auto& entry, const auto& field) {
-        const auto base = farmBaseAt(&entry, layout.terrain, width, height, field);
-        const auto conflicts = [&](const Position& other) {
-            return layout.terrain.sameBaseCell(base, other);
-        };
-        if (std::any_of(layout.beds.begin(), layout.beds.end(), conflicts) ||
-            (layout.mineDoor && conflicts(*layout.mineDoor)) ||
-            (layout.townDoor && conflicts(*layout.townDoor))) {
-            invalid(field, "la cama coincide con otra cama o una puerta");
+    if (farm.contains("beds")) {
+        invalid("farm.beds", "fixed beds must be configured inside farm.interiors");
+    }
+    std::optional<TownMap> exteriorTown;
+    farmEntries(farm, "interiors", [&](const auto& entry, const auto& field) {
+        InteriorLayout room;
+        room.location.interior_id = static_cast<InteriorId>(integer(
+            entry, "interior_id", static_cast<int>(InteriorId::ComunityCenter), field + ".interior_id"));
+        room.location.house_index = static_cast<uint8_t>(integer(
+            entry, "house_index", 3, field + ".house_index"));
+        const ZoneMap* exterior = &layout.terrain;
+        int exteriorWidth = width;
+        int exteriorHeight = height;
+        if (entry.contains("outside_zone")) {
+            const auto zone = string(entry, "outside_zone", field + ".outside_zone");
+            if (zone == "town") {
+                if (!exteriorTown) {
+                    exteriorTown.emplace();
+                    if (!exteriorTown->initialize(TownTomlReader{}.read(root))) {
+                        invalid(field, "invalid outside town");
+                    }
+                }
+                room.outside.zone = Zone::Town;
+                exterior = &exteriorTown->getMap();
+                exteriorWidth = exteriorTown->getWidth();
+                exteriorHeight = exteriorTown->getHeight();
+            } else if (zone != "farm") {
+                invalid(field + ".outside_zone", "expected farm or town");
+            }
         }
-        layout.beds.push_back(base);
-        reserveFarmPosition(layout, base);
-    }, false, 4);
+        room.outside.position = farmBaseAt(entry.get("door"), *exterior, exteriorWidth, exteriorHeight, field + ".door");
+        room.returnPosition = farmBaseAt(entry.get("return"), *exterior, exteriorWidth, exteriorHeight, field + ".return");
+        const int roomWidth = static_cast<int>(integer(entry, "width", 256, field + ".width"));
+        const int roomHeight = static_cast<int>(integer(entry, "height", 256, field + ".height"));
+        if (roomWidth == 0 || roomHeight == 0) invalid(field, "the interior cannot be empty");
+        const auto* areas = entry.get("walkable_areas");
+        std::vector<std::vector<bool>> floor(roomHeight, std::vector<bool>(roomWidth, !areas));
+        if (areas) {
+            const auto* array = areas->as_array();
+            if (!array) invalid(field + ".walkable_areas", "expected an array of rectangles");
+            for (const auto& area: *array) {
+                const auto& rect = tableAt(&area, field + ".walkable_areas");
+                const int x = static_cast<int>(integer(rect, "x", roomWidth - 1, field + ".walkable_areas.x"));
+                const int y = static_cast<int>(integer(rect, "y", roomHeight - 1, field + ".walkable_areas.y"));
+                const int w = static_cast<int>(integer(rect, "width", roomWidth - x, field + ".walkable_areas.width"));
+                const int h = static_cast<int>(integer(rect, "height", roomHeight - y, field + ".walkable_areas.height"));
+                if (w == 0 || h == 0) invalid(field, "empty walkable area");
+                for (int row = y; row < y + h; ++row) {
+                    for (int col = x; col < x + w; ++col) floor[row][col] = true;
+                }
+            }
+        }
+        room.terrain = ZoneMap{floor, TILE_SIZE};
+        room.entry = farmBaseAt(entry.get("entry"), room.terrain, roomWidth, roomHeight, field + ".entry");
+        room.exit = farmBaseAt(entry.get("exit"), room.terrain, roomWidth, roomHeight, field + ".exit");
+        const auto* beds = entry.get("beds");
+        if (beds) {
+            const auto* array = beds->as_array();
+            if (!array || array->size() > 4) invalid(field + ".beds", "expected an array of up to 4 beds");
+            for (const auto& bed: *array) {
+                room.beds.push_back(farmBaseAt(&bed, room.terrain, roomWidth, roomHeight, field + ".beds"));
+            }
+        }
+        room.background.interior = InteriorBackgroundData{
+            Position{0, 0}, room.location.interior_id, std::nullopt};
+        if (const auto* npc = entry.get("npc")) {
+            const auto merchant = shop_products::merchantForInterior(room.location.interior_id);
+            if (!merchant) invalid(field + ".npc", "the interior does not belong to a shop");
+            room.background.interior->npc = NpcData{
+                farmBaseAt(npc, room.terrain, roomWidth, roomHeight, field + ".npc"), *merchant};
+        }
+        const auto conflicts = [&](const Position& other) {
+            return exterior->sameBaseCell(room.outside.position, other);
+        };
+        if ((room.outside.zone == Zone::Farm && layout.mineDoor && conflicts(*layout.mineDoor)) ||
+            (room.outside.zone == Zone::Farm && layout.townDoor && conflicts(*layout.townDoor)) ||
+            std::any_of(layout.interiors.begin(), layout.interiors.end(), [&](const auto& other) {
+                return (room.outside.zone == other.outside.zone && conflicts(other.outside.position)) ||
+                       other.location == room.location;
+            })) invalid(field, "duplicate interior or door");
+        if (room.outside.zone == Zone::Farm) {
+            reserveFarmPosition(layout, room.outside.position);
+            reserveFarmPosition(layout, room.returnPosition);
+        }
+        layout.interiors.push_back(std::move(room));
+    }, false, 9);
 
     farmEntries(farm, "reserved_positions",
         [&](const auto& entry, const auto& field) {
@@ -497,8 +574,8 @@ FarmLayout readFarmLayout(const toml::table& root,
         [&](const auto& entry, const auto& field) {
             if (entry.contains("growth_stage")) {
                 invalid(field + ".growth_stage",
-                        "la carga inicial crea cultivos nuevos; "
-                        "no restaura crecimiento");
+                        "initial loading creates new crops; "
+                        "it does not restore growth");
             }
 
             layout.crops.push_back({
@@ -534,7 +611,7 @@ FarmLayout readFarmLayout(const toml::table& root,
                 field + ".item_id"));
 
             if (!Decoration::isDecoration(item)) {
-                invalid(field + ".item_id", "mueble no soportado");
+                invalid(field + ".item_id", "unsupported furniture");
             }
 
             layout.decorations.push_back({
@@ -547,13 +624,13 @@ FarmLayout readFarmLayout(const toml::table& root,
     farmEntries(farm, "chests",
         [](const auto&, const auto& field) {
             invalid(field,
-                    "la carga de cofres con inventario "
-                    "todavia no esta implementada");
+                    "loading chests with inventory "
+                    "is not implemented yet");
         });
 
     for (const auto& base : layout.reservedPositions) {
         if (!layout.terrain.hasBasePath(layout.spawn, base)) {
-            invalid("farm", "spawn y accesos reservados no estan conectados");
+            invalid("farm", "spawn and reserved entrances are not connected");
         }
     }
 

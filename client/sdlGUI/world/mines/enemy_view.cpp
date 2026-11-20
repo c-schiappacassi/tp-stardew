@@ -7,6 +7,7 @@
 #include "../../sprite_defs.h"
 #include "constants.h"
 
+// TODO: pasar esto a asset manager con get_sprite_id(EnemyType type, bool frenzied) o algo asi, tambien usar sprite.height para depth
 namespace {
     std::optional<SpriteId> sprite_for(EnemyType type, bool frenzied) {
         switch (type) {
@@ -18,11 +19,6 @@ namespace {
             case EnemyType::Traps:    return std::nullopt;
         }
         return std::nullopt;
-    }
-
-    int hover_bob(EnemyType type, long long it) {
-        if (type != EnemyType::Skull) return 0;
-        return static_cast<int>(std::lround(std::sin(static_cast<double>(it) * 0.15) * 2.0));
     }
 
     int height_for(EnemyType type) {
@@ -51,16 +47,7 @@ void EnemyView::update(const EnemySnapshot& data) {
 }
 
 std::optional<float> EnemyView::depth(const RenderInfo& ctx) const {
-    if (!sprite_for(type, frenzied)) {
-        return std::nullopt;
-    }
-
-    const int radius = height_for(type) * ctx.cam.get_zoom();
-    if (!ctx.cam.is_visible(pos.getX(), pos.getY(), radius)) {
-        return std::nullopt;
-    }
-
-    return static_cast<float>(pos.getY());
+    return depth_if_visible(ctx, pos, height_for(type));
 }
 
 void EnemyView::draw(const RenderInfo& ctx) {
@@ -69,27 +56,5 @@ void EnemyView::draw(const RenderInfo& ctx) {
         return;
     }
 
-    const ClipId id{*sprite_id, Action{state}, facing};
-
-    if (!current_clip || !(*current_clip == id)) {
-        current_clip = id;
-        anim.reset();
-    }
-
-    if (last_it >= 0 && ctx.it > last_it) {
-        anim.update(static_cast<float>(ctx.it - last_it) * TICK_MS);
-    }
-    last_it = ctx.it;
-
-    if (!ctx.assets.has_clip(id)) {
-        return;
-    }
-
-    const Clip& clip = ctx.assets.get_clip(id);
-    const AnimatedFrame& frame = anim.get_current_frame(clip);
-
-    SDL2pp::Point origin = ctx.cam.world_to_screen(pos.getX(), pos.getY());
-    origin.y += hover_bob(type, ctx.it) * ctx.cam.get_zoom();
-    draw_sprite(ctx, frame.sprite, origin, frame.flip);
-
+    draw_clip_at(ctx, clip_player, ClipId{*sprite_id, Action{state}, facing}, pos, type == EnemyType::Skull ? bob_offset(ctx) : 0);
 }

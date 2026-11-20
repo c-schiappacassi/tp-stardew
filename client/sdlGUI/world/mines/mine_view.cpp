@@ -20,3 +20,5 @@ void MinesView::collect_drawables(const RenderInfo& ctx, std::vector<Drawable>& 
         it->second.collect_drawables(ctx, out);
     }
 }
+
+SDL_Color MinesView::ambient_light(const RenderInfo&) { return lighting::dungeon_ambient(); }

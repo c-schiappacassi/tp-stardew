@@ -1,6 +1,8 @@
 #include "server_protocol.h"
 
+#include <algorithm>
 #include <cstdint>
+#include <set>
 #include <limits>
 #include <utility>
 
@@ -10,54 +12,129 @@ namespace {
 constexpr size_t MAX_U8 = std::numeric_limits<uint8_t>::max();
 constexpr size_t MAX_U16 = std::numeric_limits<uint16_t>::max();
 
+constexpr uint8_t BUNDLE_COUNT = 5;
+constexpr uint8_t REQUIREMENT_LIMIT = 10;
+constexpr uint8_t SEED_COUNT = 4;
+
+void requireCommunity(bool condition, const char* message) {
+    if (!condition) throw ProtocolError(message);
+}
+
+void validateCommunityQuality(Quality quality) {
+    switch (quality) {
+        case Quality::None:
+        case Quality::Base:
+        case Quality::Good:
+        case Quality::Excellent:
+        case Quality::Incredible:
+        case Quality::Perfect:
+            return;
+    }
+    throw ProtocolError("Invalid community item quality");
+}
+
+void validateCommunityStacks(const std::vector<Stack>& items) {
+    requireCommunity(items.size() <= SEED_COUNT, "Too many community reward items");
+    for (const auto& stack : items) {
+        requireCommunity(stack.quantity != 0, "Empty community reward stack");
+        validateCommunityQuality(stack.qual);
+    }
+}
+
+void validateDonationKind(DonationKind kind) {
+    requireCommunity(kind <= DonationKind::Coins, "Invalid donation kind");
+}
+
+void validateCommunityState(const CommunityStateData& state) {
+    requireCommunity(state.bundles.size() <= BUNDLE_COUNT, "Too many community bundles");
+    requireCommunity(state.discount <= MarketDiscount::Active, "Invalid community discount");
+    requireCommunity(!state.canDonate || (state.insideCenter && !state.completed), "Invalid donation availability");
+    requireCommunity(state.coinsDonated <= state.coinsRequired, "Invalid community coins");
+    if (state.available) {
+        requireCommunity(state.bundles.size() == BUNDLE_COUNT && state.coinsRequired != 0,
+                "Incomplete community state");
+    }
+    std::set<CommunityBundle> seen;
+    for (const auto& bundle : state.bundles) {
+        requireCommunity(bundle.id <= CommunityBundle::Money && seen.insert(bundle.id).second,
+                "Invalid community bundle");
+        requireCommunity(!bundle.rewardGranted || bundle.completed, "Reward granted for an incomplete bundle");
+        requireCommunity(bundle.items.size() <= REQUIREMENT_LIMIT, "Too many community requirements");
+        for (const auto& item : bundle.items) {
+            requireCommunity(item.required != 0 && item.donated <= item.required, "Invalid community requirement");
+            validateCommunityQuality(item.minimumQuality);
+        }
+        validateCommunityStacks(bundle.reward.items);
+    }
+    if (state.completed) {
+        requireCommunity(state.available && std::all_of(state.bundles.begin(), state.bundles.end(),
+            [](const auto& bundle) { return bundle.completed; }), "Invalid completed community state");
+    }
+    validateCommunityStacks(state.pendingItems);
+    if (state.lastDonation) {
+        const auto& receipt = *state.lastDonation;
+        validateDonationKind(receipt.kind);
+        requireCommunity(receipt.error <= CommunityDonationError::InvalidSlot, "Invalid donation result");
+        requireCommunity(receipt.error == CommunityDonationError::None ? receipt.accepted != 0 : receipt.accepted == 0,
+                "Invalid accepted donation amount");
+    }
+}
+
 // Los contadores viajan en 1 o 2 bytes: si no entran, se rechaza el mensaje
 // ANTES de armarlo (si no, el contador se truncaba y el cliente se desincronizaba).
 void validateCount(size_t count, size_t limit, const char* what) {
     if (count > limit) {
-        throw ProtocolError(std::string("Demasiados elementos para el protocolo: ") + what);
+        throw ProtocolError(std::string("Too many protocol entries: ") + what);
     }
 }
 
 void validateFarmCounts(const FarmData& farm) {
-    validateCount(farm.crops.size(), MAX_U16, "cultivos");
-    validateCount(farm.animals.size(), MAX_U16, "animales");
-    validateCount(farm.tilledSoil.size(), MAX_U16, "tierra arada");
+    validateCount(farm.crops.size(), MAX_U16, "crops");
+    validateCount(farm.animals.size(), MAX_U16, "animals");
+    validateCount(farm.tilledSoil.size(), MAX_U16, "tilled soil");
 }
 
 void validatePosition(const Position& pos) {
     if (pos.getX() < 0 || pos.getY() < 0 || pos.getX() > static_cast<int>(MAX_U16) ||
         pos.getY() > static_cast<int>(MAX_U16)) {
-        throw ProtocolError("Posicion fuera del protocolo");
+        throw ProtocolError("Position outside protocol range");
+    }
+}
+
+void validateLoot(const std::vector<LootData>& loot) {
+    validateCount(loot.size(), MAX_U16, "ground items");
+    for (const auto& item: loot) {
+        validatePosition(item.pos);
+        if (item.id == 0 || item.quantity == 0 || item.kind > LootKind::Gold) {
+            throw ProtocolError("Invalid ground item");
+        }
     }
 }
 
 void validateCombat(const DungeonCombatData& combat) {
-    validateCount(combat.enemies.size(), MAX_U16, "enemigos");
-    validateCount(combat.projectiles.size(), MAX_U16, "proyectiles");
-    validateCount(combat.traps.size(), MAX_U16, "trampas");
-    validateCount(combat.loot.size(), MAX_U16, "botines");
+    validateCount(combat.enemies.size(), MAX_U16, "enemies");
+    validateCount(combat.projectiles.size(), MAX_U16, "projectiles");
+    validateCount(combat.traps.size(), MAX_U16, "traps");
+    validateLoot(combat.loot);
     for (const auto& enemy: combat.enemies) {
         validatePosition(enemy.pos);
         if (enemy.dir > Direction::Right || enemy.type > EnemyType::Skull ||
             enemy.state > EnemyState::Dead) {
-            throw ProtocolError("Estado de enemigo desconocido");
+            throw ProtocolError("Unknown enemy state");
         }
     }
     for (const auto& projectile: combat.projectiles) {
         validatePosition(projectile.pos);
         if (projectile.type > FlameType::Common) {
-            throw ProtocolError("Tipo de llama desconocido");
+            throw ProtocolError("Unknown flame type");
         }
     }
     for (const auto& trap: combat.traps) {
         validatePosition(trap.pos);
         if (trap.dir == Direction::None || trap.dir > Direction::Right ||
             trap.type > TrapType::WallFlame || trap.state > TrapState::Active) {
-            throw ProtocolError("Estado de trampa desconocido");
+            throw ProtocolError("Unknown trap state");
         }
-    }
-    for (const auto& loot: combat.loot) {
-        validatePosition(loot.pos);
     }
 }
 
@@ -69,6 +146,12 @@ bool hasMatchingZoneData(const PlayerDataLocal& data) {
             return std::holds_alternative<MineData>(data.zoneData);
         case Zone::Town:
             return std::holds_alternative<std::monostate>(data.zoneData);
+        case Zone::InsideHouse: {
+            const auto* inside = std::get_if<InteriorData>(&data.zoneData);
+            return inside && data.interior &&
+                   inside->interior_id == data.interior->interior_id &&
+                   inside->house_index == data.interior->house_index;
+        }
     }
     return false;
 }
@@ -80,18 +163,20 @@ void validateStatus(const ServerStatus& status) {
             std::holds_alternative<std::monostate>(local.zoneData) &&
             (local.currentZone == Zone::Farm || local.currentZone == Zone::Dungeon);
     if (!hasMatchingZoneData(local) && !emptyEntryError) {
-        throw ProtocolError("Los datos locales no corresponden a la zona del jugador");
+        throw ProtocolError("Local data does not match the player zone");
     }
 
-    validateCount(status.players.size(), MAX_U16, "jugadores");
+    validateCount(status.players.size(), MAX_U16, "players");
     validateCount(local.items.size(), MAX_U8, "items");
+    validateCount(local.newMessages.size(), MAX_U16, "chat messages");
     const auto* farm = std::get_if<FarmData>(&local.zoneData);
     if (farm) {
         validateFarmCounts(*farm);
+        validateLoot(farm->loot);
     }
     const auto* mine = std::get_if<MineData>(&local.zoneData);
     if (mine) {
-        validateCount(mine->current_level_data.minerals.size(), MAX_U16, "minerales");
+        validateCount(mine->current_level_data.minerals.size(), MAX_U16, "minerals");
         validateCombat(mine->current_level_data.combat);
     }
 }
@@ -133,7 +218,7 @@ void ServerProtocol::writeColor(MessageBuffer& out, const Color& color) {
 Direction ServerProtocol::receiveDirection() {
     const uint8_t raw = base.receiveUint8();
     if (raw > static_cast<uint8_t>(Direction::Right)) {
-        throw ProtocolError("direccion invalida"); // dir fuera de rango corta conexion?
+        throw ProtocolError("invalid direction"); // dir fuera de rango corta conexion?
     }
     return static_cast<Direction>(raw);
 }
@@ -155,6 +240,13 @@ void ServerProtocol::writePlayerData(MessageBuffer& out, const PlayerData& data)
     writeColor(out, data.hairColor);
     writeColor(out, data.pantsColor);
     out.putUint8(static_cast<uint8_t>(data.currentZone));
+    if (data.currentZone == Zone::InsideHouse) {
+        if (!data.interior || data.interior->interior_id > InteriorId::ComunityCenter) {
+            throw ProtocolError("Unknown interior location");
+        }
+        out.putUint8(static_cast<uint8_t>(data.interior->interior_id));
+        out.putUint8(data.interior->house_index);
+    }
     out.putUint16(data.heldItem ? static_cast<uint16_t>(*data.heldItem) : 0);
 }
 
@@ -213,12 +305,18 @@ void ServerProtocol::writeCombatData(MessageBuffer& out, const DungeonCombatData
         out.putUint8(static_cast<uint8_t>(trap.state));
         out.putUint16(trap.range);
     }
-    out.putUint16(static_cast<uint16_t>(combat.loot.size()));
-    for (const auto& loot: combat.loot) {
+    writeLootData(out, combat.loot);
+}
+
+void ServerProtocol::writeLootData(MessageBuffer& out, const std::vector<LootData>& items) {
+    out.putUint16(static_cast<uint16_t>(items.size()));
+    for (const auto& loot: items) {
         out.putUint32(loot.id);
         writePosition(out, loot.pos);
         out.putUint16(static_cast<uint16_t>(loot.item));
-        out.putUint16(loot.quantity);
+        out.putUint32(loot.quantity);
+        out.putUint8(static_cast<uint8_t>(loot.quality));
+        out.putUint8(static_cast<uint8_t>(loot.kind));
     }
 }
 
@@ -264,17 +362,22 @@ void ServerProtocol::writeFarmData(MessageBuffer& out, const FarmData& farm) {
     for (const auto& position : farm.tilledSoil) {
         writePosition(out, position);
     }
+    out.putUint16(static_cast<uint16_t>(farm.furniture.size()));
+    for (const auto& furniture : farm.furniture) {
+        writeFurnitureData(out, furniture);
+    }
+    writeLootData(out, farm.loot);
 }
 
 void ServerProtocol::writeBackgroundData(MessageBuffer& out, const BackgroundData& bg) {
     validateCount(bg.decor.size(),     MAX_U16, "decor");
-    validateCount(bg.buildings.size(), MAX_U16, "edificios");
-    validateCount(bg.furniture.size(), MAX_U16, "muebles estaticos");
-    validateCount(bg.portals.size(), MAX_U16, "portales");
+    validateCount(bg.buildings.size(), MAX_U16, "buildings");
+    validateCount(bg.furniture.size(), MAX_U16, "static furniture");
+    validateCount(bg.portals.size(), MAX_U16, "portals");
     for (const auto& portal: bg.portals) {
         validatePosition(portal.pos);
         if (portal.id > PortalId::MineToFarm) {
-            throw ProtocolError("Tipo de portal desconocido");
+            throw ProtocolError("Unknown portal type");
         }
     }
 
@@ -304,11 +407,25 @@ void ServerProtocol::writeBackgroundData(MessageBuffer& out, const BackgroundDat
         writePosition(out, portal.pos);
         out.putUint8(static_cast<uint8_t>(portal.id));
     }
+    out.putUint8(bg.interior ? 1 : 0);
+    if (bg.interior) {
+        validatePosition(bg.interior->pos);
+        if (bg.interior->interior_id > InteriorId::ComunityCenter) {
+            throw ProtocolError("Unknown interior");
+        }
+        writePosition(out, bg.interior->pos);
+        out.putUint8(static_cast<uint8_t>(bg.interior->interior_id));
+        out.putUint8(bg.interior->npc ? 1 : 0);
+        if (bg.interior->npc) {
+            writePosition(out, bg.interior->npc->pos);
+            out.putUint8(static_cast<uint8_t>(bg.interior->npc->id));
+        }
+    }
 }
 
 void ServerProtocol::sendConstMap(const ConstMapData& map) {
-    validateCount(map.levels.size(),      MAX_U8, "niveles");
-    validateCount(map.farm_houses.size(), MAX_U8, "casas");
+    validateCount(map.levels.size(),      MAX_U8, "levels");
+    validateCount(map.farm_houses.size(), MAX_U8, "houses");
 
     MessageBuffer out(1 << 20);
     writeBackgroundData(out, map.farm);
@@ -320,6 +437,7 @@ void ServerProtocol::sendConstMap(const ConstMapData& map) {
     writeBackgroundData(out, map.robins);
     writeBackgroundData(out, map.clints);
     writeBackgroundData(out, map.marnies);
+    writeBackgroundData(out, map.community_center);
     writeBackgroundData(out, map.town);
     base.send(out);
 }
@@ -338,6 +456,16 @@ void ServerProtocol::writeZoneData(MessageBuffer& out, Zone currentZone,const Zo
         }
         case Zone::Town:
             return;
+        case Zone::InsideHouse: {
+            const auto* inside = std::get_if<InteriorData>(&zoneData);
+            if (!inside) throw ProtocolError("Missing interior data");
+            validateCount(inside->furniture.size(), MAX_U16, "interior furniture");
+            out.putUint8(static_cast<uint8_t>(inside->interior_id));
+            out.putUint8(inside->house_index);
+            out.putUint16(static_cast<uint16_t>(inside->furniture.size()));
+            for (const auto& furniture: inside->furniture) writeFurnitureData(out, furniture);
+            return;
+        }
     }
 }
 
@@ -351,6 +479,7 @@ void ServerProtocol::writePlayerDataLocal(MessageBuffer& out, const PlayerDataLo
     }
 
     out.putUint8(localData.current_slot);
+    out.putUint8(localData.cap_inventory);
     out.putUint32(localData.gold);
     out.putUint16(localData.health);
     out.putUint16(localData.maxHealth);
@@ -361,6 +490,11 @@ void ServerProtocol::writePlayerDataLocal(MessageBuffer& out, const PlayerDataLo
     out.putUint8(localData.combatProgress.vampires ? 1 : 0);
     out.putUint8(localData.combatProgress.orcs ? 1 : 0);
     out.putUint8(localData.combatProgress.skull ? 1 : 0);
+    out.putUint16(static_cast<uint16_t>(localData.newMessages.size()));
+    for (const auto& message : localData.newMessages) {
+        out.putString(message.sender);
+        out.putString(message.text);
+    }
 }
 
 // RECEIVERS (the type byte --> consumed by receiveType())
@@ -416,11 +550,16 @@ InteractDTO ServerProtocol::receiveInteract() {
 
 DayOkDTO ServerProtocol::receiveDayOk() { return DayOkDTO{base.receiveString()}; }
 
+DayCancelDTO ServerProtocol::receiveDayCancel() { return DayCancelDTO{base.receiveString()}; }
+
 DonateDTO ServerProtocol::receiveDonate() {
-    DonateDTO dto(base.receiveString());
-    dto.slot = base.receiveUint8();
-    dto.quantity = base.receiveUint32();
-    return dto;
+    DonateDTO command(base.receiveString());
+    command.kind = static_cast<DonationKind>(base.receiveUint8());
+    validateDonationKind(command.kind);
+    command.slot = base.receiveUint8();
+    command.quantity = base.receiveUint32();
+    command.requestId = base.receiveUint32();
+    return command;
 }
 
 ChatDTO ServerProtocol::receiveChat() {
@@ -474,11 +613,15 @@ void ServerProtocol::sendStatus(const ServerStatus& status) {
 
     writePlayerDataLocal(out, status.localPlayer);
     out.putUint8(status.dayEnded ? 1 : 0);
+    out.putUint8(status.dayConfirmationRequired ? 1 : 0);
+    out.putUint16(status.timeOfDayMinutes);
+    out.putUint8(status.gameCompleted ? 1 : 0);
+    writeCommunityState(out, status.community);
     base.send(out);
 }
 
 void ServerProtocol::sendQtStatus(const qtStatus& status) {
-    validateCount(status.games.size(), MAX_U16, "partidas");
+    validateCount(status.games.size(), MAX_U16, "games");
 
     MessageBuffer out(1024);
     out.putUint8(static_cast<uint8_t>(status.status));
@@ -490,4 +633,55 @@ void ServerProtocol::sendQtStatus(const qtStatus& status) {
         writeGameInfo(out, info);
     }
     base.send(out);
+}
+
+void ServerProtocol::writeCommunityStacks(MessageBuffer& out, const std::vector<Stack>& items) {
+    out.putUint8(static_cast<uint8_t>(items.size()));
+    for (const auto& item : items) writeStack(out, item);
+}
+
+void ServerProtocol::writeCommunityState(MessageBuffer& out, const CommunityStateData& state) {
+    validateCommunityState(state);
+    out.putUint8(state.available);
+    out.putUint8(state.insideCenter);
+    out.putUint8(state.canDonate);
+    out.putUint8(state.completed);
+    out.putUint8(static_cast<uint8_t>(state.discount));
+    out.putUint8(static_cast<uint8_t>(state.bundles.size()));
+    for (const auto& bundle : state.bundles) {
+        out.putUint8(static_cast<uint8_t>(bundle.id));
+        out.putUint8(bundle.completed);
+        out.putUint8(bundle.rewardGranted);
+        out.putUint8(static_cast<uint8_t>(bundle.items.size()));
+        for (const auto& item : bundle.items) {
+            out.putUint16(static_cast<uint16_t>(item.item));
+            out.putUint32(item.donated);
+            out.putUint32(item.required);
+            out.putUint8(static_cast<uint8_t>(item.minimumQuality));
+        }
+        writeCommunityStacks(out, bundle.reward.items);
+        out.putUint32(bundle.reward.coins);
+        out.putUint8(bundle.reward.cows);
+        out.putUint8(bundle.reward.chickens);
+        out.putUint8(bundle.reward.statsBonusPercent);
+        out.putUint8(bundle.reward.marketDiscountNextDay);
+    }
+    out.putUint32(state.coinsDonated);
+    out.putUint32(state.coinsRequired);
+    out.putUint8(state.combat.skeletons);
+    out.putUint8(state.combat.vampires);
+    out.putUint8(state.combat.orcs);
+    out.putUint8(state.combat.skull);
+    writeCommunityStacks(out, state.pendingItems);
+    out.putUint32(static_cast<uint32_t>(state.pendingCoins >> 32));
+    out.putUint32(static_cast<uint32_t>(state.pendingCoins));
+    out.putUint8(state.lastDonation.has_value());
+    if (state.lastDonation) {
+        const auto& receipt = *state.lastDonation;
+        out.putUint32(receipt.requestId);
+        out.putUint8(static_cast<uint8_t>(receipt.kind));
+        out.putUint8(receipt.slot);
+        out.putUint8(static_cast<uint8_t>(receipt.error));
+        out.putUint32(receipt.accepted);
+    }
 }

@@ -4,7 +4,9 @@
 #include <map>
 
 #include "../zone_view.h"
+#include "../lighting.h"
 #include "level_view.h"
+
 
 class MinesView : public ZoneView {
 private:
@@ -19,7 +21,8 @@ public:
         }
     }
 
-    void update(const MineData& data);
+    void update(const MineData& data);  
     void draw_background(const RenderInfo& ctx) override;
     void collect_drawables(const RenderInfo& ctx, std::vector<Drawable>& out) override;
+    SDL_Color ambient_light(const RenderInfo& ctx) override;
 };

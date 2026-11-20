@@ -7,6 +7,7 @@
 #include "entities/collision_box.h"
 
 #include "protocol_types.h"
+#include "game_time.h"
 
 struct ToolConfig {
     uint16_t energyCost;
@@ -18,7 +19,7 @@ struct PlayerConfig {
     uint16_t swordRange = 40;
     uint32_t damageGraceMs = 350;
     uint8_t passoutGoldPercent = 10;
-    uint32_t dayDurationMs = 900000;
+    uint32_t dayDurationMs = std::chrono::duration_cast<std::chrono::milliseconds>(game_time::DAY_DURATION).count();
     std::map<ItemId, ToolConfig> tools{
                                         {ItemId::Pickaxe,{2,500}},
         {ItemId::WateringCan, {2,500}},
@@ -32,7 +33,7 @@ struct PlayerConfig {
         if (!collision.isValid() || swordDamage == 0 || swordRange == 0 ||
             passoutGoldPercent > 100 || dayDurationMs == 0 || sword == tools.end() ||
             sword->second.intervalMs == 0) {
-            throw std::invalid_argument("Configuracion del jugador invalida");
+            throw std::invalid_argument("Invalid player configuration");
         }
     }
 };

@@ -36,7 +36,6 @@ public:
     DungeonCombat(const EnemyConfig& config, uint32_t seed);
     bool initialize(std::map<uint8_t, DungeonRoom>& rooms,const std::map<uint8_t, DungeonRoomLayout>& layouts, EntityIdGenerator& ids);
     bool attack(Player& player, uint16_t id, DungeonRoom& room, Direction direction,EntityIdGenerator& ids, std::chrono::steady_clock::time_point now);
-    bool collectLoot(Player& player, DungeonRoom& room);
     void silverMined(DungeonRoom& room);
     void update(CombatTime elapsed, std::map<uint8_t, DungeonRoom>& rooms,const std::vector<Combatant>& players, EntityIdGenerator& ids,std::chrono::steady_clock::time_point now);
     void onTravel(uint16_t id, uint8_t room, bool survived,const std::map<uint8_t, DungeonRoom>& rooms);

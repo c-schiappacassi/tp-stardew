@@ -14,6 +14,7 @@ private:
     Direction dir;
     Direction movementDirection = Direction::None;
     Zone zone;
+    std::optional<InteriorLocation> interior;
     uint8_t dungeonLevel = 0;
     uint16_t hairModel;
     uint16_t shirtModel;
@@ -31,6 +32,7 @@ private:
     std::chrono::steady_clock::time_point nextActionTime{};
     std::chrono::steady_clock::time_point nextDamageTime{};
     bool combatBonus = false;
+    bool bedReady = true;
 
 public:
     Player(const PlayerData& initialData, uint8_t inventoryCapacity, uint16_t maxHealth,
@@ -40,7 +42,10 @@ public:
     void advance(int step);
     bool selectSlot(uint8_t slot);
     bool addItem(const Stack& stack);
+    uint16_t addItemUpTo(const Stack& stack);
     bool removeItem(uint8_t slot, uint16_t quantity);
+    bool removeItems(const std::vector<std::pair<uint8_t, uint16_t>>& quantities);
+    const std::map<uint8_t, Stack>& getInventoryItems() const;
     const Stack* getSelectedItem() const;
     uint8_t getSelectedSlot() const;
     bool canPerformAction(std::chrono::steady_clock::time_point now) const;
@@ -59,20 +64,30 @@ public:
     bool canAct() const;
     bool canBeAttacked() const;
     bool isResting() const;
+    bool isSleeping() const;
+    bool canUseBed() const;
+    void leaveBedArea();
+    const std::optional<InteriorLocation>& getInterior() const;
     uint16_t receiveDamage(uint16_t damage, std::chrono::steady_clock::time_point now);
     uint16_t getSwordDamage() const;
     uint16_t getSwordRange() const;
-    void addGold(uint32_t amount);
+    uint32_t addGold(uint32_t amount);
+    uint32_t getGold() const;
+    bool spendGold(uint32_t amount);
+    bool buyItem(const Stack& stack, uint32_t price);
+    bool sellItems(const std::vector<std::pair<uint8_t, uint16_t>>& quantities, uint32_t price);
     void applyCombatBonus();
     void passOut();
     bool sleep();
+    bool cancelSleep();
     void wakeUp();
-    bool changeLocation(Zone destination, uint8_t level, const Position& target);
-    bool restoreLocation(Zone destination, uint8_t level, const Position& target);
+    bool changeLocation(Zone destination, uint8_t level, const Position& target,std::optional<InteriorLocation> inside = std::nullopt);
+    bool restoreLocation(Zone destination, uint8_t level, const Position& target,std::optional<InteriorLocation> inside = std::nullopt);
     void faceTarget(const Position& target);
     void faceDirection(Direction direction);
     int getMovementStep(int normalStep) const;
 
     PlayerData getPublicData() const;
     PlayerDataLocal getLocalData() const;
+    void restoreData(const PlayerDataLocal& saved);
 };

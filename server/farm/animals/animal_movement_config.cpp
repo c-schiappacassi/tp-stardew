@@ -4,6 +4,6 @@
 
 void AnimalMovementConfig::validate() const {
     if (stepPerTick <= 0 || decisionIntervalTicks == 0) {
-        throw std::invalid_argument("Paso o intervalo de movimiento invalidos");
+        throw std::invalid_argument("Invalid movement step or interval");
     }
 }

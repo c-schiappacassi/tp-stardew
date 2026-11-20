@@ -8,7 +8,6 @@
 #include "pixel_font.h"
 
 namespace {
-    constexpr int REFERENCE_HEIGHT = 720;
     constexpr int SPRITE_SCALE = 3;
     constexpr int FILL_INSET_X = 3;
     constexpr int FILL_INSET_TOP = 13;
@@ -24,11 +23,6 @@ namespace {
         const float g = std::sqrt(ratio) * 150.0f;
         return SDL_Color{static_cast<Uint8>(r), static_cast<Uint8>(g), 0, 255};
     }
-
-    void fill_rect(const RenderInfo& ctx, const SDL2pp::Rect& rect, const SDL_Color& c) {
-        ctx.r.SetDrawColor(c.r, c.g, c.b, c.a);
-        ctx.r.FillRect(rect);
-    }
 }
 
 void BarView::draw(const RenderInfo& ctx) const {
@@ -39,17 +33,14 @@ void BarView::draw(const RenderInfo& ctx) const {
         return;
     }
 
-    const SDL2pp::Point screen = ctx.r.GetOutputSize();
-    const int u = std::max(1, screen.y / REFERENCE_HEIGHT);
+    const UiFrame f = ui_frame(ctx);
+    const int s = SPRITE_SCALE * f.u;
 
     const Sprite& frame = ctx.assets.get_sprite(frame_sprite);
-    const int s = SPRITE_SCALE * u;
-
     const int w = frame.width * s;
     const int h = frame.height * s;
-    const int x = screen.x - RIGHT_MARGIN * u - w - order * (w + BAR_GAP * u);
-    const int y = screen.y - BOTTOM_MARGIN * u - h;
-    const SDL2pp::Rect bar(x, y, w, h);
+    const SDL2pp::Rect bar = aligned_rect(f.rect(), w, h, HAlign::Right, VAlign::Bottom,
+                                          RIGHT_MARGIN * f.u + order * (w + BAR_GAP * f.u), BOTTOM_MARGIN * f.u);
 
     draw_sprite_in(ctx, frame, bar);
 

@@ -26,9 +26,11 @@ private:
     std::map<TileTextureId, Sprite> tile_sprites;
     std::map<DecorId, Sprite> decor_sprites;
     std::map<BuildingId, Sprite> building_sprites;
-    std::map<std::pair<FurnitureId, Direction>, Sprite> furniture_sprites;
+    std::map<std::pair<FurnitureId, Direction>, FlippableSprite> furniture_sprites;
     std::map<EmoteId, Sprite> emote_sprites;
     std::map<PortalId, Sprite> portal_sprites;
+    std::map<InteriorId, Sprite> interior_sprites;
+    std::map<NpcId, Sprite> npc_sprites;
 
     SDL2pp::Texture load_texture(SDL2pp::Renderer& renderer, const std::filesystem::path& path);
     void load_sprites_texture(SDL2pp::Renderer& renderer, const std::filesystem::path& assets_root);
@@ -53,6 +55,8 @@ private:
     void load_animal_ids();
     void load_emotes();
     void load_portals();
+    void load_interiors();
+    void load_npcs();
 
 public:
     AssetManager(SDL2pp::Renderer& renderer, const std::filesystem::path& assets_root);
@@ -67,11 +71,13 @@ public:
     const Sprite& get_sprite(TileTextureId id) const;
     const Sprite& get_sprite(DecorId id) const;
     const Sprite& get_sprite(BuildingId id) const;
-    const Sprite& get_sprite(FurnitureId id, Direction dir) const;
+    const FlippableSprite& get_sprite(FurnitureId id, Direction dir) const;
     const Sprite& get_sprite(EmoteId id) const;
     const Sprite& get_sprite(CropType type, CropState state) const;
     const Sprite& get_sprite(ResourceType type, ResourceState state) const;
     const Sprite& get_sprite(PortalId id) const;
+    const Sprite& get_sprite(InteriorId id) const;
+    const Sprite& get_sprite(NpcId id) const;
 
     const SpriteId& get_sprite_id(AnimalType type) const;
     const ToolFrame* find_tool_frame(ItemId item, Direction dir, std::size_t frame_index) const;

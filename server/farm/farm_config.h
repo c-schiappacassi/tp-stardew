@@ -7,6 +7,7 @@
 
 #include "animals/animal_definition.h"
 #include "crops/crop_definition.h"
+#include "game_time.h"
 
 class FarmConfig {
 public:
@@ -15,7 +16,7 @@ public:
     std::vector<CropDefinition> crops;
     std::vector<AnimalDefinition> animals;
 
-    explicit FarmConfig(std::chrono::milliseconds dayLength = std::chrono::minutes{15});
+    explicit FarmConfig(std::chrono::milliseconds dayLength = game_time::DAY_DURATION);
 
     void validate() const;
 };

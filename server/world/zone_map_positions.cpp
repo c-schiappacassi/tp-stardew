@@ -46,10 +46,10 @@ std::vector<Position> ZoneMap::walkableBasePositions() const {
         for (std::size_t col = 0; col < walkableTiles[row].size(); ++col) {
             if (!walkableTiles[row][col]) continue;
             if (row > static_cast<std::size_t>(std::numeric_limits<int>::max()) || col > static_cast<std::size_t>(std::numeric_limits<int>::max())) {
-                throw std::overflow_error("Celda fuera del rango de Position");
+                throw std::overflow_error("Cell outside Position range");
             }
             const auto base = baseAt({static_cast<int>(row), static_cast<int>(col)});
-            if (!base) throw std::overflow_error("Base fuera del rango de Position");
+            if (!base) throw std::overflow_error("Base outside Position range");
             result.push_back(*base);
         }
     }

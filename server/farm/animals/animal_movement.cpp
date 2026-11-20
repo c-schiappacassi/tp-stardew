@@ -7,7 +7,7 @@ AnimalMovement::AnimalMovement(const Position& position, const AnimalMovementCon
     position(position), config(config) {
     config.validate();
     if (position.getX() < 0 || position.getY() < 0) {
-        throw std::invalid_argument("Posicion de animal invalida");
+        throw std::invalid_argument("Invalid animal position");
     }
 }
 

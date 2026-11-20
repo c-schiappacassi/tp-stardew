@@ -6,7 +6,7 @@
 Enemy::Enemy(uint32_t id, EnemyType type, const Position& pos, const EnemyDefinition& definition):
         definition(definition) {
     if (id == 0 || type > EnemyType::Skull || definition.health == 0) {
-        throw std::invalid_argument("Enemigo invalido");
+        throw std::invalid_argument("Invalid enemy");
     }
     data.id = id;
     data.type = type;

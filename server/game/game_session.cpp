@@ -6,15 +6,15 @@ GameSession Game::createGame(const CreateGameDTO& dto,const std::shared_ptr<OutQ
     session.status.status = StatusCode::Error;
 
     if (configured) {
-        session.status.errorMsg = "La partida ya fue creada";
+        session.status.errorMsg = "The game has already been created";
         return session;
     }
     if (dto.gameName.empty()) {
-        session.status.errorMsg = "El nombre de la partida es obligatorio";
+        session.status.errorMsg = "The game name is required";
         return session;
     }
     if (!world.acceptsWorld(dto.worldId)) {
-        session.status.errorMsg ="La mazmorra cargada corresponde a otro mundo";
+        session.status.errorMsg ="The loaded dungeon belongs to another world";
         return session;
     }
 
@@ -29,7 +29,7 @@ GameSession Game::createGame(const CreateGameDTO& dto,const std::shared_ptr<OutQ
     data.hairColor = dto.hairColor;
     data.pantsColor = dto.pantsColor;
 
-    session = addPlayer(dto.userName, data, output, "Partida creada");
+    session = addPlayer(dto.userName, data, output, "Game created");
 
     if (session.status.status == StatusCode::Ok) {
         configured = true;
@@ -41,10 +41,11 @@ GameSession Game::createGame(const CreateGameDTO& dto,const std::shared_ptr<OutQ
 GameSession Game::joinGame(const JoinGameDTO& dto,const std::shared_ptr<OutQueue>& output) {
     std::lock_guard<std::mutex> lock(mtx);
 
-    if (!configured || dto.code != id) {
+    if (!configured || dto.code != id || community.finished()) {
         GameSession session{};
         session.status.status = StatusCode::Error;
-        session.status.errorMsg = "No existe una partida con ese codigo";
+        session.status.errorMsg = community.finished() ? "The game has already ended" :
+            "No game exists with that code";
         return session;
     }
 
@@ -56,7 +57,7 @@ GameSession Game::joinGame(const JoinGameDTO& dto,const std::shared_ptr<OutQueue
     data.hairColor = dto.hairColor;
     data.pantsColor = dto.pantsColor;
 
-    return addPlayer(dto.userName, data, output, "Te uniste a la partida");
+    return addPlayer(dto.userName, data, output, "You joined the game");
 }
 
 GameSession Game::addPlayer(const std::string& playerName,const PlayerData& data,const std::shared_ptr<OutQueue>& output,const std::string& successMsg) {
@@ -72,10 +73,12 @@ GameSession Game::addPlayer(const std::string& playerName,const PlayerData& data
     session.status.gameId = id;
     session.status.worldId = worldId;
     session.status.successMsg = successMsg;
+    session.status.gameCompleted = community.finished();
     session.gameId = id;
     session.playerId = session.status.playerId;
     session.worldId = worldId;
     session.input = input;
+    ++saveRequests;
 
     return session;
 }
@@ -86,19 +89,21 @@ GameSession Game::resumeGame(const ResumeGameDTO& dto, const std::shared_ptr<Out
     session.userName = dto.userName;
     session.status.status = StatusCode::Error;
     if (!configured || dto.gameId != id) {
-        session.status.errorMsg = "No existe esa partida";
+        session.status.errorMsg = "That game does not exist";
         return session;
     }
     session.status = playerManager.resumePlayer(dto.userName, output);
     if (session.status.status != StatusCode::Ok) return session;
     session.status.gameId = id;
     session.status.worldId = worldId;
-    session.status.successMsg = "Partida retomada";
+    session.status.successMsg = "Game resumed";
+    session.status.gameCompleted = community.finished();
     session.gameId = id;
     session.playerId = session.status.playerId;
     session.worldId = worldId;
     session.input = input;
     session.map = mapForSession();
+    ++saveRequests;
     return session;
 }
 

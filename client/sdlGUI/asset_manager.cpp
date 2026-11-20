@@ -95,6 +95,9 @@ AssetManager::AssetManager(SDL2pp::Renderer& renderer, const std::filesystem::pa
     load_trap_clips();
     load_projectile_clips();
     load_portals();
+    load_emotes();
+    load_interiors();
+    load_npcs();
 }
 
 void AssetManager::load_portals() {
@@ -103,6 +106,19 @@ void AssetManager::load_portals() {
 }
 
 const Sprite& AssetManager::get_sprite(PortalId id) const { return portal_sprites.at(id); }
+
+void AssetManager::load_interiors() {
+    for (const auto& d : SpriteDefs::INTERIORS)
+        interior_sprites.insert_or_assign(d.id, make_tile_sprite(d.rect));
+}
+
+void AssetManager::load_npcs() {
+    for (const auto& d : SpriteDefs::NPCS)
+        npc_sprites.insert_or_assign(d.id, make_standing_sprite(d.rect));
+}
+
+const Sprite& AssetManager::get_sprite(InteriorId id) const { return interior_sprites.at(id); }
+const Sprite& AssetManager::get_sprite(NpcId id) const { return npc_sprites.at(id); }
 
 void AssetManager::load_trap_clips() {
     register_clips(clips, SpriteDefs::SPIKE_SET, SpriteDefs::SPIKE_CLIPS, false);
@@ -174,12 +190,16 @@ void AssetManager::load_furniture_sprites() {
     for (const auto& d : SpriteDefs::FURNITURE) {
         const Sprite s = make_standing_sprite(d.rect);
         if (d.dir == Direction::None) {
-            for (const Direction dir : ALL) furniture_sprites.emplace(std::pair{d.id, dir}, s);
+            for (const Direction dir : ALL) furniture_sprites.emplace(std::pair{d.id, dir}, FlippableSprite{s, false});
         } else {
-            furniture_sprites.insert_or_assign({d.id, d.dir}, s);
+            furniture_sprites.insert_or_assign({d.id, d.dir}, FlippableSprite{s, false});
+            if (SpriteDefs::FURNITURE_MIRROR_LEFT && d.dir == Direction::Right) {
+                furniture_sprites.emplace(std::pair{d.id, Direction::Left}, FlippableSprite{s, true});
+            }
         }
     }
 }
+
 
 void AssetManager::load_farmer_clips() {
     register_clips(clips, SpriteDefs::FARMER_SET, SpriteDefs::FARMER_CLIPS, SpriteDefs::FARMER_MIRROR_LEFT, SpriteDefs::farmer_offsets);
@@ -262,8 +282,10 @@ const Sprite& AssetManager::get_sprite(ResourceType type, ResourceState state) c
 const Sprite& AssetManager::get_sprite(TileTextureId id) const { return tile_sprites.at(id); }
 const Sprite& AssetManager::get_sprite(DecorId id) const { return decor_sprites.at(id); }
 const Sprite& AssetManager::get_sprite(BuildingId id) const { return building_sprites.at(id); }
-const Sprite& AssetManager::get_sprite(FurnitureId id, Direction dir) const {  return furniture_sprites.at({id, dir});}
 
+const FlippableSprite& AssetManager::get_sprite(FurnitureId id, Direction dir) const {
+    return furniture_sprites.at({id, dir});
+}
 const SpriteId& AssetManager::get_sprite_id(AnimalType type) const {
     return animal_sprite_ids.at(type);
 }

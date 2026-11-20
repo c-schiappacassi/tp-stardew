@@ -28,6 +28,7 @@ ClientHandler::ClientHandler(Socket&& socket, GameManager& manager):
         {MessageType::SelectSlot, receiver(&ServerProtocol::receiveSelectSlot)},
         {MessageType::Interact,   receiver(&ServerProtocol::receiveInteract)},
         {MessageType::DayOk,      receiver(&ServerProtocol::receiveDayOk)},
+        {MessageType::DayCancel,  receiver(&ServerProtocol::receiveDayCancel)},
         {MessageType::UseItem,    receiver(&ServerProtocol::receiveUseItem)},
         {MessageType::Donate,     receiver(&ServerProtocol::receiveDonate)},
         {MessageType::Chat,       receiver(&ServerProtocol::receiveChat)},
@@ -51,7 +52,7 @@ ClientHandler::ClientHandler(Socket&& socket, GameManager& manager):
             reply.status = StatusCode::Ok;
             if (!this->manager.codeExists(dto.code)) {
                 reply.status = StatusCode::Error;
-                reply.errorMsg = "codigo invalido";
+                reply.errorMsg = "invalid code";
             }
             protocol.sendQtStatus(reply);
         }},
