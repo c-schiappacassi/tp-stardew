@@ -253,6 +253,9 @@ PlayerData ClientProtocol::receivePlayerData() {
     data.pantsColor = receiveColor();
     data.currentZone = static_cast<Zone>(base.receiveUint8());
     if (data.currentZone > Zone::InsideHouse) throw ProtocolError("Unknown zone");
+    if (data.currentZone == Zone::Dungeon) {
+        data.dungeonLevel = base.receiveUint8();
+    }
     if (data.currentZone == Zone::InsideHouse) {
         InteriorLocation inside;
         inside.interior_id = static_cast<InteriorId>(base.receiveUint8());

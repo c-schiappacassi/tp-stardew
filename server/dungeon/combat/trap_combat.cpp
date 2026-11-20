@@ -108,7 +108,7 @@ void trap_combat::update(CombatContext& context, DungeonRoom& room,const std::ve
                 continue;
             }
             if (trapBounds(trap.data).intersects(
-                        actor.player->getCollisionBounds(actor.player->getPosition()))) {
+                        actor.player->getHitboxBounds())) {
                 trap.nextHits[actor.id] = context.time + CombatTime{context.config.trapHitMs};
                 combat_damage::apply(context, *actor.player, actor.id, context.config.trapDamage,
                                      room);

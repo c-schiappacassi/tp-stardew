@@ -356,6 +356,11 @@ PlayerDataLocal PersistenceDeserializer::player(const toml::table& table) {
     result.energy = static_cast<uint16_t>(integer(table, "energy", 0, UINT16_MAX));
     result.maxEnergy = static_cast<uint16_t>(integer(table, "maxEnergy", 0, UINT16_MAX));
     result.zoneData = zone(requiredTable(table, "zoneData"));
+    if (table.contains("dungeonLevel")) {
+        result.dungeonLevel = static_cast<uint8_t>(integer(table, "dungeonLevel", 0, UINT8_MAX));
+    } else if (const auto* mineData = std::get_if<MineData>(&result.zoneData)) {
+        result.dungeonLevel = mineData->current_level;
+    }
     result.combatProgress = combatProgress(requiredTable(table, "combatProgress"));
     for (const auto& node : requiredArray(table, "newMessages")) {
         if (!node.is_table()) throw std::runtime_error("Invalid chat message");

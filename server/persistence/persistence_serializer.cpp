@@ -223,6 +223,7 @@ toml::table PersistenceSerializer::player(const PlayerDataLocal& value) {
     result.insert("hairColor", color(value.hairColor));
     result.insert("pantsColor", color(value.pantsColor));
     result.insert("currentZone", static_cast<int64_t>(value.currentZone));
+    result.insert("dungeonLevel", static_cast<int64_t>(value.dungeonLevel));
     if (value.interior) {
         result.insert("interior", toml::table{
             {"interiorId", static_cast<int64_t>(value.interior->interior_id)},

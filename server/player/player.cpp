@@ -27,6 +27,7 @@ Player::Player(
         dir(initialData.dir),
         zone(initialData.currentZone),
         interior(initialData.interior),
+        dungeonLevel(initialData.dungeonLevel),
         hairModel(initialData.hairModel),
         shirtModel(initialData.shirtModel),
         pantsModel(initialData.pantsModel),
@@ -117,6 +118,7 @@ PlayerData Player::getPublicData() const {
     data.state = state;
     data.dir = dir;
     data.currentZone = zone;
+    data.dungeonLevel = dungeonLevel;
     data.interior = interior;
     const Stack* item = getSelectedItem();
     if (item != nullptr) {
@@ -248,6 +250,14 @@ CollisionBounds Player::getCollisionBounds(const Position& position) const {
 Position Player::getCollisionCenter() const {
      return getCollisionBounds(pos).center(); 
     }
+
+CollisionBounds Player::getHitboxBounds() const {
+    return config.hitbox.at(pos);
+}
+
+Position Player::getHitboxCenter() const {
+    return getHitboxBounds().center();
+}
 
 bool Player::canAct() const {
     return(state == PlayerState::Idle ||state == PlayerState::Walking) &&health > 0 &&energy > 0;
@@ -456,6 +466,7 @@ void Player::restoreData(const PlayerDataLocal& saved) {
     dir = saved.dir;
     movementDirection = Direction::None;
     zone = saved.currentZone;
+    dungeonLevel = saved.dungeonLevel;
     interior = saved.interior;
     hairModel = saved.hairModel;
     shirtModel = saved.shirtModel;

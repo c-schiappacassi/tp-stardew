@@ -11,7 +11,7 @@ class PlayerStatus {
 private:
     const ZoneDataSource& zones;
 
-    void fillPublicData(ServerStatus& status,const std::map<uint16_t, PlayerRecord>& players,const PlayerRecord& recipient) const;
+    void fillPublicData(ServerStatus& status,const std::map<uint16_t, PlayerRecord>& players) const;
     void completeLocalData(ServerStatus& status,const PlayerRecord& record,bool includeBroken,const DayCycle* day) const;
 
 public:

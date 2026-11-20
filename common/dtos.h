@@ -280,6 +280,7 @@ struct PlayerData{
     Color hairColor{0, 0, 0};
     Color pantsColor{0, 0, 0};
     Zone currentZone = Zone::Farm;
+    uint8_t dungeonLevel = 0;
     std::optional<InteriorLocation> interior;
     std::optional<ItemId> heldItem;
 };
@@ -456,7 +457,7 @@ struct ServerStatus {
     std::string gameId;
     uint16_t playerId = 0;
     uint8_t worldId = 0;
-    std::map<std::string, PlayerData> players;
+    std::map<std::string, PlayerData> players; // All connected players, regardless of location.
     PlayerDataLocal localPlayer;
     bool dayEnded = false;
     bool dayConfirmationRequired = false;

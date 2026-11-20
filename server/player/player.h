@@ -61,6 +61,8 @@ public:
     const Position& getPosition() const;
     CollisionBounds getCollisionBounds(const Position& position) const;
     Position getCollisionCenter() const;
+    CollisionBounds getHitboxBounds() const;
+    Position getHitboxCenter() const;
     bool canAct() const;
     bool canBeAttacked() const;
     bool isResting() const;

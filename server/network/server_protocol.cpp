@@ -240,6 +240,9 @@ void ServerProtocol::writePlayerData(MessageBuffer& out, const PlayerData& data)
     writeColor(out, data.hairColor);
     writeColor(out, data.pantsColor);
     out.putUint8(static_cast<uint8_t>(data.currentZone));
+    if (data.currentZone == Zone::Dungeon) {
+        out.putUint8(data.dungeonLevel);
+    }
     if (data.currentZone == Zone::InsideHouse) {
         if (!data.interior || data.interior->interior_id > InteriorId::ComunityCenter) {
             throw ProtocolError("Unknown interior location");
