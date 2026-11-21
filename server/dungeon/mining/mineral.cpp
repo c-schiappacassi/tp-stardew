@@ -1,9 +1,10 @@
 #include "mineral.h"
 #include "entities/collision_box.h"
 
+#include <algorithm>
 #include <stdexcept>
 
-Mineral::Mineral(EntityId id,const Position& pos,ResourceType type,uint16_t hitsToBreak): id(id),pos(pos),type(type),remainingHits(hitsToBreak) {
+Mineral::Mineral(EntityId id,const Position& pos,ResourceType type,uint16_t hitsToBreak): id(id),pos(pos),type(type),remainingDurability(static_cast<uint32_t>(hitsToBreak) * 2) {
     if (id == 0) {
         throw std::invalid_argument("EntityId must be nonzero");
     }
@@ -26,16 +27,16 @@ ResourceType Mineral::getType() const {
 }
 
 bool Mineral::isDepleted() const {
-    return remainingHits == 0;
+    return remainingDurability == 0;
 }
 
-bool Mineral::hit() {
+bool Mineral::hit(uint16_t power) {
     if (isDepleted()) {
         return false;
     }
 
-    --remainingHits;
-    return remainingHits == 0;
+    remainingDurability -= std::min<uint32_t>(remainingDurability, power);
+    return isDepleted();
 }
 
 MineralState Mineral::getState() const {

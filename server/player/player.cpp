@@ -175,8 +175,7 @@ bool Player::useTool(std::chrono::steady_clock::time_point now) {
     const ItemId item = getSelectedItem()->item_id;
     const ToolConfig& tool = config.tools.at(item);
     const Direction toolDirection = dir;
-    if (!beginAction(tool.energyCost, std::chrono::milliseconds{tool.intervalMs}, now,
-                     item != ItemId::Sword)) {
+    if (!performAction(tool.energyCost, std::chrono::milliseconds{tool.intervalMs}, now)) {
         return false;
     }
     if (state != PlayerState::Unconscious) {
@@ -192,11 +191,6 @@ bool Player::canPerformAction(std::chrono::steady_clock::time_point now) const {
 
 bool Player::performAction(uint16_t energyCost, std::chrono::milliseconds interval,
                            std::chrono::steady_clock::time_point now) {
-    return beginAction(energyCost, interval, now, true);
-}
-
-bool Player::beginAction(uint16_t energyCost, std::chrono::milliseconds interval,
-                         std::chrono::steady_clock::time_point now, bool healthAffectsInterval) {
     if (!canPerformAction(now) || interval.count() < 0) {
         return false;
     }
@@ -207,7 +201,7 @@ bool Player::beginAction(uint16_t energyCost, std::chrono::milliseconds interval
         energy -= energyCost;
     }
 
-    nextActionTime = now + interval * (healthAffectsInterval && hasLowHealth() ? 2 : 1);
+    nextActionTime = now + interval;
     if (energy == 0) {
         passOut();
     } else {
@@ -308,6 +302,10 @@ uint16_t Player::getSwordDamage() const {
         return std::max<uint16_t>(1, config.swordDamage / 2);
     }
     return config.swordDamage;
+}
+
+uint16_t Player::getMiningPower() const {
+    return hasLowHealth() ? 1 : 2;
 }
 
 uint16_t Player::getSwordRange() const { return config.swordRange; }

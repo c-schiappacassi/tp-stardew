@@ -35,8 +35,6 @@ private:
     bool bedReady = true;
 
     bool hasLowHealth() const;
-    bool beginAction(uint16_t energyCost, std::chrono::milliseconds interval,
-                     std::chrono::steady_clock::time_point now, bool healthAffectsInterval);
 
 public:
     Player(const PlayerData& initialData, uint8_t inventoryCapacity, uint16_t maxHealth,
@@ -76,6 +74,7 @@ public:
     const std::optional<InteriorLocation>& getInterior() const;
     uint16_t receiveDamage(uint16_t damage, std::chrono::steady_clock::time_point now);
     uint16_t getSwordDamage() const;
+    uint16_t getMiningPower() const;
     uint16_t getSwordRange() const;
     uint32_t addGold(uint32_t amount);
     uint32_t getGold() const;
