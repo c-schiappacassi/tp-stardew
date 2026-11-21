@@ -7,12 +7,12 @@
 #include <SDL2/SDL.h>
 #include <SDL2pp/SDL2pp.hh>
 
-#include "../clip_player.h"
-#include "entity_view.h"
-#include "lighting.h"
-#include "../draw_region.h"
-#include "../render_info.h"
-#include "../utils.h"
+#include "../../clip_player.h"
+#include "../entity_view.h"
+#include "../lighting.h"
+#include "../../draw_region.h"
+#include "../../render_info.h"
+#include "../../utils.h"
 
 #include "constants.h"
 #include "protocol_types.h"
@@ -67,7 +67,8 @@ private:
     std::optional<ItemId> held_item;
     std::optional<ItemId> current_tool;
     std::string name;
-
+    uint16_t health = 0;
+    
     uint16_t shirt_model = 0;
     uint16_t pant_model = 0;
     uint16_t hair_model = 0;

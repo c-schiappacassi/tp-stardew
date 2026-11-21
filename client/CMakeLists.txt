@@ -7,13 +7,14 @@ target_sources(taller_client
     game_ui.cpp
     sdlGUI/asset_manager.cpp
 
-    sdlGUI/world/player_view.cpp
-    sdlGUI/world/furniture_view.cpp
-    sdlGUI/world/item_view.cpp
+    sdlGUI/world/background/furniture_view.cpp
+    sdlGUI/world/background/item_view.cpp
 
     sdlGUI/world/hud/hotbar_view.cpp
     sdlGUI/world/hud/bar_view.cpp
     sdlGUI/world/hud/minimap_view.cpp
+
+    sdlGUI/world/player/player_view.cpp
 
     sdlGUI/world/mines/ore_view.cpp
     sdlGUI/world/mines/level_view.cpp
@@ -57,16 +58,18 @@ target_sources(taller_client
     sdlGUI/ui/layers/minimap_layer.h
     sdlGUI/ui/layers/night_sky_layer.h
 
-    sdlGUI/world/player_view.h
     sdlGUI/world/lighting.h
     sdlGUI/world/world_view.h
     sdlGUI/world/map_view.h
     sdlGUI/world/zone_view.h
-    sdlGUI/world/item_view.h
     sdlGUI/world/entity_view.h
-    sdlGUI/world/furniture_view.h
-    sdlGUI/world/background.h
-    sdlGUI/world/background_zone_view.h
+
+    sdlGUI/world/background/item_view.h
+    sdlGUI/world/background/furniture_view.h
+    sdlGUI/world/background/background.h
+    sdlGUI/world/background/background_zone_view.h
+
+    sdlGUI/world/player/player_view.h
 
     sdlGUI/world/interiors/interior_view.h
     sdlGUI/world/interiors/interiors_view.h

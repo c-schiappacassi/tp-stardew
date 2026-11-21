@@ -3,7 +3,7 @@
 #include <cstdint>
 #include <vector>
 
-#include "../background_zone_view.h"
+#include "../background/background_zone_view.h"
 #include "../lighting.h"   
 
 class TownView : public BackgroundZoneView {

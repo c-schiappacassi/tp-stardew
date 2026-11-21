@@ -10,7 +10,7 @@
 #include "lighting.h"
 
 #include "map_view.h"
-#include "player_view.h"
+#include "player/player_view.h"
 
 class WorldView {
 private:

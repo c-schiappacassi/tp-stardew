@@ -46,7 +46,7 @@ void PlayerView::update(const PlayerData& data) {
     shirt_model = data.shirtModel;
     pant_model = data.pantsModel;
     pant_color = to_sdl(data.pantsColor);
-
+    health = data.health;
     if (data.heldItem != held_item) {
         clip_player.reset();
     }

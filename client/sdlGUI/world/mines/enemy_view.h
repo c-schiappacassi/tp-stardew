@@ -17,6 +17,7 @@ private:
     Direction facing = Direction::Down;
     EnemyState state;
     bool frenzied = false;
+    uint16_t heath;
     
     ClipPlayer clip_player;
 public: 

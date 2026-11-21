@@ -40,7 +40,7 @@ void EnemyView::update(const EnemySnapshot& data) {
     type = data.type;
     state = data.state;
     frenzied = data.frenzied && data.state != EnemyState::Dead;
-
+    heath = data.health;
     if (data.dir != Direction::None) {
         facing = data.dir;
     }

@@ -4,7 +4,7 @@
 #include <optional>
 #include <unordered_map>
 
-#include "../background_zone_view.h"
+#include "../background/background_zone_view.h"
 #include "../../camera.h"
 #include "../../sync_views.h"
 #include "../../render_info.h"

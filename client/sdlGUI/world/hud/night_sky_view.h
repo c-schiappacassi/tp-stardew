@@ -7,7 +7,6 @@ class NightSkyView {
 private: 
     static constexpr int FADE_STEP = 8;
     int alpha = 0; 
-    const Sprite& sprite_sky;
 
 public:
     bool visible() const { return alpha > 0; }

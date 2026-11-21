@@ -6,9 +6,9 @@
 #include <utility>
 #include <vector>
 
-#include "../background_zone_view.h"
-#include "../furniture_view.h"
-#include "../item_view.h"
+#include "../background/background_zone_view.h"
+#include "../background/furniture_view.h"
+#include "../background/item_view.h"
 #include "../../sync_views.h"
 #include "../../draw_region.h"
 #include "../lighting.h"   

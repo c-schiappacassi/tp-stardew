@@ -1,8 +1,7 @@
 #pragma once
-#include "../background_zone_view.h"
-#include "../furniture_view.h"
+#include "../background/background_zone_view.h"
+#include "../background/furniture_view.h"
 #include "../../sync_views.h"
-
 
 class InteriorView : public BackgroundZoneView {
     std::unordered_map<uint32_t, FurnitureView> furniture;
