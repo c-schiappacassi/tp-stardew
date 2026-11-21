@@ -29,7 +29,7 @@ inline char printable_char(Key key) {
 enum class MouseButton : uint8_t { Left, Middle, Right, Other };
 
 struct InputEvent {
-    enum class Type : uint8_t { KeyDown, KeyUp, Text, MouseDown, MouseUp, MouseWheel, FocusLost, Quit };
+    enum class Type : uint8_t { KeyDown, KeyUp, Text, MouseDown, MouseUp, MouseWheel, FocusLost, Quit, Paste };
 
     Type type = Type::Quit;
     Key key = Key::Unknown;
@@ -79,6 +79,12 @@ struct InputEvent {
         InputEvent e;
         e.type = Type::MouseWheel;
         e.y_wheel = amount;
+        return e;
+    }
+    static InputEvent paste(std::string text) {
+        InputEvent e;
+        e.type = Type::Paste;
+        e.text = std::move(text);
         return e;
     }
     static InputEvent focus_lost() {
