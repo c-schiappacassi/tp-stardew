@@ -31,6 +31,7 @@ private:
     std::map<PortalId, Sprite> portal_sprites;
     std::map<InteriorId, Sprite> interior_sprites;
     std::map<NpcId, Sprite> npc_sprites;
+    std::map<Quality, Sprite> quality_sprites;
 
     SDL2pp::Texture load_texture(SDL2pp::Renderer& renderer, const std::filesystem::path& path);
     void load_sprites_texture(SDL2pp::Renderer& renderer, const std::filesystem::path& assets_root);
@@ -57,6 +58,7 @@ private:
     void load_portals();
     void load_interiors();
     void load_npcs();
+    void load_qualitys();
 
 public:
     AssetManager(SDL2pp::Renderer& renderer, const std::filesystem::path& assets_root);
@@ -78,6 +80,7 @@ public:
     const Sprite& get_sprite(PortalId id) const;
     const Sprite& get_sprite(InteriorId id) const;
     const Sprite& get_sprite(NpcId id) const;
+    const Sprite& get_sprite(Quality type) const;
 
     const SpriteId& get_sprite_id(AnimalType type) const;
     const ToolFrame* find_tool_frame(ItemId item, Direction dir, std::size_t frame_index) const;

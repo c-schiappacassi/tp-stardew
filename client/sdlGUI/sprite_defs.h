@@ -57,6 +57,8 @@ namespace Dimentions {
     constexpr uint16_t FLAME_COLS   = 7;
     constexpr uint16_t FLAME_CELL_W = 8;
     constexpr uint16_t FLAME_CELL_H = 8;
+
+    constexpr uint16_t QUALITY_SIZE = 8;
 }
 
 namespace SpriteDefs {
@@ -179,6 +181,15 @@ namespace SpriteDefs {
         {CropType::Scallion,   CropState::Sprouting,    48,  61},
         {CropType::Scallion,   CropState::Growing,      64,  61},
         {CropType::Scallion,   CropState::Ready,        80,  61},
+    };
+
+    // Quality
+    struct QualityDef { Quality type; uint16_t x, y; };
+    inline constexpr QualityDef QUALITYS[] = {
+        {Quality::Good,   330, 392},
+        {Quality::Excellent,   338, 392},
+        {Quality::Incredible,   346, 392},
+        {Quality::Perfect,   354, 392},
     };
 
     // Map background

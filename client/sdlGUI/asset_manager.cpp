@@ -98,6 +98,7 @@ AssetManager::AssetManager(SDL2pp::Renderer& renderer, const std::filesystem::pa
     load_emotes();
     load_interiors();
     load_npcs();
+    load_qualitys();
 }
 
 void AssetManager::load_portals() {
@@ -145,6 +146,15 @@ void AssetManager::load_ore_sprites() {
             Sprite{SpriteId::Ores, d.x, d.y, Dimentions::ORE_SIZE, Dimentions::ORE_SIZE,
                    -Dimentions::ORE_SIZE / 2, -Dimentions::ORE_SIZE});
 }
+
+void AssetManager::load_qualitys() {
+    for (const auto& d : SpriteDefs::QUALITYS)
+        quality_sprites.insert_or_assign(
+            d.type,
+            Sprite{SpriteId::Cursors, d.x, d.y, Dimentions::QUALITY_SIZE, Dimentions::QUALITY_SIZE,
+                   -Dimentions::QUALITY_SIZE / 2, -Dimentions::QUALITY_SIZE});
+}
+
 
 void AssetManager::load_crop_sprites() {
     for (const auto& d : SpriteDefs::CROPS)
@@ -272,6 +282,10 @@ const Sprite& AssetManager::get_sprite(ItemId id) const { return item_sprites.at
 const Sprite& AssetManager::get_sprite(UiSpriteId id) const { return ui_sprites.at(id); }
 
 const Sprite& AssetManager::get_sprite(EmoteId id) const { return emote_sprites.at(id); }
+
+const Sprite& AssetManager::get_sprite(Quality type) const {
+    return quality_sprites.at(type);
+};
 
 const Sprite& AssetManager::get_sprite(CropType type, CropState state) const { return crop_sprites.at({type, state}); }
 
