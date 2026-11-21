@@ -185,7 +185,8 @@ void FarmManager::restoreData(const FarmData& saved,
     const std::map<uint32_t, uint64_t>& water,
     const std::map<uint32_t, bool>& harvested,
     const std::map<uint32_t, uint64_t>& production,
-    const std::map<uint32_t, uint32_t>& products) {
+    const std::map<uint32_t, uint32_t>& products,
+    const std::map<uint32_t, bool>& regrowing) {
     if (!initialized) throw std::runtime_error("Farm not initialized");
     cropManager = CropManager(config);
     animalManager = AnimalManager(config, seed);
@@ -200,12 +201,14 @@ void FarmManager::restoreData(const FarmData& saved,
         const auto g = growth.find(data.id);
         const auto w = water.find(data.id);
         const auto h = harvested.find(data.id);
+        const auto r = regrowing.find(data.id);
         if (g == growth.end() || w == water.end() || h == harvested.end() ||
             g->second > static_cast<uint64_t>(INT64_MAX) ||
             w->second > static_cast<uint64_t>(INT64_MAX)) throw std::runtime_error("Missing crop progress");
         cropManager.findMutable(data.id)->restoreProgress(
             std::chrono::milliseconds{static_cast<int64_t>(g->second)},
-            std::chrono::milliseconds{static_cast<int64_t>(w->second)}, h->second);
+            std::chrono::milliseconds{static_cast<int64_t>(w->second)}, h->second,
+            r != regrowing.end() && r->second);
     }
     for (const AnimalData& data : saved.animals) {
         if (!addAnimal(data.id, data.pos, data.type)) throw std::runtime_error("Failed to restore animal");

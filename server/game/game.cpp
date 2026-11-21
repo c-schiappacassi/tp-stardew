@@ -94,6 +94,7 @@ PersistenceDTO Game::buildPersistenceData() const {
         snapshot.cropGrowthProgress[cropId] = static_cast<uint64_t>(growth);
         snapshot.cropWaterRemainingTime[cropId] = static_cast<uint64_t>(water);
         snapshot.harvestedCrops[cropId] = crop.isHarvested();
+        snapshot.regrowingCrops[cropId] = crop.isRegrowing();
     }
 
     for (const Animal* animal : farm.getAnimals()) {

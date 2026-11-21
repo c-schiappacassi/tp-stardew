@@ -438,6 +438,9 @@ PersistenceDTO PersistenceDeserializer::deserializeGame(const toml::table& table
     result.cropGrowthProgress = uint64Map(requiredTable(table, "cropGrowthProgress"));
     result.cropWaterRemainingTime = uint64Map(requiredTable(table, "cropWaterRemainingTime"));
     result.harvestedCrops = boolMap(requiredTable(table, "harvestedCrops"));
+    if (table.contains("regrowingCrops")) {
+        result.regrowingCrops = boolMap(requiredTable(table, "regrowingCrops"));
+    }
     result.animalProductionProgress = uint64Map(requiredTable(table, "animalProductionProgress"));
     result.animalAvailableProducts = uint32Map(requiredTable(table, "animalAvailableProducts"));
     result.communityCenterActionProgress = communityProgress(

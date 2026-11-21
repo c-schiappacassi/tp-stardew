@@ -315,6 +315,7 @@ toml::table PersistenceSerializer::serialize(const PersistenceDTO& dto) {
     result.insert("cropGrowthProgress", uint64Map(dto.cropGrowthProgress));
     result.insert("cropWaterRemainingTime", uint64Map(dto.cropWaterRemainingTime));
     result.insert("harvestedCrops", boolMap(dto.harvestedCrops));
+    result.insert("regrowingCrops", boolMap(dto.regrowingCrops));
     result.insert("animalProductionProgress", uint64Map(dto.animalProductionProgress));
     result.insert("animalAvailableProducts", uint32Map(dto.animalAvailableProducts));
     result.insert("communityCenterActionProgress", communityProgress(dto.communityCenterActionProgress));
