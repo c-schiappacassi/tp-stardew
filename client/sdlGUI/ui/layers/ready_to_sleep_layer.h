@@ -38,6 +38,8 @@ public:
     bool visible() const override { return open; }
     FocusWish focus_wish() const override { return wish; }
 
+    bool waiting() const { return open && confirmed; }
+
     void update(const State& state) override {
         wish = FocusWish::None;
         const bool required = state.day_confirmation_required();

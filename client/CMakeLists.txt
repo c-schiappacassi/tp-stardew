@@ -55,6 +55,7 @@ target_sources(taller_client
     sdlGUI/ui/layers/hud_layer.h
     sdlGUI/ui/layers/quit_layer.h
     sdlGUI/ui/layers/minimap_layer.h
+    sdlGUI/ui/layers/night_sky_layer.h
 
     sdlGUI/world/player_view.h
     sdlGUI/world/lighting.h
@@ -77,6 +78,7 @@ target_sources(taller_client
     sdlGUI/world/hud/hotbar_view.h
     sdlGUI/world/hud/bar_view.h
     sdlGUI/world/hud/ready_to_sleep_view.h
+    sdlGUI/world/hud/night_sky_view.h
     sdlGUI/world/hud/quit_view.h
     sdlGUI/world/hud/pixel_font.h
     sdlGUI/world/hud/chat_pixel_font.h

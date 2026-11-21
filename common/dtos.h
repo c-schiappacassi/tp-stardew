@@ -284,7 +284,7 @@ struct PlayerData{
     std::optional<InteriorLocation> interior;
     std::optional<ItemId> heldItem;
     uint16_t health = 0;
-    uint16_t maxHealth = 0;
+    uint16_t maxHealth = 0; //  max no hace falta
 };
 
 struct GameInfoDTO {

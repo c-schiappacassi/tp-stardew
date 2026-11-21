@@ -118,9 +118,6 @@ void AssetManager::load_npcs() {
         npc_sprites.insert_or_assign(d.id, make_standing_sprite(d.rect));
 }
 
-const Sprite& AssetManager::get_sprite(InteriorId id) const { return interior_sprites.at(id); }
-const Sprite& AssetManager::get_sprite(NpcId id) const { return npc_sprites.at(id); }
-
 void AssetManager::load_trap_clips() {
     register_clips(clips, SpriteDefs::SPIKE_SET, SpriteDefs::SPIKE_CLIPS, false);
     register_rect_clips(clips, SpriteId::WallFlameTrap, SpriteDefs::WALL_FLAME_CLIPS, true);
@@ -210,7 +207,6 @@ void AssetManager::load_furniture_sprites() {
     }
 }
 
-
 void AssetManager::load_farmer_clips() {
     register_clips(clips, SpriteDefs::FARMER_SET, SpriteDefs::FARMER_CLIPS, SpriteDefs::FARMER_MIRROR_LEFT, SpriteDefs::farmer_offsets);
 }
@@ -281,6 +277,10 @@ const Sprite& AssetManager::get_sprite(ItemId id) const { return item_sprites.at
 
 const Sprite& AssetManager::get_sprite(UiSpriteId id) const { return ui_sprites.at(id); }
 
+const Sprite& AssetManager::get_sprite(InteriorId id) const { return interior_sprites.at(id); }
+
+const Sprite& AssetManager::get_sprite(NpcId id) const { return npc_sprites.at(id); }
+
 const Sprite& AssetManager::get_sprite(EmoteId id) const { return emote_sprites.at(id); }
 
 const Sprite& AssetManager::get_sprite(Quality type) const {
@@ -294,7 +294,9 @@ const Sound& AssetManager::get_sound(SoundId id) const { return sounds.at(id); }
 const Sprite& AssetManager::get_sprite(ResourceType type, ResourceState state) const { return ore_sprites.at({type, state});}
 
 const Sprite& AssetManager::get_sprite(TileTextureId id) const { return tile_sprites.at(id); }
+
 const Sprite& AssetManager::get_sprite(DecorId id) const { return decor_sprites.at(id); }
+
 const Sprite& AssetManager::get_sprite(BuildingId id) const { return building_sprites.at(id); }
 
 const FlippableSprite& AssetManager::get_sprite(FurnitureId id, Direction dir) const {

@@ -82,7 +82,8 @@ enum class SpriteId : uint16_t {
     Robin,
     
     Harvest,
-    Craftables
+    Craftables,
+    NightSky
 };
 
 enum class UiSpriteId : uint8_t {
@@ -100,6 +101,7 @@ enum class UiSpriteId : uint8_t {
     PlayerHead,
     InfoSing,
     InfoSingArrow,
+    NightSky
 };
 
 struct Drawable {

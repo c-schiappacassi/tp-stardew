@@ -74,6 +74,7 @@ namespace SpriteDefs {
         {SpriteId::ChatBox,      "menus/chat_box.png"},
         {SpriteId::Minimap, "minimaps/placeholder_minimap.jpg"},
         {SpriteId::InfoSing, "menus/clock.png"},
+        {SpriteId::NightSky, "menus/night_sky.png"},
 
         // farmer
         {SpriteId::FarmerBase,   "characters/farmer_base.png"},
@@ -406,6 +407,7 @@ namespace SpriteDefs {
         {UiSpriteId::PlayerHead, SpriteId::FarmerBase, 0, 0, 16, 15},
         {UiSpriteId::InfoSing, SpriteId::InfoSing, 0, 0, 72, 59},
         {UiSpriteId::InfoSingArrow, SpriteId::InfoSing, 72, 0, 7, 19},
+        {UiSpriteId::NightSky, SpriteId::NightSky, 0, 0, 480, 256},
     };
 
     // Clips
