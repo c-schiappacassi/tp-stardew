@@ -15,6 +15,8 @@
 #define TILE_TO_PIXEL 16
 
 enum class SpriteId : uint16_t {
+    PlaceHolder,
+    
     FarmerBase,
     Hairstyles,
     Pants,

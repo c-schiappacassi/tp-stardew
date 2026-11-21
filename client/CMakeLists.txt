@@ -5,7 +5,8 @@ target_sources(taller_client
     client_protocol.cpp
     game.cpp
     game_ui.cpp
-    sdlGUI/asset_manager.cpp
+    sdlGUI/asset_handling/asset_manager.cpp
+    sdlGUI/asset_handling/asset_loader.cpp
 
     sdlGUI/world/background/furniture_view.cpp
     sdlGUI/world/background/item_view.cpp
@@ -35,7 +36,7 @@ target_sources(taller_client
     send_thread.h
     state.h
     
-    sdlGUI/asset_manager.h
+
     sdlGUI/render_info.h
     sdlGUI/utils.h
     sdlGUI/animator.h
@@ -43,7 +44,11 @@ target_sources(taller_client
     sdlGUI/camera.h
     sdlGUI/sync_views.h
     sdlGUI/draw_region.h
-    sdlGUI/sprite_defs.h
+
+    sdlGUI/asset_handling/sprite_defs.h
+    sdlGUI/asset_handling/asset_manager.h
+    sdlGUI/asset_handling/asset_loader.h
+    sdlGUI/asset_handling/asset_tables.h
 
     sdlGUI/ui/input_event.h
     sdlGUI/ui/sdl_input.h

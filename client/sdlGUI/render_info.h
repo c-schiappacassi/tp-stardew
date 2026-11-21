@@ -3,7 +3,7 @@
 
 #include "../state.h"
 
-#include "asset_manager.h"
+#include "asset_handling/asset_manager.h"
 #include "camera.h"
 
 struct RenderInfo {

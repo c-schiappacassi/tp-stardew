@@ -4,7 +4,7 @@
 #include <initializer_list>
 #include "dtos.h"
 #include "protocol_types.h"
-#include "utils.h"
+#include "../utils.h"
 
 // TODO: organizar mejor este archivo
 
@@ -67,6 +67,9 @@ namespace SpriteDefs {
     struct TextureDef { SpriteId id; const char* path; };
 
     inline constexpr TextureDef TEXTURES[] = {
+        // placeholder para missing sprites
+        {SpriteId::PlaceHolder, "placeholder.png"},
+
         // ui
         {SpriteId::MenuTiles,    "menus/menutiles.png"},
         {SpriteId::Cursors,      "menus/cursors.png"},

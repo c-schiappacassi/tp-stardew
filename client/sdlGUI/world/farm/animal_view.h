@@ -12,8 +12,8 @@
 #include "dtos.h"
 
 namespace dimentions {
-    const int COW_H = 32;
-    const int CHICKEN_H = 16;
+    constexpr int COW_H = 32;
+    constexpr int CHICKEN_H = 16;
 }
 
 class AnimalView: public EntityView {

@@ -8,7 +8,7 @@
 #include <SDL2pp/SDL2pp.hh>
 
 #include "dtos.h"
-#include "sdlGUI/asset_manager.h"
+#include "sdlGUI/asset_handling/asset_manager.h"
 #include "sdlGUI/camera.h"
 #include "sdlGUI/world/world_view.h"
 #include "state.h"

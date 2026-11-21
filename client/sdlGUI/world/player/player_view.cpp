@@ -65,9 +65,7 @@ void PlayerView::draw_layers_in_order(const RenderInfo& ctx, const farmer::DrawP
 
     auto tool = [&]() {
         if (state != PlayerState::UsingTool || !held_item) return;
-        if (const ToolFrame* tf = ctx.assets.find_tool_frame(*held_item, facing, d.frame_index)) {
-            draw_tool_layer(ctx, *tf, d.anchor, d.flip);
-        }
+        draw_tool_layer(ctx, ctx.assets.get_tool_frame(*held_item, facing, d.frame_index), d.anchor, d.flip);
     };
 
     const bool arms_behind = (facing == Direction::Up);
