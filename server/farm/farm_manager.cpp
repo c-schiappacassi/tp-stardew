@@ -143,6 +143,10 @@ std::optional<FarmProduct> FarmManager::collectFromAnimal(EntityId id) {
     return animalManager.collect(id);
 }
 
+bool FarmManager::dropAnimalProduct(EntityId id, EntityIdGenerator& entityIds) {
+    return animalManager.dropProduction(id, groundItems, entityIds);
+}
+
 bool FarmManager::placeDecoration(EntityId id, const Position& position, ItemId item, Direction direction) {
     return decorationManager.place(id, position, item, space, direction);
 }

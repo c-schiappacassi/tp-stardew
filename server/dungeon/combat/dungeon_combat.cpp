@@ -24,7 +24,7 @@ bool hasSkull(const DungeonRoom& room) {
 }
 }
 
-DungeonCombat::DungeonCombat(const EnemyConfig& config, uint32_t seed):config(config), generator(config, seed) {}
+DungeonCombat::DungeonCombat(const EnemyConfig& config, uint32_t seed):config(config), generator(config, seed), trapRandom(seed) {}
 
 bool DungeonCombat::initialize(std::map<uint8_t, DungeonRoom>& rooms,const std::map<uint8_t, DungeonRoomLayout>& data,EntityIdGenerator& ids) {
     if (rooms.empty() || rooms.size() != data.size()) {
@@ -51,6 +51,7 @@ bool DungeonCombat::regenerate(std::map<uint8_t, DungeonRoom>& rooms, EntityIdGe
     auto preparedRooms = rooms;
     auto preparedIds = ids;
     auto preparedGenerator = generator;
+    auto preparedTrapRandom = trapRandom;
     for (auto& [number, room]: preparedRooms) {
         const auto& layout = layouts.at(number);
         if (layout.traps.size() > 256 ||
@@ -58,13 +59,14 @@ bool DungeonCombat::regenerate(std::map<uint8_t, DungeonRoom>& rooms, EntityIdGe
             return false;
         }
         if (!preparedGenerator.populate(room, preparedIds, layout.reservedPositions) ||
-            !trap_combat::populate(room, layout, config, preparedIds)) {
+            !trap_combat::populate(room, layout, config, preparedIds, preparedTrapRandom)) {
             return false;
         }
     }
     rooms = std::move(preparedRooms);
     ids = preparedIds;
     generator = std::move(preparedGenerator);
+    trapRandom = preparedTrapRandom;
     ++visit;
     visitEnded = false;
     progress.newVisit();

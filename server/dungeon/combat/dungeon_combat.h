@@ -18,6 +18,7 @@ private:
 
     EnemyConfig config;
     EnemyGenerator generator;
+    std::mt19937 trapRandom;
     CombatProgress progress;
     CombatTime clock{0};
     uint32_t visit = 0;

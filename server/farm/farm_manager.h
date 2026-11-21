@@ -59,6 +59,7 @@ public:
     bool waterCrop(EntityId id);
     std::optional<FarmProduct> harvestCrop(EntityId id, double luck = 1.0);
     std::optional<FarmProduct> collectFromAnimal(EntityId id);
+    bool dropAnimalProduct(EntityId id, EntityIdGenerator& entityIds);
     void update(std::chrono::milliseconds elapsed, EntityIdGenerator& entityIds);
     void finishDay(std::chrono::milliseconds remainingTime, EntityIdGenerator& entityIds);
     std::size_t careCrops();

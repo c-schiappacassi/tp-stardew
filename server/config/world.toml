@@ -401,6 +401,8 @@ gold_max = 10
 [spawns]
 safety_range = 64
 skeletons_per_room = 1
+spikes_per_room = 1
+wall_flames_per_room = 1
 orc_group_every = 3
 vampire_pair_every = 4
 skull_every = 5

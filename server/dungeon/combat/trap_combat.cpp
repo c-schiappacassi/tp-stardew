@@ -1,5 +1,8 @@
 #include "trap_combat.h"
 
+#include <algorithm>
+#include <limits>
+
 #include "dungeon/enemies/enemy_navigation.h"
 #include "dungeon/rooms/dungeon_room.h"
 #include "player/player.h"
@@ -33,6 +36,77 @@ bool isValid(const TrapData& trap, const DungeonRoom& room, const DungeonRoomPas
     return true;
 }
 
+bool isOccupied(const TrapData& trap, const DungeonRoom& room,
+                const std::vector<Position>& reserved, const std::vector<TrapData>& chosen) {
+    const auto bounds = trapBounds(trap);
+    for (const auto& position: reserved) {
+        if (bounds.intersects(CollisionBox{16, 16}.at(position))) {
+            return true;
+        }
+    }
+    for (const auto& other: chosen) {
+        if (bounds.intersects(trapBounds(other))) {
+            return true;
+        }
+    }
+    for (const auto& [id, enemy]: room.getCombat().enemies) {
+        if (enemy.alive() && bounds.intersects(enemy.bounds(enemy.data.pos))) {
+            return true;
+        }
+    }
+    return false;
+}
+
+std::vector<TrapData> chooseTraps(const DungeonRoom& room, const DungeonRoomLayout& layout,
+                                const EnemyConfig& config, std::mt19937& random) {
+    std::vector<TrapData> chosen;
+    const auto positions = room.getMap().walkableBasePositions();
+    // Place wall traps first so spikes cannot take the few available wall cells.
+    for (const auto type: {TrapType::WallFlame, TrapType::Spikes}) {
+        const auto count = type == TrapType::WallFlame ? config.wallFlamesPerRoom : config.spikesPerRoom;
+        if (count == 0) {
+            continue;
+        }
+        std::vector<TrapData> candidates;
+        for (const auto& position: positions) {
+            if (position.getX() > std::numeric_limits<uint16_t>::max() ||
+                position.getY() > std::numeric_limits<uint16_t>::max()) {
+                continue;
+            }
+            for (const auto direction: {Direction::Up, Direction::Down, Direction::Left, Direction::Right}) {
+                const TrapData candidate{0, position, direction, type, TrapState::Inactive, 0};
+                if (!isValid(candidate, room, layout.passages) ||
+                    isOccupied(candidate, room, layout.reservedPositions, chosen)) {
+                    continue;
+                }
+                if (type == TrapType::WallFlame) {
+                    const auto front = enemy_navigation::offsetPosition(position, direction,
+                                                                        room.getMap().getCellSize());
+                    if (!room.canWalk(CollisionBox{16, 8}.at(front))) {
+                        continue;
+                    }
+                }
+                candidates.push_back(candidate);
+                if (type == TrapType::Spikes) {
+                    break;
+                }
+            }
+        }
+        std::shuffle(candidates.begin(), candidates.end(), random);
+        unsigned placed = 0;
+        for (const auto& candidate: candidates) {
+            if (placed >= count) {
+                break;
+            }
+            if (!isOccupied(candidate, room, layout.reservedPositions, chosen)) {
+                chosen.push_back(candidate);
+                ++placed;
+            }
+        }
+    }
+    return chosen;
+}
+
 void updateState(Trap& trap, const EnemyConfig& config, CombatTime time) {
     const int64_t warningStart = config.trapInactiveMs;
     const int64_t activeStart = warningStart + config.trapWarningMs;
@@ -60,13 +134,16 @@ void updateFlameRange(Trap& trap, const DungeonRoom& room, const EnemyConfig& co
 
 }
 
-bool trap_combat::populate(DungeonRoom& room, const DungeonRoomLayout& layout,const EnemyConfig& config, EntityIdGenerator& ids) {
+bool trap_combat::populate(DungeonRoom& room, const DungeonRoomLayout& layout, const EnemyConfig& config,
+                           EntityIdGenerator& ids, std::mt19937& random) {
     std::map<uint32_t, Trap> prepared;
     auto preparedIds = ids;
+    auto preparedRandom = random;
     if (layout.traps.size() > 256) {
         return false;
     }
-    for (auto data: layout.traps) {
+    const auto traps = layout.traps.empty() ? chooseTraps(room, layout, config, preparedRandom) : layout.traps;
+    for (auto data: traps) {
         if (!isValid(data, room, layout.passages) || preparedIds.getNextId() == 0) {
             return false;
         }
@@ -84,6 +161,7 @@ bool trap_combat::populate(DungeonRoom& room, const DungeonRoomLayout& layout,co
     }
     room.getCombat().traps = std::move(prepared);
     ids = preparedIds;
+    random = preparedRandom;
     return true;
 }
 

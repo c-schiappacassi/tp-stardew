@@ -34,6 +34,8 @@ struct EnemyConfig {
     uint16_t wallFlameRange = 64;
     uint16_t spawnSafetyRange = 64;
     uint8_t skeletonsPerRoom = 1;
+    uint8_t spikesPerRoom = 1;
+    uint8_t wallFlamesPerRoom = 1;
     uint8_t orcGroupEvery = 3;
     uint8_t vampirePairEvery = 4;
     uint8_t skullEvery = 5;
@@ -59,7 +61,8 @@ struct EnemyConfig {
             trapActiveMs == 0 || trapHitMs == 0 || trapDamage == 0 || orcSilverChance > 100 ||
             miningAmbushChance > 100 || goldChance > 100 || goldMin > goldMax ||
             maxEnemiesPerRoom < 6 || maxEnemiesPerRoom > 256 ||
-            skeletonsPerRoom > maxEnemiesPerRoom) {
+            skeletonsPerRoom > maxEnemiesPerRoom ||
+            static_cast<unsigned>(spikesPerRoom) + wallFlamesPerRoom > 256) {
             throw std::invalid_argument("Invalid combat configuration");
         }
     }
