@@ -39,7 +39,7 @@ struct EnemyConfig {
     uint8_t skullEvery = 5;
     uint8_t orcSilverChance = 20;
     uint8_t miningAmbushChance = 10;
-    uint8_t goldChance = 60;
+    uint8_t goldChance = 75;
     uint16_t goldMin = 2;
     uint16_t goldMax = 10;
     uint16_t maxEnemiesPerRoom = 32;

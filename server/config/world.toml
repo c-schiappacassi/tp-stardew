@@ -394,7 +394,7 @@ trap_damage = 12
 wall_flame_range = 64
 orc_silver_chance = 20
 mining_ambush_chance = 10
-gold_chance = 60
+gold_chance = 75
 gold_min = 2
 gold_max = 10
 

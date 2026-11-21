@@ -435,6 +435,15 @@ PersistenceDTO PersistenceDeserializer::deserializeGame(const toml::table& table
         result.players.emplace(std::string(username.str()), player(*data.as_table()));
     }
     result.farm = farm(requiredTable(table, "farm"));
+    if (table.contains("emptySoilElapsed")) {
+        for (const auto& entry : requiredArray(table, "emptySoilElapsed")) {
+            const auto* soil = entry.as_table();
+            if (!soil) throw std::runtime_error("Invalid empty soil progress entry");
+            result.emptySoilElapsed.emplace_back(position(requiredTable(*soil, "pos")),
+                static_cast<uint64_t>(integer(*soil, "elapsed", 0,
+                    std::numeric_limits<int64_t>::max())));
+        }
+    }
     result.cropGrowthProgress = uint64Map(requiredTable(table, "cropGrowthProgress"));
     result.cropWaterRemainingTime = uint64Map(requiredTable(table, "cropWaterRemainingTime"));
     result.harvestedCrops = boolMap(requiredTable(table, "harvestedCrops"));

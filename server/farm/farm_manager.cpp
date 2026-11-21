@@ -85,6 +85,15 @@ std::vector<Position> FarmManager::getTilledPositions() const {
     return result;
 }
 
+std::vector<std::pair<Position, uint64_t>> FarmManager::getEmptySoilElapsed() const {
+    std::vector<std::pair<Position, uint64_t>> result;
+    for (const auto& [cell, elapsed] : cropManager.getEmptySoilElapsed()) {
+        const auto base = space.getMap().baseAt(cell);
+        if (base) result.emplace_back(*base, static_cast<uint64_t>(elapsed.count()));
+    }
+    return result;
+}
+
 bool FarmManager::setMap(const ZoneMap& map) {
     if (cropManager.hasTilledSoil()) {
         return false;
@@ -186,7 +195,8 @@ void FarmManager::restoreData(const FarmData& saved,
     const std::map<uint32_t, bool>& harvested,
     const std::map<uint32_t, uint64_t>& production,
     const std::map<uint32_t, uint32_t>& products,
-    const std::map<uint32_t, bool>& regrowing) {
+    const std::map<uint32_t, bool>& regrowing,
+    const std::vector<std::pair<Position, uint64_t>>& emptySoilElapsed) {
     if (!initialized) throw std::runtime_error("Farm not initialized");
     cropManager = CropManager(config);
     animalManager = AnimalManager(config, seed);
@@ -209,6 +219,13 @@ void FarmManager::restoreData(const FarmData& saved,
             std::chrono::milliseconds{static_cast<int64_t>(g->second)},
             std::chrono::milliseconds{static_cast<int64_t>(w->second)}, h->second,
             r != regrowing.end() && r->second);
+    }
+    for (const auto& [position, elapsed] : emptySoilElapsed) {
+        if (elapsed > static_cast<uint64_t>(INT64_MAX) ||
+            !cropManager.restoreEmptySoilElapsed(position,
+                std::chrono::milliseconds{static_cast<int64_t>(elapsed)}, space)) {
+            throw std::runtime_error("Invalid saved empty soil time");
+        }
     }
     for (const AnimalData& data : saved.animals) {
         if (!addAnimal(data.id, data.pos, data.type)) throw std::runtime_error("Failed to restore animal");

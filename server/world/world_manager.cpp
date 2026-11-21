@@ -168,7 +168,7 @@ void WorldManager::afterStatusPublished() {
 void WorldManager::restoreFarm(const PersistenceDTO& saved) {
     farm.restoreData(saved.farm, saved.cropGrowthProgress, saved.cropWaterRemainingTime,
                      saved.harvestedCrops, saved.animalProductionProgress,
-                     saved.animalAvailableProducts, saved.regrowingCrops);
+                     saved.animalAvailableProducts, saved.regrowingCrops, saved.emptySoilElapsed);
     uint32_t maximum = 0;
     for (const auto& item : saved.farm.crops) maximum = std::max(maximum, item.id);
     for (const auto& item : saved.farm.animals) maximum = std::max(maximum, item.id);

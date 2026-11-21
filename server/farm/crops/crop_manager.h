@@ -14,6 +14,7 @@ private:
     std::chrono::milliseconds dayLength;
     std::map<EntityId, Crop> crops;
     std::set<ZoneMap::Cell> tilledSoil;
+    std::map<ZoneMap::Cell, std::chrono::milliseconds> emptySoilElapsed;
 
     const CropDefinition* findDefinition(CropType type) const;
 
@@ -31,4 +32,6 @@ public:
     const Crop* find(EntityId id) const;
     const std::map<EntityId, Crop>& getCrops() const;
     const std::set<ZoneMap::Cell>& getTilledSoil() const;
+    const std::map<ZoneMap::Cell, std::chrono::milliseconds>& getEmptySoilElapsed() const;
+    bool restoreEmptySoilElapsed(const Position& position, std::chrono::milliseconds elapsed,const FarmPlacement& placement);
 };

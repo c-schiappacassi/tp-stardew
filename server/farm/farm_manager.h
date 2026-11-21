@@ -4,6 +4,7 @@
 #include <optional>
 #include <random>
 #include <set>
+#include <utility>
 #include <vector>
 #include "animals/animal_manager.h"
 #include "crops/crop_manager.h"
@@ -71,8 +72,10 @@ public:
                      const std::map<uint32_t, bool>& harvested,
                      const std::map<uint32_t, uint64_t>& production,
                      const std::map<uint32_t, uint32_t>& products,
-                     const std::map<uint32_t, bool>& regrowing = {});
+                     const std::map<uint32_t, bool>& regrowing = {},
+                     const std::vector<std::pair<Position, uint64_t>>& emptySoilElapsed = {});
     std::vector<Position> getTilledPositions() const;
+    std::vector<std::pair<Position, uint64_t>> getEmptySoilElapsed() const;
     const Crop* findCrop(EntityId id) const;
     const Animal* findAnimal(EntityId id) const;
     const Decoration* findDecoration(EntityId id) const;

@@ -93,7 +93,7 @@ void PlayerManager::handleCommand(const PlayerCommand& command, bool gameComplet
     if (gameCompleted) return;
 
     if (command.command->type() == MessageType::DayOk) {
-        day.acknowledge(command.playerId, it->second.player);
+        day.acknowledge(command.playerId, it->second.player, isMultiplayer());
         return;
     }
 

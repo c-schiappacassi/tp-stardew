@@ -84,6 +84,7 @@ PersistenceDTO Game::buildPersistenceData() const {
 
     const FarmManager& farm = world.getFarm();
     snapshot.farm = farm.getPublicData();
+    snapshot.emptySoilElapsed = farm.getEmptySoilElapsed();
 
     for (const auto& [cropId, crop] : farm.getCrops()) {
         const auto growth = crop.getGrowthElapsed().count();

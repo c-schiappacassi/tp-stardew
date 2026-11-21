@@ -312,6 +312,12 @@ toml::table PersistenceSerializer::serialize(const PersistenceDTO& dto) {
     }
     result.insert("players", std::move(players));
     result.insert("farm", farm(dto.farm));
+    toml::array emptySoilElapsed;
+    for (const auto& [pos, elapsed] : dto.emptySoilElapsed) {
+        emptySoilElapsed.push_back(toml::table{{"pos", position(pos)},
+            {"elapsed", checkedInteger(elapsed)}});
+    }
+    result.insert("emptySoilElapsed", std::move(emptySoilElapsed));
     result.insert("cropGrowthProgress", uint64Map(dto.cropGrowthProgress));
     result.insert("cropWaterRemainingTime", uint64Map(dto.cropWaterRemainingTime));
     result.insert("harvestedCrops", boolMap(dto.harvestedCrops));

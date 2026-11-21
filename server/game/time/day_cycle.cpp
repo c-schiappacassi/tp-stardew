@@ -24,12 +24,13 @@ uint16_t DayCycle::timeOfDayMinutes() const {
     return static_cast<uint16_t>(minutes % game_time::MINUTES_PER_24_HOURS);
 }
 
-bool DayCycle::requiresConfirmation(uint16_t playerId, const Player& player) const {
-    return (player.isSleeping() || (ended && player.isResting())) && !confirmations.contains(playerId);
+bool DayCycle::requiresConfirmation(uint16_t playerId, const Player& player, bool multiplayer) const {
+    return (player.isSleeping() || (!multiplayer && ended && player.isResting())) &&
+        !confirmations.contains(playerId);
 }
 
-void DayCycle::acknowledge(uint16_t playerId, const Player& player) {
-    if (requiresConfirmation(playerId, player)) {
+void DayCycle::acknowledge(uint16_t playerId, const Player& player, bool multiplayer) {
+    if (requiresConfirmation(playerId, player, multiplayer)) {
         confirmations.insert(playerId);
     }
 }
@@ -69,7 +70,8 @@ bool DayCycle::advance(std::chrono::milliseconds time,std::span<const Participan
         return false;
     }
     for (const auto& participant: players) {
-        if (participant.connected && requiresConfirmation(participant.id, participant.player)) {
+        if (participant.connected &&
+            requiresConfirmation(participant.id, participant.player, players.size() > 1)) {
             return false;
         }
     }
