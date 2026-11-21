@@ -9,6 +9,7 @@
 
 #include "combat_context.h"
 #include "enemy_behavior.h"
+#include "enemy_defeat.h"
 
 namespace {
 bool canAttack(const Player& player, const DungeonRoom& room, Direction direction,std::chrono::steady_clock::time_point now) {
@@ -42,17 +43,6 @@ Enemy* findTarget(Player& player, DungeonRoom& room, Direction direction) {
     return nearestEnemy;
 }
 
-void rewardDefeat(CombatContext& context, uint16_t playerId, const Enemy& enemy,DungeonRoom& room) {
-    context.progress.defeat(playerId, room.getNumber(), enemy);
-    if (context.generator.roll(context.config.goldChance)) {
-        room.getGroundItems().dropGold(enemy.data.pos, context.generator.gold(), context.entityIds);
-    }
-    if (enemy.data.type == EnemyType::Orc &&
-        context.generator.roll(context.config.orcSilverChance)) {
-        room.getGroundItems().drop(enemy.data.pos, ItemId::Silver, 1, Quality::None,
-            context.entityIds);
-    }
-}
 }  // namespace
 
 bool sword_combat::attack(CombatContext& context, Player& player, uint16_t playerId,DungeonRoom& room, Direction direction) {
@@ -68,7 +58,7 @@ bool sword_combat::attack(CombatContext& context, Player& player, uint16_t playe
     if (!target || !target->hit(damage, context.time, context.config)) {
         return true;
     }
-    rewardDefeat(context, playerId, *target, room);
+    enemy_defeat::reward(context, playerId, *target, room);
     enemy_behavior::refreshVampirePairs(room);
     return true;
 }

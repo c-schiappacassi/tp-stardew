@@ -33,3 +33,11 @@ bool WorldManager::teleport(Player& player, uint16_t playerId, Zone destination,
 
 std::size_t WorldManager::careCrops() { return farm.careCrops(); }
 std::size_t WorldManager::careAnimals() { return farm.careAnimals(entityIds); }
+
+bool WorldManager::spawnEnemies(Player& player, uint16_t playerId, EnemyType type, uint16_t quantity, bool pairs,const std::vector<Position>& occupied) {
+    return dungeon.spawnEnemies(player, playerId, type, quantity, pairs, entityIds, occupied);
+}
+
+uint16_t WorldManager::killEnemies(Player& player, uint16_t playerId, bool nearestOnly) {
+    return dungeon.killEnemies(player, playerId, nearestOnly, entityIds);
+}

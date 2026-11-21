@@ -157,6 +157,26 @@ bool DungeonManager::canExit(const Player& player) const {
      return travel.canExit(player, rooms); 
     }
 
+bool DungeonManager::spawnEnemies(Player& player, uint16_t playerId, EnemyType type, uint16_t quantity, bool pairs,
+                                  EntityIdGenerator& ids, const std::vector<Position>& occupied) {
+    if (player.getZone() != Zone::Dungeon || !player.canAct() ||
+        !combat.prepareVisit(player, playerId, rooms, ids)) return false;
+    auto* room = findRoom(player.getDungeonLevel());
+    if (!room) return false;
+    auto reserved = occupied;
+    reserved.push_back(player.getPosition());
+    return combat.spawnEnemies(*room, type, quantity, pairs, ids, reserved);
+}
+
+uint16_t DungeonManager::killEnemies(Player& player, uint16_t playerId, bool nearestOnly,
+                                    EntityIdGenerator& ids) {
+    if (player.getZone() != Zone::Dungeon ||
+        !combat.prepareVisit(player, playerId, rooms, ids)) return 0;
+    auto* room = findRoom(player.getDungeonLevel());
+    if (!room) return 0;
+    return combat.killEnemies(player, playerId, *room, nearestOnly, ids);
+}
+
 void DungeonManager::removeBrokenMinerals() {
     for (auto& [number, room] : rooms) {
         room.removeBrokenMinerals();

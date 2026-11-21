@@ -20,7 +20,10 @@ enum class CheatAction {
     ClearSlot,
     SpawnAnimal,
     Warp,
-    EndDay
+    EndDay,
+    SpawnEnemy,
+    KillEnemy,
+    KillEnemies
 };
 
 struct CheatCommand {

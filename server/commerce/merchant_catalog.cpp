@@ -60,13 +60,15 @@ std::vector<ChatMessageData> MerchantChat::catalog(NpcId merchant) const {
         for (const auto& animal : farmConfig.animals) {
             add(animal.species == AnimalSpecies::Cow ? "milk" : "egg", animal.productPrice, true);
         }
-        messages.push_back({name, "Crops: base quality x1, good x1.25, excellent x2, incredible x4, perfect x8."});
     } else if (merchant == NpcId::Marnie) {
         for (const auto& animal : farmConfig.animals) {
             const auto product = animal.species == AnimalSpecies::Cow ? "cow" : "chicken";
             add(product, animal.basePrice, false);
             add(product, animal.basePrice, true);
         }
+    }
+    if (merchant == NpcId::Pierre || merchant == NpcId::Clint) {
+        messages.push_back({name, "Buying prices are for base quality. Item quality: good x1.25, excellent x2, incredible x4, perfect x8."});
     }
     return messages;
 }

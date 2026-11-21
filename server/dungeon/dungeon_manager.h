@@ -41,6 +41,9 @@ public:
     bool enter(Player& player);
     bool advanceRoom(Player& player);
     bool teleportToRoom(Player& player, uint8_t number) const;
+    bool spawnEnemies(Player& player, uint16_t playerId, EnemyType type, uint16_t quantity, bool pairs,
+                      EntityIdGenerator& ids, const std::vector<Position>& occupied);
+    uint16_t killEnemies(Player& player, uint16_t playerId, bool nearestOnly, EntityIdGenerator& ids);
     bool canExit(const Player& player) const;
     void removeBrokenMinerals();
 };

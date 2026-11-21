@@ -9,6 +9,8 @@ target_sources(taller_server_core
         dungeon/combat/combat_progress.cpp
         dungeon/combat/dungeon_combat.cpp
         dungeon/combat/combat_damage.cpp
+        dungeon/combat/combat_cheats.cpp
+        dungeon/combat/enemy_defeat.cpp
         dungeon/combat/sword_combat.cpp
         dungeon/combat/enemy_behavior.cpp
         dungeon/combat/projectile_combat.cpp
@@ -126,6 +128,7 @@ target_sources(taller_server_core
         dungeon/combat/room_combat.h
         dungeon/combat/combat_context.h
         dungeon/combat/combat_damage.h
+        dungeon/combat/enemy_defeat.h
         dungeon/combat/sword_combat.h
         dungeon/combat/enemy_behavior.h
         dungeon/combat/projectile_combat.h

@@ -118,16 +118,45 @@ std::vector<ChatMessageData> CheatChat::execute(
             return reply("Cleared slot " + std::to_string(command.amount) + ".");
         }
         case CheatAction::SpawnAnimal: {
-            const auto species = shop_products::animal(command.target);
-            if (!species) return reply("Unknown animal. Use cow or chicken.");
+            auto species = shop_products::animal(command.target);
+            const auto variant = shop_products::animalVariant(command.target);
+            if (!species && variant) species = animalSpeciesForType(*variant);
+            if (!species) return reply("Unknown animal. Use cow, chicken, brown_cow, white_cow, brown_chicken, white_chicken, blue_chicken or void_chicken.");
             if (command.amount == 0 || command.amount > std::numeric_limits<uint16_t>::max() ||
-                !world.buyAnimals(*species, static_cast<uint16_t>(command.amount))) {
+                !world.buyAnimals(*species, static_cast<uint16_t>(command.amount), variant)) {
                 return reply("Cannot add animals: check the amount, farm space and species limit. No animals were added.");
             }
             return reply("Added " + std::to_string(command.amount) + " " + command.target + " to the farm.");
         }
         case CheatAction::Warp:
             return reply(warp(context, command));
+        case CheatAction::SpawnEnemy: {
+            if (player.getZone() != Zone::Dungeon) return reply("Enter the mine first: /cheat warp mine 1.");
+            const std::pair<std::string_view, EnemyType> types[]{
+                {"skeleton", EnemyType::Skeleton}, {"orc", EnemyType::Orc},
+                {"vampire_male", EnemyType::VampireMale},
+                {"vampire_female", EnemyType::VampireFemale},
+                {"vampire_pair", EnemyType::VampireMale}, {"skull", EnemyType::Skull}
+            };
+            const auto found = std::find_if(std::begin(types), std::end(types),
+                [&](const auto& entry) { return entry.first == command.target; });
+            if (found == std::end(types)) return reply("Unknown enemy. Use skeleton, orc, vampire_male, vampire_female, vampire_pair or skull.");
+            const bool pairs = command.target == "vampire_pair";
+            if (command.amount == 0 || command.amount > 256 ||
+                !world.spawnEnemies(player, context.playerId, found->second, static_cast<uint16_t>(command.amount),
+                                    pairs, context.occupiedPositions)) {
+                return reply("Cannot spawn enemies: check your state, free space and the room's enemy limit. No enemies were added.");
+            }
+            return reply("Spawned " + std::to_string(command.amount * (pairs ? 2 : 1)) +
+                         " enemies on this floor.");
+        }
+        case CheatAction::KillEnemy:
+        case CheatAction::KillEnemies: {
+            if (player.getZone() != Zone::Dungeon) return reply("Enter the mine first: /cheat warp mine 1.");
+            const auto killed = world.killEnemies(player, context.playerId,
+                                                  command.action == CheatAction::KillEnemy);
+            return reply("Killed " + std::to_string(killed) + " enemies on this floor.");
+        }
         case CheatAction::EndDay:
             if (!endDay) return reply("The day cycle is not available.");
             endDay();

@@ -44,6 +44,11 @@ void CombatProgress::enter(uint16_t playerId, uint8_t room, bool skull) {
 
 void CombatProgress::damage(uint16_t playerId) { players[playerId].damaged = true; }
 
+void CombatProgress::observeSkull(uint16_t playerId, uint8_t room) {
+    const auto found = players.find(playerId);
+    if (found != players.end() && found->second.room == room) found->second.sawSkull = true;
+}
+
 void CombatProgress::leave(uint16_t playerId, bool survived) {
     auto it = players.find(playerId);
     if (it == players.end()) {

@@ -70,13 +70,11 @@ std::string MerchantChat::sell(Player& player, NpcId merchant, const TradeComman
     }
     const auto item = shop_products::item(command.product);
     std::optional<uint32_t> basePrice;
-    bool crop = false;
     if (item && merchant == NpcId::Clint) basePrice = priceOf(config.minerals, *item);
     if (item && merchant == NpcId::Pierre) {
         for (const auto& definition : world.getFarm().getConfig().crops) {
             if (shop_products::cropItem(definition.type) == item) {
                 basePrice = definition.basePrice;
-                crop = true;
             }
         }
         for (const auto& definition : world.getFarm().getConfig().animals) {
@@ -87,17 +85,18 @@ std::string MerchantChat::sell(Player& player, NpcId merchant, const TradeComman
     if (!basePrice) return "I do not buy that product.";
     std::vector<std::pair<uint8_t, uint16_t>> quantities;
     uint16_t remaining = command.quantity;
-    uint64_t total = 0;
+    uint64_t totalQuarters = 0;
     for (const auto& [slot, stack] : player.getInventoryItems()) {
         if (stack.item_id != *item || remaining == 0) continue;
-        const auto unitPrice = shop_products::salePrice(*basePrice, crop ? stack.qual : Quality::None);
+        const auto unitPrice = shop_products::salePriceQuarters(*basePrice, stack.qual);
         if (!unitPrice) return "The product has an unknown quality.";
         const auto quantity = std::min(remaining, stack.quantity);
-        total += prices.sellingPrice(*unitPrice) * quantity;
+        totalQuarters += prices.sellingPrice(*unitPrice) * quantity;
         quantities.emplace_back(slot, quantity);
         remaining -= quantity;
     }
     if (remaining != 0) return "You do not have enough of that product.";
+    const uint64_t total = totalQuarters / 4;
     if (total > goldSpace) return "The sale would exceed the gold limit.";
     if (!player.sellItems(quantities, static_cast<uint32_t>(total))) return "Could not complete the sale.";
     return success(command, static_cast<uint32_t>(total));

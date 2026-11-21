@@ -5,7 +5,7 @@
 #include "player/player.h"
 
 WorldManager::WorldManager(const DungeonConfig& config, uint32_t seed, const FarmConfig& farmConfig)
-    : dungeon(config, seed), farm(farmConfig, seed), farmSeed(seed) {}
+    : dungeon(config, seed), farm(farmConfig, seed), farmSeed(seed), animalRandom(seed) {}
 
 
 ConstMapData WorldManager::buildConstMap() const {

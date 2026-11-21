@@ -183,6 +183,7 @@ void DungeonCombat::onTravel(uint16_t id, uint8_t number, bool survived,const st
         return;
     }
     progress.enter(id, number, hasSkull(room->second));
+    lastVisits[id] = visit;
     presence[id] = number;
     occupied = true;
 }

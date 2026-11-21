@@ -18,7 +18,10 @@ void PlayerChat::listCheats(PlayerRecord& sender) const {
     reply(sender, "/cheat heal | /cheat end_day (affects all players)");
     reply(sender, "/cheat give product N [none|base|good|excellent|incredible|perfect]");
     reply(sender, "/cheat clear_slot N (slots start at 1) | /cheat spawn_animal cow|chicken N");
+    reply(sender, "Animal colors: brown_cow, white_cow, brown_chicken, white_chicken, blue_chicken, void_chicken.");
     reply(sender, "/cheat warp farm|town|home|center|pierre|marnie|robin|clint|mine [level]");
+    reply(sender, "/cheat spawn_enemy skeleton|orc|vampire_male|vampire_female|vampire_pair|skull [N]");
+    reply(sender, "/cheat kill_enemy (nearest) | /cheat kill_enemies (current mine floor)");
     reply(sender, "Bundle names: crops, metals, animals, combat, money. Completing all ends the game.");
     if (!services.cheats) reply(sender, services.community ?
         "Only community center cheats are currently available." : "Cheats are not available yet.");
@@ -75,7 +78,16 @@ void PlayerChat::command(std::map<uint16_t, PlayerRecord>& players, PlayerRecord
                     reply(sender, "Cheats are not available yet.");
                     return;
                 }
-                responses = services.cheats->execute(context, *request);
+                auto cheatContext = context;
+                if (request->action == CheatAction::SpawnEnemy) {
+                    for (const auto& [id, record] : players) {
+                        if (record.connected && record.player.getZone() == Zone::Dungeon &&
+                            record.player.getDungeonLevel() == sender.player.getDungeonLevel()) {
+                            cheatContext.occupiedPositions.push_back(record.player.getPosition());
+                        }
+                    }
+                }
+                responses = services.cheats->execute(cheatContext, *request);
             }
         }
     } catch (const std::exception&) {

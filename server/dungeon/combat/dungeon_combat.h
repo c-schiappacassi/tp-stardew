@@ -39,6 +39,9 @@ public:
     void silverMined(DungeonRoom& room);
     void update(CombatTime elapsed, std::map<uint8_t, DungeonRoom>& rooms,const std::vector<Combatant>& players, EntityIdGenerator& ids,std::chrono::steady_clock::time_point now);
     void onTravel(uint16_t id, uint8_t room, bool survived,const std::map<uint8_t, DungeonRoom>& rooms);
+    bool spawnEnemies(DungeonRoom& room, EnemyType type, uint16_t quantity, bool pairs,EntityIdGenerator& ids, const std::vector<Position>& occupied);
+    bool prepareVisit(Player& player, uint16_t playerId,std::map<uint8_t, DungeonRoom>& rooms, EntityIdGenerator& ids);
+    uint16_t killEnemies(Player& player, uint16_t playerId, DungeonRoom& room,bool nearestOnly, EntityIdGenerator& ids);
     const CombatProgressData& getProgress() const;
     bool completed() const;
     uint32_t getVisit() const;

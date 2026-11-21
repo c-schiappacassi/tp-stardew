@@ -72,6 +72,17 @@ std::optional<AnimalSpecies> shop_products::animal(const std::string& name) {
     return std::nullopt;
 }
 
+std::optional<AnimalType> shop_products::animalVariant(const std::string& name) {
+    const auto key = normalized(name);
+    if (key == "brown_cow") return AnimalType::BrownCow;
+    if (key == "white_cow") return AnimalType::WhiteCow;
+    if (key == "brown_chicken") return AnimalType::BrownChicken;
+    if (key == "white_chicken") return AnimalType::WhiteChicken;
+    if (key == "blue_chicken") return AnimalType::BlueChicken;
+    if (key == "void_chicken") return AnimalType::VoidChicken;
+    return std::nullopt;
+}
+
 std::string_view shop_products::merchantName(NpcId merchant) {
     switch (merchant) {
         case NpcId::Marnie: return "Marnie";
@@ -93,6 +104,11 @@ std::optional<NpcId> shop_products::merchantForInterior(InteriorId interior) {
 }
 
 std::optional<uint64_t> shop_products::salePrice(uint32_t basePrice, Quality quality) {
+    const auto quarters = salePriceQuarters(basePrice, quality);
+    return quarters ? std::optional<uint64_t>{*quarters / 4} : std::nullopt;
+}
+
+std::optional<uint64_t> shop_products::salePriceQuarters(uint32_t basePrice, Quality quality) {
     uint64_t quarters;
     switch (quality) {
         case Quality::None:
@@ -103,7 +119,7 @@ std::optional<uint64_t> shop_products::salePrice(uint32_t basePrice, Quality qua
         case Quality::Perfect: quarters = 32; break;
         default: return std::nullopt;
     }
-    return static_cast<uint64_t>(basePrice) * quarters / 4;
+    return static_cast<uint64_t>(basePrice) * quarters;
 }
 
 std::optional<ItemId> shop_products::cropItem(CropType type) {

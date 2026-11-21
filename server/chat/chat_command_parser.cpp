@@ -36,6 +36,14 @@ ParsedChatCommand trade(const std::vector<std::string>& tokens, TradeAction acti
 ParsedChatCommand cheat(const std::vector<std::string>& tokens) {
     if (tokens.size() < 2) return ChatCommandError{"Use /cheats to see the commands"};
     const auto& name = tokens[1];
+    if (name == "spawn_enemy") {
+        uint32_t amount = 1;
+        if ((tokens.size() != 3 && tokens.size() != 4) ||
+            (tokens.size() == 4 && !number(tokens[3], 256, amount))) {
+            return ChatCommandError{"Usage: /cheat spawn_enemy skeleton|orc|vampire_male|vampire_female|vampire_pair|skull [amount] (1 to 256)"};
+        }
+        return CheatCommand{CheatAction::SpawnEnemy, amount, tokens[2]};
+    }
     if (name == "give") {
         uint32_t amount = 0;
         if ((tokens.size() != 4 && tokens.size() != 5) ||
@@ -62,7 +70,7 @@ ParsedChatCommand cheat(const std::vector<std::string>& tokens) {
         if (tokens.size() != (animal ? 4u : 3u) ||
             !number(tokens.back(), animal ? std::numeric_limits<uint16_t>::max() :
                                            std::numeric_limits<uint8_t>::max(), amount)) {
-            return ChatCommandError{animal ? "Usage: /cheat spawn_animal cow|chicken amount (1 to 65535)" :
+            return ChatCommandError{animal ? "Usage: /cheat spawn_animal cow|chicken|white_cow|blue_chicken|... amount (1 to 65535)" :
                                             "Usage: /cheat clear_slot slot (1 to inventory capacity)"};
         }
         return CheatCommand{animal ? CheatAction::SpawnAnimal : CheatAction::ClearSlot,
@@ -102,6 +110,8 @@ ParsedChatCommand cheat(const std::vector<std::string>& tokens) {
         {"care_animals", CheatAction::CareAnimals},
         {"heal", CheatAction::Heal},
         {"end_day", CheatAction::EndDay},
+        {"kill_enemy", CheatAction::KillEnemy},
+        {"kill_enemies", CheatAction::KillEnemies},
     };
     for (const auto& [keyword, action] : actions) {
         if (name == keyword) {

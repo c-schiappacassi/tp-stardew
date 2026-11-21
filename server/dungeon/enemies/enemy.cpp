@@ -39,6 +39,19 @@ bool Enemy::hit(uint16_t amount, CombatTime now, const EnemyConfig& config) {
     if (alive()) {
         return false;
     }
+    die(now, config);
+    return true;
+}
+
+bool Enemy::kill(CombatTime now, const EnemyConfig& config) {
+    if (!alive()) return false;
+    data.health = 0;
+    ++data.action;
+    die(now, config);
+    return true;
+}
+
+void Enemy::die(CombatTime now, const EnemyConfig& config) {
     setState(EnemyState::Dead);
     data.frenzied = false;
     movementRemainder = 0;
@@ -46,10 +59,9 @@ bool Enemy::hit(uint16_t amount, CombatTime now, const EnemyConfig& config) {
     targetPosition.reset();
     if (data.type == EnemyType::Skeleton) {
         reviveAt = now + CombatTime{config.skeletonReviveMs};
-    } else if (data.type == EnemyType::Orc) {
+    } else if (data.type == EnemyType::Orc || data.type == EnemyType::Skull) {
         removeAt = now + CombatTime{2000};
     }
-    return true;
 }
 
 void Enemy::revive() {

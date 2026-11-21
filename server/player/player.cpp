@@ -172,9 +172,11 @@ bool Player::useTool(std::chrono::steady_clock::time_point now) {
         return false;
     }
 
-    const ToolConfig& tool = config.tools.at(getSelectedItem()->item_id);
+    const ItemId item = getSelectedItem()->item_id;
+    const ToolConfig& tool = config.tools.at(item);
     const Direction toolDirection = dir;
-    if (!performAction(tool.energyCost, std::chrono::milliseconds{tool.intervalMs}, now)) {
+    if (!beginAction(tool.energyCost, std::chrono::milliseconds{tool.intervalMs}, now,
+                     item != ItemId::Sword)) {
         return false;
     }
     if (state != PlayerState::Unconscious) {
@@ -190,6 +192,11 @@ bool Player::canPerformAction(std::chrono::steady_clock::time_point now) const {
 
 bool Player::performAction(uint16_t energyCost, std::chrono::milliseconds interval,
                            std::chrono::steady_clock::time_point now) {
+    return beginAction(energyCost, interval, now, true);
+}
+
+bool Player::beginAction(uint16_t energyCost, std::chrono::milliseconds interval,
+                         std::chrono::steady_clock::time_point now, bool healthAffectsInterval) {
     if (!canPerformAction(now) || interval.count() < 0) {
         return false;
     }
@@ -200,7 +207,7 @@ bool Player::performAction(uint16_t energyCost, std::chrono::milliseconds interv
         energy -= energyCost;
     }
 
-    nextActionTime = now + interval;
+    nextActionTime = now + interval * (healthAffectsInterval && hasLowHealth() ? 2 : 1);
     if (energy == 0) {
         passOut();
     } else {
@@ -292,8 +299,12 @@ uint16_t Player::receiveDamage(uint16_t damage, std::chrono::steady_clock::time_
     return applied;
 }
 
+bool Player::hasLowHealth() const {
+    return static_cast<uint32_t>(health) * 5 <= maxHealth;
+}
+
 uint16_t Player::getSwordDamage() const {
-    if (static_cast<uint32_t>(health) * 5 <= maxHealth && config.swordDamage > 0) {
+    if (hasLowHealth() && config.swordDamage > 0) {
         return std::max<uint16_t>(1, config.swordDamage / 2);
     }
     return config.swordDamage;
@@ -443,7 +454,7 @@ int Player::getMovementStep(int normalStep) const {
         return 0;
     }
 
-    if (static_cast<uint32_t>(energy) * 10 <= maxEnergy) {
+    if (hasLowHealth() || static_cast<uint32_t>(energy) * 10 <= maxEnergy) {
         return std::max(1, normalStep / 2);
     }
 

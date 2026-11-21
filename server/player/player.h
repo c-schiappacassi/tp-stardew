@@ -34,6 +34,10 @@ private:
     bool combatBonus = false;
     bool bedReady = true;
 
+    bool hasLowHealth() const;
+    bool beginAction(uint16_t energyCost, std::chrono::milliseconds interval,
+                     std::chrono::steady_clock::time_point now, bool healthAffectsInterval);
+
 public:
     Player(const PlayerData& initialData, uint8_t inventoryCapacity, uint16_t maxHealth,
            uint16_t maxEnergy, uint32_t initialGold, const PlayerConfig& config = {});
