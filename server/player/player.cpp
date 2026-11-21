@@ -129,6 +129,8 @@ PlayerData Player::getPublicData() const {
     data.pantsModel = pantsModel;
     data.hairColor = hairColor;
     data.pantsColor = pantsColor;
+    data.health = health;
+    data.maxHealth = maxHealth;
     return data;
 }
 
@@ -138,8 +140,6 @@ PlayerDataLocal Player::getLocalData() const {
     data.cap_inventory = inventory.getCapacity();
     data.current_slot = currentSlot;
     data.gold = gold;
-    data.health = health;
-    data.maxHealth = maxHealth;
     data.energy = energy;
     data.maxEnergy = maxEnergy;
     return data;

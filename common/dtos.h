@@ -283,6 +283,8 @@ struct PlayerData{
     uint8_t dungeonLevel = 0;
     std::optional<InteriorLocation> interior;
     std::optional<ItemId> heldItem;
+    uint16_t health = 0;
+    uint16_t maxHealth = 0;
 };
 
 struct GameInfoDTO {
@@ -302,8 +304,6 @@ struct PlayerDataLocal : public PlayerData {
     uint8_t cap_inventory = 0;
     uint8_t current_slot = 0;
     uint32_t gold = 0;
-    uint16_t health = 0;
-    uint16_t maxHealth = 0;
     uint16_t energy = 0;
     uint16_t maxEnergy = 0;
     ZoneData zoneData{std::monostate{}};
