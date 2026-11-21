@@ -33,14 +33,17 @@ namespace {
     }
 }
 
-EnemyView::EnemyView(const EnemySnapshot& data) { update(data); }
+EnemyView::EnemyView(const EnemySnapshot& data) {
+    hit_flash = &health_trigger.add<HitFlash>();
+    update(data);
+}
 
 void EnemyView::update(const EnemySnapshot& data) {
     pos = data.pos;
     type = data.type;
     state = data.state;
     frenzied = data.frenzied && data.state != EnemyState::Dead;
-    heath = data.health;
+    health_trigger.observe(data.health, data.pos);
     if (data.dir != Direction::None) {
         facing = data.dir;
     }
@@ -56,5 +59,5 @@ void EnemyView::draw(const RenderInfo& ctx) {
         return;
     }
 
-    draw_clip_at(ctx, clip_player, ClipId{*sprite_id, Action{state}, facing}, pos, type == EnemyType::Skull ? bob_offset(ctx) : 0);
+    draw_clip_at(ctx, clip_player, ClipId{*sprite_id, Action{state}, facing}, pos, type == EnemyType::Skull ? bob_offset(ctx) : 0, hit_flash->tint(ctx));
 }

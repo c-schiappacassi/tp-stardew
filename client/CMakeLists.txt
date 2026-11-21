@@ -64,6 +64,9 @@ target_sources(taller_client
     sdlGUI/world/zone_view.h
     sdlGUI/world/entity_view.h
 
+    sdlGUI/world/effects/health_trigger.h
+    sdlGUI/world/effects/hit_flash.h
+
     sdlGUI/world/background/item_view.h
     sdlGUI/world/background/furniture_view.h
     sdlGUI/world/background/background.h
