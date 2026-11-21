@@ -11,7 +11,7 @@
 
 class HotbarView {
 private:
-    std::map<uint8_t, Stack> items;
+    std::map<uint8_t, Stack> items; // TODO: cambiar a SlotView para que se reutilize en ChestView
     uint8_t current_slot = 0;
     uint8_t cap = 9;
 

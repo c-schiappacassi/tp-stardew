@@ -99,7 +99,7 @@ enum class UiSpriteId : uint8_t {
     CancelButton,
     PlayerHead,
     InfoSing,
-    InfoSingArrow
+    InfoSingArrow,
 };
 
 struct Drawable {

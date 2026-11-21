@@ -16,6 +16,7 @@ namespace {
     constexpr int INDEX_PX = 2;
     constexpr int QUANTITY_MARGIN = 4;
     constexpr int QUANTITY_PX = 3;
+    constexpr int QUALITY_SCALE = 2;
 
     struct Layout {
         int u;
@@ -49,8 +50,15 @@ void HotbarView::draw_stack(const RenderInfo& ctx, const Stack& stack, const SDL
                      pixel_font::TEXT_COLOR, QUANTITY_MARGIN * u, QUANTITY_MARGIN * u,
                      pixel_font::SHADOW_COLOR, QUANTITY_PX * u);
     }
-}
 
+    if (stack.qual > Quality::Base) {
+        const Sprite& star = ctx.assets.get_sprite(stack.qual);
+        const int scale = QUALITY_SCALE * u;
+        const SDL2pp::Rect icon_area = centered_rect(slot_rect, ICON_BOX * u, ICON_BOX * u);
+        const SDL2pp::Rect dst = aligned_rect(icon_area, star.width * scale, star.height * scale, HAlign::Right, VAlign::Top, 0, 0);
+        draw_sprite_in(ctx, star, dst);
+    }
+}
 void HotbarView::draw_slot( const RenderInfo& ctx, uint8_t slot, const SDL2pp::Rect& rect, int u) {
     draw_ui(ctx, UiSpriteId::HotbarSlot, rect);
     draw_ui(ctx, UiSpriteId::HotbarSlotOutline, rect);
