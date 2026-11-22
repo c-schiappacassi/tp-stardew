@@ -5,26 +5,25 @@
 
 #include "dungeon/enemies/enemy_navigation.h"
 #include "dungeon/rooms/dungeon_room.h"
-#include "player/player.h"
+#include "player/player_manager.h"
 
 #include "combat_context.h"
 #include "combat_damage.h"
 
 namespace {
-bool hitPlayer(CombatContext& context, const Projectile& projectile,const std::vector<Combatant>& players, DungeonRoom& room) {
+bool hitPlayer(CombatContext& context, const Projectile& projectile, const std::vector<Combatant>& players, DungeonRoom& room) {
     const auto bounds = CollisionBox{4, 4}.at(projectile.data.pos);
     for (const auto& actor: players) {
-        Player& player = *actor.player;
-        if (player.canBeAttacked() &&
-            bounds.intersects(player.getHitboxBounds())) {
-            combat_damage::apply(context, player, actor.id, projectile.damage, room);
+        const auto player = context.players.snapshot(actor.id);
+        if (player.canBeAttacked() && bounds.intersects(player.getHitboxBounds())) {
+            combat_damage::apply(context, actor.id, projectile.damage, room);
             return true;
         }
     }
     return false;
 }
 
-bool advanceProjectile(CombatContext& context, Projectile& projectile, DungeonRoom& room,const std::vector<Combatant>& players, CombatTime elapsed) {
+bool advanceProjectile(CombatContext& context, Projectile& projectile, DungeonRoom& room, const std::vector<Combatant>& players, CombatTime elapsed) {
     if (context.time >= projectile.expires) {
         return false;
     }
@@ -38,17 +37,16 @@ bool advanceProjectile(CombatContext& context, Projectile& projectile, DungeonRo
     for (int step = 0; step < steps; ++step) {
         projectile.x += dx / steps;
         projectile.y += dy / steps;
-        projectile.data.pos = Position{static_cast<int>(std::round(projectile.x)),static_cast<int>(std::round(projectile.y))};
-        if (!room.canWalk(CollisionBox{4, 4}.at(projectile.data.pos)) ||
-            hitPlayer(context, projectile, players, room)) {
+        projectile.data.pos = Position{static_cast<int>(std::round(projectile.x)), static_cast<int>(std::round(projectile.y))};
+        if (!room.canWalk(CollisionBox{4, 4}.at(projectile.data.pos)) || hitPlayer(context, projectile, players, room)) {
             return false;
         }
     }
     return true;
 }
-}
+}  // namespace
 
-void projectile_combat::launch(CombatContext& context, const Enemy& enemy, const Player& target,DungeonRoom& room) {
+void projectile_combat::launch(CombatContext& context, const Enemy& enemy, const PlayerSnapshot& target, DungeonRoom& room) {
     auto& projectiles = room.getCombat().projectiles;
     if (projectiles.size() >= 128 || context.entityIds.getNextId() == 0) {
         return;
@@ -68,17 +66,15 @@ void projectile_combat::launch(CombatContext& context, const Enemy& enemy, const
         type = FlameType::Green;
     }
     const auto id = context.entityIds.generate();
-    projectiles.emplace(id,Projectile{ProjectileData{id, origin, type}, static_cast<double>(origin.getX()),
-                       static_cast<double>(origin.getY()), speed * dx / length, speed * dy / length,
-                       damage, context.time + CombatTime{context.config.flameLifetimeMs},
-                       context.time});
+    projectiles.emplace(id,
+        Projectile{ProjectileData{id, origin, type}, static_cast<double>(origin.getX()), static_cast<double>(origin.getY()), speed * dx / length, speed * dy / length, damage,
+            context.time + CombatTime{context.config.flameLifetimeMs}, context.time});
 }
 
 void projectile_combat::launch(CombatContext& context, const TrapData& trap, DungeonRoom& room) {
     auto& projectiles = room.getCombat().projectiles;
-    if (trap.type != TrapType::WallFlame || trap.range == 0 ||
-        trap.dir == Direction::None || trap.dir > Direction::Right ||
-        projectiles.size() >= 128 || context.entityIds.getNextId() == 0) {
+    if (trap.type != TrapType::WallFlame || trap.range == 0 || trap.dir == Direction::None || trap.dir > Direction::Right || projectiles.size() >= 128 ||
+        context.entityIds.getNextId() == 0) {
         return;
     }
     const auto origin = CollisionBox{16, 8}.at(trap.pos).center();
@@ -87,14 +83,12 @@ void projectile_combat::launch(CombatContext& context, const TrapData& trap, Dun
     const auto rangeLifetime = CombatTime{static_cast<int64_t>(std::ceil(static_cast<double>(trap.range) * 1000.0 / speed))};
     const auto lifetime = std::min(rangeLifetime, CombatTime{context.config.flameLifetimeMs});
     const auto id = context.entityIds.generate();
-    projectiles.emplace(id, Projectile{ProjectileData{id, origin, FlameType::Common},
-                        static_cast<double>(origin.getX()), static_cast<double>(origin.getY()),
-                        speed * (step.getX() - origin.getX()),
-                        speed * (step.getY() - origin.getY()), context.config.trapDamage,
-                        context.time + lifetime, context.time});
+    projectiles.emplace(id,
+        Projectile{ProjectileData{id, origin, FlameType::Common}, static_cast<double>(origin.getX()), static_cast<double>(origin.getY()), speed * (step.getX() - origin.getX()),
+            speed * (step.getY() - origin.getY()), context.config.trapDamage, context.time + lifetime, context.time});
 }
 
-void projectile_combat::update(CombatContext& context, DungeonRoom& room,const std::vector<Combatant>& players, CombatTime elapsed) {
+void projectile_combat::update(CombatContext& context, DungeonRoom& room, const std::vector<Combatant>& players, CombatTime elapsed) {
     auto& projectiles = room.getCombat().projectiles;
     for (auto it = projectiles.begin(); it != projectiles.end();) {
         if (advanceProjectile(context, it->second, room, players, elapsed)) {

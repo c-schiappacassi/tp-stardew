@@ -1,11 +1,11 @@
 #pragma once
 
-class Player;
+class PlayerSnapshot;
 struct PlayerDataLocal;
 
 class ZoneDataSource {
 public:
-    virtual void completeZoneData(const Player& player,PlayerDataLocal& data,bool includeBroken) const = 0;
+    virtual void completeZoneData(const PlayerSnapshot& player, PlayerDataLocal& data,bool includeBroken) const = 0;
 
-    virtual ~ZoneDataSource() = default;
+    virtual ~ZoneDataSource();
 };

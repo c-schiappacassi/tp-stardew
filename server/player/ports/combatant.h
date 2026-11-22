@@ -1,10 +1,9 @@
 #pragma once
-
 #include <cstdint>
 
-class Player;
+#include "player/queries/player_snapshot.h"
 
 struct Combatant {
     uint16_t id;
-    Player* player;
+    PlayerSnapshot player;
 };

@@ -1,7 +1,7 @@
 #pragma once
 
-#include "player.h"
-#include "player_config.h"
+#include "player/player.h"
+#include "player/player_config.h"
 
 class PlayerFactory {
 private:
@@ -10,4 +10,5 @@ private:
 public:
     explicit PlayerFactory(const PlayerConfig& config);
     Player create(const PlayerData& appearance) const;
+    Player restore(const PlayerDataLocal& saved) const;
 };

@@ -1,14 +1,14 @@
-#include "player_chat.h"
-
 #include <exception>
 #include <variant>
 #include <vector>
 
-#include "chat_command_parser.h"
-#include "player/player_record.h"
-#include "services/cheat_chat_service.h"
-#include "services/community_chat_service.h"
-#include "services/merchant_chat_service.h"
+#include "chat/chat_command_parser.h"
+#include "chat/services/cheat_chat_service.h"
+#include "chat/services/community_chat_service.h"
+#include "chat/services/merchant_chat_service.h"
+#include "player/sessions/player_roster.h"
+
+#include "player_chat.h"
 
 void PlayerChat::listCheats(PlayerRecord& sender) const {
     reply(sender, "/cheat health N | /cheat energy N (0 to 65535)");
@@ -18,17 +18,16 @@ void PlayerChat::listCheats(PlayerRecord& sender) const {
     reply(sender, "/cheat heal | /cheat end_day (affects all players)");
     reply(sender, "/cheat give product N [none|base|good|excellent|incredible|perfect]");
     reply(sender, "/cheat clear_slot N (slots start at 1) | /cheat spawn_animal cow|chicken N");
-    reply(sender, "Animal colors: brown_cow, white_cow, brown_chicken, white_chicken, blue_chicken, void_chicken.");
+    reply(sender, "Animal colors: brown_cow, white_cow, brown_chicken, white_chicken, ""blue_chicken, void_chicken.");
     reply(sender, "/cheat warp farm|town|home|center|pierre|marnie|robin|clint|mine [level]");
-    reply(sender, "/cheat spawn_enemy skeleton|orc|vampire_male|vampire_female|vampire_pair|skull [N]");
+    reply(sender,"/cheat spawn_enemy skeleton|orc|vampire_male|vampire_female|vampire_pair|skull [N]");
     reply(sender, "/cheat kill_enemy (nearest) | /cheat kill_enemies (current mine floor)");
-    reply(sender, "Bundle names: crops, metals, animals, combat, money. Completing all ends the game.");
-    if (!services.cheats) reply(sender, services.community ?
-        "Only community center cheats are currently available." : "Cheats are not available yet.");
+    reply(sender,"Bundle names: crops, metals, animals, combat, money. Completing all ends the game.");
+    if (!services.cheats)
+        reply(sender, services.community ? "Only community center cheats are currently available." :"Cheats are not available yet.");
 }
 
-void PlayerChat::command(std::map<uint16_t, PlayerRecord>& players, PlayerRecord& sender,
-                         const std::string& text, bool actionsBlocked) const {
+void PlayerChat::command(const PlayerRoster& players, PlayerRecord& sender, const std::string& text,bool actionsBlocked) const {
     const auto parsed = ChatCommandParser::parse(text);
     if (const auto* error = std::get_if<ChatCommandError>(&parsed)) {
         reply(sender, error->text);
@@ -40,13 +39,14 @@ void PlayerChat::command(std::map<uint16_t, PlayerRecord>& players, PlayerRecord
     }
     if (std::holds_alternative<ChatPlayers>(parsed)) {
         reply(sender, "Connected players:");
-        for (const auto& [id, record] : players) {
-            if (record.connected && record.output) reply(sender, record.name);
+        for (const auto& [id, record]: players) {
+            if (record.isConnected())
+                reply(sender, record.getName());
         }
         return;
     }
 
-    const ChatCommandContext context{sender.id, sender.name, sender.player, actionsBlocked};
+    const ChatCommandContext context{sender.getId(), sender.getName(), manager, actionsBlocked};
     std::vector<ChatMessageData> responses;
     try {
         if (const auto* request = std::get_if<TradeCommand>(&parsed)) {
@@ -54,7 +54,7 @@ void PlayerChat::command(std::map<uint16_t, PlayerRecord>& players, PlayerRecord
                 reply(sender, "Trading is not available yet.");
                 return;
             }
-            if (actionsBlocked || !sender.player.canAct()) {
+            if (actionsBlocked || !sender.getPlayer().canAct()) {
                 reply(sender, "You cannot trade right now.");
                 return;
             }
@@ -71,7 +71,7 @@ void PlayerChat::command(std::map<uint16_t, PlayerRecord>& players, PlayerRecord
                 return;
             }
             if (services.community && (request->action == CheatAction::CompleteBundle ||
-                                      request->action == CheatAction::CompleteAllBundles)) {
+                                       request->action == CheatAction::CompleteAllBundles)) {
                 responses = services.community->completeCheat(*request);
             } else {
                 if (!services.cheats) {
@@ -80,10 +80,10 @@ void PlayerChat::command(std::map<uint16_t, PlayerRecord>& players, PlayerRecord
                 }
                 auto cheatContext = context;
                 if (request->action == CheatAction::SpawnEnemy) {
-                    for (const auto& [id, record] : players) {
-                        if (record.connected && record.player.getZone() == Zone::Dungeon &&
-                            record.player.getDungeonLevel() == sender.player.getDungeonLevel()) {
-                            cheatContext.occupiedPositions.push_back(record.player.getPosition());
+                    for (const auto& [id, record]: players) {
+                        if (record.isConnected() && record.getPlayer().getZone() == Zone::Dungeon &&
+                            record.getPlayer().getDungeonLevel() ==sender.getPlayer().getDungeonLevel()) {
+                            cheatContext.occupiedPositions.push_back(record.getPlayer().getPosition());
                         }
                     }
                 }
@@ -94,5 +94,5 @@ void PlayerChat::command(std::map<uint16_t, PlayerRecord>& players, PlayerRecord
         reply(sender, "Could not execute the command. Try again.");
         return;
     }
-    sender.chatMessages.insert(sender.chatMessages.end(), responses.begin(), responses.end());
+    sender.enqueueMessages(responses);
 }

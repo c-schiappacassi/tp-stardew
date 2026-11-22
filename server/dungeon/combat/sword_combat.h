@@ -5,9 +5,10 @@
 #include "protocol_types.h"
 
 class DungeonRoom;
-class Player;
+class PlayerManager;
+class PlayerSnapshot;
 struct CombatContext;
 
 namespace sword_combat {
-bool attack(CombatContext& context, Player& player, uint16_t playerId, DungeonRoom& room,Direction direction);
+bool attack(CombatContext& context, uint16_t playerId, DungeonRoom& room, Direction direction);
 }

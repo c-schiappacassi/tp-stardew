@@ -5,7 +5,7 @@
 #include <stdexcept>
 #include <utility>
 
-#include "player/player.h"
+#include "player/player_manager.h"
 
 #include "combat_context.h"
 #include "enemy_behavior.h"
@@ -22,11 +22,11 @@ bool hasSkull(const DungeonRoom& room) {
     }
     return false;
 }
-}
+}  // namespace
 
-DungeonCombat::DungeonCombat(const EnemyConfig& config, uint32_t seed):config(config), generator(config, seed), trapRandom(seed) {}
+DungeonCombat::DungeonCombat(const EnemyConfig& config, uint32_t seed): config(config), generator(config, seed), trapRandom(seed) {}
 
-bool DungeonCombat::initialize(std::map<uint8_t, DungeonRoom>& rooms,const std::map<uint8_t, DungeonRoomLayout>& data,EntityIdGenerator& ids) {
+bool DungeonCombat::initialize(std::map<uint8_t, DungeonRoom>& rooms, const std::map<uint8_t, DungeonRoomLayout>& data, EntityIdGenerator& ids) {
     if (rooms.empty() || rooms.size() != data.size()) {
         return false;
     }
@@ -54,12 +54,10 @@ bool DungeonCombat::regenerate(std::map<uint8_t, DungeonRoom>& rooms, EntityIdGe
     auto preparedTrapRandom = trapRandom;
     for (auto& [number, room]: preparedRooms) {
         const auto& layout = layouts.at(number);
-        if (layout.traps.size() > 256 ||
-            room.getMap().getCellSize() > std::numeric_limits<uint16_t>::max()) {
+        if (layout.traps.size() > 256 || room.getMap().getCellSize() > std::numeric_limits<uint16_t>::max()) {
             return false;
         }
-        if (!preparedGenerator.populate(room, preparedIds, layout.reservedPositions) ||
-            !trap_combat::populate(room, layout, config, preparedIds, preparedTrapRandom)) {
+        if (!preparedGenerator.populate(room, preparedIds, layout.reservedPositions) || !trap_combat::populate(room, layout, config, preparedIds, preparedTrapRandom)) {
             return false;
         }
     }
@@ -74,9 +72,9 @@ bool DungeonCombat::regenerate(std::map<uint8_t, DungeonRoom>& rooms, EntityIdGe
     return true;
 }
 
-bool DungeonCombat::attack(Player& player, uint16_t id, DungeonRoom& room, Direction direction,EntityIdGenerator& ids, std::chrono::steady_clock::time_point now) {
-    CombatContext context{config, generator, progress, ids, clock, now};
-    return sword_combat::attack(context, player, id, room, direction);
+bool DungeonCombat::attack(PlayerManager& players, uint16_t playerId, DungeonRoom& room, Direction direction, EntityIdGenerator& ids, std::chrono::steady_clock::time_point now) {
+    CombatContext context{players, config, generator, progress, ids, clock, now};
+    return sword_combat::attack(context, playerId, room, direction);
 }
 
 void DungeonCombat::silverMined(DungeonRoom& room) {
@@ -97,20 +95,22 @@ void DungeonCombat::endVisit() {
     occupied = false;
 }
 
-DungeonCombat::PlayersByRoom DungeonCombat::updatePresence(const std::vector<Combatant>& players,std::map<uint16_t, uint8_t> current,std::map<uint8_t, DungeonRoom>& rooms) {
+DungeonCombat::PlayersByRoom DungeonCombat::updatePresence(
+    const std::vector<Combatant>& combatants, PlayerManager& players, std::map<uint16_t, uint8_t> current, std::map<uint8_t, DungeonRoom>& rooms) {
     for (const auto& [id, number]: presence) {
         if (!current.contains(id)) {
             progress.leave(id, false);
         }
     }
     PlayersByRoom byRoom;
-    for (const auto& actor: players) {
-        if (!actor.player || actor.player->getZone() != Zone::Dungeon) {
+    for (const auto& actor: combatants) {
+        if (actor.player.getZone() != Zone::Dungeon) {
             continue;
         }
-        Player& player = *actor.player;
+        auto player = actor.player;
         if (lastVisits.contains(actor.id) && lastVisits.at(actor.id) != visit) {
-            player.changeLocation(Zone::Dungeon, 1, rooms.at(1).getPassages()->entry);
+            players.apply(actor.id, player_action::ChangeLocation{Zone::Dungeon, 1, rooms.at(1).getPassages()->entry});
+            player = players.snapshot(actor.id);
         }
         lastVisits[actor.id] = visit;
         const auto number = player.getDungeonLevel();
@@ -123,36 +123,37 @@ DungeonCombat::PlayersByRoom DungeonCombat::updatePresence(const std::vector<Com
             progress.enter(actor.id, number, hasSkull(room->second));
         }
         current[actor.id] = number;
-        byRoom[number].push_back(actor);
+        byRoom[number].push_back({actor.id, std::move(player)});
     }
     presence = std::move(current);
     return byRoom;
 }
 
-void DungeonCombat::spawnPendingAmbush(DungeonRoom& room, const std::vector<Combatant>& players,EntityIdGenerator& ids) {
+void DungeonCombat::spawnPendingAmbush(DungeonRoom& room, const std::vector<Combatant>& combatants, EntityIdGenerator& ids) {
     auto& pending = room.getCombat().pendingAmbushes;
     if (pending == 0) {
         return;
     }
     auto reserved = layouts.at(room.getNumber()).reservedPositions;
-    for (const auto& actor: players) {
-        reserved.push_back(actor.player->getPosition());
+    for (const auto& actor: combatants) {
+        reserved.push_back(actor.player.getPosition());
     }
     if (generator.spawnOrcs(room, ids, reserved)) {
         --pending;
     }
 }
 
-void DungeonCombat::update(CombatTime elapsed, std::map<uint8_t, DungeonRoom>& rooms,const std::vector<Combatant>& players, EntityIdGenerator& ids,std::chrono::steady_clock::time_point now) {
+void DungeonCombat::update(CombatTime elapsed, std::map<uint8_t, DungeonRoom>& rooms, const std::vector<Combatant>& combatants, PlayerManager& players, EntityIdGenerator& ids,
+    std::chrono::steady_clock::time_point now) {
     if (elapsed.count() < 0) {
         throw std::invalid_argument("Time cannot move backwards");
     }
     clock += elapsed;
     const CombatTime movementTime{std::min<int64_t>(elapsed.count(), 250)};
     std::map<uint16_t, uint8_t> current;
-    for (const auto& actor: players) {
-        if (actor.player && actor.player->getZone() == Zone::Dungeon) {
-            current.emplace(actor.id, actor.player->getDungeonLevel());
+    for (const auto& actor: combatants) {
+        if (actor.player.getZone() == Zone::Dungeon) {
+            current.emplace(actor.id, actor.player.getDungeonLevel());
         }
     }
     if (current.empty()) {
@@ -163,8 +164,8 @@ void DungeonCombat::update(CombatTime elapsed, std::map<uint8_t, DungeonRoom>& r
         return;
     }
     occupied = true;
-    const auto byRoom = updatePresence(players, std::move(current), rooms);
-    CombatContext context{config, generator, progress, ids, clock, now};
+    const auto byRoom = updatePresence(combatants, players, std::move(current), rooms);
+    CombatContext context{players, config, generator, progress, ids, clock, now};
     for (const auto& [number, roomPlayers]: byRoom) {
         auto& room = rooms.at(number);
         spawnPendingAmbush(room, roomPlayers, ids);
@@ -174,7 +175,7 @@ void DungeonCombat::update(CombatTime elapsed, std::map<uint8_t, DungeonRoom>& r
     }
 }
 
-void DungeonCombat::onTravel(uint16_t id, uint8_t number, bool survived,const std::map<uint8_t, DungeonRoom>& rooms) {
+void DungeonCombat::onTravel(uint16_t id, uint8_t number, bool survived, const std::map<uint8_t, DungeonRoom>& rooms) {
     progress.leave(id, survived);
     presence.erase(id);
     const auto room = rooms.find(number);

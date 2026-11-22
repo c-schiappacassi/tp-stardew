@@ -3,12 +3,13 @@
 #include <map>
 
 #include "chat/services/merchant_chat_service.h"
+
 #include "market_prices.h"
 #include "shop_config.h"
 
 class WorldManager;
 
-class MerchantChat final : public MerchantChatService {
+class MerchantChat final: public MerchantChatService {
     struct Conversation {
         InteriorLocation location;
         NpcData npc;
@@ -23,8 +24,8 @@ class MerchantChat final : public MerchantChatService {
 
     void rotateCatalog();
     std::vector<ChatMessageData> catalog(NpcId merchant) const;
-    std::string buy(Player& player, NpcId merchant, const TradeCommand& command);
-    std::string sell(Player& player, NpcId merchant, const TradeCommand& command);
+    std::string buy(PlayerManager& players, uint16_t playerId, NpcId merchant, const TradeCommand& command);
+    std::string sell(PlayerManager& players, uint16_t playerId, NpcId merchant, const TradeCommand& command);
 
 public:
     MerchantChat(WorldManager& world, const MarketPrices& prices, const MarketConfig& config = {});
