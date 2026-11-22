@@ -20,13 +20,16 @@ enum class SpriteId : uint16_t {
     Pants,
     Shirts,
     Tools,
-    Clock,
     Weapons,
-    InGameUI,
     Ores,
-    MenuTiles,
     Crops,
 
+    MenuTiles,
+    InGameUI,
+    Clock,
+    Minimap,
+    LightGlow,
+    
     BronwCow,
     WhiteCow,
     BronwChicken,
@@ -62,7 +65,24 @@ enum class SpriteId : uint16_t {
     Flames,
 
     Cursors,
-    Emotes
+    Emotes,
+    ChatBox,
+    InfoSing,
+
+    PlayerHouseInterior,
+    MarniesInterior,
+    PierresInterior,
+    ClintsInterior,
+    RobinsInterior,
+    ComunityCenterInterior,
+
+    Marnie,
+    Pierre,
+    Clint,
+    Robin,
+    
+    Harvest,
+    Craftables
 };
 
 enum class UiSpriteId : uint8_t {
@@ -71,7 +91,15 @@ enum class UiSpriteId : uint8_t {
     HotbarSlotOutline,
     HotbarSlotSelected,
     EnergyBar,
-    HealthBar
+    HealthBar,
+    ChatBox,
+    ChatTypeBox,
+    DialogBox,
+    OkButton,
+    CancelButton,
+    PlayerHead,
+    InfoSing,
+    InfoSingArrow
 };
 
 struct Drawable {
@@ -89,6 +117,11 @@ struct Sprite {
 
     SDL2pp::Rect src() const { return SDL2pp::Rect(x, y, width, height); }
     int dx(bool flip) const { return flip ? -(offset_x + static_cast<int>(width)) : offset_x; }
+};
+
+struct FlippableSprite {
+    Sprite sprite;
+    bool flip = false;
 };
 
 struct Offset { int8_t x = 0; int8_t y = 0; }; 

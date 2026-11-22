@@ -6,6 +6,7 @@
 #include "constants.h"
 
 namespace {
+    // TODO: tambien como en enemigo pasar esto a asset manager
     SpriteId sprite_for(TrapType type) {
         switch (type) {
             case TrapType::Spikes:    return SpriteId::SpikeTrap;
@@ -38,38 +39,9 @@ void TrapView::update(const TrapData& data) {
 }
 
 std::optional<float> TrapView::depth(const RenderInfo& ctx) const {
-    const int radius = height_for(type) * ctx.cam.get_zoom();
-    if (!ctx.cam.is_visible(pos.getX(), pos.getY(), radius)) {
-        return std::nullopt;
-    }
-
-    if (type == TrapType::Spikes) {
-        return static_cast<float>(pos.getY() - TILE_TO_PIXEL);
-    }
-
-    return static_cast<float>(pos.getY());
+    return depth_if_visible(ctx, pos, height_for(type), type == TrapType::Spikes ? -TILE_TO_PIXEL : 0);
 }
 
 void TrapView::draw(const RenderInfo& ctx) {
-    const ClipId id{sprite_for(type), Action{state}, clip_dir(type, facing)};
-
-    if (!current_clip || !(*current_clip == id)) {
-        current_clip = id;
-        anim.reset();
-    }
-
-    if (last_it >= 0 && ctx.it > last_it) {
-        anim.update(static_cast<float>(ctx.it - last_it) * TICK_MS);
-    }
-    last_it = ctx.it;
-
-    if (!ctx.assets.has_clip(id)) {
-        return;
-    }
-
-    const Clip& clip = ctx.assets.get_clip(id);
-    const AnimatedFrame& frame = anim.get_current_frame(clip);
-
-    const SDL2pp::Point origin = ctx.cam.world_to_screen(pos.getX(), pos.getY());
-    draw_sprite(ctx, frame.sprite, origin, frame.flip);
+    draw_clip_at(ctx, clip_player, ClipId{sprite_for(type), Action{state}, clip_dir(type, facing)}, pos);
 }

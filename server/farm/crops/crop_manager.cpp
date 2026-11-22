@@ -81,6 +81,10 @@ void CropManager::update(std::chrono::milliseconds elapsed) {
     }
 }
 
+void CropManager::finishDay() {
+    for (auto& [id, crop] : crops) crop.finishDay();
+}
+
 const Crop* CropManager::find(EntityId id) const {
     const auto it = crops.find(id);
     if (it == crops.end()) {
@@ -88,4 +92,9 @@ const Crop* CropManager::find(EntityId id) const {
     } else {
         return &it->second;
     }
+}
+
+Crop* CropManager::findMutable(EntityId id) {
+    const auto it = crops.find(id);
+    return it == crops.end() ? nullptr : &it->second;
 }

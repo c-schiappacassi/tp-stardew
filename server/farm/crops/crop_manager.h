@@ -26,6 +26,8 @@ public:
     bool water(EntityId id);
     std::optional<FarmProduct> harvest(EntityId id, FarmPlacement& placement, double luck = 1.0);
     void update(std::chrono::milliseconds elapsed);
+    void finishDay();
+    Crop* findMutable(EntityId id);
     const Crop* find(EntityId id) const;
     const std::map<EntityId, Crop>& getCrops() const;
     const std::set<ZoneMap::Cell>& getTilledSoil() const;

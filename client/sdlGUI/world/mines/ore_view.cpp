@@ -14,17 +14,10 @@ void OreView::update(const MineralData& data) {
 }
 
 std::optional<float> OreView::depth(const RenderInfo& ctx) const {
-    const int radius = TILE_TO_PIXEL * ctx.cam.get_zoom();
-
-    if (!ctx.cam.is_visible(pos.getX(), pos.getY(), radius)) {
-        return std::nullopt;
-    }
-
-    return static_cast<float>(pos.getY());
+    return depth_if_visible(ctx, pos, TILE_TO_PIXEL);
 }
 
 void OreView::draw(const RenderInfo& ctx) {
     const Sprite& sprite = ctx.assets.get_sprite(type, state);
-    const SDL2pp::Point origin = ctx.cam.world_to_screen(pos.getX(), pos.getY());
-    draw_sprite(ctx, sprite, origin);
+    draw_sprite_at(ctx, sprite, pos);
 }

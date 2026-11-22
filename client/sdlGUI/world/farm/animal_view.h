@@ -3,10 +3,9 @@
 
 #include "../../utils.h"
 #include "../entity_view.h"
-#include "../../animator.h"
 #include "../../render_info.h"
 #include "../../draw_region.h"
-
+#include "../../clip_player.h"
 #include "position.h"
 #include "protocol_types.h"
 #include "constants.h"
@@ -25,9 +24,7 @@ private:
     Direction facing = Direction::Down;
     AnimalState state;
     
-    Animator anim;
-    std::optional<ClipId> current_clip;
-    long long last_it = -1;
+    ClipPlayer clip_player;
 public:
     explicit AnimalView(const AnimalData& data);
 

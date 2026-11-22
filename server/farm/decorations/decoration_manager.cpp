@@ -6,12 +6,13 @@ const std::map<EntityId, Decoration>& DecorationManager::getDecorations() const 
 }
 
 bool DecorationManager::place(EntityId id, const Position& position, ItemId item,
-    FarmPlacement& placement) {
+    FarmPlacement& placement, Direction direction) {
     if (!Decoration::isDecoration(item) || id == 0 || placement.contains(id) ||
+        direction < Direction::Up || direction > Direction::Right ||
         !placement.isAvailable(CollisionBox{entity_dimensions::DECORATION}.at(position))) {
         return false;
     }
-    const Decoration decoration{id, position, item};
+    const Decoration decoration{id, position, item, direction};
     const CollisionBox collision{entity_dimensions::DECORATION};
     FarmReservation reservation{placement, id, position, collision, decoration.blocksMovement()};
     if (!reservation.isReserved() || !decorations.emplace(id, decoration).second) {

@@ -4,6 +4,7 @@
 #include <vector>
 #include "protocol_types.h"
 #include "world/zone_map.h"
+#include "world/interiors/interior_layout.h"
 
 struct FarmBackgroundTile {
     Position tile{0, 0};
@@ -39,6 +40,6 @@ struct FarmLayout {
     std::optional<Position> mineReturn;
     std::optional<Position> townDoor;
     std::optional<Position> townReturn;
-    std::vector<Position> beds;
+    std::vector<InteriorLayout> interiors;
     uint8_t playerHouses = 4;
 };

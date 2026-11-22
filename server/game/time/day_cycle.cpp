@@ -7,33 +7,50 @@
 
 #include "player/player.h"
 #include "player/ports/player_spawn_source.h"
+#include "game_time.h"
 
 DayCycle::DayCycle(std::chrono::milliseconds duration): duration(duration) {
     if (duration.count() <= 0) {
-        throw std::invalid_argument("La duracion del dia debe ser positiva");
+        throw std::invalid_argument("Day duration must be positive");
     }
 }
 
 bool DayCycle::hasEnded() const { return ended; }
 
+std::chrono::milliseconds DayCycle::remainingTime() const { return duration - elapsed; }
+
+uint16_t DayCycle::timeOfDayMinutes() const {
+    const auto minutes = game_time::START_MINUTES + elapsed.count() * game_time::DAY_MINUTES / duration.count();
+    return static_cast<uint16_t>(minutes % game_time::MINUTES_PER_24_HOURS);
+}
+
+bool DayCycle::requiresConfirmation(uint16_t playerId, const Player& player) const {
+    return (player.isSleeping() || (ended && player.isResting())) && !confirmations.contains(playerId);
+}
+
 void DayCycle::acknowledge(uint16_t playerId, const Player& player) {
-    if (player.isResting()) {
+    if (requiresConfirmation(playerId, player)) {
         confirmations.insert(playerId);
     }
+}
+
+bool DayCycle::cancel(uint16_t playerId, Player& player) {
+    return !ended && !confirmations.contains(playerId) && player.cancelSleep();
 }
 
 void DayCycle::forgetConfirmation(uint16_t playerId) { confirmations.erase(playerId); }
 
 bool DayCycle::advance(std::chrono::milliseconds time,std::span<const Participant> players,const PlayerSpawnSource& spawns) {
     if (time.count() < 0) {
-        throw std::invalid_argument("El tiempo no puede retroceder");
+        throw std::invalid_argument("Time cannot move backwards");
     }
     bool connected = false;
     bool allIncapacitated = true;
     for (const auto& participant: players) {
         if (participant.connected) {
             connected = true;
-            allIncapacitated &= !participant.player.canBeAttacked();
+            allIncapacitated &= participant.player.isResting() &&
+                (!participant.player.isSleeping() || confirmations.contains(participant.id));
         }
     }
     if (!connected) {
@@ -52,7 +69,7 @@ bool DayCycle::advance(std::chrono::milliseconds time,std::span<const Participan
         return false;
     }
     for (const auto& participant: players) {
-        if (participant.connected && !confirmations.contains(participant.id)) {
+        if (participant.connected && requiresConfirmation(participant.id, participant.player)) {
             return false;
         }
     }
@@ -62,7 +79,7 @@ bool DayCycle::advance(std::chrono::milliseconds time,std::span<const Participan
     for (const auto& participant: players) {
         prepared.push_back(participant.player);
         prepared.back().wakeUp();
-        if (!spawns.recoverPlayer(prepared.back())) {
+        if (!spawns.recoverPlayer(prepared.back(), participant.id)) {
             return false;
         }
     }

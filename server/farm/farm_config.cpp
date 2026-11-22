@@ -7,7 +7,7 @@
 namespace {
 void validateDayLength(std::chrono::milliseconds dayLength) {
     if (dayLength.count() < 6 || dayLength.count() > std::numeric_limits<int64_t>::max() / 7) {
-        throw std::invalid_argument("La duracion del dia no permite definir los ciclos de la granja");
+        throw std::invalid_argument("Day duration does not allow defining farm cycles");
     }
 }
 }
@@ -38,7 +38,7 @@ void FarmConfig::validate() const {
     for (const auto& crop : crops) {
         if (crop.type != CropType::Strawberry && crop.type != CropType::Scallion &&
             crop.type != CropType::Potato && crop.type != CropType::Pumpkin) {
-            throw std::invalid_argument("Tipo de cultivo desconocido");
+            throw std::invalid_argument("Unknown crop type");
         }
 
         const bool invalidTolerance = crop.toleratedMissedWaterings != 0 &&
@@ -47,7 +47,7 @@ void FarmConfig::validate() const {
         if (!cropTypes.insert(crop.type).second || crop.growthTime.count() <= 0 ||
             crop.wateringInterval.count() <= 0 || crop.regrowthTime.count() < 0 ||
             invalidTolerance) {
-            throw std::invalid_argument("Definicion de cultivo repetida o con tiempos nulos");
+            throw std::invalid_argument("Duplicate crop definition or zero duration");
         }
     }
 
@@ -56,12 +56,12 @@ void FarmConfig::validate() const {
     for (const auto& animal : animals) {
         animal.movement.validate();
         if (animal.species != AnimalSpecies::Cow && animal.species != AnimalSpecies::Chicken) {
-            throw std::invalid_argument("Tipo de animal desconocido");
+            throw std::invalid_argument("Unknown animal type");
         }
 
         if (!animalTypes.insert(animal.species).second || animal.productionInterval.count() <= 0 ||
             animal.maxCount == 0 || !animal.collision.isValid()) {
-            throw std::invalid_argument("Definicion de animal repetida o con tiempo o tope nulo");
+            throw std::invalid_argument("Duplicate animal definition or zero duration or limit");
         }
     }
 }

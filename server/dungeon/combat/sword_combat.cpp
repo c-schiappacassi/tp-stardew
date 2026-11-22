@@ -42,33 +42,15 @@ Enemy* findTarget(Player& player, DungeonRoom& room, Direction direction) {
     return nearestEnemy;
 }
 
-void dropSilver(CombatContext& context, const Enemy& enemy, DungeonRoom& room) {
-    auto& drops = room.getCombat().loot;
-    for (auto& [id, loot]: drops) {
-        if (loot.item == ItemId::Silver && loot.pos.getX() == enemy.data.pos.getX() &&
-            loot.pos.getY() == enemy.data.pos.getY() &&
-            loot.quantity < std::numeric_limits<uint16_t>::max()) {
-            ++loot.quantity;
-            return;
-        }
-    }
-    if (context.entityIds.getNextId() == 0) {
-        return;
-    }
-    LootData loot{context.entityIds.generate(), enemy.data.pos, ItemId::Silver, 1};
-    drops.emplace(loot.id, loot);
-}
-
-void rewardDefeat(CombatContext& context, Player& player, uint16_t playerId, const Enemy& enemy,DungeonRoom& room) {
+void rewardDefeat(CombatContext& context, uint16_t playerId, const Enemy& enemy,DungeonRoom& room) {
     context.progress.defeat(playerId, room.getNumber(), enemy);
     if (context.generator.roll(context.config.goldChance)) {
-        player.addGold(context.generator.gold());
+        room.getGroundItems().dropGold(enemy.data.pos, context.generator.gold(), context.entityIds);
     }
     if (enemy.data.type == EnemyType::Orc &&
         context.generator.roll(context.config.orcSilverChance)) {
-        if (!player.addItem(Stack{ItemId::Silver, 1, Quality::None})) {
-            dropSilver(context, enemy, room);
-        }
+        room.getGroundItems().drop(enemy.data.pos, ItemId::Silver, 1, Quality::None,
+            context.entityIds);
     }
 }
 }  // namespace
@@ -86,34 +68,7 @@ bool sword_combat::attack(CombatContext& context, Player& player, uint16_t playe
     if (!target || !target->hit(damage, context.time, context.config)) {
         return true;
     }
-    rewardDefeat(context, player, playerId, *target, room);
+    rewardDefeat(context, playerId, *target, room);
     enemy_behavior::refreshVampirePairs(room);
     return true;
-}
-
-bool sword_combat::collectLoot(Player& player, DungeonRoom& room) {
-    if (!player.canAct() || player.getZone() != Zone::Dungeon ||
-        player.getDungeonLevel() != room.getNumber()) {
-        return false;
-    }
-    auto& drops = room.getCombat().loot;
-    for (auto it = drops.begin(); it != drops.end(); ++it) {
-        auto& loot = it->second;
-        if (!player.canReach(loot.pos, 24) ||
-            !room.hasClearLine(player.getCollisionCenter(), loot.pos)) {
-            continue;
-        }
-        for (uint16_t amount = std::min<uint16_t>(50, loot.quantity); amount > 0; --amount) {
-            if (!player.addItem(Stack{loot.item, amount, Quality::None})) {
-                continue;
-            }
-            loot.quantity -= amount;
-            if (loot.quantity == 0) {
-                drops.erase(it);
-            }
-            return true;
-        }
-        return false;
-    }
-    return false;
 }

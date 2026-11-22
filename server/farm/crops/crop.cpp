@@ -12,7 +12,7 @@ Crop::Crop(EntityId id, const Position& position, const CropDefinition& definiti
     const bool invalidTolerance = definition.toleratedMissedWaterings != 0 &&definition.wateringInterval.count() >std::numeric_limits<int64_t>::max() / definition.toleratedMissedWaterings;
     if (id == 0 || position.getX() < 0 || position.getY() <= 0 ||
         definition.growthTime.count() <= 0 || definition.regrowthTime.count() < 0 ||invalidTolerance) {
-        throw std::invalid_argument("Identificador, posicion o tiempos de cultivo invalidos");
+        throw std::invalid_argument("Invalid crop identifier, position or times");
     }
     remainingDryTolerance = definition.wateringInterval * definition.toleratedMissedWaterings;
     getProduct();
@@ -25,6 +25,7 @@ bool Crop::isReady() const { return !harvested && growthElapsed >= growthDuratio
 bool Crop::isHarvested() const { return harvested; }
 bool Crop::isWatered() const { return remainingWaterTime.count() > 0 && !isReady() && !harvested; }
 std::chrono::milliseconds Crop::getGrowthElapsed() const { return growthElapsed; }
+std::chrono::milliseconds Crop::getRemainingWaterTime() const { return remainingWaterTime; }
 
 CropState Crop::getState() const {
     if (isReady()) {
@@ -55,12 +56,12 @@ ItemId Crop::getProduct() const {
         case CropType::Pumpkin:
             return ItemId::Pumpkin;
     }
-    throw std::invalid_argument("Tipo de cultivo desconocido");
+    throw std::invalid_argument("Unknown crop type");
 }
 
 void Crop::update(std::chrono::milliseconds elapsed) {
     if (elapsed.count() < 0) {
-        throw std::invalid_argument("Tiempo negativo");
+        throw std::invalid_argument("Negative time");
     }
     if (harvested) {
         return;
@@ -89,6 +90,11 @@ void Crop::update(std::chrono::milliseconds elapsed) {
             quality.recordWaterRequest();
         }
     }
+}
+
+void Crop::finishDay() {
+    if (isWatered()) quality.recordWaterRequest();
+    remainingWaterTime = std::chrono::milliseconds{0};
 }
 
 bool Crop::water() {
@@ -125,4 +131,14 @@ std::optional<FarmProduct> Crop::harvest(double luck) {
         }
     }
     return product;
+}
+
+void Crop::restoreProgress(std::chrono::milliseconds growth, std::chrono::milliseconds water, bool wasHarvested) {
+    if (growth.count() < 0 || water.count() < 0 || growth > growthDuration ||
+        water > definition.wateringInterval) {
+        throw std::invalid_argument("Invalid saved crop progress");
+    }
+    growthElapsed = growth;
+    remainingWaterTime = water;
+    harvested = wasHarvested;
 }

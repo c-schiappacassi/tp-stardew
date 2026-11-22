@@ -7,7 +7,7 @@ Cow::Cow(EntityId id, const Position& position, AnimalType type,
     Animal(id, position, type, productionInterval, movementConfig) {
     if (animalSpeciesForType(type) != AnimalSpecies::Cow) {
         throw std::invalid_argument(
-            "La variante no corresponde a una vaca");
+            "The variant does not belong to a cow");
     }
 }
 

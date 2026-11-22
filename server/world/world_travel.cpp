@@ -6,10 +6,21 @@
 #include "farm/loading/farm_layout.h"
 #include "player/player.h"
 #include "town/town_map.h"
+#include "interiors/interior_manager.h"
 
 void WorldTravel::configureFarm(const FarmLayout& layout) {
     resetDungeon();
     farmTown.reset();
+    portals.clear();
+    for (const auto& room: layout.interiors) {
+        const WorldLocation inside{Zone::InsideHouse, 0, room.location, room.entry};
+        auto exit = inside;
+        exit.position = room.exit;
+        auto outsideReturn = room.outside;
+        outsideReturn.position = room.returnPosition;
+        portals.push_back({room.outside, inside});
+        portals.push_back({exit, outsideReturn});
+    }
     if (layout.townDoor) {
         farmTown = FarmTownPassage{*layout.townDoor, layout.townReturn.value_or(layout.spawn)};
     }
@@ -63,8 +74,32 @@ bool WorldTravel::enterMine(Player& player, uint16_t playerId, const ReturnPoint
     return true;
 }
 
-bool WorldTravel::use(Player& player, uint16_t playerId, DungeonManager& dungeon,const FarmManager& farm, const TownMap& town) {
+bool WorldTravel::use(Player& player, uint16_t playerId, DungeonManager& dungeon,const FarmManager& farm, const TownMap& town, const InteriorManager& interiors) {
     if (!player.canAct()) return false;
+    const auto terrainFor = [&](const WorldLocation& location) -> const ZoneMap* {
+        if (location.zone == Zone::Farm) return &farm.getMap();
+        if (location.zone == Zone::Town) return &town.getMap();
+        if (location.zone == Zone::InsideHouse && location.interior) {
+            const auto* room = interiors.find(*location.interior);
+            return room ? &room->terrain : nullptr;
+        }
+        return nullptr;
+    };
+    for (const auto& portal: portals) {
+        const auto& source = portal.source;
+        const auto* terrain = terrainFor(source);
+        if (source.zone != player.getZone() || source.level != player.getDungeonLevel() ||
+            source.interior != player.getInterior() || !terrain ||
+            !terrain->sameBaseCell(player.getPosition(), source.position)) continue;
+        const auto& target = portal.destination;
+        const auto* destination = terrainFor(target);
+        const auto bounds = player.getCollisionBounds(target.position);
+        const bool canWalk = target.zone == Zone::InsideHouse && target.interior
+            ? interiors.canWalk(*target.interior, bounds)
+            : canArrive(player, {target.zone, target.position}, farm, town);
+        return destination && canWalk &&
+               player.changeLocation(target.zone, target.level, target.position, target.interior);
+    }
     const auto townFarmDoor = town.connectionTo(Zone::Farm);
     const auto townMineDoor = town.connectionTo(Zone::Dungeon);
     if (player.getZone() == Zone::Dungeon) {

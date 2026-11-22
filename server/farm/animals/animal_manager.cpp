@@ -6,6 +6,7 @@
 
 #include "animal_factory.h"
 #include "farm/spatial/farm_reservation.h"
+#include "items/ground_items.h"
 
 AnimalManager::AnimalManager(const FarmConfig& config, uint32_t seed):
     definitions(config.animals), random(seed) {
@@ -84,9 +85,16 @@ std::optional<FarmProduct> AnimalManager::collect(EntityId id) {
     }
 }
 
-void AnimalManager::update(std::chrono::milliseconds elapsed, FarmPlacement& placement) {
+void AnimalManager::update(std::chrono::milliseconds elapsed, FarmPlacement& placement,GroundItems& groundItems, EntityIdGenerator& entityIds) {
     for (auto& [id, animal] : animals) {
         animal->updateProduction(elapsed);
+        if (animal->dropsProductsAutomatically()) {
+            const auto product = animal->getProduction();
+            if (product && groundItems.drop(animal->getPosition(), product->item,
+                    product->quantity, product->quality, entityIds)) {
+                animal->collect();
+            }
+        }
         animal->advanceMovement(placement, random);
     }
 }
@@ -110,4 +118,9 @@ std::vector<const Animal*> AnimalManager::getAnimals() const {
     }
 
     return result;
+}
+
+Animal* AnimalManager::findMutable(EntityId id) {
+    const auto it = animals.find(id);
+    return it == animals.end() ? nullptr : it->second.get();
 }

@@ -19,12 +19,15 @@ private:
     Color receiveColor();
 
     Stack receiveStack();
+    std::vector<Stack> receiveCommunityStacks();
+    CommunityStateData receiveCommunityState();
 
     MineralData receiveMineralData();
     EnemySnapshot receiveEnemyData();
     ProjectileData receiveProjectileData();
     TrapData receiveTrapData();
     LootData receiveLootData();
+    std::vector<LootData> receiveLoot();
     DungeonCombatData receiveCombatData();
     LevelData receiveLevelData();
     MineData receiveMineData();
@@ -38,6 +41,10 @@ private:
     CropData receiveCropData();
     AnimalData receiveAnimalData();
     DecorData receiveDecorationData();
+    FurnitureData receiveFurnitureData();
+    InteriorData receiveInteriorData();
+    NpcData receiveNpcData();
+    InteriorBackgroundData receiveInteriorBackground();
     FarmData receiveFarmData();
 
     BackgroundData receiveBackgroundData();
@@ -60,6 +67,7 @@ public:
     void send(const MoveDTO& dto);
     void send(const InteractDTO& dto);
     void send(const DayOkDTO& dto);
+    void send(const DayCancelDTO& dto);
     void send(const DonateDTO& dto);
     void send(const ChatDTO& dto);
     void send(const UseItemDTO& dto);

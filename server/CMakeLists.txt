@@ -1,7 +1,8 @@
-target_sources(taller_server
+add_library(taller_server_core STATIC)
+
+target_sources(taller_server_core
     PRIVATE
     # .cpp files
-        main.cpp
         dungeon/enemies/enemy.cpp
         dungeon/enemies/enemy_generator.cpp
         dungeon/enemies/enemy_navigation.cpp
@@ -17,10 +18,32 @@ target_sources(taller_server
         network/client_handler.cpp
         network/client_sender.cpp
         network/server_protocol.cpp
+        chat/player_chat.cpp
+        chat/chat_command_parser.cpp
+        community/domain/community_bundle.cpp
+        community/domain/community_config.cpp
+        community/domain/community_center.cpp
+        community/application/community_donations.cpp
+        community/application/community_rewards.cpp
+        community/application/community_state.cpp
+        community/chat/community_chat.cpp
+        community/chat/community_messages.cpp
+        persistence/community_persistence.cpp
+        chat/player_chat_commands.cpp
+        player/player_inventory.cpp
+        config/community_toml_reader.cpp
+        commerce/merchant_chat.cpp
+        commerce/market_prices.cpp
+        commerce/merchant_catalog.cpp
+        commerce/merchant_trade.cpp
+        commerce/shop_products.cpp
+        player/player_trade.cpp
+        world/world_commerce.cpp
         game/game.cpp
         game/game_setup.cpp
         game/game_manager.cpp
         inventory/inventory.cpp
+        items/ground_items.cpp
         player/player.cpp
         dungeon/mining/mineral.cpp
         dungeon/rooms/dungeon_room.cpp
@@ -31,8 +54,10 @@ target_sources(taller_server
         world/zone_map.cpp
         player/player_factory.cpp
         player/player_manager.cpp
+        player/player_sessions.cpp
         world/world_manager.cpp
         world/world_travel.cpp
+        world/interiors/interior_manager.cpp
         game/time/day_cycle.cpp
         town/town_map.cpp
         player/player_updates.cpp
@@ -81,6 +106,11 @@ target_sources(taller_server
         config/dungeon_toml_reader.cpp
         config/town_toml_reader.cpp
         config/farm_toml_reader.cpp
+        persistence/persistence_serializer.cpp
+        persistence/persistence_deserializer.cpp
+        persistence/persistence_reader.cpp
+        persistence/persistence_writer.cpp
+        persistence/persistence_manager.cpp
     PUBLIC
     # .h files
         dungeon/enemies/enemy.h
@@ -100,11 +130,41 @@ target_sources(taller_server
         network/client_handler.h
         network/client_sender.h
         network/server_protocol.h
+        chat/player_chat.h
+        chat/chat_command_context.h
+        chat/chat_services.h
+        chat/parsed_chat_command.h
+        chat/commands/trade_command.h
+        chat/commands/cheat_command.h
+        chat/commands/community_command.h
+        chat/services/merchant_chat_service.h
+        chat/services/cheat_chat_service.h
+        chat/services/community_chat_service.h
+        chat/chat_command_parser.h
+        community/domain/community_bundle.h
+        community/domain/community_config.h
+        community/domain/community_progress.h
+        community/domain/community_center.h
+        community/application/community_donation_result.h
+        community/application/community_donations.h
+        community/application/community_reward_data.h
+        community/application/community_rewards.h
+        community/application/community_state.h
+        community/chat/community_chat.h
+        community/chat/community_messages.h
+        persistence/community_persistence.h
+        persistence/community_save_data.h
+        config/community_toml_reader.h
+        commerce/merchant_chat.h
+        commerce/market_prices.h
+        commerce/shop_config.h
+        commerce/shop_products.h
         game/game.h
         game/game_manager.h
         game/game_types.h
         player/player_record.h
         inventory/inventory.h
+        items/ground_items.h
         player/player.h
         entities/entity_id.h
         entities/collision_box.h
@@ -179,6 +239,18 @@ target_sources(taller_server
         config/dungeon_toml_reader.h
         config/town_toml_reader.h
         config/farm_toml_reader.h
+        persistence/persistence_serializer.h
+        persistence/persistence_deserializer.h
+        persistence/persistence_reader.h
+        persistence/persistence_writer.h
+        persistence/persistence_manager.h
+        persistence/persistence_dto.h
+        persistence/persistence_index.h
 )
 
-target_include_directories(taller_server PRIVATE ${CMAKE_CURRENT_SOURCE_DIR})
+target_include_directories(taller_server_core PUBLIC ${CMAKE_CURRENT_SOURCE_DIR})
+target_link_libraries(taller_server_core PUBLIC taller_common tomlplusplus::tomlplusplus)
+set_project_warnings(taller_server_core ${TALLER_MAKE_WARNINGS_AS_ERRORS} FALSE)
+
+target_sources(taller_server PRIVATE main.cpp)
+target_link_libraries(taller_server taller_server_core)

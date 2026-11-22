@@ -81,36 +81,52 @@ std::optional<DungeonCombatData> DungeonManager::getCombatData(uint8_t number) c
     return data;
 }
 
-bool DungeonManager::mineMineral(Player& player, EntityId id,
+bool DungeonManager::mineMineral(Player& player, EntityId id, EntityIdGenerator& ids,
                                  std::chrono::steady_clock::time_point now) {
     auto* room = findRoom(player.getDungeonLevel());
     if (!room) {
         return false;
     }
-    const auto result = mining.mine(player, *room, id, generator, now);
-    if (result.obtainedSilver) {
+    const auto result = mining.mine(player, *room, id, generator, ids, now);
+    if (result.droppedSilver) {
         combat.silverMined(*room);
     }
     return result.acted;
 }
 
 bool DungeonManager::useSelectedItem(Player& player, Direction direction,std::chrono::steady_clock::time_point now,EntityIdGenerator& ids, uint16_t playerId) {
+    if (player.getZone() != Zone::Dungeon || !player.canPerformAction(now)) {
+        return false;
+    }
     auto* room = findRoom(player.getDungeonLevel());
     if (!room) {
         return false;
-    }
-    if (combat.collectLoot(player, *room)) {
-        return true;
     }
     const auto* item = player.getSelectedItem();
     if (item && item->item_id == ItemId::Sword) {
         return combat.attack(player, playerId, *room, direction, ids, now);
     }
-    const auto result = mining.useSelectedItem(player, *room, generator, direction, now);
-    if (result.obtainedSilver) {
+    const auto result = mining.useSelectedItem(player, *room, generator, ids, direction, now);
+    if (result.droppedSilver) {
         combat.silverMined(*room);
     }
     return result.acted;
+}
+
+std::vector<LootData> DungeonManager::getGroundItems(uint8_t number) const {
+    const auto* room = findRoom(number);
+    return room ? room->getGroundItems().getPublicData() : std::vector<LootData>{};
+}
+
+bool DungeonManager::collectNearbyItems(Player& player) {
+    if (player.getZone() != Zone::Dungeon) {
+        return false;
+    }
+    auto* room = findRoom(player.getDungeonLevel());
+    return room && room->getGroundItems().collect(player, [&](const Position& position) {
+        return room->hasClearLine(player.getCollisionCenter(),
+            Position{position.getX(), position.getY() - 1});
+    });
 }
 
 void DungeonManager::update(std::chrono::milliseconds elapsed,const std::vector<Combatant>& players, EntityIdGenerator& ids,std::chrono::steady_clock::time_point now) {

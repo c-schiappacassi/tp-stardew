@@ -8,6 +8,7 @@ void LevelView::update(const LevelData& level) {
     sync_views(enemies, level.combat.enemies, [](const EnemySnapshot& d) { return d.id; });
     sync_views(traps, level.combat.traps, [](const TrapData& d) { return d.id; });
     sync_views(projectiles, level.combat.projectiles, [](const ProjectileData& d) { return d.id; });
+    update_loot(level.combat.loot);
 }
 
 void LevelView::collect_entities(const RenderInfo& ctx, std::vector<Drawable>& out, uint64_t& tie) {

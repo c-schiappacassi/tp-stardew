@@ -10,8 +10,9 @@
 
 DungeonMining::DungeonMining(uint16_t range): range(range) {}
 
-MiningResult DungeonMining::mine(Player& player, DungeonRoom& room, EntityId id,MineralGenerator& generator,std::chrono::steady_clock::time_point now) const {
-    if (player.getZone() != Zone::Dungeon || !player.canUsePickaxe(now)) {
+MiningResult DungeonMining::mine(Player& player, DungeonRoom& room, EntityId id,MineralGenerator& generator, EntityIdGenerator& ids, std::chrono::steady_clock::time_point now) const {
+    if (player.getZone() != Zone::Dungeon || player.getDungeonLevel() != room.getNumber() ||
+        !player.canUsePickaxe(now)) {
         return MiningResult();
     }
     auto* mineral = room.findMineral(id);
@@ -23,15 +24,20 @@ MiningResult DungeonMining::mine(Player& player, DungeonRoom& room, EntityId id,
     if (!player.useTool(now)) {
         return MiningResult();
     }
-    bool obtainedSilver = false;
-    if (mineral->hit()) {
+    bool droppedSilver = false;
+    auto preparedMineral = *mineral;
+    if (preparedMineral.hit()) {
         const auto reward = generator.rollReward(mineral->getType());
         if (reward) {
-            const bool received = player.addItem(*reward);
-            obtainedSilver = received && reward->item_id == ItemId::Silver;
+            if (!room.getGroundItems().drop(mineral->getPosition(), reward->item_id,
+                    reward->quantity, reward->qual, ids)) {
+                return {true, false};
+            }
+            droppedSilver = reward->item_id == ItemId::Silver;
         }
     }
-    return {true, obtainedSilver};
+    *mineral = preparedMineral;
+    return {true, droppedSilver};
 }
 
 EntityId DungeonMining::chooseMineral(const Player& player, const DungeonRoom& room,
@@ -59,10 +65,10 @@ EntityId DungeonMining::chooseMineral(const Player& player, const DungeonRoom& r
     return chosen;
 }
 
-MiningResult DungeonMining::useSelectedItem(Player& player, DungeonRoom& room,MineralGenerator& generator,Direction direction,std::chrono::steady_clock::time_point now) const {
+MiningResult DungeonMining::useSelectedItem(Player& player, DungeonRoom& room,MineralGenerator& generator, EntityIdGenerator& ids, Direction direction,std::chrono::steady_clock::time_point now) const {
     if (player.getZone() != Zone::Dungeon || !player.canUsePickaxe(now)) {
         return MiningResult();
     }
     const EntityId chosen = chooseMineral(player, room, direction);
-    return chosen != 0 ? mine(player, room, chosen, generator, now) : MiningResult{};
+    return chosen != 0 ? mine(player, room, chosen, generator, ids, now) : MiningResult{};
 }

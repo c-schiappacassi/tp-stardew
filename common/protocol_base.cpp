@@ -18,7 +18,7 @@ void ProtocolBase::send(const MessageBuffer& message) {
         return;
     }
     if (message.size() > std::numeric_limits<unsigned int>::max()) {
-        throw ProtocolError("mensaje demasiado largo");
+        throw ProtocolError("message too long");
     }
     if (socket.sendall(message.bytes(), static_cast<unsigned int>(message.size())) == 0) {
         throw ConnectionClosed();

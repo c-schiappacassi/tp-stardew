@@ -8,6 +8,7 @@
 #include "dungeon_room_passages.h"
 #include "room_geometry.h"
 #include "room_minerals.h"
+#include "items/ground_items.h"
 
 
 class DungeonRoom {
@@ -18,6 +19,7 @@ private:
     RoomGeometry geometry;
     std::optional<DungeonRoomPassages> passages;
     RoomCombat combat;
+    GroundItems groundItems;
 
 public:
     explicit DungeonRoom(uint8_t number);
@@ -39,4 +41,6 @@ public:
     RoomCombat& getCombat();
     const RoomCombat& getCombat() const;
     DungeonCombatData getCombatData() const;
+    GroundItems& getGroundItems();
+    const GroundItems& getGroundItems() const;
 };

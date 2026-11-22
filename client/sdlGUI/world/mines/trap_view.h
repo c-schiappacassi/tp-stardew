@@ -3,7 +3,7 @@
 
 #include "../../utils.h"
 #include "../entity_view.h"
-#include "../../animator.h"
+#include "../../clip_player.h"
 
 #include "position.h"
 #include "protocol_types.h"
@@ -17,9 +17,7 @@ private:
     Direction facing = Direction::Down;
     TrapState state;
 
-    Animator anim;
-    std::optional<ClipId> current_clip;
-    long long last_it = -1;
+    ClipPlayer clip_player;
 
 public:
     explicit TrapView(const TrapData& data);
