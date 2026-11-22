@@ -1,6 +1,8 @@
 #pragma once
 
 #include <chrono>
+#include <cstdint>
+#include <optional>
 
 #include "dtos.h"
 
@@ -11,6 +13,7 @@ private:
     Direction movementDirection = Direction::None;
     std::chrono::steady_clock::time_point nextActionTime{};
     bool bedReady = true;
+    std::optional<uint32_t> openChestId;
 
 public:
     explicit PlayerActivity(const PlayerData& initialData);
@@ -23,6 +26,7 @@ public:
     bool isSleeping() const;
     bool isBedReady() const;
     bool cooldownEnded(std::chrono::steady_clock::time_point now) const;
+    std::optional<uint32_t> getOpenChestId() const;
 
     void setMovement(Direction requested);
     void faceDirection(Direction requested);
@@ -38,4 +42,6 @@ public:
     void leaveBedArea();
     void reset();
     void restoreData(const PlayerData& saved);
+    void openChest(uint32_t id);
+    void closeChest();
 };

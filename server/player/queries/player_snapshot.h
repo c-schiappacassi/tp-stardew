@@ -36,6 +36,7 @@ class PlayerSnapshot {
     uint16_t swordDamage;
     uint16_t swordRange;
     uint16_t miningPower;
+    std::optional<uint32_t> openChestId;
 
 public:
     PlayerSnapshot(const Player& player, const PlayerConfig& config,std::chrono::steady_clock::time_point readyAt);
@@ -50,6 +51,7 @@ public:
     uint32_t getGold() const;
     const Stack* getSelectedItem() const;
     uint8_t getSelectedSlot() const;
+    std::optional<uint32_t> getOpenChestId() const;
     bool canAct() const;
     bool canBeAttacked() const;
     bool isResting() const;

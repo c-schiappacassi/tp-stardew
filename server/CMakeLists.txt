@@ -45,6 +45,14 @@ target_sources(taller_server_core
         game/game_setup.cpp
         game/game_manager.cpp
         inventory/inventory.cpp
+        chests/chest.cpp
+        chests/chest_manager.cpp
+        chests/rooms/chest_room.cpp
+        world/interaction_targeting.cpp
+        world/world_chests.cpp
+        chests/queries/chest_snapshot.cpp
+        chests/commands/chest_commands.cpp
+        chests/interactions/chest_interactions.cpp
         items/ground_items.cpp
         player/queries/player_snapshot.cpp
         player/player.cpp
@@ -178,6 +186,15 @@ target_sources(taller_server_core
         player/sessions/player_record.h
         player/sessions/player_roster.h
         inventory/inventory.h
+        chests/chest.h
+        chests/chest_manager.h
+        chests/rooms/chest_room.h
+        chests/loading/chest_spawn.h
+        world/interaction_targeting.h
+        chests/queries/chest_snapshot.h
+        chests/commands/chest_commands.h
+        chests/commands/chest_action.h
+        chests/interactions/chest_interactions.h
         items/ground_items.h
         player/queries/player_snapshot.h
         player/commands/player_action.h

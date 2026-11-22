@@ -30,5 +30,8 @@ FarmData FarmStatus::build(const FarmManager& farm) {
     }
     result.tilledSoil = farm.getTilledPositions();
     result.loot = farm.getGroundItems().getPublicData();
+    for (const auto& [id, chest]: farm.getChests()) {
+        result.furniture.push_back(chest.getPublicData());
+    }
     return result;
 }

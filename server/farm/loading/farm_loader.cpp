@@ -1,6 +1,7 @@
 #include "farm_loader.h"
 
 #include <limits>
+#include <stdexcept>
 
 #include "entities/entity_id_generator.h"
 #include "farm/farm_manager.h"
@@ -78,6 +79,18 @@ bool FarmLoader::load(const FarmLayout& layout, FarmManager& farm, EntityIdGener
     for (const auto& spawn : layout.decorations) {
         if (!validBase(spawn.base) || ids.getNextId() == 0 ||
             !farm.placeDecoration(ids.getNextId(), spawn.base, spawn.item)) {
+            return false;
+        }
+        ids.generate();
+    }
+    for (const auto& spawn: layout.chests) {
+        if (!validBase(spawn.base) || ids.getNextId() == 0) {
+            return false;
+        }
+        try {
+            if (!farm.placeChest(ids.getNextId(), spawn.base, spawn.items))
+                return false;
+        } catch (const std::invalid_argument&) {
             return false;
         }
         ids.generate();

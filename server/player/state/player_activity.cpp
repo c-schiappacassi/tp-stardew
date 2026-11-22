@@ -41,6 +41,8 @@ void PlayerActivity::setMovement(Direction requested) {
         return;
 
     movementDirection = requested;
+    if (requested != Direction::None)
+        closeChest();
     if (state == PlayerState::UsingTool)
         return;
     if (requested == Direction::None) {
@@ -65,6 +67,7 @@ void PlayerActivity::faceDirection(Direction requested) {
 }
 
 void PlayerActivity::stopMovementAfterRelocation() {
+    closeChest();
     movementDirection = Direction::None;
     if (state == PlayerState::Walking)
         state = PlayerState::Idle;
@@ -79,6 +82,7 @@ void PlayerActivity::startCooldown(std::chrono::steady_clock::time_point now,std
 void PlayerActivity::startTool(Direction toolDirection) {
     if (state == PlayerState::Unconscious)
         return;
+    closeChest();
     direction = toolDirection;
     state = PlayerState::UsingTool;
 }
@@ -91,6 +95,7 @@ void PlayerActivity::updateToolState(std::chrono::steady_clock::time_point now) 
 }
 
 bool PlayerActivity::passOut() {
+    closeChest();
     if (isResting())
         return false;
     state = PlayerState::Unconscious;
@@ -99,6 +104,7 @@ bool PlayerActivity::passOut() {
 }
 
 void PlayerActivity::sleep() {
+    closeChest();
     state = PlayerState::Sleeping;
     movementDirection = Direction::None;
 }
@@ -120,12 +126,14 @@ void PlayerActivity::wakeUp() {
 void PlayerActivity::leaveBedArea() { bedReady = true; }
 
 void PlayerActivity::reset() {
+    closeChest();
     state = PlayerState::Idle;
     movementDirection = Direction::None;
     nextActionTime = {};
 }
 
 void PlayerActivity::restoreData(const PlayerData& saved) {
+    closeChest();
     state = saved.state;
     direction = saved.dir;
     movementDirection = Direction::None;
@@ -135,3 +143,12 @@ void PlayerActivity::restoreData(const PlayerData& saved) {
 std::chrono::steady_clock::time_point PlayerActivity::actionReadyAt() const {
     return nextActionTime;
 }
+
+void PlayerActivity::openChest(uint32_t id) {
+    setMovement(Direction::None);
+    openChestId = id;
+}
+
+void PlayerActivity::closeChest() { openChestId.reset(); }
+
+std::optional<uint32_t> PlayerActivity::getOpenChestId() const { return openChestId; }

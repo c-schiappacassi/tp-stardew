@@ -24,6 +24,7 @@ void PlayerRecord::connect(const std::shared_ptr<OutQueue>& newOutput) {
         throw std::invalid_argument("A connected player needs an output");
     output = newOutput;
     player.setMovement(Direction::None);
+    player.closeChest();
 }
 
 void PlayerRecord::disconnect() {
@@ -31,6 +32,7 @@ void PlayerRecord::disconnect() {
     chatMessages.clear();
     lastDonation.reset();
     player.setMovement(Direction::None);
+    player.closeChest();
 }
 
 void PlayerRecord::closeOutput() {

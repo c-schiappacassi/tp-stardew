@@ -1,5 +1,6 @@
 #include "farm_interactions.h"
 
+#include "chests/interactions/chest_interactions.h"
 #include "entities/entity_id_generator.h"
 #include "farm/farm_constants.h"
 #include "farm/farm_manager.h"
@@ -72,7 +73,11 @@ bool FarmInteractions::placeSelectedItem(PlayerManager& players, uint16_t player
         return false;
     }
     const auto id = entityIds.getNextId();
-    const bool placed = cropType ? farm.plant(id, *position, *cropType) : farm.placeDecoration(id, *position, item, direction);
+    bool placed = false;
+    if (cropType)
+        placed = farm.plant(id, *position, *cropType);
+    else
+        placed = farm.placeDecoration(id, *position, item, direction);
     if (!placed) {
         return false;
     }
@@ -103,10 +108,15 @@ bool FarmInteractions::applySelectedItem(PlayerManager& players, uint16_t player
 bool FarmInteractions::interact(
     PlayerManager& players, uint16_t playerId, FarmManager& farm, EntityIdGenerator& entityIds, Direction direction, std::chrono::steady_clock::time_point now) const {
     const auto player = players.snapshot(playerId);
-    if (player.getZone() != Zone::Farm || !player.canPerformAction(now)) {
+    if (player.getZone() != Zone::Farm || !player.canAct()) {
         return false;
     }
     const auto* selectedItem = player.getSelectedItem();
+    if (const auto handled = farm.interactWithChest(players, playerId, direction, entityIds, now))
+        return *handled;
+    players.apply(playerId, player_action::CloseChest{});
+    if (!player.canPerformAction(now))
+        return false;
     const bool usesTool = selectedItem && (selectedItem->item_id == ItemId::WateringCan || selectedItem->item_id == ItemId::Shovel);
     if (usesTool && !player.canUseTool(now)) {
         return false;

@@ -245,6 +245,25 @@ const Stack* Player::getSelectedItem() const { return inventory.getSlot(currentS
 
 uint8_t Player::getSelectedSlot() const { return currentSlot; }
 
+bool Player::transferItemsTo(Inventory& destination, uint8_t slot, uint16_t quantity) {
+    return canAct() && inventory.transferTo(destination, slot, quantity);
+}
+
+bool Player::transferItemsFrom(Inventory& source, uint8_t slot, uint16_t quantity) {
+    return canAct() && source.transferTo(inventory, slot, quantity);
+}
+
+bool Player::openChest(uint32_t id) {
+    const bool validZone = getZone() == Zone::Farm || getZone() == Zone::Dungeon ||
+        (getZone() == Zone::InsideHouse && getInterior() && getInterior()->interior_id == InteriorId::PlayerHouse);
+    if (id == 0 || !validZone || !canAct())
+        return false;
+    activity.openChest(id);
+    return true;
+}
+
+void Player::closeChest() { activity.closeChest(); }
+
 uint32_t Player::addGold(uint32_t amount) {
     const auto received = std::min(amount, std::numeric_limits<uint32_t>::max() - gold);
     gold += received;

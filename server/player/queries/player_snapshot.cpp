@@ -23,7 +23,8 @@ PlayerSnapshot::PlayerSnapshot(const Player& player, const PlayerConfig& config,
         selectedTool(player.getSelectedItem() &&config.tools.contains(player.getSelectedItem()->item_id)),
         swordDamage(player.getSwordDamage()),
         swordRange(player.getSwordRange()),
-        miningPower(player.getMiningPower()) {}
+        miningPower(player.getMiningPower()),
+        openChestId(player.activity.getOpenChestId()) {}
 
 const PlayerVitalsData& PlayerSnapshot::getVitals() const { return vitals; }
 uint8_t PlayerSnapshot::getInventoryCapacity() const { return inventoryCapacity; }
@@ -35,6 +36,7 @@ const std::optional<InteriorLocation>& PlayerSnapshot::getInterior() const { ret
 uint32_t PlayerSnapshot::getGold() const { return gold; }
 const Stack* PlayerSnapshot::getSelectedItem() const { return selected ? &*selected : nullptr; }
 uint8_t PlayerSnapshot::getSelectedSlot() const { return selectedSlot; }
+std::optional<uint32_t> PlayerSnapshot::getOpenChestId() const { return openChestId; }
 bool PlayerSnapshot::canAct() const { return active; }
 bool PlayerSnapshot::canBeAttacked() const { return attackable; }
 bool PlayerSnapshot::isResting() const { return resting; }

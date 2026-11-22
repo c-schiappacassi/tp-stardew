@@ -84,6 +84,7 @@ PersistenceDTO Game::buildPersistenceData() const {
 
     const FarmManager& farm = world.getFarm();
     snapshot.farm = farm.getPublicData();
+    world.saveChestStorage(snapshot);
     snapshot.emptySoilElapsed = farm.getEmptySoilElapsed();
 
     for (const auto& [cropId, crop] : farm.getCrops()) {

@@ -1,8 +1,11 @@
 #include "persistence_deserializer.h"
 
 #include <limits>
+#include <set>
 #include <stdexcept>
 #include <utility>
+
+#include "inventory/inventory.h"
 
 #include "constants.h"
 
@@ -198,6 +201,14 @@ FarmData PersistenceDeserializer::farm(const toml::table& table) {
         if (!node.is_table()) throw std::runtime_error("Invalid loot entry");
         result.loot.push_back(loot(*node.as_table()));
     }
+    if (table.contains("chests")) {
+        for (const auto& node: requiredArray(table, "chests")) {
+            const auto* chest = node.as_table();
+            if (!chest)
+                throw std::runtime_error("Invalid chest entry");
+            result.furniture.push_back({static_cast<uint32_t>(integer(*chest, "id", 1, UINT32_MAX)), position(requiredTable(*chest, "pos")), FurnitureId::Chest, Direction::Down});
+        }
+    }
     return result;
 }
 
@@ -292,6 +303,13 @@ InteriorData PersistenceDeserializer::interior(const toml::table& table) {
     for (const auto& node : requiredArray(table, "furniture")) {
         if (!node.is_table()) throw std::runtime_error("Invalid interior furniture entry");
         result.furniture.push_back(furniture(*node.as_table()));
+    }
+    if (table.contains("loot")) {
+        for (const auto& node: requiredArray(table, "loot")) {
+            if (!node.is_table())
+                throw std::runtime_error("Invalid interior loot");
+            result.loot.push_back(loot(*node.as_table()));
+        }
     }
     return result;
 }
@@ -435,6 +453,82 @@ PersistenceDTO PersistenceDeserializer::deserializeGame(const toml::table& table
         result.players.emplace(std::string(username.str()), player(*data.as_table()));
     }
     result.farm = farm(requiredTable(table, "farm"));
+    if (table.contains("interiors")) {
+        std::set<std::pair<InteriorId, uint8_t>> rooms;
+        for (const auto& node: requiredArray(table, "interiors")) {
+            if (!node.is_table())
+                throw std::runtime_error("Invalid saved interior");
+            auto room = interior(*node.as_table());
+            if (room.interior_id != InteriorId::PlayerHouse || room.house_index >= 4 || !rooms.emplace(room.interior_id, room.house_index).second)
+                throw std::runtime_error("Invalid or duplicate saved house");
+            result.interiors.push_back(std::move(room));
+        }
+    }
+    if (table.contains("dungeonFurniture")) {
+        for (const auto& [key, node]: requiredTable(table, "dungeonFurniture")) {
+            const auto level = numericKey(std::string(key.str()));
+            if (level == 0 || level > 10 || !node.is_array() || result.dungeonFurniture.contains(static_cast<uint8_t>(level)))
+                throw std::runtime_error("Invalid or duplicate saved dungeon level");
+            auto& items = result.dungeonFurniture[static_cast<uint8_t>(level)];
+            for (const auto& entry: *node.as_array()) {
+                if (!entry.is_table())
+                    throw std::runtime_error("Invalid dungeon furniture");
+                auto item = furniture(*entry.as_table());
+                if (item.type != FurnitureId::Chest)
+                    throw std::runtime_error("Unsupported dungeon furniture");
+                items.push_back(item);
+            }
+        }
+    }
+
+    if (table.contains("dungeonStorageLoot")) {
+        for (const auto& [key, node]: requiredTable(table, "dungeonStorageLoot")) {
+            const auto level = numericKey(std::string(key.str()));
+            if (level == 0 || level > 10 || !node.is_array() || !result.dungeonFurniture.contains(static_cast<uint8_t>(level)) ||
+                result.dungeonStorageLoot.contains(static_cast<uint8_t>(level)))
+                throw std::runtime_error("Invalid saved dungeon storage loot");
+            auto& items = result.dungeonStorageLoot[static_cast<uint8_t>(level)];
+            for (const auto& entry: *node.as_array()) {
+                if (!entry.is_table())
+                    throw std::runtime_error("Invalid dungeon loot");
+                items.push_back(loot(*entry.as_table()));
+            }
+        }
+    }
+    if (table.contains("chestInventories")) {
+        for (const auto& [key, node]: requiredTable(table, "chestInventories")) {
+            const auto id = numericKey(std::string(key.str()));
+            const auto* items = node.as_table();
+            if (id == 0 || !items)
+                throw std::runtime_error("Invalid chest inventory");
+            std::map<uint8_t, Stack> contents;
+            for (const auto& [slotKey, item]: *items) {
+                const auto slot = numericKey(std::string(slotKey.str()));
+                if (slot >= CHEST_INVENTORY_CAPACITY || !item.is_table() || !contents.emplace(static_cast<uint8_t>(slot), stack(*item.as_table())).second) {
+                    throw std::runtime_error("Invalid chest inventory slot");
+                }
+            }
+            Inventory{CHEST_INVENTORY_CAPACITY}.restoreSlots(contents);
+            if (!result.chestInventories.emplace(id, std::move(contents)).second) {
+                throw std::runtime_error("Duplicate chest inventory");
+            }
+        }
+    }
+    std::set<uint32_t> chestIds;
+    const auto validateChests = [&](const std::vector<FurnitureData>& items) {
+        std::set<uint32_t> ids;
+        for (const auto& item: items) {
+            if (item.id == 0 || item.type > FurnitureId::Chest || item.dir > Direction::Right || !ids.insert(item.id).second)
+                throw std::runtime_error("Invalid or duplicate furniture");
+            if (item.type == FurnitureId::Chest && (!chestIds.insert(item.id).second || !result.chestInventories.contains(item.id)))
+                throw std::runtime_error("Duplicate chest or missing contents");
+        }
+    };
+    validateChests(result.farm.furniture);
+    for (const auto& room: result.interiors) validateChests(room.furniture);
+    for (const auto& [level, items]: result.dungeonFurniture) validateChests(items);
+    if (result.chestInventories.size() != chestIds.size())
+        throw std::runtime_error("Missing or orphaned chest inventories");
     if (table.contains("emptySoilElapsed")) {
         for (const auto& entry : requiredArray(table, "emptySoilElapsed")) {
             const auto* soil = entry.as_table();

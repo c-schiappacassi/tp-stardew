@@ -2,6 +2,7 @@
 
 #include <utility>
 
+#include "chests/interactions/chest_interactions.h"
 #include "player/player_manager.h"
 
 WorldManager::WorldManager(const DungeonConfig& config, uint32_t seed, const FarmConfig& farmConfig):
@@ -115,18 +116,22 @@ bool WorldManager::canMove(const PlayerSnapshot& player, const Position& next) c
 void WorldManager::completeZoneData(const PlayerSnapshot& player, PlayerDataLocal& data, bool includeBroken) const {
     data.combatProgress = dungeon.getCombatProgress();
     data.zoneData = std::monostate{};
+    data.openChest.reset();
     if (player.getZone() == Zone::Farm) {
         data.zoneData = farm.getPublicData();
+        data.openChest = farm.openChestFor(player);
         return;
     }
     if (player.getZone() == Zone::InsideHouse && player.getInterior()) {
         data.zoneData = interiors.dataFor(*player.getInterior());
+        data.openChest = interiors.openChestFor(player);
         return;
     }
     if (player.getZone() == Zone::Dungeon) {
         const auto mine = dungeon.getMineData(player.getDungeonLevel(), includeBroken);
         if (mine) {
             data.zoneData = *mine;
+            data.openChest = dungeon.openChestFor(player);
         }
     }
 }
@@ -149,7 +154,8 @@ void WorldManager::interact(PlayerManager& players, uint16_t playerId, Direction
     } else if (player.getZone() == Zone::Farm && farm.isInitialized()) {
         farm.useSelectedItem(players, playerId, direction, entityIds, now);
     } else if (player.getZone() == Zone::InsideHouse) {
-        interiors.useBed(players, playerId);
+        if (!interiors.interactWithChest(players, playerId, direction, entityIds, now))
+            interiors.useBed(players, playerId);
     }
 }
 
@@ -163,12 +169,24 @@ void WorldManager::afterStatusPublished() { dungeon.removeBrokenMinerals(); }
 
 void WorldManager::restoreFarm(const PersistenceDTO& saved) {
     farm.restoreData(saved.farm, saved.cropGrowthProgress, saved.cropWaterRemainingTime, saved.harvestedCrops, saved.animalProductionProgress, saved.animalAvailableProducts,
-        saved.regrowingCrops, saved.emptySoilElapsed);
+        saved.regrowingCrops, saved.emptySoilElapsed, saved.chestInventories);
     uint32_t maximum = 0;
     for (const auto& item: saved.farm.crops) maximum = std::max(maximum, item.id);
     for (const auto& item: saved.farm.animals) maximum = std::max(maximum, item.id);
     for (const auto& item: saved.farm.furniture) maximum = std::max(maximum, item.id);
     for (const auto& item: saved.farm.loot) maximum = std::max(maximum, item.id);
+    interiors.restoreStorage(saved.interiors, saved.chestInventories);
+    dungeon.restoreStorage(saved.dungeonFurniture, saved.chestInventories, saved.dungeonStorageLoot);
+    for (const auto& room: saved.interiors) {
+        for (const auto& item: room.furniture) maximum = std::max(maximum, item.id);
+        for (const auto& item: room.loot) maximum = std::max(maximum, item.id);
+    }
+    for (const auto& [level, furniture]: saved.dungeonFurniture) {
+        for (const auto& item: furniture) maximum = std::max(maximum, item.id);
+    }
+    for (const auto& [level, loot]: saved.dungeonStorageLoot) {
+        for (const auto& item: loot) maximum = std::max(maximum, item.id);
+    }
     if (maximum == UINT32_MAX)
         throw std::runtime_error("Saved entity ID exhausted");
     entityIds.ensureNextId(maximum + 1);

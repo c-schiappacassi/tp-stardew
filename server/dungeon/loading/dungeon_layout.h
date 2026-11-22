@@ -2,8 +2,10 @@
 
 #include <vector>
 
+#include "chests/loading/chest_spawn.h"
 #include "dungeon/rooms/dungeon_room_passages.h"
 #include "world/zone_map.h"
+
 #include "dtos.h"
 
 struct DungeonRoomLayout {
@@ -11,4 +13,5 @@ struct DungeonRoomLayout {
     DungeonRoomPassages passages;
     std::vector<Position> reservedPositions;
     std::vector<TrapData> traps;
+    std::vector<ChestSpawn> chests;
 };

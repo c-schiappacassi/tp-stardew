@@ -7,6 +7,7 @@
 #include "farm/farm_constants.h"
 #include "farm/farm_manager.h"
 #include "player/queries/player_snapshot.h"
+#include "world/interaction_targeting.h"
 
 namespace {
 int64_t squaredDistance(const Position& origin, const Position& target) {
@@ -16,60 +17,14 @@ int64_t squaredDistance(const Position& origin, const Position& target) {
 }
 }  // namespace
 
-bool FarmTargeting::hasClearPath(const Position& origin, const Position& target, const ZoneMap& map) const {
-    const int dx = target.getX() - origin.getX();
-    const int dy = target.getY() - origin.getY();
-    const int steps = std::max(std::abs(dx), std::abs(dy));
-    Position previous{origin.getX(), origin.getY() - 1};
-    for (int step = 1; step <= steps; ++step) {
-        const int xOffset = static_cast<int>(std::round(static_cast<double>(dx) * step / steps));
-        const int yOffset = static_cast<int>(std::round(static_cast<double>(dy) * step / steps));
-        const Position sample{origin.getX() + xOffset, origin.getY() - 1 + yOffset};
-        if (!map.isWalkable(sample) || !map.isWalkable(Position{sample.getX(), previous.getY()}) || !map.isWalkable(Position{previous.getX(), sample.getY()})) {
-            return false;
-        }
-        previous = sample;
-    }
-    return true;
-}
+bool FarmTargeting::hasClearPath(const Position& origin, const Position& target, const ZoneMap& map) const { return InteractionTargeting{}.hasClearPath(origin, target, map); }
 
 bool FarmTargeting::canReach(const PlayerSnapshot& player, const Position& position, Direction direction, const ZoneMap& map) const {
-    if (!player.canReach(position, farm_constants::INTERACTION_RANGE)) {
-        return false;
-    }
-    const int dx = position.getX() - player.getPosition().getX();
-    const int dy = position.getY() - player.getPosition().getY();
-    const bool inDirection = (direction == Direction::Up && dy < 0 && std::abs(dx) <= -dy) || (direction == Direction::Down && dy > 0 && std::abs(dx) <= dy) ||
-        (direction == Direction::Left && dx < 0 && std::abs(dy) <= -dx) || (direction == Direction::Right && dx > 0 && std::abs(dy) <= dx);
-    return inDirection && hasClearPath(player.getPosition(), position, map);
+    return InteractionTargeting{}.canReach(player, position, direction, map, farm_constants::INTERACTION_RANGE);
 }
 
 std::optional<Position> FarmTargeting::findAdjacentPosition(const PlayerSnapshot& player, Direction direction, const ZoneMap& map, const CollisionBox& collision) const {
-    auto cell = map.baseCellAt(player.getPosition());
-    if (!cell) {
-        return std::nullopt;
-    }
-    switch (direction) {
-        case Direction::Up:
-            --cell->first;
-            break;
-        case Direction::Down:
-            ++cell->first;
-            break;
-        case Direction::Left:
-            --cell->second;
-            break;
-        case Direction::Right:
-            ++cell->second;
-            break;
-        default:
-            return std::nullopt;
-    }
-    const auto position = map.baseAt(*cell);
-    if (!position || !canReach(player, *position, direction, map) || player.getCollisionBounds(player.getPosition()).intersects(collision.at(*position))) {
-        return std::nullopt;
-    }
-    return position;
+    return InteractionTargeting{}.findAdjacentPosition(player, direction, map, collision, farm_constants::INTERACTION_RANGE);
 }
 
 const Crop* FarmTargeting::findCropToWater(const PlayerSnapshot& player, const FarmManager& farm, Direction direction) const {

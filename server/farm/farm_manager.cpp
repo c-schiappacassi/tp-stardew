@@ -3,6 +3,7 @@
 #include <stdexcept>
 #include <utility>
 
+#include "chests/interactions/chest_interactions.h"
 #include "entities/entity_id_generator.h"
 #include "loading/farm_loader.h"
 #include "player/player_manager.h"
@@ -130,6 +131,26 @@ bool FarmManager::placeDecoration(EntityId id, const Position& position, ItemId 
 
 std::optional<ItemId> FarmManager::removeDecoration(EntityId id) { return decorationManager.remove(id, space); }
 
+bool FarmManager::placeChest(EntityId id, const Position& position, const std::map<uint8_t, Stack>& items) { return chestManager.place(id, position, space, items); }
+
+bool FarmManager::removeEmptyChest(EntityId id) { return chestManager.removeEmpty(id, space); }
+const Chest* FarmManager::findChest(EntityId id) const { return chestManager.find(id); }
+std::optional<ChestSnapshot> FarmManager::chestSnapshot(EntityId id) const { return chestManager.snapshot(id); }
+const std::map<EntityId, Chest>& FarmManager::getChests() const { return chestManager.getChests(); }
+
+std::optional<bool> FarmManager::interactWithChest(
+    PlayerManager& players, uint16_t playerId, Direction direction, EntityIdGenerator& ids, std::chrono::steady_clock::time_point now) {
+    return ChestInteractions{}.interact(players, playerId, chestManager, space, getMap(), groundItems, direction, ids, now);
+}
+
+std::optional<OpenChestData> FarmManager::openChestFor(const PlayerSnapshot& player) const { return ChestInteractions{}.contentsFor(player, chestManager, getMap()); }
+bool FarmManager::depositInChest(PlayerManager& players, uint16_t playerId, const ItemTransferDTO& command) {
+    return ChestInteractions{}.deposit(players, playerId, chestManager, getMap(), command);
+}
+bool FarmManager::withdrawFromChest(PlayerManager& players, uint16_t playerId, const SelectItemDTO& command) {
+    return ChestInteractions{}.withdraw(players, playerId, chestManager, getMap(), command);
+}
+
 void FarmManager::update(std::chrono::milliseconds elapsed, EntityIdGenerator& entityIds) {
     if (elapsed.count() < 0) {
         throw std::invalid_argument("Negative time");
@@ -162,12 +183,14 @@ const GroundItems& FarmManager::getGroundItems() const { return groundItems; }
 
 void FarmManager::restoreData(const FarmData& saved, const std::map<uint32_t, uint64_t>& growth, const std::map<uint32_t, uint64_t>& water,
     const std::map<uint32_t, bool>& harvested, const std::map<uint32_t, uint64_t>& production, const std::map<uint32_t, uint32_t>& products,
-    const std::map<uint32_t, bool>& regrowing, const std::vector<std::pair<Position, uint64_t>>& emptySoilElapsed) {
+    const std::map<uint32_t, bool>& regrowing, const std::vector<std::pair<Position, uint64_t>>& emptySoilElapsed,
+    const std::map<uint32_t, std::map<uint8_t, Stack>>& chestInventories) {
     if (!initialized)
         throw std::runtime_error("Farm not initialized");
     cropManager = CropManager(config);
     animalManager = AnimalManager(config, seed);
     decorationManager = DecorationManager();
+    chestManager = ChestManager();
     groundItems = GroundItems();
     space.clearOccupants();
     for (const Position& position: saved.tilledSoil) {
@@ -201,9 +224,15 @@ void FarmManager::restoreData(const FarmData& saved, const std::map<uint32_t, ui
         animalManager.findMutable(data.id)->restoreProgress(std::chrono::milliseconds{static_cast<int64_t>(t->second)}, n->second);
     }
     for (const FurnitureData& data: saved.furniture) {
-        const ItemId item = static_cast<ItemId>(static_cast<uint16_t>(ItemId::Chair) + static_cast<uint16_t>(data.type));
-        if (!placeDecoration(data.id, data.pos, item, data.dir))
-            throw std::runtime_error("Failed to restore decoration");
+        if (data.type == FurnitureId::Chest) {
+            const auto contents = chestInventories.find(data.id);
+            if (contents == chestInventories.end() || !placeChest(data.id, data.pos, contents->second))
+                throw std::runtime_error("Failed to restore chest");
+        } else {
+            const ItemId item = static_cast<ItemId>(static_cast<uint16_t>(ItemId::Chair) + static_cast<uint16_t>(data.type));
+            if (!placeDecoration(data.id, data.pos, item, data.dir))
+                throw std::runtime_error("Failed to restore decoration");
+        }
     }
     groundItems.restoreItems(saved.loot);
 }

@@ -7,6 +7,7 @@
 #include <vector>
 
 #include "animals/animal_manager.h"
+#include "chests/chest_manager.h"
 #include "crops/crop_manager.h"
 #include "decorations/decoration_manager.h"
 #include "interactions/farm_interactions.h"
@@ -33,6 +34,7 @@ private:
     CropManager cropManager;
     AnimalManager animalManager;
     DecorationManager decorationManager;
+    ChestManager chestManager;
     FarmInteractions interactions;
     GroundItems groundItems;
 
@@ -58,6 +60,15 @@ public:
     bool removeAnimal(EntityId id);
     bool placeDecoration(EntityId id, const Position& position, ItemId item, Direction direction = Direction::Down);
     std::optional<ItemId> removeDecoration(EntityId id);
+    bool placeChest(EntityId id, const Position& position, const std::map<uint8_t, Stack>& items = {});
+    bool removeEmptyChest(EntityId id);
+    const Chest* findChest(EntityId id) const;
+    std::optional<ChestSnapshot> chestSnapshot(EntityId id) const;
+    const std::map<EntityId, Chest>& getChests() const;
+    std::optional<bool> interactWithChest(PlayerManager& players, uint16_t playerId, Direction direction, EntityIdGenerator& ids, std::chrono::steady_clock::time_point now);
+    std::optional<OpenChestData> openChestFor(const PlayerSnapshot& player) const;
+    bool depositInChest(PlayerManager& players, uint16_t playerId, const ItemTransferDTO& command);
+    bool withdrawFromChest(PlayerManager& players, uint16_t playerId, const SelectItemDTO& command);
     bool waterCrop(EntityId id);
     std::optional<FarmProduct> harvestCrop(EntityId id, double luck = 1.0);
     std::optional<FarmProduct> collectFromAnimal(EntityId id);
@@ -71,7 +82,7 @@ public:
     FarmData getPublicData() const;
     void restoreData(const FarmData& saved, const std::map<uint32_t, uint64_t>& growth, const std::map<uint32_t, uint64_t>& water, const std::map<uint32_t, bool>& harvested,
         const std::map<uint32_t, uint64_t>& production, const std::map<uint32_t, uint32_t>& products, const std::map<uint32_t, bool>& regrowing = {},
-        const std::vector<std::pair<Position, uint64_t>>& emptySoilElapsed = {});
+        const std::vector<std::pair<Position, uint64_t>>& emptySoilElapsed = {}, const std::map<uint32_t, std::map<uint8_t, Stack>>& chestInventories = {});
     std::vector<Position> getTilledPositions() const;
     std::vector<std::pair<Position, uint64_t>> getEmptySoilElapsed() const;
     const Crop* findCrop(EntityId id) const;

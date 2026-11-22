@@ -77,7 +77,10 @@ void PlayerManager::collectCommunityRewards() {
 }
 
 void PlayerManager::finishGame() {
-    for (auto& [id, record]: roster) record.getPlayer().setMovement(Direction::None);
+    for (auto& [id, record]: roster) {
+        record.getPlayer().setMovement(Direction::None);
+        record.getPlayer().closeChest();
+    }
 }
 
 void PlayerManager::disconnectPlayer(uint16_t playerId) {

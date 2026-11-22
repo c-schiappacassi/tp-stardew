@@ -1,5 +1,6 @@
 #pragma once
 
+#include "chests/loading/chest_spawn.h"
 #include "world/world_location.h"
 #include "world/zone_map.h"
 
@@ -12,4 +13,5 @@ struct InteriorLayout {
     Position exit{0, 0};
     std::vector<Position> beds;
     BackgroundData background;
+    std::vector<ChestSpawn> chests;
 };

@@ -50,6 +50,15 @@ void CommandRouter::dispatch(PlayerRecord& record, const CommandDTO& command,
         case MessageType::Interact:
             interact(record, static_cast<const InteractDTO&>(command).dir);
             break;
+        case MessageType::ItemTransfer:
+            interactions.depositInChest(manager, record.getId(), static_cast<const ItemTransferDTO&>(command));
+            break;
+        case MessageType::SelectItem:
+            interactions.withdrawFromChest(manager, record.getId(), static_cast<const SelectItemDTO&>(command));
+            break;
+        case MessageType::CloseChest:
+            player.closeChest();
+            break;
         default:
             break;
     }
@@ -90,6 +99,19 @@ void CommandRouter::interact(PlayerRecord& record, Direction requested) const {
 }
 
 namespace {
+PlayerActionResult applyAction(Player& player, const player_action::OpenChest& action) {
+    return {player.openChest(action.id), 0};
+}
+PlayerActionResult applyAction(Player& player, const player_action::CloseChest&) {
+    player.closeChest();
+    return {true, 0};
+}
+PlayerActionResult applyAction(Player& player, const player_action::TransferItemsTo& action) {
+    return {player.transferItemsTo(action.destination.get(), action.slot, action.quantity), 0};
+}
+PlayerActionResult applyAction(Player& player, const player_action::TransferItemsFrom& action) {
+    return {player.transferItemsFrom(action.source.get(), action.slot, action.quantity), 0};
+}
 PlayerActionResult applyAction(Player& player, const player_action::FaceDirection& action) {
     player.faceDirection(action.direction);
     return {true, 0};

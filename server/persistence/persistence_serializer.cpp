@@ -190,6 +190,9 @@ toml::table PersistenceSerializer::interior(const InteriorData& value) {
         furnitureArray.push_back(furniture(item));
     }
     result.insert("furniture", std::move(furnitureArray));
+    toml::array lootArray;
+    for (const auto& item: value.loot) lootArray.push_back(loot(item));
+    result.insert("loot", std::move(lootArray));
     return result;
 }
 
@@ -312,6 +315,33 @@ toml::table PersistenceSerializer::serialize(const PersistenceDTO& dto) {
     }
     result.insert("players", std::move(players));
     result.insert("farm", farm(dto.farm));
+    toml::array interiors;
+    for (const auto& room: dto.interiors) interiors.push_back(interior(room));
+    result.insert("interiors", std::move(interiors));
+    toml::table dungeonFurniture;
+    for (const auto& [level, items]: dto.dungeonFurniture) {
+        toml::array entries;
+        for (const auto& item: items) entries.push_back(furniture(item));
+        dungeonFurniture.insert(std::to_string(level), std::move(entries));
+    }
+    result.insert("dungeonFurniture", std::move(dungeonFurniture));
+    toml::table dungeonStorageLoot;
+    for (const auto& [level, items]: dto.dungeonStorageLoot) {
+        toml::array entries;
+        for (const auto& item: items) entries.push_back(loot(item));
+        dungeonStorageLoot.insert(std::to_string(level), std::move(entries));
+    }
+    result.insert("dungeonStorageLoot", std::move(dungeonStorageLoot));
+
+    toml::table chestInventories;
+    for (const auto& [id, contents]: dto.chestInventories) {
+        toml::table slots;
+        for (const auto& [slot, item]: contents) {
+            slots.insert(std::to_string(slot), stack(item));
+        }
+        chestInventories.insert(std::to_string(id), std::move(slots));
+    }
+    result.insert("chestInventories", std::move(chestInventories));
     toml::array emptySoilElapsed;
     for (const auto& [pos, elapsed] : dto.emptySoilElapsed) {
         emptySoilElapsed.push_back(toml::table{{"pos", position(pos)},

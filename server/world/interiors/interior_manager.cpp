@@ -4,9 +4,11 @@
 #include <cstdlib>
 #include <limits>
 #include <set>
+#include <stdexcept>
 
 #include "commerce/shop_products.h"
 #include "entities/collision_box.h"
+#include "entities/entity_id_generator.h"
 #include "player/player_manager.h"
 
 namespace {
@@ -52,7 +54,7 @@ ZoneMap walkingMap(const InteriorLayout& room) {
 }
 }  // namespace
 
-bool InteriorManager::initialize(const std::vector<InteriorLayout>& layouts) {
+bool InteriorManager::initialize(const std::vector<InteriorLayout>& layouts, EntityIdGenerator& ids) {
     std::set<std::pair<InteriorId, uint8_t>> registered;
     const CollisionBox playerBox{entity_dimensions::PLAYER};
     for (const auto& room: layouts) {
@@ -93,7 +95,22 @@ bool InteriorManager::initialize(const std::vector<InteriorLayout>& layouts) {
             }
         }
     }
+    std::map<std::pair<InteriorId, uint8_t>, ChestRoom> prepared;
+    auto preparedIds = ids;
+    for (const auto& room: layouts) {
+        if (room.location.interior_id != InteriorId::PlayerHouse) {
+            if (!room.chests.empty())
+                return false;
+            continue;
+        }
+        std::vector<CollisionBounds> obstacles;
+        for (const auto& bed: room.beds) obstacles.push_back(BED_BOX.at(bed));
+        if (!prepared[{room.location.interior_id, room.location.house_index}].initialize(room.terrain, {room.entry, room.exit}, obstacles, room.chests, preparedIds))
+            return false;
+    }
     rooms = layouts;
+    storage = std::move(prepared);
+    ids = preparedIds;
     return true;
 }
 
@@ -104,7 +121,8 @@ const InteriorLayout* InteriorManager::find(const InteriorLocation& location) co
 
 bool InteriorManager::canWalk(const InteriorLocation& location, const CollisionBounds& bounds) const {
     const auto* room = find(location);
-    return room && room->terrain.isWalkable(bounds) &&
+    const auto chests = storage.find({location.interior_id, location.house_index});
+    return room && room->terrain.isWalkable(bounds) && (chests == storage.end() || chests->second.canWalk(bounds)) &&
         (!room->background.interior || !room->background.interior->npc || !CollisionBox{entity_dimensions::PLAYER}.at(room->background.interior->npc->pos).intersects(bounds)) &&
         std::none_of(room->beds.begin(), room->beds.end(), [&](const auto& bed) { return BED_BOX.at(bed).intersects(bounds); });
 }
@@ -153,7 +171,15 @@ std::optional<WorldLocation> InteriorManager::recoveryFor(const PlayerSnapshot& 
     return std::nullopt;
 }
 
-InteriorData InteriorManager::dataFor(const InteriorLocation& location) const { return InteriorData{location.interior_id, location.house_index, {}}; }
+InteriorData InteriorManager::dataFor(const InteriorLocation& location) const {
+    InteriorData result{location.interior_id, location.house_index, {}, {}};
+    const auto found = storage.find({location.interior_id, location.house_index});
+    if (found != storage.end()) {
+        result.furniture = found->second.furniture();
+        result.loot = found->second.getGroundItems().getPublicData();
+    }
+    return result;
+}
 
 void InteriorManager::completeMap(ConstMapData& map) const {
     for (const auto& room: rooms) {
@@ -189,4 +215,71 @@ void InteriorManager::completeMap(ConstMapData& map) const {
         auto& outside = room.outside.zone == Zone::Farm ? map.farm : map.town;
         outside.portals.push_back({room.outside.position, PortalId::ToNextLevel});
     }
+}
+
+namespace {
+std::optional<std::pair<InteriorId, uint8_t>> houseKey(const PlayerSnapshot& player) {
+    if (player.getZone() != Zone::InsideHouse || !player.getInterior() || player.getInterior()->interior_id != InteriorId::PlayerHouse)
+        return std::nullopt;
+    return std::pair{player.getInterior()->interior_id, player.getInterior()->house_index};
+}
+}  // namespace
+
+bool InteriorManager::interactWithChest(PlayerManager& players, uint16_t playerId, Direction direction, EntityIdGenerator& ids, std::chrono::steady_clock::time_point now) {
+    const auto key = houseKey(players.snapshot(playerId));
+    if (!key)
+        return false;
+    const auto found = storage.find(*key);
+    if (found == storage.end())
+        return false;
+    return found->second.interact(players, playerId, direction, ids, now).has_value();
+}
+
+std::optional<OpenChestData> InteriorManager::openChestFor(const PlayerSnapshot& player) const {
+    const auto key = houseKey(player);
+    if (!key)
+        return std::nullopt;
+    const auto found = storage.find(*key);
+    return found == storage.end() ? std::nullopt : found->second.contentsFor(player);
+}
+
+void InteriorManager::depositInChest(PlayerManager& players, uint16_t playerId, const ItemTransferDTO& command) {
+    const auto key = houseKey(players.snapshot(playerId));
+    if (key && storage.contains(*key))
+        storage.at(*key).deposit(players, playerId, command);
+}
+
+void InteriorManager::withdrawFromChest(PlayerManager& players, uint16_t playerId, const SelectItemDTO& command) {
+    const auto key = houseKey(players.snapshot(playerId));
+    if (key && storage.contains(*key))
+        storage.at(*key).withdraw(players, playerId, command);
+}
+
+void InteriorManager::collectNearbyItems(PlayerManager& players, uint16_t playerId) {
+    const auto key = houseKey(players.snapshot(playerId));
+    if (key && storage.contains(*key))
+        storage.at(*key).collectNearbyItems(players, playerId);
+}
+
+std::vector<InteriorData> InteriorManager::storageData() const {
+    std::vector<InteriorData> result;
+    for (const auto& [key, chests]: storage) result.push_back(dataFor({key.first, key.second}));
+    return result;
+}
+
+void InteriorManager::saveInventories(std::map<uint32_t, std::map<uint8_t, Stack>>& inventories) const {
+    for (const auto& [key, area]: storage) {
+        for (const auto& [id, chest]: area.getChests()) inventories.emplace(id, chest.getInventory().getItems());
+    }
+}
+
+void InteriorManager::restoreStorage(const std::vector<InteriorData>& saved, const std::map<uint32_t, std::map<uint8_t, Stack>>& inventories) {
+    auto prepared = storage;
+    for (const auto& room: saved) {
+        const auto found = prepared.find({room.interior_id, room.house_index});
+        if (room.interior_id != InteriorId::PlayerHouse || found == prepared.end())
+            throw std::runtime_error("Invalid saved house storage");
+        found->second.restore(room.furniture, inventories, room.loot);
+    }
+    storage = std::move(prepared);
 }

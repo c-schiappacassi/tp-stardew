@@ -94,6 +94,10 @@ public:
     const std::map<uint8_t, Stack>& getInventoryItems() const;
     const Stack* getSelectedItem() const;
     uint8_t getSelectedSlot() const;
+    bool transferItemsTo(Inventory& destination, uint8_t slot, uint16_t quantity);
+    bool transferItemsFrom(Inventory& source, uint8_t slot, uint16_t quantity);
+    bool openChest(uint32_t id);
+    void closeChest();
 
     uint32_t addGold(uint32_t amount);
     uint32_t getGold() const;

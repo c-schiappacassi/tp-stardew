@@ -49,4 +49,12 @@ public:
     uint16_t killEnemies(PlayerManager& players, uint16_t playerId, bool nearestOnly, EntityIdGenerator& ids);
     bool canExit(const PlayerSnapshot& player) const;
     void removeBrokenMinerals();
+    std::optional<OpenChestData> openChestFor(const PlayerSnapshot& player) const;
+    void depositInChest(PlayerManager& players, uint16_t playerId, const ItemTransferDTO& command);
+    void withdrawFromChest(PlayerManager& players, uint16_t playerId, const SelectItemDTO& command);
+    std::map<uint8_t, std::vector<FurnitureData>> storageFurniture() const;
+    std::map<uint8_t, std::vector<LootData>> storageLoot() const;
+    void saveInventories(std::map<uint32_t, std::map<uint8_t, Stack>>& inventories) const;
+    void restoreStorage(const std::map<uint8_t, std::vector<FurnitureData>>& saved, const std::map<uint32_t, std::map<uint8_t, Stack>>& inventories,
+        const std::map<uint8_t, std::vector<LootData>>& loot);
 };

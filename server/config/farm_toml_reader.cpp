@@ -1,7 +1,5 @@
 #include "config/farm_toml_reader.h"
 
-#include "commerce/shop_products.h"
-
 #include <algorithm>
 #include <cstddef>
 #include <cstdint>
@@ -13,13 +11,15 @@
 #include <utility>
 #include <vector>
 
+#include "commerce/shop_products.h"
 #include "config/toml_helpers.h"
 #include "config/town_toml_reader.h"
-#include "entities/collision_box.h"
 #include "entities/collision_bounds.h"
+#include "entities/collision_box.h"
 #include "entities/entity_dimensions.h"
 #include "farm/animals/animal_species.h"
 #include "farm/decorations/decoration.h"
+#include "inventory/inventory.h"
 #include "town/town_map.h"
 
 namespace {
@@ -125,6 +125,33 @@ Type farmNamedType(
     }
 
     invalid(field + ".type", "unknown type: " + name);
+}
+
+std::map<uint8_t, Stack> readChestItems(const toml::table& entry, const std::string& field) {
+    std::map<uint8_t, Stack> contents;
+    if (const auto* itemsNode = entry.get("items")) {
+        const auto* items = itemsNode->as_array();
+        if (!items || items->size() > CHEST_INVENTORY_CAPACITY) {
+            invalid(field + ".items", "expected up to 30 inventory slots");
+        }
+        for (const auto& node: *items) {
+            const auto itemField = field + ".items";
+            const auto& item = tableAt(&node, itemField);
+            const auto slot = static_cast<uint8_t>(integer(item, "slot", CHEST_INVENTORY_CAPACITY - 1, itemField + ".slot"));
+            Stack stack{static_cast<ItemId>(integer(item, "item_id", UINT16_MAX, itemField + ".item_id")),
+                static_cast<uint16_t>(integer(item, "quantity", INVENTORY_STACK_LIMIT, itemField + ".quantity")),
+                item.contains("quality") ? static_cast<Quality>(integer(item, "quality", static_cast<uint8_t>(Quality::Perfect), itemField + ".quality")) : Quality::None};
+            if (!contents.emplace(slot, stack).second) {
+                invalid(itemField + ".slot", "duplicate chest slot");
+            }
+        }
+    }
+    try {
+        Inventory{CHEST_INVENTORY_CAPACITY}.restoreSlots(contents);
+    } catch (const std::invalid_argument&) {
+        invalid(field + ".items", "invalid chest contents");
+    }
+    return contents;
 }
 
 void reserveFarmPosition(FarmLayout& layout, const Position& base) {
@@ -388,6 +415,15 @@ void validateInitialPlacements(const FarmLayout& layout,
         blocksMovement.push_back(spawn.item != ItemId::BeigeRug && spawn.item != ItemId::BlueRug);
     }
 
+    for (const auto& spawn: layout.chests) {
+        const auto bounds = decorationBox.at(spawn.base);
+        if (!validBase(spawn.base) || !canPlace(bounds)) {
+            invalid("farm.chests", "chest overlaps or is outside the map");
+        }
+        occupiedBounds.push_back(bounds);
+        blocksMovement.push_back(true);
+    }
+
     const auto playerBounds = playerBox.at(layout.spawn);
     if (!walkableBounds(layout.terrain, playerBounds)) {
         invalid("farm.spawn", "the player has no walkable space at spawn");
@@ -526,6 +562,11 @@ FarmLayout readFarmLayout(const toml::table& root,
                 room.beds.push_back(farmBaseAt(&bed, room.terrain, roomWidth, roomHeight, field + ".beds"));
             }
         }
+        farmEntries(entry, "chests", [&](const auto& chest, const auto& chestField) {
+            if (room.location.interior_id != InteriorId::PlayerHouse)
+                invalid(field + ".chests", "only player houses can contain chests");
+            room.chests.push_back({farmBaseAt(chest.get("position"), room.terrain, roomWidth, roomHeight, field + ".chests.position"), readChestItems(chest, chestField)});
+        });
         room.background.interior = InteriorBackgroundData{
             Position{0, 0}, room.location.interior_id, std::nullopt};
         if (const auto* npc = entry.get("npc")) {
@@ -621,12 +662,11 @@ FarmLayout readFarmLayout(const toml::table& root,
             });
         });
 
-    farmEntries(farm, "chests",
-        [](const auto&, const auto& field) {
-            invalid(field,
-                    "loading chests with inventory "
-                    "is not implemented yet");
-        });
+    farmEntries(farm, "chests", [&](const auto& entry, const auto& field) {
+        FarmChestSpawn spawn{farmBaseAt(entry.get("position"), layout.terrain, width, height, field + ".position"), {}};
+        spawn.items = readChestItems(entry, field);
+        layout.chests.push_back(std::move(spawn));
+    });
 
     for (const auto& base : layout.reservedPositions) {
         if (!layout.terrain.hasBasePath(layout.spawn, base)) {

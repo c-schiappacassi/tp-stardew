@@ -19,6 +19,7 @@ private:
     Color receiveColor();
 
     Stack receiveStack();
+    std::optional<OpenChestData> receiveOpenChest();
     std::vector<Stack> receiveCommunityStacks();
     CommunityStateData receiveCommunityState();
 
@@ -42,6 +43,7 @@ private:
     AnimalData receiveAnimalData();
     DecorData receiveDecorationData();
     FurnitureData receiveFurnitureData();
+    std::vector<FurnitureData> receiveFurniture();
     InteriorData receiveInteriorData();
     NpcData receiveNpcData();
     InteriorBackgroundData receiveInteriorBackground();
@@ -61,6 +63,9 @@ public:
 
     void send(const CommandDTO& dto);
     void send(const SelectSlotDTO& dto);
+    void send(const ItemTransferDTO& dto);
+    void send(const SelectItemDTO& dto);
+    void send(const CloseChestDTO& dto);
     void send(const CreateGameDTO& dto);
     void send(const JoinGameDTO& dto);
     void send(const ResumeGameDTO& dto);

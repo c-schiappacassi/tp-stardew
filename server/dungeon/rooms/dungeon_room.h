@@ -3,12 +3,15 @@
 #include <cstdint>
 #include <map>
 #include <optional>
+
+#include "chests/rooms/chest_room.h"
 #include "dungeon/combat/room_combat.h"
+#include "items/ground_items.h"
 #include "world/zone_map.h"
+
 #include "dungeon_room_passages.h"
 #include "room_geometry.h"
 #include "room_minerals.h"
-#include "items/ground_items.h"
 
 
 class DungeonRoom {
@@ -20,6 +23,7 @@ private:
     std::optional<DungeonRoomPassages> passages;
     RoomCombat combat;
     GroundItems groundItems;
+    ChestRoom storage;
 
 public:
     explicit DungeonRoom(uint8_t number);
@@ -43,4 +47,9 @@ public:
     DungeonCombatData getCombatData() const;
     GroundItems& getGroundItems();
     const GroundItems& getGroundItems() const;
+    bool initializeChests(const std::vector<ChestSpawn>& initial, const std::vector<Position>& reserved, EntityIdGenerator& ids);
+    std::optional<bool> interactWithChest(PlayerManager& players, uint16_t playerId, Direction direction, EntityIdGenerator& ids, std::chrono::steady_clock::time_point now);
+    void restoreChests(const std::vector<FurnitureData>& furniture, const std::map<uint32_t, std::map<uint8_t, Stack>>& inventories, const std::vector<LootData>& loot);
+    ChestRoom& getStorage();
+    const ChestRoom& getStorage() const;
 };

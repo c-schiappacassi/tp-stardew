@@ -14,6 +14,7 @@ target_sources(taller_common
         message_buffer.h
         constants.h
         dtos.h
+        furniture_data.h
         game_time.h
         foo.h
         position.h

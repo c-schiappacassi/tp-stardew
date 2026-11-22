@@ -43,6 +43,7 @@ public:
     std::optional<WorldLocation> recoveryFor(const PlayerSnapshot& player, uint16_t playerId) const override;
     const FarmManager& getFarm() const;
     void restoreFarm(const PersistenceDTO& saved);
+    void saveChestStorage(PersistenceDTO& saved) const;
     std::optional<NpcData> nearbyMerchant(const PlayerSnapshot& player, Direction direction = Direction::None) const;
     bool buyAnimals(AnimalSpecies species, uint16_t quantity, std::optional<AnimalType> variant = std::nullopt);
     bool sellAnimals(AnimalSpecies species, uint16_t quantity);
@@ -56,6 +57,8 @@ public:
     bool canMove(const PlayerSnapshot& player, const Position& next) const override;
     void completeZoneData(const PlayerSnapshot& player, PlayerDataLocal& data, bool includeBroken) const override;
     void interact(PlayerManager& players, uint16_t playerId, Direction direction) override;
+    void depositInChest(PlayerManager& players, uint16_t playerId, const ItemTransferDTO& command) override;
+    void withdrawFromChest(PlayerManager& players, uint16_t playerId, const SelectItemDTO& command) override;
     void afterStatusPublished();
     bool teleport(PlayerManager& players, uint16_t playerId, Zone destination, uint8_t level = 0, std::optional<InteriorLocation> inside = std::nullopt);
     std::size_t careCrops();

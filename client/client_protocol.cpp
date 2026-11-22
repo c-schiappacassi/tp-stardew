@@ -6,6 +6,8 @@
 #include <stdexcept>
 #include <utility>
 
+#include "constants.h"
+#include "furniture_data.h"
 #include "protocol_errors.h"
 
 namespace {
@@ -229,6 +231,7 @@ LevelData ClientProtocol::receiveLevelData() {
         level.minerals.push_back(receiveMineralData());
     }
     level.combat = receiveCombatData();
+    level.furniture = receiveFurniture();
     return level;
 }
 
@@ -311,7 +314,12 @@ PlayerDataLocal ClientProtocol::receivePlayerDataLocal() {
         message.text = base.receiveString();
         localData.newMessages.push_back(std::move(message));
     }
-
+    localData.openChest = receiveOpenChest();
+    if (localData.openChest) {
+        if (!hasChest(localData.zoneData, localData.openChest->id)) {
+            throw ProtocolError("Open chest does not belong to the player zone");
+        }
+    }
     return localData;
 }
 
@@ -344,8 +352,7 @@ FarmData ClientProtocol::receiveFarmData() {
     for (uint16_t i = 0; i < n; ++i) farm.animals.push_back(receiveAnimalData());
     n = base.receiveUint16();
     for (uint16_t i = 0; i < n; ++i) farm.tilledSoil.push_back(receivePosition());
-    n = base.receiveUint16();
-    for (uint16_t i = 0; i < n; ++i) farm.furniture.push_back(receiveFurnitureData());
+    farm.furniture = receiveFurniture();
     farm.loot = receiveLoot();
     return farm;
 }
@@ -356,7 +363,23 @@ FurnitureData ClientProtocol::receiveFurnitureData() {
     f.pos = receivePosition();
     f.type = static_cast<FurnitureId>(base.receiveUint8());
     f.dir = static_cast<Direction>(base.receiveUint8());
+    if (f.id == 0 || f.type > FurnitureId::Chest || f.dir > Direction::Right)
+        throw ProtocolError("Invalid furniture");
     return f;
+}
+
+std::vector<FurnitureData> ClientProtocol::receiveFurniture() {
+    const auto count = base.receiveUint16();
+    std::vector<FurnitureData> result;
+    std::set<uint32_t> ids;
+    result.reserve(count);
+    for (uint16_t i = 0; i < count; ++i) {
+        auto item = receiveFurnitureData();
+        if (!ids.insert(item.id).second)
+            throw ProtocolError("Duplicate furniture identifier");
+        result.push_back(item);
+    }
+    return result;
 }
 
 InteriorData ClientProtocol::receiveInteriorData() {
@@ -366,9 +389,8 @@ InteriorData ClientProtocol::receiveInteriorData() {
         throw ProtocolError("Unknown interior");
     }
     in.house_index = base.receiveUint8();
-    const uint16_t n = base.receiveUint16();
-    in.furniture.reserve(n);
-    for (uint16_t i = 0; i < n; ++i) in.furniture.push_back(receiveFurnitureData());
+    in.furniture = receiveFurniture();
+    in.loot = receiveLoot();
     return in;
 }
 
@@ -391,6 +413,15 @@ void ClientProtocol::send(const CommandDTO& dto) {
         case MessageType::ResumeGame: send(static_cast<const ResumeGameDTO&>(dto)); break;
         case MessageType::Move: send(static_cast<const MoveDTO&>(dto)); break;
         case MessageType::Interact: send(static_cast<const InteractDTO&>(dto)); break;
+        case MessageType::ItemTransfer:
+            send(static_cast<const ItemTransferDTO&>(dto));
+            break;
+        case MessageType::SelectItem:
+            send(static_cast<const SelectItemDTO&>(dto));
+            break;
+        case MessageType::CloseChest:
+            send(static_cast<const CloseChestDTO&>(dto));
+            break;
         case MessageType::DayOk:send(static_cast<const DayOkDTO&>(dto));break;
         case MessageType::DayCancel:send(static_cast<const DayCancelDTO&>(dto));break;
         case MessageType::Donate: send(static_cast<const DonateDTO&>(dto)); break;
@@ -520,6 +551,56 @@ void ClientProtocol::send(const SelectSlotDTO& dto) {
     out.putString(dto.userName);
     out.putUint8(dto.slot);
     base.send(out);
+}
+
+void ClientProtocol::send(const ItemTransferDTO& dto) {
+    MessageBuffer out;
+    out.putUint8(static_cast<uint8_t>(MessageType::ItemTransfer));
+    out.putString(dto.userName);
+    out.putUint32(dto.chestId);
+    out.putUint8(dto.slot);
+    out.putUint16(dto.quantity);
+    base.send(out);
+}
+
+void ClientProtocol::send(const SelectItemDTO& dto) {
+    MessageBuffer out;
+    out.putUint8(static_cast<uint8_t>(MessageType::SelectItem));
+    out.putString(dto.userName);
+    out.putUint32(dto.chestId);
+    out.putUint8(dto.slot);
+    out.putUint16(dto.quantity);
+    base.send(out);
+}
+
+void ClientProtocol::send(const CloseChestDTO& dto) {
+    MessageBuffer out;
+    out.putUint8(static_cast<uint8_t>(MessageType::CloseChest));
+    out.putString(dto.userName);
+    base.send(out);
+}
+
+std::optional<OpenChestData> ClientProtocol::receiveOpenChest() {
+    const auto present = base.receiveUint8();
+    if (present > 1)
+        throw ProtocolError("Invalid open chest flag");
+    if (present == 0)
+        return std::nullopt;
+    OpenChestData chest;
+    chest.id = base.receiveUint32();
+    chest.capacity = base.receiveUint8();
+    const auto count = base.receiveUint8();
+    if (chest.id == 0 || chest.capacity != CHEST_INVENTORY_CAPACITY || count > chest.capacity) {
+        throw ProtocolError("Invalid open chest");
+    }
+    for (uint8_t i = 0; i < count; ++i) {
+        const auto slot = base.receiveUint8();
+        const auto stack = receiveStack();
+        if (slot >= chest.capacity || stack.quantity == 0 || stack.quantity > INVENTORY_STACK_LIMIT || stack.qual > Quality::Perfect || !chest.items.emplace(slot, stack).second) {
+            throw ProtocolError("Invalid chest slot");
+        }
+    }
+    return chest;
 }
 
 void ClientProtocol::send(const ListGamesDTO& dto) {

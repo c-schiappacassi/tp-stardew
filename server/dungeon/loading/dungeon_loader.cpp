@@ -18,6 +18,7 @@ bool DungeonLoader::load(const std::map<uint8_t, DungeonRoomLayout>& layout,std:
     }
 
     std::map<uint8_t, DungeonRoom> preparedRooms;
+    auto preparedIds = entityIds;
 
     for (uint8_t number = 1; number <= DUNGEON_ROOM_COUNT; ++number) {
         const auto it = layout.find(number);
@@ -26,13 +27,12 @@ bool DungeonLoader::load(const std::map<uint8_t, DungeonRoomLayout>& layout,std:
         }
 
         auto& room = preparedRooms.try_emplace(number, number).first->second;
-        if (!room.setMap(it->second.terrain) ||!room.setPassages(it->second.passages)) {
+        if (!room.setMap(it->second.terrain) || !room.setPassages(it->second.passages) || !room.initializeChests(it->second.chests, it->second.reservedPositions, preparedIds)) {
             return false;
         }
     }
 
     auto preparedGenerator = generator;
-    auto preparedIds = entityIds;
     auto preparedRandom = random;
 
     for (auto& [number, room] : preparedRooms) {

@@ -9,7 +9,7 @@ bool WorldManager::loadFarm(uint8_t worldId, const FarmLayout& layout) {
     FarmManager preparedFarm{farm.getConfig(), farmSeed};
     auto preparedIds = entityIds;
     InteriorManager preparedInteriors;
-    if (!preparedFarm.initialize(layout, preparedIds) || !preparedInteriors.initialize(layout.interiors)) {
+    if (!preparedFarm.initialize(layout, preparedIds) || !preparedInteriors.initialize(layout.interiors, preparedIds)) {
         return false;
     }
     const CollisionBox playerBox{entity_dimensions::PLAYER};
@@ -44,5 +44,7 @@ void WorldManager::update(std::chrono::milliseconds elapsed, PlayerManager& play
             farm.collectNearbyItems(players, id);
         else if (zone == Zone::Dungeon)
             dungeon.collectNearbyItems(players, id);
+        else if (zone == Zone::InsideHouse)
+            interiors.collectNearbyItems(players, id);
     }
 }

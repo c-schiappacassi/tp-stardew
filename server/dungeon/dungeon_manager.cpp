@@ -1,5 +1,7 @@
 #include "dungeon_manager.h"
 
+#include <stdexcept>
+
 #include "player/player_manager.h"
 
 DungeonManager::DungeonManager(const DungeonConfig& config, uint32_t seed):
@@ -91,7 +93,7 @@ bool DungeonManager::mineMineral(PlayerManager& players, uint16_t playerId, Enti
 
 bool DungeonManager::useSelectedItem(PlayerManager& players, uint16_t playerId, Direction direction, std::chrono::steady_clock::time_point now, EntityIdGenerator& ids) {
     const auto player = players.snapshot(playerId);
-    if (player.getZone() != Zone::Dungeon || !player.canPerformAction(now)) {
+    if (player.getZone() != Zone::Dungeon || !player.canAct()) {
         return false;
     }
     auto* room = findRoom(player.getDungeonLevel());
@@ -99,6 +101,10 @@ bool DungeonManager::useSelectedItem(PlayerManager& players, uint16_t playerId, 
         return false;
     }
     const auto* item = player.getSelectedItem();
+    if (const auto handled = room->interactWithChest(players, playerId, direction, ids, now))
+        return *handled;
+    if (!player.canPerformAction(now))
+        return false;
     if (item && item->item_id == ItemId::Sword) {
         return combat.attack(players, playerId, *room, direction, ids, now);
     }
@@ -120,9 +126,14 @@ bool DungeonManager::collectNearbyItems(PlayerManager& players, uint16_t playerI
         return false;
     }
     auto* room = findRoom(player.getDungeonLevel());
-    return room && room->getGroundItems().collect(players, playerId, [&](const Position& position) {
-        return room->hasClearLine(player.getCollisionCenter(), Position{position.getX(), position.getY() - 1});
-    });
+    if (!room)
+        return false;
+    const bool stored = room->getStorage().collectNearbyItems(players, playerId);
+    return room->getGroundItems().collect(players, playerId,
+               [&](const Position& position) {
+                   return room->hasClearLine(player.getCollisionCenter(), Position{position.getX(), position.getY() - 1});
+               }) ||
+        stored;
 }
 
 void DungeonManager::update(
@@ -176,4 +187,60 @@ void DungeonManager::removeBrokenMinerals() {
     for (auto& [number, room]: rooms) {
         room.removeBrokenMinerals();
     }
+}
+
+std::optional<OpenChestData> DungeonManager::openChestFor(const PlayerSnapshot& player) const {
+    const auto* room = player.getZone() == Zone::Dungeon ? findRoom(player.getDungeonLevel()) : nullptr;
+    return room ? room->getStorage().contentsFor(player) : std::nullopt;
+}
+
+void DungeonManager::depositInChest(PlayerManager& players, uint16_t playerId, const ItemTransferDTO& command) {
+    const auto player = players.snapshot(playerId);
+    auto* room = player.getZone() == Zone::Dungeon ? findRoom(player.getDungeonLevel()) : nullptr;
+    if (room)
+        room->getStorage().deposit(players, playerId, command);
+}
+
+void DungeonManager::withdrawFromChest(PlayerManager& players, uint16_t playerId, const SelectItemDTO& command) {
+    const auto player = players.snapshot(playerId);
+    auto* room = player.getZone() == Zone::Dungeon ? findRoom(player.getDungeonLevel()) : nullptr;
+    if (room)
+        room->getStorage().withdraw(players, playerId, command);
+}
+
+std::map<uint8_t, std::vector<FurnitureData>> DungeonManager::storageFurniture() const {
+    std::map<uint8_t, std::vector<FurnitureData>> result;
+    for (const auto& [number, room]: rooms) {
+        if (room.getPassages())
+            result.emplace(number, room.getStorage().furniture());
+    }
+    return result;
+}
+
+void DungeonManager::saveInventories(std::map<uint32_t, std::map<uint8_t, Stack>>& inventories) const {
+    for (const auto& [number, room]: rooms) {
+        for (const auto& [id, chest]: room.getStorage().getChests()) inventories.emplace(id, chest.getInventory().getItems());
+    }
+}
+
+void DungeonManager::restoreStorage(const std::map<uint8_t, std::vector<FurnitureData>>& saved, const std::map<uint32_t, std::map<uint8_t, Stack>>& inventories,
+    const std::map<uint8_t, std::vector<LootData>>& loot) {
+    auto prepared = rooms;
+    for (const auto& [number, furniture]: saved) {
+        const auto found = prepared.find(number);
+        if (found == prepared.end() || !found->second.getPassages())
+            throw std::runtime_error("Invalid saved dungeon storage");
+        const auto dropped = loot.find(number);
+        found->second.restoreChests(furniture, inventories, dropped == loot.end() ? std::vector<LootData>{} : dropped->second);
+    }
+    rooms = std::move(prepared);
+}
+
+std::map<uint8_t, std::vector<LootData>> DungeonManager::storageLoot() const {
+    std::map<uint8_t, std::vector<LootData>> result;
+    for (const auto& [number, room]: rooms) {
+        if (room.getPassages())
+            result.emplace(number, room.getStorage().getGroundItems().getPublicData());
+    }
+    return result;
 }
