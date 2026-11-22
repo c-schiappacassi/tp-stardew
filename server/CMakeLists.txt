@@ -51,6 +51,8 @@ target_sources(taller_server_core
         entities/entity_id_generator.cpp
         entities/collision_box.cpp
         entities/collision_bounds.cpp
+        world/loading/map_loader.cpp
+        world/loading/map_converter.cpp
         world/zone_map.cpp
         player/player_factory.cpp
         player/player_manager.cpp
@@ -176,6 +178,9 @@ target_sources(taller_server_core
         entities/entity_id_generator.h
         dungeon/dungeon_config.h
         player/player_config.h
+        world/loading/map_data.h
+        world/loading/map_loader.h
+        world/loading/map_converter.h
         world/zone_map.h
         player/player_factory.h
         player/player_manager.h
