@@ -279,6 +279,7 @@ BackgroundData MapConverter::convertVisualZone(const EditorZoneData& zone,
     const int tileSize = entity_dimensions::TILE_SIZE;
     result.floor.reserve(zone.background.size());
     result.decor.reserve(zone.decorations.size());
+    result.frame.reserve(zone.frame.size());
     result.buildings.reserve(zone.buildings.size());
 
     const auto position = [&](int x, int y) -> Position {
@@ -298,6 +299,12 @@ BackgroundData MapConverter::convertVisualZone(const EditorZoneData& zone,
             throw std::invalid_argument("Unknown decoration in " + name);
         }
         result.decor.push_back({position(decor.x, decor.y), static_cast<DecorId>(decor.id)});
+    }
+    for (const MapElement& piece : zone.frame) {
+        if (piece.id < 0 || piece.id > static_cast<int>(FramePieceId::DungeonTopWallEndLeft)) {
+            throw std::invalid_argument("Unknown frame piece in " + name);
+        }
+        result.frame.push_back({position(piece.x, piece.y), static_cast<FramePieceId>(piece.id)});
     }
     for (const EditorBuildingData& building : zone.buildings) {
         if (building.id < 0 || building.id > static_cast<int>(BuildingId::ComunityCenter)) {

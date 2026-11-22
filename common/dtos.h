@@ -155,6 +155,11 @@ struct DecorData { // para cosas como arboles y plantas
     DecorId id = DecorId::MapleTree;
 };
 
+struct FramePieceData {
+    Position pos{0, 0};
+    FramePieceId id = FramePieceId::StoneCliftTop;
+};
+
 struct BuildingData {
     Position pos{0,0};
     BuildingId id = BuildingId::FarmHouse;
@@ -180,6 +185,7 @@ struct InteriorBackgroundData
 struct BackgroundData{
     std::vector<TileData> floor;
     std::vector<DecorData> decor;
+    std::vector<FramePieceData> frame;
     std::vector<BuildingData> buildings; // Exteriores, para los interiores son una zona distinta, asi que les llega su propio BackgroundData
     std::vector<StaticFurnitureData> furniture;
     std::vector<PortalData> portals;

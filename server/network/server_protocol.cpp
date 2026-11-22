@@ -371,6 +371,7 @@ void ServerProtocol::writeFarmData(MessageBuffer& out, const FarmData& farm) {
 
 void ServerProtocol::writeBackgroundData(MessageBuffer& out, const BackgroundData& bg) {
     validateCount(bg.decor.size(),     MAX_U16, "decor");
+    validateCount(bg.frame.size(),     MAX_U16, "frame pieces");
     validateCount(bg.buildings.size(), MAX_U16, "buildings");
     validateCount(bg.furniture.size(), MAX_U16, "static furniture");
     validateCount(bg.portals.size(), MAX_U16, "portals");
@@ -390,6 +391,15 @@ void ServerProtocol::writeBackgroundData(MessageBuffer& out, const BackgroundDat
     for (const auto& d : bg.decor) {
         writePosition(out, d.pos);
         out.putUint8(static_cast<uint8_t>(d.id));
+    }
+    out.putUint16(static_cast<uint16_t>(bg.frame.size()));
+    for (const auto& piece : bg.frame) {
+        validatePosition(piece.pos);
+        if (piece.id > FramePieceId::DungeonTopWallEndLeft) {
+            throw ProtocolError("Unknown frame piece");
+        }
+        writePosition(out, piece.pos);
+        out.putUint8(static_cast<uint8_t>(piece.id));
     }
     out.putUint16(static_cast<uint16_t>(bg.buildings.size()));
     for (const auto& b : bg.buildings) {

@@ -618,6 +618,17 @@ BackgroundData ClientProtocol::receiveBackgroundData() {
         bg.decor.push_back(d);
     }
     n = base.receiveUint16();
+    bg.frame.reserve(n);
+    for (uint16_t i = 0; i < n; ++i) {
+        FramePieceData piece;
+        piece.pos = receivePosition();
+        piece.id = static_cast<FramePieceId>(base.receiveUint8());
+        if (piece.id > FramePieceId::DungeonTopWallEndLeft) {
+            throw ProtocolError("Unknown frame piece");
+        }
+        bg.frame.push_back(piece);
+    }
+    n = base.receiveUint16();
     for (uint16_t i = 0; i < n; ++i) {
         BuildingData b;
         b.pos = receivePosition();
