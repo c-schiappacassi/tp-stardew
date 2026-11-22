@@ -2,8 +2,6 @@
 
 #include "../../draw_region.h"
 #include "../../render_info.h"
-#include "../../sprite_defs.h"
-#include "constants.h"
 
 ProjectileView::ProjectileView(const ProjectileData& data) {
     update(data);
@@ -15,7 +13,7 @@ void ProjectileView::update(const ProjectileData& data) {
 }
 
 std::optional<float> ProjectileView::depth(const RenderInfo& ctx) const {
-    return depth_if_visible(ctx, pos, Dimentions::FLAME_CELL_H);
+    return depth_if_visible(ctx, pos, dimentions::FLAME_SIZE );
 }
 
 void ProjectileView::draw(const RenderInfo& ctx) {

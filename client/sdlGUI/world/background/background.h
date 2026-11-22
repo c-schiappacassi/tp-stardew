@@ -1,8 +1,8 @@
 #pragma once
 
-#include "../utils.h"
-#include "../draw_region.h"
-#include "entity_view.h"
+#include "../../utils.h"
+#include "../../draw_region.h"
+#include "../entity_view.h"
 #include "protocol_types.h"
 #include "dtos.h"
 

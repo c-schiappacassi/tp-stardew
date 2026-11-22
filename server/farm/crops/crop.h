@@ -19,6 +19,7 @@ private:
     std::chrono::milliseconds remainingWaterTime{0};
     std::chrono::milliseconds remainingDryTolerance;
     bool harvested = false;
+    bool regrowing = false;
 
     ItemId getProduct() const;
     void resetCycle();
@@ -32,14 +33,17 @@ public:
     CropState getState() const;
     bool isReady() const;
     bool isHarvested() const;
+    bool isRegrowing() const;
     bool isWatered() const;
     std::chrono::milliseconds getGrowthElapsed() const;
-    void restoreProgress(std::chrono::milliseconds growth, std::chrono::milliseconds water, bool wasHarvested);
+    void restoreProgress(std::chrono::milliseconds growth, std::chrono::milliseconds water,
+        bool wasHarvested, bool wasRegrowing = false);
     std::chrono::milliseconds getRemainingWaterTime() const;
     CropData getPublicData() const;
     void update(std::chrono::milliseconds elapsed);
     void finishDay();
     bool water();
+    void growFully();
     std::optional<FarmProduct> getHarvest(double luck = 1.0) const;
     std::optional<FarmProduct> harvest(double luck = 1.0);
 };

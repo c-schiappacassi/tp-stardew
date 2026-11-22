@@ -240,6 +240,9 @@ void ServerProtocol::writePlayerData(MessageBuffer& out, const PlayerData& data)
     writeColor(out, data.hairColor);
     writeColor(out, data.pantsColor);
     out.putUint8(static_cast<uint8_t>(data.currentZone));
+    if (data.currentZone == Zone::Dungeon) {
+        out.putUint8(data.dungeonLevel);
+    }
     if (data.currentZone == Zone::InsideHouse) {
         if (!data.interior || data.interior->interior_id > InteriorId::ComunityCenter) {
             throw ProtocolError("Unknown interior location");
@@ -248,6 +251,8 @@ void ServerProtocol::writePlayerData(MessageBuffer& out, const PlayerData& data)
         out.putUint8(data.interior->house_index);
     }
     out.putUint16(data.heldItem ? static_cast<uint16_t>(*data.heldItem) : 0);
+    out.putUint16(data.health);
+    out.putUint16(data.maxHealth);
 }
 
 void ServerProtocol::writeGameInfo(MessageBuffer& out, const GameInfoDTO& info) {
@@ -481,8 +486,6 @@ void ServerProtocol::writePlayerDataLocal(MessageBuffer& out, const PlayerDataLo
     out.putUint8(localData.current_slot);
     out.putUint8(localData.cap_inventory);
     out.putUint32(localData.gold);
-    out.putUint16(localData.health);
-    out.putUint16(localData.maxHealth);
     out.putUint16(localData.energy);
     out.putUint16(localData.maxEnergy);
     writeZoneData(out, localData.currentZone, localData.zoneData);

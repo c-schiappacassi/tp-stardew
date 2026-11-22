@@ -280,8 +280,11 @@ struct PlayerData{
     Color hairColor{0, 0, 0};
     Color pantsColor{0, 0, 0};
     Zone currentZone = Zone::Farm;
+    uint8_t dungeonLevel = 0;
     std::optional<InteriorLocation> interior;
     std::optional<ItemId> heldItem;
+    uint16_t health = 0;
+    uint16_t maxHealth = 0; //  max no hace falta
 };
 
 struct GameInfoDTO {
@@ -301,8 +304,6 @@ struct PlayerDataLocal : public PlayerData {
     uint8_t cap_inventory = 0;
     uint8_t current_slot = 0;
     uint32_t gold = 0;
-    uint16_t health = 0;
-    uint16_t maxHealth = 0;
     uint16_t energy = 0;
     uint16_t maxEnergy = 0;
     ZoneData zoneData{std::monostate{}};
@@ -456,7 +457,7 @@ struct ServerStatus {
     std::string gameId;
     uint16_t playerId = 0;
     uint8_t worldId = 0;
-    std::map<std::string, PlayerData> players;
+    std::map<std::string, PlayerData> players; // All connected players, regardless of location.
     PlayerDataLocal localPlayer;
     bool dayEnded = false;
     bool dayConfirmationRequired = false;

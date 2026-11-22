@@ -1,6 +1,7 @@
 #include "crop_manager.h"
 #include "farm/farm_config.h"
 
+#include <stdexcept>
 #include <utility>
 
 #include "farm/spatial/farm_reservation.h"
@@ -14,6 +15,20 @@ bool CropManager::hasTilledSoil() const { return !tilledSoil.empty(); }
 
 const std::map<EntityId, Crop>& CropManager::getCrops() const { return crops; }
 const std::set<ZoneMap::Cell>& CropManager::getTilledSoil() const { return tilledSoil; }
+
+const std::map<ZoneMap::Cell, std::chrono::milliseconds>& CropManager::getEmptySoilElapsed() const {
+    return emptySoilElapsed;
+}
+
+bool CropManager::restoreEmptySoilElapsed(const Position& position,
+    std::chrono::milliseconds elapsed, const FarmPlacement& placement) {
+    const auto cell = placement.cellAt(position);
+    if (!cell || elapsed.count() < 0 || elapsed >= 2 * dayLength) return false;
+    const auto it = emptySoilElapsed.find(*cell);
+    if (it == emptySoilElapsed.end()) return false;
+    it->second = elapsed;
+    return true;
+}
 
 const CropDefinition* CropManager::findDefinition(CropType type) const {
     for (const auto& definition : definitions) {
@@ -29,7 +44,9 @@ bool CropManager::tillSoil(const Position& position, const FarmPlacement& placem
     if (!cell || !placement.isAvailable(CollisionBox{entity_dimensions::CROP}.at(position))) {
         return false;
     }
-    return tilledSoil.insert(*cell).second;
+    if (!tilledSoil.insert(*cell).second) return false;
+    emptySoilElapsed.emplace(*cell, std::chrono::milliseconds{0});
+    return true;
 }
 
 bool CropManager::isTilled(const Position& position, const FarmPlacement& placement) const {
@@ -40,7 +57,8 @@ bool CropManager::isTilled(const Position& position, const FarmPlacement& placem
 bool CropManager::plant(EntityId id, const Position& position, CropType type,
     FarmPlacement& placement) {
     const auto* definition = findDefinition(type);
-    if (!definition || id == 0 || placement.contains(id) || !isTilled(position, placement) ||
+    const auto cell = placement.cellAt(position);
+    if (!definition || id == 0 || placement.contains(id) || !cell || !tilledSoil.contains(*cell) ||
         !placement.isAvailable(CollisionBox{entity_dimensions::CROP}.at(position))) {
         return false;
     }
@@ -50,6 +68,7 @@ bool CropManager::plant(EntityId id, const Position& position, CropType type,
         return false;
     }
     reservation.commit();
+    emptySoilElapsed.erase(*cell);
     return true;
 }
 
@@ -69,6 +88,8 @@ std::optional<FarmProduct> CropManager::harvest(EntityId id, FarmPlacement& plac
     }
     auto product = it->second.harvest(luck);
     if (it->second.isHarvested()) {
+        const auto cell = placement.cellAt(it->second.getPosition());
+        if (cell) emptySoilElapsed[*cell] = std::chrono::milliseconds{0};
         placement.release(id);
         crops.erase(it);
     }
@@ -76,6 +97,16 @@ std::optional<FarmProduct> CropManager::harvest(EntityId id, FarmPlacement& plac
 }
 
 void CropManager::update(std::chrono::milliseconds elapsed) {
+    if (elapsed.count() < 0) throw std::invalid_argument("Negative time");
+    for (auto it = emptySoilElapsed.begin(); it != emptySoilElapsed.end();) {
+        if (elapsed >= 2 * dayLength - it->second) {
+            tilledSoil.erase(it->first);
+            it = emptySoilElapsed.erase(it);
+        } else {
+            it->second += elapsed;
+            ++it;
+        }
+    }
     for (auto& [id, crop] : crops) {
         crop.update(elapsed);
     }

@@ -16,7 +16,7 @@ bool hitPlayer(CombatContext& context, const Projectile& projectile,const std::v
     for (const auto& actor: players) {
         Player& player = *actor.player;
         if (player.canBeAttacked() &&
-            bounds.intersects(player.getCollisionBounds(player.getPosition()))) {
+            bounds.intersects(player.getHitboxBounds())) {
             combat_damage::apply(context, player, actor.id, projectile.damage, room);
             return true;
         }
@@ -55,7 +55,7 @@ void projectile_combat::launch(CombatContext& context, const Enemy& enemy, const
     }
     const bool green = context.generator.roll(50);
     const auto origin = enemy.bounds(enemy.data.pos).center();
-    const auto destination = target.getCollisionCenter();
+    const auto destination = target.getHitboxCenter();
     const double dx = destination.getX() - origin.getX();
     const double dy = destination.getY() - origin.getY();
     const double length = std::max(1.0, std::hypot(dx, dy));

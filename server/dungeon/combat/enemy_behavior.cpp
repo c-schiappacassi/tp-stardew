@@ -79,9 +79,14 @@ const Combatant* findTarget(const Enemy& enemy, const std::vector<Combatant>& pl
 
 bool canReachTarget(const Enemy& enemy, const Player& player, const DungeonRoom& room) {
     const auto range = enemy.definition.range;
-    const auto distance = enemy_navigation::squaredDistance(enemy.data.pos, player.getPosition());
+    const auto origin = enemy.bounds(enemy.data.pos).center();
+    const auto hitbox = player.getHitboxBounds();
+    const Position target{
+        static_cast<int>(std::clamp<int64_t>(origin.getX(), hitbox.getLeft(), hitbox.getRight())),
+        static_cast<int>(std::clamp<int64_t>(origin.getY(), hitbox.getTop(), hitbox.getBottom()))};
+    const auto distance = enemy_navigation::squaredDistance(origin, target);
     return distance <= static_cast<double>(range) * range &&
-           room.hasClearLine(enemy.bounds(enemy.data.pos).center(), player.getCollisionCenter());
+           room.hasClearLine(origin, target);
 }
 
 void attack(CombatContext& context, Enemy& enemy, const Combatant& target, DungeonRoom& room) {

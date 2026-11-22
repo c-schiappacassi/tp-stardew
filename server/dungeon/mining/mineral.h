@@ -11,7 +11,7 @@ private:
     EntityId id;
     Position pos;
     ResourceType type;
-    uint16_t remainingHits;
+    uint32_t remainingDurability;
 
 public:
     Mineral(EntityId id,const Position& pos,ResourceType type,uint16_t hitsToBreak);
@@ -22,7 +22,7 @@ public:
     CollisionBounds getCollisionBounds() const;
     Position getCollisionCenter() const;
     bool isDepleted() const;
-    bool hit();
+    bool hit(uint16_t power = 2);
     MineralState getState() const;
     MineralData getPublicData() const;
 };

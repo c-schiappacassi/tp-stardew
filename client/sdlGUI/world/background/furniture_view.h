@@ -1,10 +1,10 @@
 #pragma once
 #include <optional>
 
-#include "../utils.h"
-#include "entity_view.h"
-#include "../render_info.h"
-#include "../draw_region.h"
+#include "../../utils.h"
+#include "../entity_view.h"
+#include "../../render_info.h"
+#include "../../draw_region.h"
 
 #include "position.h"
 #include "protocol_types.h"

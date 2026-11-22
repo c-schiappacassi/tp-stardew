@@ -13,7 +13,7 @@
 #include "../../../state.h"
 #include "../../draw_region.h"
 #include "../../render_info.h"
-#include "../player_view.h"
+#include "../player/player_view.h"
 
 namespace {
     enum class Area : std::size_t { Farm, Town, Mines, Count };

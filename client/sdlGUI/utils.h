@@ -15,6 +15,8 @@
 #define TILE_TO_PIXEL 16
 
 enum class SpriteId : uint16_t {
+    PlaceHolder,
+    
     FarmerBase,
     Hairstyles,
     Pants,
@@ -82,7 +84,8 @@ enum class SpriteId : uint16_t {
     Robin,
     
     Harvest,
-    Craftables
+    Craftables,
+    NightSky
 };
 
 enum class UiSpriteId : uint8_t {
@@ -99,7 +102,8 @@ enum class UiSpriteId : uint8_t {
     CancelButton,
     PlayerHead,
     InfoSing,
-    InfoSingArrow
+    InfoSingArrow,
+    NightSky
 };
 
 struct Drawable {

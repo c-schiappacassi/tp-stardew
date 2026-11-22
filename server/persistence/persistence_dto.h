@@ -19,10 +19,12 @@ struct PersistenceDTO {
     std::map<std::string, PlayerDataLocal> players;
 
     FarmData farm;
+    std::vector<std::pair<Position, uint64_t>> emptySoilElapsed;
 
     std::map<uint32_t, uint64_t> cropGrowthProgress;
     std::map<uint32_t, uint64_t> cropWaterRemainingTime;
     std::map<uint32_t, bool> harvestedCrops;
+    std::map<uint32_t, bool> regrowingCrops;
 
     std::map<uint32_t, uint64_t> animalProductionProgress;
     std::map<uint32_t, uint32_t> animalAvailableProducts;

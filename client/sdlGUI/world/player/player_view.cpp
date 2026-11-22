@@ -33,6 +33,7 @@ namespace {
 }
 
 PlayerView::PlayerView(const PlayerData& data) {
+    hit_flash = &health_trigger.add<HitFlash>();
     update(data);
 }
 
@@ -46,7 +47,7 @@ void PlayerView::update(const PlayerData& data) {
     shirt_model = data.shirtModel;
     pant_model = data.pantsModel;
     pant_color = to_sdl(data.pantsColor);
-
+    health_trigger.observe(data.health, data.pos);
     if (data.heldItem != held_item) {
         clip_player.reset();
     }
@@ -57,16 +58,14 @@ std::optional<float> PlayerView::depth(const RenderInfo& ctx) const {
     return depth_if_visible(ctx, pos, farmer::CELL_H);
 }
 
-void PlayerView::draw_layers_in_order(const RenderInfo& ctx, const farmer::DrawPlayerData& d) {
+void PlayerView::draw_layers_in_order(const RenderInfo& ctx, const farmer::DrawPlayerData& d, const std::optional<SDL_Color>& flash){
     auto layer = [&](SpriteId id, const SDL2pp::Rect& src, Offset off = {}, std::optional<SDL_Color> tint = std::nullopt) {
-        draw_region(ctx, id, src, d.origin, layer_x(off.x, d.flip, d.cell_w, src.w), off.y, d.flip, tint);
+        draw_region(ctx, id, src, d.origin, layer_x(off.x, d.flip, d.cell_w, src.w), off.y, d.flip, combine_tint(tint, flash));
     };
 
     auto tool = [&]() {
         if (state != PlayerState::UsingTool || !held_item) return;
-        if (const ToolFrame* tf = ctx.assets.find_tool_frame(*held_item, facing, d.frame_index)) {
-            draw_tool_layer(ctx, *tf, d.anchor, d.flip);
-        }
+        draw_tool_layer(ctx, ctx.assets.get_tool_frame(*held_item, facing, d.frame_index), d.anchor, d.flip);
     };
 
     const bool arms_behind = (facing == Direction::Up);
@@ -96,7 +95,8 @@ void PlayerView::draw(const RenderInfo& ctx) {
 
     const AnimatedFrame* frame = clip_player.frame(ctx, clip_id);
     if (!frame) return;
-
+    
+    const auto flash = hit_flash->tint(ctx);
     const Sprite& body = frame->sprite;
     const int zoom = ctx.cam.get_zoom();
     const SDL2pp::Point anchor = ctx.cam.world_to_screen(pos.getX(), pos.getY());
@@ -112,7 +112,7 @@ void PlayerView::draw(const RenderInfo& ctx) {
         clip_player.frame_index(),
         body.width,
         frame->flip
-    });
+    }, flash);
 }
 
 void PlayerView::draw_name(const RenderInfo& ctx) const {

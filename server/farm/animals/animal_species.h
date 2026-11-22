@@ -1,6 +1,7 @@
 #pragma once
 
 #include <optional>
+#include <span>
 
 #include "protocol_types.h"
 
@@ -10,3 +11,4 @@ enum class AnimalSpecies {
 };
 
 std::optional<AnimalSpecies> animalSpeciesForType(AnimalType type);
+std::span<const AnimalType> animalTypesForSpecies(AnimalSpecies species);

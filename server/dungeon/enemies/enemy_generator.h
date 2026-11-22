@@ -20,6 +20,8 @@ public:
     EnemyGenerator(const EnemyConfig& config, uint32_t seed);
     bool populate(DungeonRoom& room, EntityIdGenerator& ids, const std::vector<Position>& reserved);
     bool spawnOrcs(DungeonRoom& room, EntityIdGenerator& ids, const std::vector<Position>& reserved,int minimum = 3);
+    bool spawnEnemies(DungeonRoom& room, EnemyType type, uint16_t quantity, bool pairs,
+                      EntityIdGenerator& ids, const std::vector<Position>& reserved);
     bool roll(uint8_t percent);
     uint16_t gold();
 };

@@ -16,7 +16,7 @@ FarmConfig::FarmConfig(std::chrono::milliseconds dayLength): dayLength(dayLength
     validateDayLength(dayLength);
 
     crops = {
-        {CropType::Strawberry, 4 * dayLength, dayLength / 2, 2 * dayLength, 0, 25},
+        {CropType::Strawberry, 4 * dayLength, dayLength / 2, dayLength, 0, 25},
         {CropType::Scallion, 2 * dayLength, dayLength / 3, std::chrono::milliseconds{0}, 0, 12},
         {CropType::Potato, 3 * dayLength, dayLength / 2, std::chrono::milliseconds{0}, 1, 18},
         {CropType::Pumpkin, 7 * dayLength, dayLength, std::chrono::milliseconds{0}, 0, 50}

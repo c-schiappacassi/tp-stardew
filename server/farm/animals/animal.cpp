@@ -73,7 +73,7 @@ std::optional<FarmProduct> Animal::getProduction() const {
     if (availableProducts == 0) {
         return std::nullopt;
     }
-    return FarmProduct{getProduct(), availableProducts, Quality::None};
+    return FarmProduct{getProduct(), availableProducts, Quality::Base};
 }
 
 AnimalData Animal::getPublicData() const {

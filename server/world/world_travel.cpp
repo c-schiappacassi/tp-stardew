@@ -139,3 +139,20 @@ bool WorldTravel::use(Player& player, uint16_t playerId, DungeonManager& dungeon
 }
 
 void WorldTravel::finishDay() { mineReturns.clear(); }
+
+void WorldTravel::onTeleport(uint16_t playerId, const Player& origin, const Player& destination,const FarmManager& farm) {
+    if (destination.getZone() != Zone::Dungeon) {
+        mineReturns.erase(playerId);
+    } else if (origin.getZone() != Zone::Dungeon) {
+        if (origin.getZone() == Zone::Farm || origin.getZone() == Zone::Town) {
+            mineReturns.insert_or_assign(playerId, ReturnPoint{origin.getZone(), origin.getPosition()});
+        } else if (entrance) {
+            mineReturns.insert_or_assign(playerId, ReturnPoint{entrance->zone, entrance->returnPosition});
+        } else {
+            Player outside = origin;
+            if (farm.spawnPlayer(outside)) {
+                mineReturns.insert_or_assign(playerId, ReturnPoint{Zone::Farm, outside.getPosition()});
+            }
+        }
+    }
+}

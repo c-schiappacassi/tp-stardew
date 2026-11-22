@@ -3,6 +3,7 @@
 #include <SDL2/SDL.h>
 
 #include <optional>
+#include <string>
 
 #include "input_event.h"
 
@@ -29,10 +30,27 @@ inline MouseButton button_from_sdl(Uint8 button) {
     }
 }
 
+inline bool is_paste_shortcut(const SDL_KeyboardEvent& k) {
+    return k.keysym.sym == SDLK_v && (k.keysym.mod & (KMOD_CTRL | KMOD_GUI)) && k.repeat == 0;
+}
+
+inline std::string clipboard_text() {
+    if (!SDL_HasClipboardText()) return {};
+    char* raw = SDL_GetClipboardText();
+    if (raw == nullptr) return {};
+    std::string text(raw);
+    SDL_free(raw);
+    return text;
+}
+
 inline std::optional<InputEvent> translate(const SDL_Event& e) {
     switch (e.type) {
         case SDL_QUIT: return InputEvent::quit();
-        case SDL_KEYDOWN: return InputEvent::key_down(key_from_sdl(e.key.keysym.sym), e.key.repeat != 0);
+        case SDL_KEYDOWN:
+            if (is_paste_shortcut(e.key)) {
+                return InputEvent::paste(clipboard_text());
+            }
+            return InputEvent::key_down(key_from_sdl(e.key.keysym.sym), e.key.repeat != 0);
         case SDL_KEYUP: return InputEvent::key_up(key_from_sdl(e.key.keysym.sym));
         case SDL_TEXTINPUT: return InputEvent::typed(e.text.text);
         case SDL_MOUSEBUTTONDOWN: return InputEvent::mouse_down(button_from_sdl(e.button.button), e.button.x, e.button.y);

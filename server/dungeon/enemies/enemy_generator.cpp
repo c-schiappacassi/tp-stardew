@@ -94,6 +94,40 @@ bool EnemyGenerator::spawnOrcs(DungeonRoom& room, EntityIdGenerator& ids,const s
     return true;
 }
 
+bool EnemyGenerator::spawnEnemies(DungeonRoom& room, EnemyType type, uint16_t quantity,
+                                  bool pairs, EntityIdGenerator& ids,
+                                  const std::vector<Position>& reserved) {
+    const uint32_t count = static_cast<uint32_t>(quantity) * (pairs ? 2 : 1);
+    if (quantity == 0 || type > EnemyType::Skull ||
+        (pairs && type != EnemyType::VampireMale) ||
+        room.getCombat().enemies.size() + count > config.maxEnemiesPerRoom) return false;
+
+    auto preparedRoom = room;
+    auto preparedIds = ids;
+    auto preparedGenerator = *this;
+    if (pairs) {
+        for (uint16_t index = 0; index < quantity; ++index) {
+            if (preparedIds.getNextId() == 0) return false;
+            const auto pair = preparedIds.generate();
+            if (!preparedGenerator.spawn(preparedRoom,
+                    {EnemyType::VampireMale, EnemyType::VampireFemale}, preparedIds,
+                    reserved, 0, pair)) return false;
+        }
+    } else {
+        uint32_t group = 0;
+        if (type == EnemyType::Orc) {
+            if (preparedIds.getNextId() == 0) return false;
+            group = preparedIds.generate();
+        }
+        if (!preparedGenerator.spawn(preparedRoom, std::vector<EnemyType>(quantity, type),
+                                     preparedIds, reserved, group, 0)) return false;
+    }
+    room.getCombat() = std::move(preparedRoom.getCombat());
+    ids = preparedIds;
+    random = preparedGenerator.random;
+    return true;
+}
+
 bool EnemyGenerator::populate(DungeonRoom& room, EntityIdGenerator& ids,const std::vector<Position>& reserved) {
     auto preparedRoom = room;
     auto preparedIds = ids;

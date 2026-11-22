@@ -12,7 +12,9 @@ std::string_view name(ItemId item);
 std::optional<ItemId> item(const std::string& name);
 std::optional<ItemId> cropItem(CropType crop);
 std::optional<AnimalSpecies> animal(const std::string& name);
+std::optional<AnimalType> animalVariant(const std::string& name);
 std::string_view merchantName(NpcId merchant);
 std::optional<NpcId> merchantForInterior(InteriorId interior);
 std::optional<uint64_t> salePrice(uint32_t basePrice, Quality quality);
+std::optional<uint64_t> salePriceQuarters(uint32_t basePrice, Quality quality);
 }

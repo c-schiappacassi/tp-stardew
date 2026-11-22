@@ -4,6 +4,8 @@
 #include "../../utils.h"
 #include "../entity_view.h"
 #include "../../clip_player.h"
+#include "../effects/health_trigger.h"
+#include "../effects/hit_flash.h"
 
 #include "position.h"
 #include "protocol_types.h"
@@ -17,6 +19,9 @@ private:
     Direction facing = Direction::Down;
     EnemyState state;
     bool frenzied = false;
+    uint16_t heath;
+    HealthTrigger health_trigger;
+    HitFlash* hit_flash = nullptr;
     
     ClipPlayer clip_player;
 public: 

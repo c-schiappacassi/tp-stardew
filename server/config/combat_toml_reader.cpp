@@ -80,6 +80,8 @@ void CombatTomlReader::read(const toml::table& table, DungeonConfig& dungeon,
     section = table["spawns"];
     number(section, "safety_range", enemies.spawnSafetyRange);
     number(section, "skeletons_per_room", enemies.skeletonsPerRoom);
+    number(section, "spikes_per_room", enemies.spikesPerRoom);
+    number(section, "wall_flames_per_room", enemies.wallFlamesPerRoom);
     number(section, "orc_group_every", enemies.orcGroupEvery);
     number(section, "vampire_pair_every", enemies.vampirePairEvery);
     number(section, "skull_every", enemies.skullEvery);

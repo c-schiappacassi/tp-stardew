@@ -5,8 +5,8 @@
 
 #include "background.h"
 #include "item_view.h"
-#include "zone_view.h"
-#include "../sync_views.h"
+#include "../zone_view.h"
+#include "../../sync_views.h"
 
 class BackgroundZoneView : public ZoneView {
 private:

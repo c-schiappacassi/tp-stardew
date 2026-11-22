@@ -13,6 +13,7 @@ Player PlayerFactory::create(const PlayerData& appearance) const {
     const int tileSize = entity_dimensions::TILE_SIZE;
     spawn.pos = Position{3 * tileSize + tileSize / 2, 4 * tileSize};
     spawn.currentZone = Zone::Farm;
+    spawn.dungeonLevel = 0;
 
     std::mt19937 generator(std::random_device{}());
     std::uniform_int_distribution<uint32_t> goldDistribution(0, 100);

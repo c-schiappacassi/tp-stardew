@@ -17,6 +17,7 @@
 #include "layers/minimap_layer.h"
 #include "layers/quit_layer.h"
 #include "layers/ready_to_sleep_layer.h"
+#include "layers/night_sky_layer.h"
 
 class UiManager {
 public:
@@ -59,16 +60,19 @@ public:
     explicit UiManager(const std::string& player_name): world(player_name) {
         emplace<HudLayer>();
 
+        NightSkyLayer& sky = emplace<NightSkyLayer>(); 
+
         MinimapLayer& minimap = emplace<MinimapLayer>();
         bind_open(Key::M, minimap);
 
         ChatLayer& chat = emplace<ChatLayer>(player_name);
         bind_open(Key::T, chat);
 
-        emplace<ReadyToSleepLayer>(player_name);
-
         QuitLayer& quit_layer = emplace<QuitLayer>(player_name);
         bind_open(Key::Escape, quit_layer);
+        
+        ReadyToSleepLayer& sleep = emplace<ReadyToSleepLayer>(player_name);
+        sky.watch(sleep);
     }
 
     UiManager(const UiManager&) = delete;

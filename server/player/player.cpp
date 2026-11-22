@@ -27,6 +27,7 @@ Player::Player(
         dir(initialData.dir),
         zone(initialData.currentZone),
         interior(initialData.interior),
+        dungeonLevel(initialData.dungeonLevel),
         hairModel(initialData.hairModel),
         shirtModel(initialData.shirtModel),
         pantsModel(initialData.pantsModel),
@@ -117,6 +118,7 @@ PlayerData Player::getPublicData() const {
     data.state = state;
     data.dir = dir;
     data.currentZone = zone;
+    data.dungeonLevel = dungeonLevel;
     data.interior = interior;
     const Stack* item = getSelectedItem();
     if (item != nullptr) {
@@ -127,6 +129,8 @@ PlayerData Player::getPublicData() const {
     data.pantsModel = pantsModel;
     data.hairColor = hairColor;
     data.pantsColor = pantsColor;
+    data.health = health;
+    data.maxHealth = maxHealth;
     return data;
 }
 
@@ -136,8 +140,6 @@ PlayerDataLocal Player::getLocalData() const {
     data.cap_inventory = inventory.getCapacity();
     data.current_slot = currentSlot;
     data.gold = gold;
-    data.health = health;
-    data.maxHealth = maxHealth;
     data.energy = energy;
     data.maxEnergy = maxEnergy;
     return data;
@@ -170,7 +172,8 @@ bool Player::useTool(std::chrono::steady_clock::time_point now) {
         return false;
     }
 
-    const ToolConfig& tool = config.tools.at(getSelectedItem()->item_id);
+    const ItemId item = getSelectedItem()->item_id;
+    const ToolConfig& tool = config.tools.at(item);
     const Direction toolDirection = dir;
     if (!performAction(tool.energyCost, std::chrono::milliseconds{tool.intervalMs}, now)) {
         return false;
@@ -249,6 +252,14 @@ Position Player::getCollisionCenter() const {
      return getCollisionBounds(pos).center(); 
     }
 
+CollisionBounds Player::getHitboxBounds() const {
+    return config.hitbox.at(pos);
+}
+
+Position Player::getHitboxCenter() const {
+    return getHitboxBounds().center();
+}
+
 bool Player::canAct() const {
     return(state == PlayerState::Idle ||state == PlayerState::Walking) &&health > 0 &&energy > 0;
 }
@@ -282,11 +293,19 @@ uint16_t Player::receiveDamage(uint16_t damage, std::chrono::steady_clock::time_
     return applied;
 }
 
+bool Player::hasLowHealth() const {
+    return static_cast<uint32_t>(health) * 5 <= maxHealth;
+}
+
 uint16_t Player::getSwordDamage() const {
-    if (static_cast<uint32_t>(health) * 5 <= maxHealth && config.swordDamage > 0) {
+    if (hasLowHealth() && config.swordDamage > 0) {
         return std::max<uint16_t>(1, config.swordDamage / 2);
     }
     return config.swordDamage;
+}
+
+uint16_t Player::getMiningPower() const {
+    return hasLowHealth() ? 1 : 2;
 }
 
 uint16_t Player::getSwordRange() const { return config.swordRange; }
@@ -433,7 +452,7 @@ int Player::getMovementStep(int normalStep) const {
         return 0;
     }
 
-    if (static_cast<uint32_t>(energy) * 10 <= maxEnergy) {
+    if (hasLowHealth() || static_cast<uint32_t>(energy) * 10 <= maxEnergy) {
         return std::max(1, normalStep / 2);
     }
 
@@ -456,6 +475,7 @@ void Player::restoreData(const PlayerDataLocal& saved) {
     dir = saved.dir;
     movementDirection = Direction::None;
     zone = saved.currentZone;
+    dungeonLevel = saved.dungeonLevel;
     interior = saved.interior;
     hairModel = saved.hairModel;
     shirtModel = saved.shirtModel;

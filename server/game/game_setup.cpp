@@ -17,11 +17,6 @@ GameSetup makeDefaultGameSetup(uint8_t worldId) {
         if (level < DUNGEON_ROOM_COUNT) {
             room.passages.nextRoom = terrain.baseAt({21, 29}).value();
         }
-        room.traps.push_back(TrapData{0, terrain.baseAt({12, 14}).value(), Direction::Down,TrapType::Spikes, TrapState::Inactive, 16});
-        room.traps.push_back(TrapData{0, terrain.baseAt({8, 0}).value(), Direction::Right,TrapType::WallFlame, TrapState::Inactive, 64});
-        for (const auto& trap: room.traps) {
-            room.reservedPositions.push_back(trap.pos);
-        }
         setup.layout.emplace(level, std::move(room));
     }
     setup.entrance.emplace();

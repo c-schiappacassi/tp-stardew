@@ -22,6 +22,7 @@ public:
     void defeat(uint16_t playerId, uint8_t room, const Enemy& enemy);
     void enter(uint16_t playerId, uint8_t room, bool skull);
     void damage(uint16_t playerId);
+    void observeSkull(uint16_t playerId, uint8_t room);
     void leave(uint16_t playerId, bool survived);
     const CombatProgressData& data() const;
     bool complete() const;

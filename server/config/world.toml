@@ -394,13 +394,15 @@ trap_damage = 12
 wall_flame_range = 64
 orc_silver_chance = 20
 mining_ambush_chance = 10
-gold_chance = 60
+gold_chance = 75
 gold_min = 2
 gold_max = 10
 
 [spawns]
 safety_range = 64
 skeletons_per_room = 1
+spikes_per_room = 1
+wall_flames_per_room = 1
 orc_group_every = 3
 vampire_pair_every = 4
 skull_every = 5

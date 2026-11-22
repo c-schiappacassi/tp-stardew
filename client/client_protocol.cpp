@@ -253,6 +253,9 @@ PlayerData ClientProtocol::receivePlayerData() {
     data.pantsColor = receiveColor();
     data.currentZone = static_cast<Zone>(base.receiveUint8());
     if (data.currentZone > Zone::InsideHouse) throw ProtocolError("Unknown zone");
+    if (data.currentZone == Zone::Dungeon) {
+        data.dungeonLevel = base.receiveUint8();
+    }
     if (data.currentZone == Zone::InsideHouse) {
         InteriorLocation inside;
         inside.interior_id = static_cast<InteriorId>(base.receiveUint8());
@@ -264,6 +267,8 @@ PlayerData ClientProtocol::receivePlayerData() {
     }
     const uint16_t heldItem = base.receiveUint16();
     if (heldItem != 0) data.heldItem = static_cast<ItemId>(heldItem);
+    data.health = base.receiveUint16();
+    data.maxHealth = base.receiveUint16();
     return data;
 }
 
@@ -290,8 +295,6 @@ PlayerDataLocal ClientProtocol::receivePlayerDataLocal() {
     localData.current_slot = base.receiveUint8();
     localData.cap_inventory = base.receiveUint8();
     localData.gold = base.receiveUint32();
-    localData.health = base.receiveUint16();
-    localData.maxHealth = base.receiveUint16();
     localData.energy = base.receiveUint16();
     localData.maxEnergy = base.receiveUint16();
     localData.zoneData = receiveZoneData(baseData.currentZone);

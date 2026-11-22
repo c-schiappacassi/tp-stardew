@@ -4,7 +4,7 @@
 #include <initializer_list>
 #include "dtos.h"
 #include "protocol_types.h"
-#include "utils.h"
+#include "../utils.h"
 
 // TODO: organizar mejor este archivo
 
@@ -57,6 +57,8 @@ namespace Dimentions {
     constexpr uint16_t FLAME_COLS   = 7;
     constexpr uint16_t FLAME_CELL_W = 8;
     constexpr uint16_t FLAME_CELL_H = 8;
+
+    constexpr uint16_t QUALITY_SIZE = 8;
 }
 
 namespace SpriteDefs {
@@ -65,6 +67,9 @@ namespace SpriteDefs {
     struct TextureDef { SpriteId id; const char* path; };
 
     inline constexpr TextureDef TEXTURES[] = {
+        // placeholder para missing sprites
+        {SpriteId::PlaceHolder, "placeholder.png"},
+
         // ui
         {SpriteId::MenuTiles,    "menus/menutiles.png"},
         {SpriteId::Cursors,      "menus/cursors.png"},
@@ -72,6 +77,7 @@ namespace SpriteDefs {
         {SpriteId::ChatBox,      "menus/chat_box.png"},
         {SpriteId::Minimap, "minimaps/placeholder_minimap.jpg"},
         {SpriteId::InfoSing, "menus/clock.png"},
+        {SpriteId::NightSky, "menus/night_sky.png"},
 
         // farmer
         {SpriteId::FarmerBase,   "characters/farmer_base.png"},
@@ -179,6 +185,15 @@ namespace SpriteDefs {
         {CropType::Scallion,   CropState::Sprouting,    48,  61},
         {CropType::Scallion,   CropState::Growing,      64,  61},
         {CropType::Scallion,   CropState::Ready,        80,  61},
+    };
+
+    // Quality
+    struct QualityDef { Quality type; uint16_t x, y; };
+    inline constexpr QualityDef QUALITYS[] = {
+        {Quality::Good,   330, 392},
+        {Quality::Excellent,   338, 392},
+        {Quality::Incredible,   346, 392},
+        {Quality::Perfect,   354, 392},
     };
 
     // Map background
@@ -395,6 +410,7 @@ namespace SpriteDefs {
         {UiSpriteId::PlayerHead, SpriteId::FarmerBase, 0, 0, 16, 15},
         {UiSpriteId::InfoSing, SpriteId::InfoSing, 0, 0, 72, 59},
         {UiSpriteId::InfoSingArrow, SpriteId::InfoSing, 72, 0, 7, 19},
+        {UiSpriteId::NightSky, SpriteId::NightSky, 0, 0, 480, 256},
     };
 
     // Clips

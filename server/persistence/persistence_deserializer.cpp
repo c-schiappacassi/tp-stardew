@@ -356,6 +356,11 @@ PlayerDataLocal PersistenceDeserializer::player(const toml::table& table) {
     result.energy = static_cast<uint16_t>(integer(table, "energy", 0, UINT16_MAX));
     result.maxEnergy = static_cast<uint16_t>(integer(table, "maxEnergy", 0, UINT16_MAX));
     result.zoneData = zone(requiredTable(table, "zoneData"));
+    if (table.contains("dungeonLevel")) {
+        result.dungeonLevel = static_cast<uint8_t>(integer(table, "dungeonLevel", 0, UINT8_MAX));
+    } else if (const auto* mineData = std::get_if<MineData>(&result.zoneData)) {
+        result.dungeonLevel = mineData->current_level;
+    }
     result.combatProgress = combatProgress(requiredTable(table, "combatProgress"));
     for (const auto& node : requiredArray(table, "newMessages")) {
         if (!node.is_table()) throw std::runtime_error("Invalid chat message");
@@ -430,9 +435,21 @@ PersistenceDTO PersistenceDeserializer::deserializeGame(const toml::table& table
         result.players.emplace(std::string(username.str()), player(*data.as_table()));
     }
     result.farm = farm(requiredTable(table, "farm"));
+    if (table.contains("emptySoilElapsed")) {
+        for (const auto& entry : requiredArray(table, "emptySoilElapsed")) {
+            const auto* soil = entry.as_table();
+            if (!soil) throw std::runtime_error("Invalid empty soil progress entry");
+            result.emptySoilElapsed.emplace_back(position(requiredTable(*soil, "pos")),
+                static_cast<uint64_t>(integer(*soil, "elapsed", 0,
+                    std::numeric_limits<int64_t>::max())));
+        }
+    }
     result.cropGrowthProgress = uint64Map(requiredTable(table, "cropGrowthProgress"));
     result.cropWaterRemainingTime = uint64Map(requiredTable(table, "cropWaterRemainingTime"));
     result.harvestedCrops = boolMap(requiredTable(table, "harvestedCrops"));
+    if (table.contains("regrowingCrops")) {
+        result.regrowingCrops = boolMap(requiredTable(table, "regrowingCrops"));
+    }
     result.animalProductionProgress = uint64Map(requiredTable(table, "animalProductionProgress"));
     result.animalAvailableProducts = uint32Map(requiredTable(table, "animalAvailableProducts"));
     result.communityCenterActionProgress = communityProgress(

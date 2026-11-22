@@ -247,13 +247,13 @@ TODO: nuestro:
     - pasar a planta final after cosecha?
 
 TODO: de abril
-- BUG MAX CANT GRANJEROS - no era un bug, solo paso que habian 2 casas en el mapa je
-- fix: broadcast general
+- BUG MAX CANT GRANJEROS - no era un bug, solo paso que habian 2 casas en el mapa je - DONE
+- fix: broadcast general - DONE
 - fix: golpe menor cuando poca vida
 - agregar nombre de usuario arriba - DONE
-- script: sobre mint 20 o 22 - sdlpuro
+- script: sobre mint 20 o 22
 - cheats: 
-    -   forzar calidad
-    -   kill enemigos para probar minas
-- fix: visual feedback de golpes - sdlpuro
+    -   forzar calidad - DONE
+    -   kill enemigos para probar minas - DONE
+- fix: visual feedback de golpes - sdlpuro - DONE
 - pantalla fin de juego - TBD: QT o SDL

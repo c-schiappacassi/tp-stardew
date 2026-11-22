@@ -52,16 +52,15 @@ bool FarmInteractions::collectProduct(Player& player, FarmManager& farm, Directi
     if (!target) {
         return false;
     }
+    if (target->source == FarmProductSource::Animal) {
+        return farm.dropAnimalProduct(target->id, entityIds);
+    }
     const auto& product = target->product;
     if (!farm.getGroundItems().drop(target->position, product.item, product.quantity,
             product.quality, entityIds)) {
         return false;
     }
-    if (target->source == FarmProductSource::Animal) {
-        farm.collectFromAnimal(target->id);
-    } else {
-        farm.harvestCrop(target->id);
-    }
+    farm.harvestCrop(target->id);
     return true;
 }
 

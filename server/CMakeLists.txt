@@ -9,6 +9,8 @@ target_sources(taller_server_core
         dungeon/combat/combat_progress.cpp
         dungeon/combat/dungeon_combat.cpp
         dungeon/combat/combat_damage.cpp
+        dungeon/combat/combat_cheats.cpp
+        dungeon/combat/enemy_defeat.cpp
         dungeon/combat/sword_combat.cpp
         dungeon/combat/enemy_behavior.cpp
         dungeon/combat/projectile_combat.cpp
@@ -20,6 +22,7 @@ target_sources(taller_server_core
         network/server_protocol.cpp
         chat/player_chat.cpp
         chat/chat_command_parser.cpp
+        chat/cheat_chat.cpp
         community/domain/community_bundle.cpp
         community/domain/community_config.cpp
         community/domain/community_center.cpp
@@ -31,6 +34,7 @@ target_sources(taller_server_core
         persistence/community_persistence.cpp
         chat/player_chat_commands.cpp
         player/player_inventory.cpp
+        player/player_cheats.cpp
         config/community_toml_reader.cpp
         commerce/merchant_chat.cpp
         commerce/market_prices.cpp
@@ -39,6 +43,7 @@ target_sources(taller_server_core
         commerce/shop_products.cpp
         player/player_trade.cpp
         world/world_commerce.cpp
+        world/world_cheats.cpp
         game/game.cpp
         game/game_setup.cpp
         game/game_manager.cpp
@@ -87,6 +92,7 @@ target_sources(taller_server_core
         farm/spatial/farm_space.cpp
         farm/spatial/farm_reservation.cpp
         farm/farm_manager.cpp
+        farm/farm_cheats.cpp
         farm/farm_status.cpp
         farm/interactions/farm_interactions.cpp
         farm/interactions/farm_targeting.cpp
@@ -122,6 +128,7 @@ target_sources(taller_server_core
         dungeon/combat/room_combat.h
         dungeon/combat/combat_context.h
         dungeon/combat/combat_damage.h
+        dungeon/combat/enemy_defeat.h
         dungeon/combat/sword_combat.h
         dungeon/combat/enemy_behavior.h
         dungeon/combat/projectile_combat.h
@@ -141,6 +148,7 @@ target_sources(taller_server_core
         chat/services/cheat_chat_service.h
         chat/services/community_chat_service.h
         chat/chat_command_parser.h
+        chat/cheat_chat.h
         community/domain/community_bundle.h
         community/domain/community_config.h
         community/domain/community_progress.h
@@ -252,5 +260,7 @@ target_include_directories(taller_server_core PUBLIC ${CMAKE_CURRENT_SOURCE_DIR}
 target_link_libraries(taller_server_core PUBLIC taller_common tomlplusplus::tomlplusplus)
 set_project_warnings(taller_server_core ${TALLER_MAKE_WARNINGS_AS_ERRORS} FALSE)
 
-target_sources(taller_server PRIVATE main.cpp)
-target_link_libraries(taller_server taller_server_core)
+if(TALLER_SERVER)
+    target_sources(taller_server PRIVATE main.cpp)
+    target_link_libraries(taller_server taller_server_core)
+endif()

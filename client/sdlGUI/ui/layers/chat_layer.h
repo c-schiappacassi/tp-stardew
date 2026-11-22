@@ -1,9 +1,11 @@
 #pragma once
+#include <algorithm>
 #include <chrono>
 #include <cstddef>
 #include <memory>
 #include <string>
 #include <utility>
+#include <vector>
 
 #include "../../render_info.h"
 #include "../../world/hud/chat_view.h"
@@ -17,6 +19,7 @@ private:
     static constexpr std::chrono::milliseconds PEEK_DURATION{5000};
     static constexpr std::size_t MAX_INPUT_CHAT = 100;
     static constexpr int WHEEL_LINES = 2;
+    static constexpr std::size_t MAX_HISTORY = 20;
 
     std::string player_name;
     ChatView view;
@@ -27,6 +30,10 @@ private:
 
     std::size_t scroll = 0;
     std::size_t max_scroll = 0;
+
+    std::vector<std::string> history;
+    std::size_t history_pos = 0;
+    std::string draft;
 
     bool peeking() const { return Clock::now() < peek_until; }
 
@@ -44,6 +51,7 @@ private:
         if (text.empty()) {
             return;
         }
+        remember(text);
         auto dto = std::make_shared<ChatDTO>(player_name);
         dto->text = text;
         out.push_back(dto);
@@ -60,6 +68,34 @@ private:
         }
     }
     
+    void remember(const std::string& text) {
+        if (history.empty() || history.back() != text) {
+            history.push_back(text);
+            if (history.size() > MAX_HISTORY) {
+                history.erase(history.begin());
+            }
+        }
+    }
+
+    void history_prev() {
+        if (history.empty() || history_pos == 0) {
+            return;
+        }
+        if (history_pos == history.size()) {
+            draft = input;
+        }
+        --history_pos;
+        input = history[history_pos];
+    }
+
+    void history_next() {
+        if (history_pos >= history.size()) {
+            return;
+        }
+        ++history_pos;
+        input = (history_pos == history.size()) ? draft : history[history_pos];
+    }
+
     void scroll_by(int lines) {
         const long next = static_cast<long>(scroll) + lines;
         scroll = static_cast<std::size_t>(std::clamp<long>(next, 0, static_cast<long>(max_scroll)));
@@ -70,7 +106,12 @@ public:
 
     bool visible() const override { return focused() || peeking(); }
 
-    void on_focus() override { input.clear(); scroll = 0; }
+    void on_focus() override {
+        input.clear();
+        scroll = 0;
+        draft.clear();
+        history_pos = history.size();
+    }
 
     void on_blur() override {
         input.clear();
@@ -92,6 +133,14 @@ public:
                 append(e.text);
                 break;
 
+            case InputEvent::Type::Paste: {
+                std::string flat = e.text;
+                std::replace_if(flat.begin(), flat.end(),
+                        [](char c) { return c == '\n' || c == '\r' || c == '\t'; }, ' ');
+                append(flat);
+                break;
+            }
+
             case InputEvent::Type::MouseWheel:
                 scroll_by(e.y_wheel * WHEEL_LINES);
                 break;
@@ -100,9 +149,9 @@ public:
                 if (e.key == Key::Backspace) {
                     if (!input.empty()) input.pop_back();
                 } else if (e.key == Key::Up) {
-                    scroll_by(1);
+                    history_prev();
                 } else if (e.key == Key::Down) {
-                    scroll_by(-1);
+                    history_next();
                 } else if (!e.repeat) {
                     if (e.key == Key::Escape) return Focus::Release;
                     if (e.key == Key::Enter) { send(out); return Focus::Release; }

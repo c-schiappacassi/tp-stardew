@@ -26,7 +26,7 @@ MiningResult DungeonMining::mine(Player& player, DungeonRoom& room, EntityId id,
     }
     bool droppedSilver = false;
     auto preparedMineral = *mineral;
-    if (preparedMineral.hit()) {
+    if (preparedMineral.hit(player.getMiningPower())) {
         const auto reward = generator.rollReward(mineral->getType());
         if (reward) {
             if (!room.getGroundItems().drop(mineral->getPosition(), reward->item_id,

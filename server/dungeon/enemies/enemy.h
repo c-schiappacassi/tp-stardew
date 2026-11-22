@@ -11,6 +11,8 @@
 using CombatTime = std::chrono::milliseconds;
 
 class Enemy {
+    void die(CombatTime now, const EnemyConfig& config);
+
 public:
     EnemySnapshot data;
     EnemyDefinition definition;
@@ -29,6 +31,7 @@ public:
     bool alive() const;
     void setState(EnemyState state);
     bool hit(uint16_t damage, CombatTime now, const EnemyConfig& config);
+    bool kill(CombatTime now, const EnemyConfig& config);
     void revive();
     uint16_t damage() const;
     uint32_t speed() const;

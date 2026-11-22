@@ -34,6 +34,8 @@ private:
     bool combatBonus = false;
     bool bedReady = true;
 
+    bool hasLowHealth() const;
+
 public:
     Player(const PlayerData& initialData, uint8_t inventoryCapacity, uint16_t maxHealth,
            uint16_t maxEnergy, uint32_t initialGold, const PlayerConfig& config = {});
@@ -61,6 +63,8 @@ public:
     const Position& getPosition() const;
     CollisionBounds getCollisionBounds(const Position& position) const;
     Position getCollisionCenter() const;
+    CollisionBounds getHitboxBounds() const;
+    Position getHitboxCenter() const;
     bool canAct() const;
     bool canBeAttacked() const;
     bool isResting() const;
@@ -70,6 +74,7 @@ public:
     const std::optional<InteriorLocation>& getInterior() const;
     uint16_t receiveDamage(uint16_t damage, std::chrono::steady_clock::time_point now);
     uint16_t getSwordDamage() const;
+    uint16_t getMiningPower() const;
     uint16_t getSwordRange() const;
     uint32_t addGold(uint32_t amount);
     uint32_t getGold() const;
@@ -81,6 +86,8 @@ public:
     bool sleep();
     bool cancelSleep();
     void wakeUp();
+    void setVitals(uint16_t newHealth, uint16_t newEnergy);
+    void restoreVitals();
     bool changeLocation(Zone destination, uint8_t level, const Position& target,std::optional<InteriorLocation> inside = std::nullopt);
     bool restoreLocation(Zone destination, uint8_t level, const Position& target,std::optional<InteriorLocation> inside = std::nullopt);
     void faceTarget(const Position& target);

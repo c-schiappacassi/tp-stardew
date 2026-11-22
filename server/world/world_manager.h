@@ -1,6 +1,7 @@
 #pragma once
 
 #include <optional>
+#include <random>
 #include "persistence/persistence_dto.h"
 
 #include "dungeon/dungeon_entrance.h"
@@ -21,6 +22,7 @@ private:
     DungeonManager dungeon;
     FarmManager farm;
     uint32_t farmSeed;
+    std::mt19937 animalRandom;
     TownMap town;
     InteriorManager interiors;
     EntityIdGenerator entityIds;
@@ -38,7 +40,7 @@ public:
     const FarmManager& getFarm() const;
     void restoreFarm(const PersistenceDTO& saved);
     std::optional<NpcData> nearbyMerchant(const Player& player, Direction direction = Direction::None) const;
-    bool buyAnimals(AnimalSpecies species, uint16_t quantity);
+    bool buyAnimals(AnimalSpecies species, uint16_t quantity,std::optional<AnimalType> variant = std::nullopt);
     bool sellAnimals(AnimalSpecies species, uint16_t quantity);
     void update(std::chrono::milliseconds elapsed, const std::vector<CollisionBounds>& farmPlayers = {}, const std::vector<Combatant>& players = {},std::chrono::steady_clock::time_point now = std::chrono::steady_clock::now());
     bool combatCompleted() const;
@@ -51,4 +53,10 @@ public:
     void completeZoneData(const Player& player, PlayerDataLocal& data,bool includeBroken) const override;
     void interact(Player& player, Direction direction,uint16_t playerId = 0) override;
     void afterStatusPublished();
+    bool teleport(Player& player, uint16_t playerId, Zone destination, uint8_t level = 0,std::optional<InteriorLocation> inside = std::nullopt);
+    std::size_t careCrops();
+    std::size_t careAnimals();
+    bool spawnEnemies(Player& player, uint16_t playerId, EnemyType type, uint16_t quantity, bool pairs,
+                      const std::vector<Position>& occupied = {});
+    uint16_t killEnemies(Player& player, uint16_t playerId, bool nearestOnly);
 };

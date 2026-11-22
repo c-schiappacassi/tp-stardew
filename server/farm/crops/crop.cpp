@@ -23,6 +23,7 @@ const Position& Crop::getPosition() const { return position; }
 CropType Crop::getType() const { return definition.type; }
 bool Crop::isReady() const { return !harvested && growthElapsed >= growthDuration; }
 bool Crop::isHarvested() const { return harvested; }
+bool Crop::isRegrowing() const { return regrowing; }
 bool Crop::isWatered() const { return remainingWaterTime.count() > 0 && !isReady() && !harvested; }
 std::chrono::milliseconds Crop::getGrowthElapsed() const { return growthElapsed; }
 std::chrono::milliseconds Crop::getRemainingWaterTime() const { return remainingWaterTime; }
@@ -30,6 +31,9 @@ std::chrono::milliseconds Crop::getRemainingWaterTime() const { return remaining
 CropState Crop::getState() const {
     if (isReady()) {
         return CropState::Ready;
+    }
+    if (regrowing) {
+        return CropState::Growing;
     }
     const double progress = static_cast<double>(growthElapsed.count()) / growthDuration.count();
     if (progress < 1.0 / 3.0) {
@@ -105,6 +109,13 @@ bool Crop::water() {
     return true;
 }
 
+void Crop::growFully() {
+    if (harvested) return;
+    growthElapsed = growthDuration;
+    remainingWaterTime = std::chrono::milliseconds{0};
+    quality.reset();
+}
+
 std::optional<FarmProduct> Crop::getHarvest(double luck) const {
     const auto result = quality.evaluate(luck);
     if (!isReady()) {
@@ -114,6 +125,7 @@ std::optional<FarmProduct> Crop::getHarvest(double luck) const {
 }
 
 void Crop::resetCycle() {
+    regrowing = true;
     growthElapsed = std::chrono::milliseconds{0};
     growthDuration = definition.regrowthTime;
     remainingWaterTime = std::chrono::milliseconds{0};
@@ -133,11 +145,16 @@ std::optional<FarmProduct> Crop::harvest(double luck) {
     return product;
 }
 
-void Crop::restoreProgress(std::chrono::milliseconds growth, std::chrono::milliseconds water, bool wasHarvested) {
-    if (growth.count() < 0 || water.count() < 0 || growth > growthDuration ||
+void Crop::restoreProgress(std::chrono::milliseconds growth, std::chrono::milliseconds water,
+    bool wasHarvested, bool wasRegrowing) {
+    const auto restoredDuration = wasRegrowing ? definition.regrowthTime : definition.growthTime;
+    if (restoredDuration.count() <= 0 || growth.count() < 0 || water.count() < 0 ||
+        growth > restoredDuration ||
         water > definition.wateringInterval) {
         throw std::invalid_argument("Invalid saved crop progress");
     }
+    regrowing = wasRegrowing;
+    growthDuration = restoredDuration;
     growthElapsed = growth;
     remainingWaterTime = water;
     harvested = wasHarvested;

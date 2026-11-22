@@ -8,6 +8,13 @@
 #include "farm/spatial/farm_reservation.h"
 #include "items/ground_items.h"
 
+namespace {
+Quality rollProductQuality(std::mt19937& random) {
+    return static_cast<Quality>(std::uniform_int_distribution<int>{
+        static_cast<int>(Quality::Base), static_cast<int>(Quality::Perfect)}(random));
+}
+}
+
 AnimalManager::AnimalManager(const FarmConfig& config, uint32_t seed):
     definitions(config.animals), random(seed) {
     config.validate();
@@ -80,20 +87,39 @@ std::optional<FarmProduct> AnimalManager::collect(EntityId id) {
 
     if (it == animals.end()) {
         return std::nullopt;
-    } else {
-        return it->second->collect();
     }
+    auto product = it->second->collect();
+    if (product) {
+        product->quality = rollProductQuality(random);
+    }
+    return product;
+}
+
+bool AnimalManager::dropProduction(EntityId id, GroundItems& groundItems, EntityIdGenerator& entityIds) {
+    const auto it = animals.find(id);
+    if (it == animals.end()) {
+        return false;
+    }
+    auto product = it->second->getProduction();
+    if (!product) {
+        return false;
+    }
+    auto preparedRandom = random;
+    product->quality = rollProductQuality(preparedRandom);
+    if (!groundItems.drop(it->second->getPosition(), product->item, product->quantity,
+                          product->quality, entityIds)) {
+        return false;
+    }
+    it->second->collect();
+    random = preparedRandom;
+    return true;
 }
 
 void AnimalManager::update(std::chrono::milliseconds elapsed, FarmPlacement& placement,GroundItems& groundItems, EntityIdGenerator& entityIds) {
     for (auto& [id, animal] : animals) {
         animal->updateProduction(elapsed);
         if (animal->dropsProductsAutomatically()) {
-            const auto product = animal->getProduction();
-            if (product && groundItems.drop(animal->getPosition(), product->item,
-                    product->quantity, product->quality, entityIds)) {
-                animal->collect();
-            }
+            dropProduction(id, groundItems, entityIds);
         }
         animal->advanceMovement(placement, random);
     }

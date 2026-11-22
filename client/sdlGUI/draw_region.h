@@ -166,10 +166,7 @@ inline void draw_ui(const RenderInfo& ctx, UiSpriteId id, const SDL2pp::Rect& ds
 }
 
 inline bool draw_item_icon(  const RenderInfo& ctx, ItemId item, const SDL2pp::Rect& area, int box) {
-    const Sprite* icon = ctx.assets.find_sprite(item);
-    if (!icon) return false;
-
-    draw_sprite_fit(ctx, *icon, area, box);
+    draw_sprite_fit(ctx, ctx.assets.get_sprite(item) , area, box);
     return true;
 }
 
@@ -236,8 +233,8 @@ inline void draw_sprite_rotated(const RenderInfo& ctx, const Sprite& s, const SD
     draw_region_rotated(ctx, s.sprite_id, s.src(), origin, s.dx(flip), s.offset_y, angle, pivot_px, flip, tint);
 }
 
-inline void draw_sprite_at(const RenderInfo& ctx, const Sprite& s, const Position& pos, bool flip = false, int dy = 0) {
-    draw_sprite(ctx, s, ctx.cam.world_to_screen(pos.getX(), pos.getY() + dy), flip);
+inline void draw_sprite_at(const RenderInfo& ctx, const Sprite& s, const Position& pos, bool flip = false, int dy = 0, std::optional<SDL_Color> tint = std::nullopt) {
+    draw_sprite(ctx, s, ctx.cam.world_to_screen(pos.getX(), pos.getY() + dy), flip, tint);
 }
 
 inline int bob_offset(const RenderInfo& ctx, int amplitude = 2, double speed = 0.15) {
@@ -245,9 +242,9 @@ inline int bob_offset(const RenderInfo& ctx, int amplitude = 2, double speed = 0
 }
 
 template <class Player, class ClipIdT>
-auto draw_clip_at(const RenderInfo& ctx, Player& player, const ClipIdT& id, const Position& pos, int dy = 0) {
+auto draw_clip_at(const RenderInfo& ctx, Player& player, const ClipIdT& id, const Position& pos, int dy = 0, std::optional<SDL_Color> tint = std::nullopt) {
     auto* frame = player.frame(ctx, id);
-    if (frame) draw_sprite_at(ctx, frame->sprite, pos, frame->flip, dy);
+    if (frame) draw_sprite_at(ctx, frame->sprite, pos, frame->flip, dy, tint);
     return frame;
 }
 

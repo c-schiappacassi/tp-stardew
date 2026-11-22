@@ -131,8 +131,8 @@ enum class Quality : uint8_t {
     Base = 1,       // x1
     Good = 2,       // x1.25
     Excellent = 3,  // x2
-    Incredible = 5, // x4
-    Perfect = 6     // x8
+    Incredible = 4, // x4
+    Perfect = 5     // x8
 };
 
 enum class LootKind : uint8_t {
