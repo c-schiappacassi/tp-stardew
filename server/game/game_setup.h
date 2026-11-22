@@ -16,6 +16,9 @@ struct GameSetup {
     TownConfig townConfig;
 };
 
+InteriorLayout makePlayerHouseInterior(uint8_t houseIndex);
+InteriorLayout makeTownInterior(InteriorId interiorId);
+
 GameSetup makeDefaultGameSetup(uint8_t worldId);
 
 GameSetup makeFarmGameSetup(uint8_t worldId, const FarmLayout& farm);

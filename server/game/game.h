@@ -42,6 +42,8 @@ private:
     std::shared_ptr<CommunityChat> communityChat;
     PlayerManager playerManager;
     std::shared_ptr<const ConstMapData> constMap;
+    ConstMapData mapVisuals;
+    bool hasMapVisuals = false;
     std::function<void(const PersistenceDTO&)> saveCallback;
     bool completionHandled = false;
 
@@ -87,6 +89,7 @@ public:
     std::optional<GameInfoDTO> infoFor(const std::string& userName) const;
     bool loadDungeon(uint8_t selectedWorldId,const std::map<uint8_t, DungeonRoomLayout>& layout);
     bool loadFarm(uint8_t selectedWorldId, const FarmLayout& layout);
+    void setMapVisuals(ConstMapData visuals);
     bool loadTown(const TownConfig& config);
     bool configureDungeonEntrance(const DungeonEntrance& entrance);
 

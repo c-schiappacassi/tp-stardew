@@ -36,8 +36,40 @@ bool Game::loadTown(const TownConfig& config) {
 }
 
 std::shared_ptr<const ConstMapData> Game::mapForSession() {
-    if (!constMap) constMap = std::make_shared<const ConstMapData>(world.buildConstMap());
+    if (!constMap) {
+        ConstMapData assembled = world.buildConstMap();
+        if (hasMapVisuals) {
+            assembled.farm.floor = std::move(mapVisuals.farm.floor);
+            assembled.farm.decor = std::move(mapVisuals.farm.decor);
+            assembled.farm.frame = std::move(mapVisuals.farm.frame);
+            assembled.farm.buildings = std::move(mapVisuals.farm.buildings);
+            assembled.town.floor = std::move(mapVisuals.town.floor);
+            assembled.town.decor = std::move(mapVisuals.town.decor);
+            assembled.town.frame = std::move(mapVisuals.town.frame);
+            assembled.town.buildings = std::move(mapVisuals.town.buildings);
+            if (assembled.levels.size() != mapVisuals.levels.size()) {
+                throw std::runtime_error("Mine visuals do not match dungeon levels");
+            }
+            for (std::size_t i = 0; i < assembled.levels.size(); ++i) {
+                assembled.levels[i].floor = std::move(mapVisuals.levels[i].floor);
+                assembled.levels[i].decor = std::move(mapVisuals.levels[i].decor);
+                assembled.levels[i].frame = std::move(mapVisuals.levels[i].frame);
+                assembled.levels[i].buildings = std::move(mapVisuals.levels[i].buildings);
+            }
+            hasMapVisuals = false;
+        }
+        constMap = std::make_shared<const ConstMapData>(std::move(assembled));
+    }
     return constMap;
+}
+
+void Game::setMapVisuals(ConstMapData visuals) {
+    std::lock_guard<std::mutex> lock(mtx);
+    if (constMap || configured) {
+        throw std::logic_error("Map visuals cannot be replaced after initialization");
+    }
+    mapVisuals = std::move(visuals);
+    hasMapVisuals = true;
 }
 
 const std::string& Game::getId() const {

@@ -411,6 +411,7 @@ void ClientProtocol::send(const CreateGameDTO& dto) {
     out.putString(dto.userName);
     out.putString(dto.characterName);
     out.putString(dto.gameName);
+    out.putString(dto.mapPath);
     out.putUint8(dto.worldId);
     out.putUint16(dto.hairModel);
     out.putUint16(dto.shirtModel);
@@ -618,6 +619,17 @@ BackgroundData ClientProtocol::receiveBackgroundData() {
         d.pos = receivePosition();
         d.id  = static_cast<DecorId>(base.receiveUint8());
         bg.decor.push_back(d);
+    }
+    n = base.receiveUint16();
+    bg.frame.reserve(n);
+    for (uint16_t i = 0; i < n; ++i) {
+        FramePieceData piece;
+        piece.pos = receivePosition();
+        piece.id = static_cast<FramePieceId>(base.receiveUint8());
+        if (piece.id > FramePieceId::DungeonTopWallEndLeft) {
+            throw ProtocolError("Unknown frame piece");
+        }
+        bg.frame.push_back(piece);
     }
     n = base.receiveUint16();
     for (uint16_t i = 0; i < n; ++i) {

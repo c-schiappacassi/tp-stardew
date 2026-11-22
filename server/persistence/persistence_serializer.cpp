@@ -287,6 +287,7 @@ toml::table PersistenceSerializer::serialize(const GameIndexDTO& dto) {
     toml::table result;
     result.insert("id", dto.id);
     result.insert("farmName", dto.farmName);
+    result.insert("mapPath", dto.mapPath);
     result.insert("users", strings(dto.users));
     result.insert("isMultiplayer", dto.isMultiplayer);
 

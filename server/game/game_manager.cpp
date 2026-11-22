@@ -1,6 +1,10 @@
 #include "game_manager.h"
 
 #include <algorithm>
+#include <filesystem>
+
+#include "world/loading/map_loader.h"
+#include "world/loading/map_converter.h"
 
 #include <exception>
 #include <optional>
@@ -27,10 +31,49 @@ GameManager::GameManager(const GameConfig& config, const std::optional<FarmLayou
     }
 }
 
+std::filesystem::path GameManager::resolveMapPath(const std::string& mapPath) {
+    const std::filesystem::path relative(mapPath);
+    if (relative.empty() || relative.is_absolute() || relative.extension() != ".toml") {
+        throw std::invalid_argument("Invalid map path: " + mapPath);
+    }
+
+    auto part = relative.begin();
+    if (part == relative.end() || *part++ != "maps" || part == relative.end() ||
+        (*part != "predefined" && *part != "custom")) {
+        throw std::invalid_argument("Map must be in maps/predefined or maps/custom");
+    }
+    for (const auto& component : relative) {
+        if (component == "." || component == "..") {
+            throw std::invalid_argument("Map path cannot contain traversal components");
+        }
+    }
+
+    std::filesystem::path directory = std::filesystem::current_path();
+    while (true) {
+        const std::filesystem::path candidate = directory / relative;
+        if (std::filesystem::is_regular_file(candidate)) {
+            const auto canonicalRoot = std::filesystem::weakly_canonical(directory / "maps");
+            const auto canonicalFile = std::filesystem::canonical(candidate);
+            auto inside = canonicalFile.lexically_relative(canonicalRoot);
+            if (inside.empty() || inside.is_absolute() || *inside.begin() == "..") {
+                throw std::invalid_argument("Map file is outside the maps directory");
+            }
+            return canonicalFile;
+        }
+        if (directory == directory.root_path()) break;
+        directory = directory.parent_path();
+    }
+    throw std::runtime_error("Map TOML not found: " + mapPath);
+}
+
 std::unique_ptr<Game> GameManager::makeGame(
-    const std::string& id, const std::string& name, uint8_t worldId) const {
-    auto setup = farmLayout ? makeFarmGameSetup(worldId, *farmLayout) : makeDefaultGameSetup(worldId);
-    if (config.town.map.width != 0) setup.townConfig = config.town;
+    const std::string& id, const std::string& name, uint8_t worldId,
+    const std::string& mapPath) const {
+    MapLoader loader;
+    MapConverter converter;
+    MapData mapData = loader.load(resolveMapPath(mapPath));
+    GameSetup setup = converter.convert(mapData, worldId);
+    ConstMapData visuals = converter.convertVisuals(mapData);
     auto game = std::make_unique<Game>(id, name, worldId, config, setup.farm.playerHouses);
     if (!game->loadDungeon(setup.worldId, setup.layout)) {
         throw std::invalid_argument("Could not load the game dungeon");
@@ -45,21 +88,24 @@ std::unique_ptr<Game> GameManager::makeGame(
     if (setup.entrance && !game->configureDungeonEntrance(*setup.entrance)) {
         throw std::invalid_argument("The dungeon entrance is invalid");
     }
+    game->setMapVisuals(std::move(visuals));
     return game;
 }
 
 GameSession GameManager::createGame(const CreateGameDTO& dto,
                                     const std::shared_ptr<OutQueue>& output) {
     std::lock_guard<std::mutex> lock(mtx);
-    const std::string id = "game-" + std::to_string(nextId);
-    auto game = makeGame(id, dto.gameName, dto.worldId);
+    GameSession failure{};
+    failure.status.status = StatusCode::Error;
+    try {
+        const std::string id = "game-" + std::to_string(nextId);
+        auto game = makeGame(id, dto.gameName, dto.worldId, dto.mapPath);
+        GameSession session = game->createGame(dto, output);
+        if (session.status.status != StatusCode::Ok) return session;
 
-    GameSession session = game->createGame(dto, output);
-
-    if (session.status.status == StatusCode::Ok) {
         {
             std::lock_guard<std::mutex> saveLock(persistenceMtx);
-            persistence.createGame(game->getPersistenceData());
+            persistence.createGame(game->getPersistenceData(), dto.mapPath);
         }
         game->setSaveCallback([this](const PersistenceDTO& data) {
             std::lock_guard<std::mutex> saveLock(persistenceMtx);
@@ -68,8 +114,11 @@ GameSession GameManager::createGame(const CreateGameDTO& dto,
         game->start();
         games.emplace(id, std::move(game));
         ++nextId;
+        return session;
+    } catch (const std::exception& error) {
+        failure.status.errorMsg = std::string("Could not create game: ") + error.what();
+        return failure;
     }
-    return session;
 }
 
 GameSession GameManager::joinGame(const JoinGameDTO& dto,
@@ -98,16 +147,18 @@ GameSession GameManager::resumeGame(const ResumeGameDTO& dto,
     failure.status.errorMsg = "Could not restore the game";
     try {
         PersistenceDTO saved;
+        std::string mapPath;
         {
             std::lock_guard<std::mutex> saveLock(persistenceMtx);
             if (!persistence.gameExists(dto.gameId)) return failure;
             saved = persistence.loadGame(dto.gameId);
+            mapPath = persistence.mapPathFor(dto.gameId);
         }
         if (!saved.players.contains(dto.userName)) {
             failure.status.errorMsg = "You do not have a player in this game";
             return failure;
         }
-        auto game = makeGame(saved.id, saved.farmName, saved.mapId);
+        auto game = makeGame(saved.id, saved.farmName, saved.mapId, mapPath);
         game->restorePersistenceData(saved);
         GameSession session = game->resumeGame(dto, output);
         if (session.status.status != StatusCode::Ok) return session;
