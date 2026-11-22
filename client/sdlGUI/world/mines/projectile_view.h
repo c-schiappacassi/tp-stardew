@@ -9,6 +9,10 @@
 #include "protocol_types.h"
 #include "dtos.h"
 
+namespace dimentions {
+    constexpr int FLAME_SIZE = 8;
+}
+
 class ProjectileView: public EntityView {
 private:
     Position pos{0, 0};

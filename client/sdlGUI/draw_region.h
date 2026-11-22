@@ -166,10 +166,7 @@ inline void draw_ui(const RenderInfo& ctx, UiSpriteId id, const SDL2pp::Rect& ds
 }
 
 inline bool draw_item_icon(  const RenderInfo& ctx, ItemId item, const SDL2pp::Rect& area, int box) {
-    const Sprite* icon = ctx.assets.find_sprite(item);
-    if (!icon) return false;
-
-    draw_sprite_fit(ctx, *icon, area, box);
+    draw_sprite_fit(ctx, ctx.assets.get_sprite(item) , area, box);
     return true;
 }
 
