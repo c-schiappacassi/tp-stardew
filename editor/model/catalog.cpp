@@ -41,9 +41,10 @@ ElementInfo make(ElementId element, const std::string& name, const std::string& 
     return {element, name, sheet, x, y, width, height, tilesWidth, tilesHeight, {0, tilesHeight - 1, tilesWidth, 1}};
 }
 
-ElementInfo building(BuildingId id, const std::string& name, const std::string& sheet, int x, int y, int width, int height) {
+ElementInfo building(BuildingId id, const std::string& name, const std::string& sheet, int x, int y, int width, int height, int doorColumn) {
     ElementInfo info = make(buildingElement(id), name, sheet, x, y, width, height);
     info.footprint = {0, 0, info.tilesWidth, info.tilesHeight};
+    info.doorColumn = doorColumn;
     return info;
 }
 
@@ -71,15 +72,15 @@ ElementInfo wall(FramePieceId id, const std::string& name, const std::string& sh
 
 const std::vector<ElementInfo>& elements() {
     static const std::vector<ElementInfo> list{
-        building(BuildingId::FarmHouse, "Farm house", "farm/environment/farm_buildings.png", 157, 268, 144, 145),
-        building(BuildingId::StoneCabin, "Stone cabin", "farm/environment/cabins.png", 80, 336, 80, 112),
-        building(BuildingId::WoodCabin, "Wood cabin", "farm/environment/cabins.png", 80, 0, 80, 112),
-        building(BuildingId::BrickCabin, "Brick cabin", "farm/environment/cabins.png", 80, 112, 80, 112),
-        building(BuildingId::MarniesShop, "Marnie's ranch", "market/world/buildings.png", 291, 0, 128, 112),
-        building(BuildingId::PierresShop, "Pierre's general store", "market/world/buildings.png", 0, 0, 161, 160),
-        building(BuildingId::RobinsShop, "Robin's carpenter shop", "market/world/buildings.png", 192, 127, 157, 193),
-        building(BuildingId::ClintsShop, "Clint's blacksmith", "market/world/buildings.png", 161, 0, 130, 127),
-        building(BuildingId::ComunityCenter, "Community center", "market/world/buildings.png", 0, 160, 192, 160),
+        building(BuildingId::FarmHouse, "Farm house", "farm/environment/farm_buildings.png", 157, 268, 144, 145, 5),
+        building(BuildingId::StoneCabin, "Stone cabin", "farm/environment/cabins.png", 80, 336, 80, 112, 2),
+        building(BuildingId::WoodCabin, "Wood cabin", "farm/environment/cabins.png", 80, 0, 80, 112, 2),
+        building(BuildingId::BrickCabin, "Brick cabin", "farm/environment/cabins.png", 80, 112, 80, 112, 2),
+        building(BuildingId::MarniesShop, "Marnie's ranch", "market/world/buildings.png", 291, 0, 128, 112, 3),
+        building(BuildingId::PierresShop, "Pierre's general store", "market/world/buildings.png", 0, 0, 161, 160, 6),
+        building(BuildingId::RobinsShop, "Robin's carpenter shop", "market/world/buildings.png", 192, 127, 157, 193, 6),
+        building(BuildingId::ClintsShop, "Clint's blacksmith", "market/world/buildings.png", 161, 0, 130, 127, 3),
+        building(BuildingId::ComunityCenter, "Community center", "market/world/buildings.png", 0, 160, 192, 160, 6),
 
         tree(DecorId::MapleTree, "Maple tree", "enviroment/trees.png", 0, 0, 48, 97),
         tree(DecorId::PineTree, "Pine tree", "enviroment/trees.png", 0, 320, 48, 97),

@@ -45,7 +45,7 @@ namespace {
             }
             const ElementInfo& info = ElementCatalog::infoOf(placed.element);
             out << "  [" << placed.x << ", " << placed.y << ", " << placed.element.id << ", "
-                << placed.x + info.tilesWidth / 2 << ", " << placed.y + info.tilesHeight << "],\n";
+                << placed.x + info.doorColumn << ", " << placed.y + info.tilesHeight << "],\n";
         }
         out << "]\n";
     }

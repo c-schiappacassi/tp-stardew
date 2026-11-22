@@ -59,6 +59,7 @@ struct ElementInfo {
     int tilesWidth;
     int tilesHeight;
     TileArea footprint;  // que tiles ocupa en el PISO
+    int doorColumn = 0;
 };
 
 class ElementCatalog {
