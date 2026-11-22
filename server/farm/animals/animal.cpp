@@ -7,7 +7,7 @@
 Animal::Animal(EntityId id, const Position& position, AnimalType type,std::chrono::milliseconds productionInterval, const AnimalMovementConfig& movementConfig):
     id(id), type(type), movement(position, movementConfig), productionInterval(productionInterval) {
     if (id == 0 || productionInterval.count() <= 0) {
-        throw std::invalid_argument("Identificador o tiempo de animal invalidos");
+        throw std::invalid_argument("Invalid animal identifier or time");
     }
 }
 
@@ -22,8 +22,11 @@ Direction Animal::getDirection() const { return movement.getDirection(); }
 AnimalType Animal::getType() const { return type; }
 
 uint32_t Animal::getAvailableProducts() const { return availableProducts; }
+std::chrono::milliseconds Animal::getProductionElapsed() const { return productionElapsed; }
 
 bool Animal::needsInteraction() const { return false; }
+
+bool Animal::dropsProductsAutomatically() const { return false; }
 
 AnimalState Animal::getState() const {
     if (movement.isWalking()) {
@@ -43,7 +46,7 @@ void Animal::advanceMovement(FarmPlacement& placement, std::mt19937& random) {
 
 void Animal::advanceProduction(std::chrono::milliseconds elapsed, ProductionMode mode) {
     if (elapsed.count() < 0) {
-        throw std::invalid_argument("Tiempo negativo");
+        throw std::invalid_argument("Negative time");
     }
     uint64_t produced = static_cast<uint64_t>(elapsed / productionInterval);
     const auto remainder = elapsed % productionInterval;
@@ -81,4 +84,12 @@ std::optional<FarmProduct> Animal::collect() {
     auto result = getProduction();
     availableProducts = 0;
     return result;
+}
+
+void Animal::restoreProgress(std::chrono::milliseconds elapsed, uint32_t products) {
+    if (elapsed.count() < 0 || elapsed >= productionInterval) {
+        throw std::invalid_argument("Invalid saved animal progress");
+    }
+    productionElapsed = elapsed;
+    availableProducts = products;
 }

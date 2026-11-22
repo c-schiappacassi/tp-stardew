@@ -7,17 +7,17 @@
 
 ZoneMap::ZoneMap(const std::vector<std::vector<bool>>& walkableTiles,int cellSize):walkableTiles(walkableTiles),cellSize(cellSize) {
     if (cellSize <= 0) {
-        throw std::invalid_argument("El tamano de celda debe ser positivo");
+        throw std::invalid_argument("Cell size must be positive");
     }
     if (walkableTiles.empty() || walkableTiles.front().empty()) {
-        throw std::invalid_argument("El mapa no puede estar vacio");
+        throw std::invalid_argument("The map cannot be empty");
     }
 
     const std::size_t columns = walkableTiles.front().size();
 
     for (const auto& row : walkableTiles) {
         if (row.size() != columns) {
-            throw std::invalid_argument("El mapa debe ser rectangular");
+            throw std::invalid_argument("The map must be rectangular");
         }
     }
 }

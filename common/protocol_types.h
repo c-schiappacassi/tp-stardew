@@ -21,6 +21,7 @@ enum class MessageType : uint8_t {
     Donate = 0x17,       // para completar las misiones
     ItemTransfer = 0x18, // inventario a cofre
     SelectSlot = 0x19,
+    DayCancel = 0x1A,
 
     Status = 0x80,
     GameList = 0x81,
@@ -38,6 +39,23 @@ enum class StatusCode : uint8_t {
     Error = 1 
 };
 
+enum class CommunityBundle : uint8_t { Crops, Metals, Animals, Combat, Money };
+enum class MarketDiscount : uint8_t { None, Pending, Active };
+enum class DonationKind : uint8_t { Item, Coins };
+
+enum class CommunityDonationError : uint8_t {
+    None,
+    InvalidAmount,
+    CannotAct,
+    OutsideCenter,
+    UnsupportedItem,
+    AlreadyComplete,
+    MissingItems,
+    MissingCoins,
+    InventoryChanged,
+    InvalidSlot
+};
+
 enum class Direction : uint8_t {
     None = 0,
     Up = 1,
@@ -49,7 +67,9 @@ enum class Direction : uint8_t {
 enum class Zone : uint8_t {
     Farm = 0,
     Town = 1,
-    Dungeon = 2
+    Dungeon = 2,
+    InsideHouse,
+    // InsideShop,
 };
 
 enum class TargetType : uint8_t {
@@ -115,6 +135,11 @@ enum class Quality : uint8_t {
     Perfect = 6     // x8
 };
 
+enum class LootKind : uint8_t {
+    Item = 0,
+    Gold = 1
+};
+
 // ANIMALS
 enum class AnimalType : uint8_t {
     BrownCow,
@@ -161,7 +186,7 @@ enum class ItemId : uint16_t {
     PotatoSeed = 12,
     PumpkinSeed = 13,
 
-    Strawberry = 20, // usamos cultivo + calidad
+    Strawberry = 20,
     Scallion = 21,
     Potato = 22,
     Pumpkin = 23,
@@ -174,14 +199,32 @@ enum class ItemId : uint16_t {
     Milk = 40,
     Egg = 41,
 
-    // podemos agregar mas cosas al shop
     Chest = 50,
-    Table = 51,
-    Chair = 52,
-    Lamp = 53,
-    Rug = 54,
-    Plant = 55,
-    Painting = 56
+
+    Chair,
+    Table,
+    Bed,
+    BedSheet,
+    Bonsai,
+    PottedTree,
+    BlueArmCouch,
+    Tv,
+    BeigeRug,
+    ClockFirePlace,
+    BlueRug,
+    CatFirePlace,
+    SimpleFirePlace,
+    BlueJunimoPushee,
+    GreenJunimoPushee,
+    YellowJunimoPushee,
+    PinkJunimoPushee,
+    SimpleLamp,
+    BookShelf,
+    SquareLamp,
+    RoundTable,
+    GreenStool,
+    BrownSofa,
+    BrownArmCouch,
 };
 
 enum class EmoteId : uint16_t {
@@ -337,4 +380,21 @@ enum class BuildingId : uint8_t{
     RobinsShop,
     ClintsShop,
     ComunityCenter,
+};
+
+
+enum class InteriorId : uint8_t{
+    PlayerHouse,
+    MarniesShop,
+    PierresShop,
+    RobinsShop,
+    ClintsShop,
+    ComunityCenter,
+};
+
+enum class NpcId : uint8_t{
+    Marnie,
+    Pierre,
+    Robin,
+    Clint,
 };

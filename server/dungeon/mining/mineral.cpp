@@ -5,11 +5,11 @@
 
 Mineral::Mineral(EntityId id,const Position& pos,ResourceType type,uint16_t hitsToBreak): id(id),pos(pos),type(type),remainingHits(hitsToBreak) {
     if (id == 0) {
-        throw std::invalid_argument("El EntityId debe ser distinto de cero");
+        throw std::invalid_argument("EntityId must be nonzero");
     }
 
     if (hitsToBreak == 0) {
-        throw std::invalid_argument("El mineral debe requerir al menos un golpe");
+        throw std::invalid_argument("The mineral must require at least one hit");
     }
 }
 

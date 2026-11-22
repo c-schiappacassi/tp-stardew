@@ -16,15 +16,15 @@ uint16_t Inventory::getStackLimit(ItemId item) const {
 Inventory::Inventory(uint8_t capacity, uint16_t stackLimit):capacity(capacity), stackLimit(stackLimit) {
     if (capacity == 0 || stackLimit == 0) {
         throw std::invalid_argument(
-            "Capacidad y limite deben ser mayores a cero");
+            "Capacity and limit must be greater than zero");
     }
 }
 
 bool Inventory::canAdd(const Stack& stack) const {
-    if (stack.quantity == 0) {
-        return false;
-    }
+    return stack.quantity != 0 && availableSpace(stack) >= stack.quantity;
+}
 
+uint32_t Inventory::availableSpace(const Stack& stack) const {
     const uint16_t limit = getStackLimit(stack.item_id);
     uint32_t available = 0;
 
@@ -36,13 +36,18 @@ bool Inventory::canAdd(const Stack& stack) const {
         } else if (it->second.item_id == stack.item_id && it->second.qual == stack.qual) {
             available += limit - it->second.quantity;
         }
-
-        if (available >= stack.quantity) {
-            return true;
-        }
     }
 
-    return false;
+    return available;
+}
+
+uint16_t Inventory::addUpTo(const Stack& stack) {
+    const auto amount = static_cast<uint16_t>(std::min<uint32_t>(
+        stack.quantity, availableSpace(stack)));
+    if (amount != 0) {
+        add(Stack{stack.item_id, amount, stack.qual});
+    }
+    return amount;
 }
 
 bool Inventory::add(const Stack& stack) {
@@ -110,6 +115,16 @@ const Stack* Inventory::getSlot(uint8_t slot) const {
 uint8_t Inventory::getCapacity() const {
     return capacity;
 }
+
 const std::map<uint8_t, Stack>& Inventory::getItems() const {
     return slots;
+}
+
+void Inventory::restoreSlots(const std::map<uint8_t, Stack>& saved) {
+    for (const auto& [slot, stack] : saved) {
+        if (slot >= capacity || stack.quantity == 0 || stack.quantity > getStackLimit(stack.item_id)) {
+            throw std::invalid_argument("Invalid saved inventory slot");
+        }
+    }
+    slots = saved;
 }

@@ -229,3 +229,31 @@
  
 - Client:
     - sound manager
+
+# 6ra Reunión 10-11-2026
+
+### Preguntas
+- en la ultima semana de tp, no se pueden implementar nuevas features?
+- el video se tiene que tener terminado para la semana que viene?
+- la docu se entraga al mismo tiempo que el vid o tenemos un tiempo despues?
+- Docu era: diseño y manual de usuario nada más?
+- server status change para minimap? -> manda a todos siempre
+
+TODO: nuestro:
+    - sdl pantalla de noche/carga cuando duerme un jugador y espera al resto.
+    - cambiar hitbox de combate del player
+    - ajustar colition box de muebles en server
+    - completar minimap
+    - pasar a planta final after cosecha?
+
+TODO: de abril
+- BUG MAX CANT GRANJEROS - no era un bug, solo paso que habian 2 casas en el mapa je
+- fix: broadcast general
+- fix: golpe menor cuando poca vida
+- agregar nombre de usuario arriba - DONE
+- script: sobre mint 20 o 22 - sdlpuro
+- cheats: 
+    -   forzar calidad
+    -   kill enemigos para probar minas
+- fix: visual feedback de golpes - sdlpuro
+- pantalla fin de juego - TBD: QT o SDL

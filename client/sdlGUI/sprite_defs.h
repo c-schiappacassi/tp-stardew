@@ -8,7 +8,7 @@
 
 // TODO: organizar mejor este archivo
 
-namespace Dimentions {
+namespace Dimentions {    
     constexpr uint16_t FARMER_COLS    = 6;
     constexpr uint16_t FARMER_CELL_W  = 16;
     constexpr uint16_t FARMER_CELL_H  = 32;
@@ -60,6 +60,7 @@ namespace Dimentions {
 }
 
 namespace SpriteDefs {
+    inline constexpr bool FURNITURE_MIRROR_LEFT = true;
 
     struct TextureDef { SpriteId id; const char* path; };
 
@@ -68,6 +69,9 @@ namespace SpriteDefs {
         {SpriteId::MenuTiles,    "menus/menutiles.png"},
         {SpriteId::Cursors,      "menus/cursors.png"},
         {SpriteId::Emotes,      "misc/emotes.png"},
+        {SpriteId::ChatBox,      "menus/chat_box.png"},
+        {SpriteId::Minimap, "minimaps/placeholder_minimap.jpg"},
+        {SpriteId::InfoSing, "menus/clock.png"},
 
         // farmer
         {SpriteId::FarmerBase,   "characters/farmer_base.png"},
@@ -77,8 +81,11 @@ namespace SpriteDefs {
         {SpriteId::Tools,        "characters/tools.png"},
         {SpriteId::Weapons,      "characters/weapons.png"},
 
+        // items y mas
         {SpriteId::Ores,         "caverns/mines.png"},
         {SpriteId::Crops,        "farm/crops/crops.png"},
+        {SpriteId::Harvest , "farm/harvested_crops_seed_packets_minerals_food_equipment_miscellaneous_objects.png"},
+        {SpriteId::Craftables, "misc/craftables.png"},
 
         //animals
         {SpriteId::BronwCow,     "farm/animals/cow_brown.png"},
@@ -103,6 +110,7 @@ namespace SpriteDefs {
         {SpriteId::Furniture,       "farm/environment/furniture.png"},
         {SpriteId::LevelPortals,    "caverns/level_portals.png"},
         {SpriteId::TilledDirt,      "farm/environment/tilled_dirt.png"},
+        {SpriteId::LightGlow,      "misc/sconce_light.png"},
     
 
         // monsters
@@ -118,6 +126,20 @@ namespace SpriteDefs {
         {SpriteId::SpikeTrap, "caverns/monsters/spikes.png"},
         {SpriteId::WallFlameTrap, "caverns/monsters/wallflame.png"},
         {SpriteId::Flames, "caverns/monsters/projectile_fire.png"},
+
+        // interiors
+        {SpriteId::PlayerHouseInterior, "farm/interior.png"},
+        {SpriteId::MarniesInterior, "farm/interior.png"},
+        {SpriteId::PierresInterior, "farm/interior.png"},
+        {SpriteId::ClintsInterior, "farm/interior.png"},
+        {SpriteId::RobinsInterior, "farm/interior.png"},
+        {SpriteId::ComunityCenterInterior, "farm/interior.png"},
+
+        // npcs
+        {SpriteId::Marnie, "market/npcs/marnie.png"},
+        {SpriteId::Pierre , "market/npcs/pierre.png"},
+        {SpriteId::Clint, "market/npcs/clint.png"},
+        {SpriteId::Robin, "market/npcs/robin.png"},
     };
 
     // Ores
@@ -146,7 +168,7 @@ namespace SpriteDefs {
         {CropType::Pumpkin,    CropState::JustPlanted,   0, 285},
         {CropType::Pumpkin,    CropState::Sprouting,    48, 285},
         {CropType::Pumpkin,    CropState::Growing,      80, 285},
-        {CropType::Pumpkin,    CropState::Ready,       285, 285},
+        {CropType::Pumpkin,    CropState::Ready,       96, 285},
 
         {CropType::Strawberry, CropState::JustPlanted, 144, 318},
         {CropType::Strawberry, CropState::Sprouting,   192, 318},
@@ -167,6 +189,26 @@ namespace SpriteDefs {
     struct BuildingDef  { BuildingId id;    SpriteRect rect; };
     struct FurnitureDef { FurnitureId id; Direction dir; SpriteRect rect; };
     struct PortalDef { PortalId id; SpriteRect rect; };
+
+    struct InteriorDef  { InteriorId id;    SpriteRect rect; };
+    inline constexpr InteriorDef INTERIORS[] = {
+        {InteriorId::PlayerHouse , {SpriteId::PlayerHouseInterior, 0, 0, 272, 272}},
+        {InteriorId::PierresShop , {SpriteId::PierresInterior, 0, 0, 272, 272}},
+        {InteriorId::MarniesShop , {SpriteId::MarniesInterior, 0, 0, 272, 272}},
+        {InteriorId::ClintsShop , {SpriteId::ClintsInterior, 0, 0, 272, 272}},
+        {InteriorId::RobinsShop , {SpriteId::RobinsInterior, 0, 0, 272, 272}},
+        {InteriorId::ComunityCenter , {SpriteId::ComunityCenterInterior, 0, 0, 272, 272}},
+    };
+    
+
+    struct NpcDef  { NpcId id;    SpriteRect rect; };
+    inline constexpr NpcDef NPCS[] = {
+        {NpcId::Marnie , {SpriteId::Marnie, 0, 0, 16, 32}},
+        {NpcId::Pierre , {SpriteId::Pierre, 0, 0, 16, 32}},
+        {NpcId::Clint , {SpriteId::Clint, 0, 0, 16, 32}},
+        {NpcId::Robin , {SpriteId::Robin, 0, 0, 16, 32}},
+    };
+    
 
     inline constexpr TileDef TILES[] = {
         {TileTextureId::Grass,                           {SpriteId::OutdoorsSpring, 0, 112, 16, 16}},
@@ -294,6 +336,41 @@ namespace SpriteDefs {
         {ItemId::Lapis,       SpriteId::Ores,     64, 108, 16, 16},
         {ItemId::Silver,      SpriteId::Ores,    145,  68, 15, 15},
         {ItemId::Gold,        SpriteId::Ores,     94, 108, 16, 16},
+        {ItemId::Milk,        SpriteId::Harvest,     290, 112, 13, 16},
+        {ItemId::Egg,        SpriteId::Harvest,     224, 113, 16, 16},
+        {ItemId::StrawberrySeed,     SpriteId::Harvest,    256,  320, 16, 16},
+        {ItemId::ScallionSeed,       SpriteId::Harvest,    176,  320, 16, 16},
+        {ItemId::PotatoSeed,         SpriteId::Harvest,    304,  304, 16, 16},
+        {ItemId::PumpkinSeed,        SpriteId::Harvest,    160,  320, 16, 16},
+        {ItemId::Strawberry,         SpriteId::Harvest,    256,  256, 16, 16},
+        {ItemId::Scallion,           SpriteId::Harvest,    240,  256, 16, 16},
+        {ItemId::Potato,             SpriteId::Harvest,     0,  128, 16, 16},
+        {ItemId::Pumpkin,            SpriteId::Harvest,    192,  176, 16, 16},
+        {ItemId::Chest,              SpriteId::Craftables,  32,  520, 16, 24},
+        {ItemId::Chair,              SpriteId::Furniture,   0,    0, 16, 32},
+        {ItemId::Table,              SpriteId::Furniture,   0,  569, 32, 39},
+        {ItemId::Bed,                SpriteId::Furniture,   0, 1032, 32, 55},
+        {ItemId::BedSheet,           SpriteId::Furniture,  32, 1032, 32, 55},
+        {ItemId::Bonsai,             SpriteId::Furniture, 514,  633, 32, 48},
+        {ItemId::PottedTree,         SpriteId::Furniture, 514,  585, 32, 48},
+        {ItemId::BlueArmCouch,       SpriteId::Furniture,   0,  144, 32, 32},
+        {ItemId::Tv,                 SpriteId::Furniture, 259,  832, 26, 32},
+        {ItemId::BeigeRug,           SpriteId::Furniture, 229,  871, 24, 20},
+        {ItemId::ClockFirePlace,     SpriteId::Furniture, 160,  938, 32, 70},
+        {ItemId::BlueRug,            SpriteId::Furniture, 149,  867, 37, 28},
+        {ItemId::CatFirePlace,       SpriteId::Furniture, 128,  925, 32, 51},
+        {ItemId::SimpleFirePlace,    SpriteId::Furniture,   0,  896, 32, 80},
+        {ItemId::BlueJunimoPushee,   SpriteId::Furniture,  16,  880, 16, 16},
+        {ItemId::GreenJunimoPushee,  SpriteId::Furniture,   0,  880, 16, 16},
+        {ItemId::YellowJunimoPushee, SpriteId::Furniture,  32,  880, 16, 16},
+        {ItemId::PinkJunimoPushee,   SpriteId::Furniture,  48,  880, 16, 16},
+        {ItemId::SimpleLamp,         SpriteId::Furniture,  49,  733, 16, 34},
+        {ItemId::BookShelf,          SpriteId::Furniture,  80,  640, 32, 48},
+        {ItemId::SquareLamp,         SpriteId::Furniture,  80,  729, 16, 39},
+        {ItemId::RoundTable,         SpriteId::Furniture, 224,  570, 32, 38},
+        {ItemId::GreenStool,         SpriteId::Furniture, 480,   47, 16, 17},
+        {ItemId::BrownSofa,          SpriteId::Furniture,   0,  256, 48, 32},
+        {ItemId::BrownArmCouch,      SpriteId::Furniture, 384,  144, 32, 32},
     };
 
     struct EmoteDef { EmoteId id; SpriteId sprite; uint16_t x, y, w, h; };
@@ -308,15 +385,22 @@ namespace SpriteDefs {
         {UiSpriteId::HotbarSlot,         SpriteId::MenuTiles,  64, 128, 64, 64},
         {UiSpriteId::HotbarSlotOutline,  SpriteId::MenuTiles, 128, 128, 64, 64},
         {UiSpriteId::HotbarSlotSelected, SpriteId::MenuTiles,   0, 896, 64, 64},
-
         {UiSpriteId::EnergyBar,          SpriteId::Cursors,   256, 408, 12, 56},
         {UiSpriteId::HealthBar,          SpriteId::Cursors,   268, 408, 12, 56},
+        {UiSpriteId::ChatBox,            SpriteId::ChatBox,     0,   14, 75, 61},
+        {UiSpriteId::ChatTypeBox,            SpriteId::ChatBox,     0,   0, 75, 14},
+        {UiSpriteId::DialogBox, SpriteId::MenuTiles, 0, 256, 60, 60},
+        {UiSpriteId::OkButton,  SpriteId::Cursors, 128, 256, 64, 64},
+        {UiSpriteId::CancelButton, SpriteId::Cursors, 192, 256, 64, 64},
+        {UiSpriteId::PlayerHead, SpriteId::FarmerBase, 0, 0, 16, 15},
+        {UiSpriteId::InfoSing, SpriteId::InfoSing, 0, 0, 72, 59},
+        {UiSpriteId::InfoSingArrow, SpriteId::InfoSing, 72, 0, 7, 19},
     };
 
     // Clips
     struct FrameDef { int index; int ms; };
 
-    constexpr int MAX_FRAMES = 7; // las llamas (projectile_fire.png) tienen 7 frames; el resto de las anims usa <= 5
+    constexpr int MAX_FRAMES = 7;
 
     template <class State>
     struct ClipDef {
@@ -374,8 +458,7 @@ namespace SpriteDefs {
     };
 
     // Farmer
-    inline constexpr ClipSetInfo FARMER_SET{ SpriteId::FarmerBase, Dimentions::FARMER_COLS, Dimentions::FARMER_CELL_W, Dimentions::FARMER_CELL_H,
-                                             -Dimentions::FARMER_CELL_W / 2, -Dimentions::FARMER_FEET_Y};
+    inline constexpr ClipSetInfo FARMER_SET{ SpriteId::FarmerBase, Dimentions::FARMER_COLS, Dimentions::FARMER_CELL_W, Dimentions::FARMER_CELL_H,-Dimentions::FARMER_CELL_W / 2, -Dimentions::FARMER_FEET_Y};
     inline constexpr bool FARMER_MIRROR_LEFT = true;
 
     inline constexpr ClipDef<PlayerState> FARMER_CLIPS[] = {
@@ -384,10 +467,21 @@ namespace SpriteDefs {
         clip(PlayerState::Idle, Direction::Right, false, {{6, 200}}),
         clip(PlayerState::Idle, Direction::Up,    false, {{12, 200}}),
 
-        clip(PlayerState::Walking, Direction::Down,  true, {{0, 200}, {1, 200}, {0, 200}, {2, 200}}),
-        clip(PlayerState::Walking, Direction::Left,  true, {{6, 200}, {7, 200}, {6, 200}, {8, 200}}),
-        clip(PlayerState::Walking, Direction::Right, true, {{6, 200}, {7, 200}, {6, 200}, {8, 200}}),
-        clip(PlayerState::Walking, Direction::Up,    true, {{12, 200}, {13, 200}, {12, 200}, {14, 200}}),
+        // TODO: PlayerState::Unconscious Y PlayerState::Sleeping
+        clip(PlayerState::Sleeping, Direction::Down,  true, {{16, 1000}}),
+        clip(PlayerState::Sleeping, Direction::Left,  true, {{16, 1000}}),
+        clip(PlayerState::Sleeping, Direction::Right, true, {{16, 1000}}),
+        clip(PlayerState::Sleeping, Direction::Up,    true, {{16, 1000}}),
+
+        clip(PlayerState::Unconscious, Direction::Down,  false, {{4, 150}, {5, 300}}),
+        clip(PlayerState::Unconscious, Direction::Left,  false, {{4, 150}, {5, 300}}),
+        clip(PlayerState::Unconscious, Direction::Right, false, {{4, 150}, {5, 300}}),
+        clip(PlayerState::Unconscious, Direction::Up,    false, {{4, 150}, {5, 300}}),
+
+        clip(PlayerState::Walking, Direction::Down,  true, {{1, 200}, {0, 200}, {2, 200}, {0, 200}}),
+        clip(PlayerState::Walking, Direction::Left,  true, {{7, 200}, {6, 200}, {8, 200}, {6, 200}}),
+        clip(PlayerState::Walking, Direction::Right, true, {{7, 200}, {6, 200}, {8, 200}, {6, 200}}),
+        clip(PlayerState::Walking, Direction::Up,    true, {{13, 200}, {12, 200}, {14, 200}, {12, 200}}),
 
         clip_run(PlayerState::UsingTool, Direction::Down,  false, 66, 5, 100),
         clip_run(PlayerState::UsingTool, Direction::Right, false, 48, 5, 100),
@@ -422,6 +516,13 @@ namespace SpriteDefs {
         { 12, {{ 0,  0}, { 0,  0}, { 0, 0}} },
         { 13, {{ 0,  1}, { 0,  0}, { 0, 0}} },
         { 14, {{ 0,  1}, { 0,  0}, { 0, 0}} },
+
+        // Sleeping
+        { 16, {{ 0,  1}, { 0,  1}, { 0, 0}} },
+
+        // Unconscious
+        {  4, {{ 0,  4}, { 0,  4}, { 0, 1}} },
+        {  5, {{ 0,  5}, { 0,  5}, { 0, 1}} },
 
         // Using tool up
         { 36, {{  0,  0}, {  0,  0}, {0, 0}} },

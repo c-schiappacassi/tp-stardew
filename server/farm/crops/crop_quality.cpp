@@ -8,7 +8,7 @@
 namespace {
 void accumulate(std::chrono::milliseconds& total, std::chrono::milliseconds elapsed) {
     if (elapsed.count() < 0) {
-        throw std::invalid_argument("Tiempo negativo");
+        throw std::invalid_argument("Negative time");
     }
     total += std::min(elapsed, std::chrono::milliseconds::max() - total);
 }
@@ -18,7 +18,7 @@ CropQuality::CropQuality(std::chrono::milliseconds dayLength,
     std::chrono::milliseconds wateringInterval):
     dayLength(dayLength), wateringInterval(wateringInterval) {
     if (dayLength.count() <= 0 || wateringInterval.count() <= 0) {
-        throw std::invalid_argument("Los tiempos del cultivo deben ser positivos");
+        throw std::invalid_argument("Crop times must be positive");
     }
 }
 
@@ -43,7 +43,7 @@ void CropQuality::reset() {
 
 Quality CropQuality::evaluate(double luck) const {
     if (!std::isfinite(luck) || luck < 0.0) {
-        throw std::invalid_argument("La suerte debe ser finita y no negativa");
+        throw std::invalid_argument("Luck must be finite and nonnegative");
     }
     const double waterPenalty = static_cast<double>(wateringDelay.count()) /
         (static_cast<double>(waterRequests) * wateringInterval.count());

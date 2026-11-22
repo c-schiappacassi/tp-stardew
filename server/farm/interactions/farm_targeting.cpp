@@ -111,7 +111,7 @@ std::optional<FarmCollectionTarget> FarmTargeting::findCollectionTarget(
         }
         const auto distance = squaredDistance(player.getPosition(), position);
         if (distance < closestDistance) {
-            closestTarget = FarmCollectionTarget{id, source, product};
+            closestTarget = FarmCollectionTarget{id, source, position, product};
             closestDistance = distance;
         }
     };
@@ -122,6 +122,9 @@ std::optional<FarmCollectionTarget> FarmTargeting::findCollectionTarget(
         }
     }
     for (const auto* animal : farm.getAnimals()) {
+        if (animal->dropsProductsAutomatically()) {
+            continue;
+        }
         const auto product = animal->getProduction();
         if (product) {
             considerProduct(animal->getId(), animal->getPosition(), FarmProductSource::Animal,

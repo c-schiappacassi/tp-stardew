@@ -14,7 +14,7 @@ uint32_t readNumber(const toml::node_view<const toml::node>& section, std::strin
     }
     const auto value = node.value<int64_t>();
     if (!node.is_integer() || !value || *value < 0 || static_cast<uint64_t>(*value) > maximum) {
-        throw std::invalid_argument("Valor de combate invalido: " + std::string(name));
+        throw std::invalid_argument("Invalid combat value: " + std::string(name));
     }
     return static_cast<uint32_t>(*value);
 }
@@ -41,7 +41,7 @@ void CombatTomlReader::read(const toml::table& table, DungeonConfig& dungeon,
                             PlayerConfig& player) const {
     for (const auto* name: {"enemies", "combat", "spawns", "player"}) {
         if (table.contains(name) && !table[name].is_table()) {
-            throw std::invalid_argument("Se esperaba una tabla de combate: " + std::string(name));
+            throw std::invalid_argument("Expected a combat table: " + std::string(name));
         }
     }
     auto nextDungeon = dungeon;
@@ -51,7 +51,7 @@ void CombatTomlReader::read(const toml::table& table, DungeonConfig& dungeon,
     for (const auto& [name, type]: types) {
         auto section = table["enemies"][name];
         if (section && !section.is_table()) {
-            throw std::invalid_argument("Se esperaba una tabla de enemigo: " + std::string(name));
+            throw std::invalid_argument("Expected an enemy table: " + std::string(name));
         }
         auto& definition = enemies.definitions.at(type);
         number(section, "health", definition.health);

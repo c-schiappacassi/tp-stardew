@@ -12,9 +12,9 @@ class FarmInteractions {
 private:
     FarmTargeting targeting;
 
-    bool useShovel(Player& player, FarmManager& farm, Direction direction) const;
+    bool useShovel(Player& player, FarmManager& farm, Direction direction,EntityIdGenerator& entityIds) const;
     bool waterCrop(Player& player, FarmManager& farm, Direction direction) const;
-    bool collectProduct(Player& player, FarmManager& farm, Direction direction) const;
+    bool collectProduct(Player& player, FarmManager& farm, Direction direction,EntityIdGenerator& entityIds) const;
     bool placeSelectedItem(Player& player, FarmManager& farm, EntityIdGenerator& entityIds,
         Direction direction, ItemId item) const;
     bool applySelectedItem(Player& player, FarmManager& farm, EntityIdGenerator& entityIds,

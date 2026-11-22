@@ -8,11 +8,11 @@
 #include <SDL2pp/SDL2pp.hh>
 
 #include "dtos.h"
-#include "input_translator.h"
 #include "sdlGUI/asset_manager.h"
 #include "sdlGUI/camera.h"
 #include "sdlGUI/world/world_view.h"
 #include "state.h"
+#include "sdlGUI/ui/ui_manager.h"
 
 class GameUI {
 private:
@@ -24,7 +24,7 @@ private:
     Zone currentZone = Zone::Farm;
     std::string local_player;
     WorldView world;
-    InputTranslator input;
+    UiManager ui;
 
     void update_camera(const State& state);
 public:

@@ -107,3 +107,5 @@ bool FarmSpace::move(EntityId id, const Position& base) {
 bool FarmSpace::release(EntityId id) {
     return occupants.erase(id) != 0;
 }
+
+void FarmSpace::clearOccupants() { occupants.clear(); }

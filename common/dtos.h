@@ -12,8 +12,18 @@
 
 #include "position.h"
 #include "protocol_types.h"
+#include "game_time.h"
 
 // AUXILIARES
+
+struct LootData {
+    uint32_t id = 0;
+    Position pos{0, 0};
+    ItemId item = ItemId::Silver;
+    uint32_t quantity = 1;
+    Quality quality = Quality::None;
+    LootKind kind = LootKind::Item;
+};
 
 // Farm
 struct CropData{
@@ -38,7 +48,7 @@ struct FurnitureData {
     uint32_t id = 0;
     Position pos{0, 0};
     FurnitureId type = FurnitureId::Chair;
-    Direction dir;
+    Direction dir = Direction::Down;
 };
 
 struct FarmData{
@@ -46,10 +56,11 @@ struct FarmData{
     std::vector<AnimalData> animals;
     std::vector<Position> tilledSoil;
     std::vector<FurnitureData> furniture;
+    std::vector<LootData> loot;
 };
 
-// Farmer houses
-struct HouseData {
+struct InteriorData {
+    InteriorId interior_id = InteriorId::PlayerHouse;
     uint8_t house_index = 0;
     std::vector<FurnitureData> furniture;
 };
@@ -85,13 +96,6 @@ struct TrapData {
     TrapType type = TrapType::Spikes;
     TrapState state = TrapState::Inactive;
     uint16_t range = 0;
-};
-
-struct LootData {
-    uint32_t id = 0;
-    Position pos{0, 0};
-    ItemId item = ItemId::Silver;
-    uint16_t quantity = 1;
 };
 
 struct CombatProgressData {
@@ -130,7 +134,7 @@ struct MineData{
 };
 // Fin Mine
 
-using ZoneData = std::variant<MineData, FarmData, std::monostate>;
+using ZoneData = std::variant<MineData, FarmData, InteriorData, std::monostate>;
 
 // Map DTOS para el segundo handshake
 
@@ -161,12 +165,25 @@ struct PortalData {
     PortalId id = PortalId::FarmToMine;
 };
 
+struct NpcData{
+    Position pos{0,0};
+    NpcId id = NpcId::Marnie;
+};
+
+struct InteriorBackgroundData
+{
+    Position pos{0,0};
+    InteriorId interior_id = InteriorId::PlayerHouse;
+    std::optional<NpcData> npc;
+};
+
 struct BackgroundData{
     std::vector<TileData> floor;
     std::vector<DecorData> decor;
     std::vector<BuildingData> buildings; // Exteriores, para los interiores son una zona distinta, asi que les llega su propio BackgroundData
     std::vector<StaticFurnitureData> furniture;
     std::vector<PortalData> portals;
+    std::optional<InteriorBackgroundData> interior;
 };
 
 // TODO: TBD primer draft del segundo Handshake, para la data que NUNCA cambia.
@@ -181,6 +198,7 @@ struct ConstMapData{
     BackgroundData robins;
     BackgroundData clints;
     BackgroundData marnies;
+    BackgroundData community_center;
     BackgroundData town;
 };
 
@@ -197,6 +215,60 @@ struct Stack {
     Quality qual;
 };
 
+struct CommunityRequirementData {
+    ItemId item = ItemId::Potato;
+    uint32_t donated = 0;
+    uint32_t required = 0;
+    Quality minimumQuality = Quality::None;
+};
+
+struct CommunityRewardData {
+    std::vector<Stack> items;
+    uint32_t coins = 0;
+    uint8_t cows = 0;
+    uint8_t chickens = 0;
+    uint8_t statsBonusPercent = 0;
+    bool marketDiscountNextDay = false;
+};
+
+struct CommunityBundleData {
+    CommunityBundle id = CommunityBundle::Crops;
+    bool completed = false;
+    bool rewardGranted = false;
+    std::vector<CommunityRequirementData> items;
+    CommunityRewardData reward;
+};
+
+struct CommunityDonationReceipt {
+    uint32_t requestId = 0;
+    DonationKind kind = DonationKind::Item;
+    uint8_t slot = 0;
+    CommunityDonationError error = CommunityDonationError::None;
+    uint32_t accepted = 0;
+};
+
+struct CommunityStateData {
+    bool available = false;
+    bool insideCenter = false;
+    bool canDonate = false;
+    bool completed = false;
+    MarketDiscount discount = MarketDiscount::None;
+    std::vector<CommunityBundleData> bundles;
+    uint32_t coinsDonated = 0;
+    uint32_t coinsRequired = 0;
+    CombatProgressData combat;
+    std::vector<Stack> pendingItems;
+    uint64_t pendingCoins = 0;
+    std::optional<CommunityDonationReceipt> lastDonation;
+};
+
+struct InteriorLocation {
+    InteriorId interior_id = InteriorId::PlayerHouse;
+    uint8_t house_index = 0;
+
+    bool operator==(const InteriorLocation&) const = default;
+};
+
 struct PlayerData{
     std::string characterName;
     Position pos{0,0};
@@ -208,6 +280,7 @@ struct PlayerData{
     Color hairColor{0, 0, 0};
     Color pantsColor{0, 0, 0};
     Zone currentZone = Zone::Farm;
+    std::optional<InteriorLocation> interior;
     std::optional<ItemId> heldItem;
 };
 
@@ -218,9 +291,14 @@ struct GameInfoDTO {
     bool isMultiplayer = false;
 };
 
+struct ChatMessageData {
+    std::string sender;
+    std::string text;
+};
 
 struct PlayerDataLocal : public PlayerData {
     std::map<uint8_t, Stack> items;
+    uint8_t cap_inventory = 0;
     uint8_t current_slot = 0;
     uint32_t gold = 0;
     uint16_t health = 0;
@@ -229,8 +307,7 @@ struct PlayerDataLocal : public PlayerData {
     uint16_t maxEnergy = 0;
     ZoneData zoneData{std::monostate{}};
     CombatProgressData combatProgress;
-
-    // TODO: enviar la max cap del inventario (9 y con la recompenza sube a 10)
+    std::vector<ChatMessageData> newMessages;
 
     PlayerDataLocal() = default;
     explicit PlayerDataLocal(const PlayerData& publicData): PlayerData(publicData) {}
@@ -245,7 +322,7 @@ struct CommandDTO {
 
     explicit CommandDTO(std::string name) : userName(std::move(name)) {
         if (userName.empty()) {
-            throw std::invalid_argument("userName no puede estar vacio");
+            throw std::invalid_argument("userName cannot be empty");
         }
     }
     virtual ~CommandDTO() = default;
@@ -307,9 +384,16 @@ struct DayOkDTO: public CommandDTO {
     MessageType type() const override { return MessageType::DayOk; }
 };
 
+struct DayCancelDTO: public CommandDTO {
+    explicit DayCancelDTO(const std::string& name): CommandDTO(name) {}
+    MessageType type() const override { return MessageType::DayCancel; }
+};
+
 struct DonateDTO : public CommandDTO {
-    uint8_t slot;
-    uint32_t quantity;
+    DonationKind kind = DonationKind::Item;
+    uint8_t slot = 0;
+    uint32_t quantity = 0;
+    uint32_t requestId = 0;
 
     MessageType type() const override { return MessageType::Donate; }
     explicit DonateDTO(const std::string& name) : CommandDTO(name) {}
@@ -375,6 +459,10 @@ struct ServerStatus {
     std::map<std::string, PlayerData> players;
     PlayerDataLocal localPlayer;
     bool dayEnded = false;
+    bool dayConfirmationRequired = false;
+    uint16_t timeOfDayMinutes = game_time::START_MINUTES;
+    bool gameCompleted = false;
+    CommunityStateData community;
 };
 
 struct qtStatus {

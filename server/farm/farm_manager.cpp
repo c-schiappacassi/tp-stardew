@@ -12,13 +12,17 @@ FarmManager::FarmManager(const FarmConfig& config, uint32_t seed):config(config)
 
 bool FarmManager::initialize(const FarmLayout& layout, EntityIdGenerator& entityIds) {
     FarmManager prepared{config, seed};
+    prepared.background = layout.background;
+    for (const auto& tile : layout.background) {
+        if (tile.textureId == static_cast<uint16_t>(TileTextureId::Dirt)) {
+            prepared.dirtCells.emplace(tile.tile.getY(), tile.tile.getX());
+        }
+    }
     auto preparedIds = entityIds;
     if (!FarmLoader{}.load(layout, prepared, preparedIds)) {
         return false;
     }
     prepared.spawnPosition = layout.spawn;
-    prepared.background = layout.background;
-    prepared.beds = layout.beds;
     prepared.initialized = true;
     *this = std::move(prepared);
     entityIds = preparedIds;
@@ -26,16 +30,6 @@ bool FarmManager::initialize(const FarmLayout& layout, EntityIdGenerator& entity
 }
 
 bool FarmManager::isInitialized() const { return initialized; }
-
-bool FarmManager::useBed(Player& player) const {
-    if (!initialized || player.getZone() != Zone::Farm) return false;
-    for (const auto& bed: beds) {
-        if (space.getMap().sameBaseCell(player.getPosition(), bed)) {
-            return player.sleep();
-        }
-    }
-    return false;
-}
 
 bool FarmManager::spawnPlayer(Player& player) const {
     if (!initialized) {
@@ -56,6 +50,15 @@ bool FarmManager::spawnPlayer(Player& player) const {
 bool FarmManager::useSelectedItem(Player& player, Direction direction, EntityIdGenerator& entityIds,
         std::chrono::steady_clock::time_point now) {
     return interactions.interact(player, *this, entityIds, direction, now);
+}
+
+bool FarmManager::collectNearbyItems(Player& player) {
+    if (!initialized || player.getZone() != Zone::Farm) {
+        return false;
+    }
+    return groundItems.collect(player, [&](const Position& position) {
+        return FarmTargeting{}.hasClearPath(player.getPosition(), position, getMap());
+    });
 }
 
 bool FarmManager::setReservedPositions(const std::vector<Position>& positions) {
@@ -98,6 +101,8 @@ const std::vector<FarmBackgroundTile>& FarmManager::getBackground() const {
 bool FarmManager::canWalk(const CollisionBounds& bounds) const { return space.canWalk(bounds); }
 
 bool FarmManager::tillSoil(const Position& position) {
+    const auto cell = space.cellAt(position);
+    if (!cell || !dirtCells.contains(*cell)) return false;
     return cropManager.tillSoil(position, space);
 }
 
@@ -129,23 +134,28 @@ std::optional<FarmProduct> FarmManager::collectFromAnimal(EntityId id) {
     return animalManager.collect(id);
 }
 
-bool FarmManager::placeDecoration(EntityId id, const Position& position, ItemId item) {
-    return decorationManager.place(id, position, item, space);
+bool FarmManager::placeDecoration(EntityId id, const Position& position, ItemId item, Direction direction) {
+    return decorationManager.place(id, position, item, space, direction);
 }
 
 std::optional<ItemId> FarmManager::removeDecoration(EntityId id) {
     return decorationManager.remove(id, space);
 }
 
-void FarmManager::update(std::chrono::milliseconds elapsed) {
+void FarmManager::update(std::chrono::milliseconds elapsed, EntityIdGenerator& entityIds) {
     if (elapsed.count() < 0) {
-        throw std::invalid_argument("Tiempo negativo");
+        throw std::invalid_argument("Negative time");
     }
     if (elapsed.count() == 0) {
         return;
     }
     cropManager.update(elapsed);
-    animalManager.update(elapsed, space);
+    animalManager.update(elapsed, space, groundItems, entityIds);
+}
+
+void FarmManager::finishDay(std::chrono::milliseconds remainingTime, EntityIdGenerator& entityIds) {
+    update(remainingTime, entityIds);
+    cropManager.finishDay();
 }
 
 const Crop* FarmManager::findCrop(EntityId id) const { return cropManager.find(id); }
@@ -166,3 +176,51 @@ const std::map<EntityId, Decoration>& FarmManager::getDecorations() const {
 }
 
 const FarmConfig& FarmManager::getConfig() const { return config; }
+
+GroundItems& FarmManager::getGroundItems() { return groundItems; }
+const GroundItems& FarmManager::getGroundItems() const { return groundItems; }
+
+void FarmManager::restoreData(const FarmData& saved,
+    const std::map<uint32_t, uint64_t>& growth,
+    const std::map<uint32_t, uint64_t>& water,
+    const std::map<uint32_t, bool>& harvested,
+    const std::map<uint32_t, uint64_t>& production,
+    const std::map<uint32_t, uint32_t>& products) {
+    if (!initialized) throw std::runtime_error("Farm not initialized");
+    cropManager = CropManager(config);
+    animalManager = AnimalManager(config, seed);
+    decorationManager = DecorationManager();
+    groundItems = GroundItems();
+    space.clearOccupants();
+    for (const Position& position : saved.tilledSoil) {
+        if (!tillSoil(position)) throw std::runtime_error("Failed to restore tilled soil");
+    }
+    for (const CropData& data : saved.crops) {
+        if (!plant(data.id, data.pos, data.type)) throw std::runtime_error("Failed to restore crop");
+        const auto g = growth.find(data.id);
+        const auto w = water.find(data.id);
+        const auto h = harvested.find(data.id);
+        if (g == growth.end() || w == water.end() || h == harvested.end() ||
+            g->second > static_cast<uint64_t>(INT64_MAX) ||
+            w->second > static_cast<uint64_t>(INT64_MAX)) throw std::runtime_error("Missing crop progress");
+        cropManager.findMutable(data.id)->restoreProgress(
+            std::chrono::milliseconds{static_cast<int64_t>(g->second)},
+            std::chrono::milliseconds{static_cast<int64_t>(w->second)}, h->second);
+    }
+    for (const AnimalData& data : saved.animals) {
+        if (!addAnimal(data.id, data.pos, data.type)) throw std::runtime_error("Failed to restore animal");
+        const auto t = production.find(data.id);
+        const auto n = products.find(data.id);
+        if (t == production.end() || n == products.end() ||
+            t->second > static_cast<uint64_t>(INT64_MAX)) throw std::runtime_error("Missing animal progress");
+        animalManager.findMutable(data.id)->restoreProgress(
+            std::chrono::milliseconds{static_cast<int64_t>(t->second)}, n->second);
+    }
+    for (const FurnitureData& data : saved.furniture) {
+        const ItemId item = static_cast<ItemId>(
+            static_cast<uint16_t>(ItemId::Chair) + static_cast<uint16_t>(data.type));
+        if (!placeDecoration(data.id, data.pos, item, data.dir))
+            throw std::runtime_error("Failed to restore decoration");
+    }
+    groundItems.restoreItems(saved.loot);
+}

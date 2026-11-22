@@ -12,7 +12,8 @@
 
 
 namespace crop {
-    const int HEIGHT = 32;
+    const int CROP_HEIGHT = 32;
+    const int CROP_Y_OFFSET = 3;
 }
 
 

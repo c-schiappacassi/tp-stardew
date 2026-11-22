@@ -34,8 +34,11 @@ public:
     bool isHarvested() const;
     bool isWatered() const;
     std::chrono::milliseconds getGrowthElapsed() const;
+    void restoreProgress(std::chrono::milliseconds growth, std::chrono::milliseconds water, bool wasHarvested);
+    std::chrono::milliseconds getRemainingWaterTime() const;
     CropData getPublicData() const;
     void update(std::chrono::milliseconds elapsed);
+    void finishDay();
     bool water();
     std::optional<FarmProduct> getHarvest(double luck = 1.0) const;
     std::optional<FarmProduct> harvest(double luck = 1.0);
