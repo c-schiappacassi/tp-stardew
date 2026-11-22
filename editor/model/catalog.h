@@ -12,6 +12,10 @@ struct FloorInfo {
     std::string sheet;
     int spriteX;
     int spriteY;
+    int spriteWidth = 16;
+    int spriteHeight = 16;
+    bool walkable = true;
+    bool overDungeonFloor = false;
 };
 
 class FloorCatalog {
@@ -21,7 +25,7 @@ public:
 };
 
 
-enum class ElementKind { Building, Decor, Portal };
+enum class ElementKind { Building, Decor, Portal, Wall };
 
 struct ElementId {
     ElementKind kind;
@@ -35,6 +39,7 @@ struct ElementId {
 ElementId buildingElement(BuildingId id);
 ElementId decorElement(DecorId id);
 ElementId portalElement(PortalId id);
+ElementId wallElement(FramePieceId id);
 
 struct TileArea {
     int x;

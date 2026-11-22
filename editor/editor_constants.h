@@ -7,6 +7,7 @@ const QString MENUS_PATH = QString(ASSETS_DIR) + "/sprites/menus/";
 const QString EDITOR_PATH = QString(ASSETS_DIR) + "/sprites/editor/";
 const QString SPRITES_PATH = QString(ASSETS_DIR) + "/sprites/";
 const QString CUSTOM_MAPS_PATH = QString(MAPS_DIR) + "/custom/";
+const QString BASE_MAP_PATH = QString(MAPS_DIR) + "/base.toml";
 
 const QString TEXT_COLOR = "#4a2a0a";
 

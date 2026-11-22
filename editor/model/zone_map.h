@@ -1,7 +1,10 @@
 #ifndef ZONE_MAP_H
 #define ZONE_MAP_H
 
+#include <map>
 #include <optional>
+#include <string>
+#include <utility>
 #include <vector>
 
 #include "catalog.h"
@@ -32,14 +35,20 @@ public:
     std::optional<PlacedElement> elementAt(int x, int y) const;
     bool removeAt(int x, int y);
 
+    //portales fijos del mapa base (door_town, door_farm). no se editan, se guardan tal cual
+    const std::map<std::string, std::pair<int, int>>& getFixedDoors() const;
+    void setFixedDoor(const std::string& key, int x, int y);
+
 private:
     int index(int x, int y) const;
+    bool isFixed(const PlacedElement& placed) const;
 
     int width;
     int height;
     std::vector<TileTextureId> floors;
     std::vector<bool> locked;
     std::vector<PlacedElement> elements;
+    std::map<std::string, std::pair<int, int>> fixedDoors;
 };
 
 #endif  // ZONE_MAP_H

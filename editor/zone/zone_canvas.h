@@ -38,12 +38,14 @@ protected:
 
 private:
     bool tileAt(QMouseEvent* event, int& x, int& y) const;
+    void drawTile(QPainter& painter, int x, int y) const;
+    void redrawMap();
 
     const ZoneMap& zone;
     const Sprites& sprites;
     QGraphicsScene* scene;
-    std::vector<QGraphicsPixmapItem*> tileItems;
-    std::vector<QGraphicsPixmapItem*> elementItems;
+    QPixmap floorLayer;
+    QGraphicsPixmapItem* mapItem;
     QGraphicsRectItem* ghostArea;
     QGraphicsPixmapItem* ghostSprite;
 };

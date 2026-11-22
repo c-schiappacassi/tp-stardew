@@ -7,6 +7,8 @@
 #include <QMouseEvent>
 #include <QPainter>
 
+#include <algorithm>
+
 namespace {
 const int TILE_PIXELS = 16;
 const QColor GRID_COLOR(0, 0, 0, 60);
@@ -17,14 +19,18 @@ const qreal GHOST_Z = 10000;
 }
 
 ZoneCanvas::ZoneCanvas(const ZoneMap& zone, const Sprites& sprites, QWidget* parent):
-        QGraphicsView(parent), zone(zone), sprites(sprites), scene(new QGraphicsScene(this)) {
+        QGraphicsView(parent), zone(zone), sprites(sprites),
+        scene(new QGraphicsScene(this)), floorLayer(zone.getWidth() * TILE_PIXELS, zone.getHeight() * TILE_PIXELS) {
+    floorLayer.fill(Qt::black);
+    QPainter painter(&floorLayer);
     for (int y = 0; y < zone.getHeight(); ++y) {
         for (int x = 0; x < zone.getWidth(); ++x) {
-            QGraphicsPixmapItem* item = scene->addPixmap(sprites.floor(zone.getFloor(x, y)));
-            item->setPos(x * TILE_PIXELS, y * TILE_PIXELS);
-            tileItems.push_back(item);
+            drawTile(painter, x, y);
         }
     }
+    painter.end();
+
+    mapItem = scene->addPixmap(QPixmap());
     scene->setSceneRect(0, 0, zone.getWidth() * TILE_PIXELS, zone.getHeight() * TILE_PIXELS);
     setScene(scene);
     setMouseTracking(true);
@@ -36,29 +42,41 @@ ZoneCanvas::ZoneCanvas(const ZoneMap& zone, const Sprites& sprites, QWidget* par
     ghostSprite->setZValue(GHOST_Z);
     clearGhost();
 
-    refreshElements();
+    redrawMap();
+}
+
+void ZoneCanvas::drawTile(QPainter& painter, int x, int y) const {
+    painter.drawPixmap(x * TILE_PIXELS, y * TILE_PIXELS, sprites.floorTile(zone.getFloor(x, y), x, y));
 }
 
 void ZoneCanvas::refreshTile(int x, int y) {
-    tileItems[static_cast<std::size_t>(y * zone.getWidth() + x)]->setPixmap(sprites.floor(zone.getFloor(x, y)));
+    QPainter painter(&floorLayer);
+    painter.setCompositionMode(QPainter::CompositionMode_Source);
+    drawTile(painter, x, y);
+    painter.end();
+    redrawMap();
 }
 
 void ZoneCanvas::refreshElements() {
-    for (QGraphicsPixmapItem* item: elementItems) {
-        scene->removeItem(item);
-        delete item;
-    }
-    elementItems.clear();
+    redrawMap();
+}
 
-    for (const PlacedElement& placed: zone.getElements()) {
+void ZoneCanvas::redrawMap() {
+    std::vector<PlacedElement> ordered = zone.getElements();
+    std::stable_sort(ordered.begin(), ordered.end(), [](const PlacedElement& a, const PlacedElement& b) {
+        return a.y + ElementCatalog::infoOf(a.element).tilesHeight < b.y + ElementCatalog::infoOf(b.element).tilesHeight;
+    });
+
+    QPixmap map = floorLayer;
+    QPainter painter(&map);
+    for (const PlacedElement& placed: ordered) {
         const ElementInfo& info = ElementCatalog::infoOf(placed.element);
         const QPixmap& sprite = sprites.element(placed.element);
-        QGraphicsPixmapItem* item = scene->addPixmap(sprite);
-        item->setPos(placed.x * TILE_PIXELS + (info.tilesWidth * TILE_PIXELS - sprite.width()) / 2,
-                     placed.y * TILE_PIXELS + info.tilesHeight * TILE_PIXELS - sprite.height());
-        item->setZValue(placed.y + info.tilesHeight);
-        elementItems.push_back(item);
+        painter.drawPixmap(placed.x * TILE_PIXELS + (info.tilesWidth * TILE_PIXELS - sprite.width()) / 2,
+                           placed.y * TILE_PIXELS + info.tilesHeight * TILE_PIXELS - sprite.height(), sprite);
     }
+    painter.end();
+    mapItem->setPixmap(map);
 }
 
 void ZoneCanvas::showGhost(ElementId element, int x, int y, bool canPlace) {

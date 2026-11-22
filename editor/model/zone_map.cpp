@@ -63,6 +63,11 @@ bool ZoneMap::canPlace(ElementId element, int x, int y) const {
         return false;
     }
 
+    // las piezas del borde se pueden pisar entre ellas y con lo demas (se arman superpuestas)
+    if (element.kind == ElementKind::Wall) {
+        return true;
+    }
+
     const TileArea footprint = footprintAt(element, x, y);
     if (element.kind != ElementKind::Portal) {
         for (int tileY = footprint.y; tileY < footprint.y + footprint.height; ++tileY) {
@@ -75,6 +80,10 @@ bool ZoneMap::canPlace(ElementId element, int x, int y) const {
     }
 
     for (const PlacedElement& other: elements) {
+        //los portales se pueden poner contra el borde
+        if (element.kind == ElementKind::Portal && other.element.kind == ElementKind::Wall) {
+            continue;
+        }
         if (overlaps(footprint, footprintAt(other.element, other.x, other.y))) {
             return false;
         }
@@ -92,7 +101,8 @@ bool ZoneMap::place(ElementId element, int x, int y) {
 
 std::optional<PlacedElement> ZoneMap::elementAt(int x, int y) const {
     for (int i = static_cast<int>(elements.size()) - 1; i >= 0; --i) {
-        if (covers(elements[static_cast<std::size_t>(i)], x, y)) {
+        const PlacedElement& placed = elements[static_cast<std::size_t>(i)];
+        if (!isFixed(placed) && covers(placed, x, y)) {
             return elements[static_cast<std::size_t>(i)];
         }
     }
@@ -101,9 +111,33 @@ std::optional<PlacedElement> ZoneMap::elementAt(int x, int y) const {
 
 bool ZoneMap::removeAt(int x, int y) {
     for (int i = static_cast<int>(elements.size()) - 1; i >= 0; --i) {
-        if (covers(elements[static_cast<std::size_t>(i)], x, y)) {
+        const PlacedElement& placed = elements[static_cast<std::size_t>(i)];
+        if (!isFixed(placed) && covers(placed, x, y)) {
             elements.erase(elements.begin() + i);
             return true;
+        }
+    }
+    return false;
+}
+
+const std::map<std::string, std::pair<int, int>>& ZoneMap::getFixedDoors() const { return fixedDoors; }
+
+void ZoneMap::setFixedDoor(const std::string& key, int x, int y) { fixedDoors[key] = {x, y}; }
+
+//fijo: las piezas del borde y lo que esta apoyado sobre tiles fijos
+bool ZoneMap::isFixed(const PlacedElement& placed) const {
+    if (placed.element.kind == ElementKind::Wall) {
+        return true;
+    }
+    if (placed.element.kind == ElementKind::Portal) {
+        return false;
+    }
+    const TileArea footprint = footprintAt(placed.element, placed.x, placed.y);
+    for (int tileY = footprint.y; tileY < footprint.y + footprint.height; ++tileY) {
+        for (int tileX = footprint.x; tileX < footprint.x + footprint.width; ++tileX) {
+            if (isLocked(tileX, tileY)) {
+                return true;
+            }
         }
     }
     return false;

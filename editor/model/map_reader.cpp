@@ -24,13 +24,6 @@ ZoneMap readZone(const toml::table& table) {
         const toml::array& tile = *node.as_array();
         zone.setFloor(number(tile[0]), number(tile[1]), static_cast<TileTextureId>(number(tile[2])));
     }
-    //tiles fijos (el mapa base, cliff, camino de farm a town y de town a farm...) -> [x, y]
-    if (const toml::array* locked = table["locked"].as_array()) {
-        for (const toml::node& node: *locked) {
-            const toml::array& tile = *node.as_array();
-            zone.lock(number(tile[0]), number(tile[1]));
-        }
-    }
     //building -> [x, y, building_id, door_x, door_y]
     if (const toml::array* buildings = table["buildings"].as_array()) {
         for (const toml::node& node: *buildings) {
@@ -43,6 +36,26 @@ ZoneMap readZone(const toml::table& table) {
     for (const toml::node& node: *table["decor"].as_array()) {
         const toml::array& item = *node.as_array();
         zone.place(decorElement(static_cast<DecorId>(number(item[2]))), number(item[0]), number(item[1]));
+    }
+    //el borde (acantilados, cercas, paredes de la mina) -> [x, y, frame_piece_id]
+    if (const toml::array* frame = table["frame"].as_array()) {
+        for (const toml::node& node: *frame) {
+            const toml::array& piece = *node.as_array();
+            zone.place(wallElement(static_cast<FramePieceId>(number(piece[2]))), number(piece[0]), number(piece[1]));
+        }
+    }
+    //tiles fijos (el mapa base, cliff, camino de farm a town y de town a farm...) -> [x, y]
+    if (const toml::array* locked = table["locked"].as_array()) {
+        for (const toml::node& node: *locked) {
+            const toml::array& tile = *node.as_array();
+            zone.lock(number(tile[0]), number(tile[1]));
+        }
+    }
+    //portales fijos entre la granja y el pueblo
+    for (const char* key: {"door_town", "door_farm"}) {
+        if (const toml::array* door = table[key].as_array()) {
+            zone.setFixedDoor(key, number((*door)[0]), number((*door)[1]));
+        }
     }
     return zone;
 }

@@ -25,11 +25,11 @@ namespace {
 
     void writeBackground(std::ostream& out, const ZoneMap& zone) {
         const std::vector<bool> blocked = blockedTiles(zone);
-        out << "# cada tile: [x, y, texture_id, state]\n";
         out << "background = [\n";
         for (int y = 0; y < zone.getHeight(); ++y) {
             for (int x = 0; x < zone.getWidth(); ++x) {
-                const bool walkable = !blocked[static_cast<std::size_t>(y * zone.getWidth() + x)];
+                const bool walkable = FloorCatalog::infoOf(zone.getFloor(x, y)).walkable &&
+                                      !blocked[static_cast<std::size_t>(y * zone.getWidth() + x)];
                 out << "  [" << x << ", " << y << ", " << static_cast<int>(zone.getFloor(x, y)) << ", \""
                     << (walkable ? "walkable" : "unwalkable") << "\"],\n";
             }
@@ -38,7 +38,6 @@ namespace {
     }
 
     void writeBuildings(std::ostream& out, const ZoneMap& zone) {
-        out << "# cada edificio: [x, y, building_id, door_x, door_y]\n";
         out << "buildings = [\n";
         for (const PlacedElement& placed: zone.getElements()) {
             if (placed.element.kind != ElementKind::Building) {
@@ -52,7 +51,6 @@ namespace {
     }
 
     void writeDecor(std::ostream& out, const ZoneMap& zone) {
-        out << "# cada decoracion: [x, y, decor_id]\n";
         out << "decor = [\n";
         for (const PlacedElement& placed: zone.getElements()) {
             if (placed.element.kind == ElementKind::Decor) {
@@ -60,6 +58,34 @@ namespace {
             }
         }
         out << "]\n";
+    }
+
+    void writeFrame(std::ostream& out, const ZoneMap& zone) {
+        out << "frame = [\n";
+        for (const PlacedElement& placed: zone.getElements()) {
+            if (placed.element.kind == ElementKind::Wall) {
+                out << "  [" << placed.x << ", " << placed.y << ", " << placed.element.id << "],\n";
+            }
+        }
+        out << "]\n";
+    }
+
+    void writeLocked(std::ostream& out, const ZoneMap& zone) {
+        out << "locked = [\n";
+        for (int y = 0; y < zone.getHeight(); ++y) {
+            for (int x = 0; x < zone.getWidth(); ++x) {
+                if (zone.isLocked(x, y)) {
+                    out << "  [" << x << ", " << y << "],\n";
+                }
+            }
+        }
+        out << "]\n";
+    }
+
+    void writeFixedDoors(std::ostream& out, const ZoneMap& zone) {
+        for (const auto& [key, door]: zone.getFixedDoors()) {
+            out << key << " = [" << door.first << ", " << door.second << "]\n";
+        }
     }
 
     int countBuildings(const ZoneMap& zone) {
@@ -99,15 +125,21 @@ bool writeMap(const WorldMap& map, const std::string& path) {
     writeSize(out, map.farm);
     out << "player_houses = " << countBuildings(map.farm) << "\n";
     writeDoor(out, "door_mines", map.farm, PortalId::FarmToMine);
+    writeFixedDoors(out, map.farm);
     writeBackground(out, map.farm);
     writeBuildings(out, map.farm);
     writeDecor(out, map.farm);
+    writeFrame(out, map.farm);
+    writeLocked(out, map.farm);
 
     out << "\n[town]\n";
     writeSize(out, map.town);
+    writeFixedDoors(out, map.town);
     writeBackground(out, map.town);
     writeBuildings(out, map.town);
     writeDecor(out, map.town);
+    writeFrame(out, map.town);
+    writeLocked(out, map.town);
 
     for (const ZoneMap& level: map.mineLevels) {
         out << "\n[[mine_levels]]\n";
@@ -116,6 +148,8 @@ bool writeMap(const WorldMap& map, const std::string& path) {
         writeDoor(out, "door_next_level", level, PortalId::ToNextLevel);
         writeBackground(out, level);
         writeDecor(out, level);
+        writeFrame(out, level);
+        writeLocked(out, level);
     }
     return static_cast<bool>(out);
 }

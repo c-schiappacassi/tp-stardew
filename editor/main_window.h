@@ -17,6 +17,7 @@ public:
 
 private:
     void openEditor(const WorldMap& map);
+    void createMap();
     void editExistingMap();
     void closeEditor();
 

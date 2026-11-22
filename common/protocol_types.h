@@ -214,7 +214,39 @@ enum class TileTextureId : uint8_t{
     ConnctionStonePathGrassTop,
     ConnctionStonePathGrassBottom,
     WateredDirt,
-    TilledDirt
+    TilledDirt,
+    DungeonFloor,
+    DungeonVoid,
+    DungeonLeftWall,
+    DungeonRightWall,
+    DungeonBottom,
+    DungeonBottomLeftCorner1,
+    DungeonBottomRightCorner1,
+    DungeonInnerCornerTopRight,
+    DungeonInnerCornerTopLeft,
+};
+
+enum class FramePieceId : uint8_t{
+    StoneCliftTop,
+    StoneCliftTopLeftCorner,
+    StoneCliftDropRight,
+    StoneCliftLeftSide,
+    StoneCliftRightSide,
+    StoneCliftBottom,
+    StoneCliftTopRightCorner,
+    StoneCliftDropLeft,
+    StoneCliftBottomLeftCorner,
+    StoneCliftBottomRightCorner,
+    DungeonTopWall,
+    DungeonTopLeftCorner1,
+    DungeonTopLeftCorner2,
+    DungeonTopRightCorner1,
+    DungeonTopRightCorner2,
+    DungeonBottomLeftCorner2,
+    DungeonBottomRightCorner2,
+    DungeonLantern,
+    DungeonTopWallEndRight,
+    DungeonTopWallEndLeft,
 };
 
 enum class DecorId : uint8_t{

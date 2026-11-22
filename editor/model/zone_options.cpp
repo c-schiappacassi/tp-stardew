@@ -44,7 +44,7 @@ ZoneOptions townOptions() {
     return {
         {TileTextureId::Grass, TileTextureId::Dirt, TileTextureId::ConnctionStonePathGrassCorner,
          TileTextureId::ConnctionStonePathGrassLeftSide, TileTextureId::ConnctionStonePathGrassTop,
-         TileTextureId::ConnctionStonePathGrassBottom},
+         TileTextureId::ConnctionStonePathGrassBottom, TileTextureId::StonePath},
         {
             buildingElement(BuildingId::PierresShop),
             buildingElement(BuildingId::ClintsShop),
@@ -79,7 +79,7 @@ ZoneOptions townOptions() {
 
 ZoneOptions mineOptions() {
     return {
-        {TileTextureId::Dirt},
+        {TileTextureId::DungeonFloor, TileTextureId::Dirt},
         {
             decorElement(DecorId::WeirdGreenPlant),
             decorElement(DecorId::SmallFern),

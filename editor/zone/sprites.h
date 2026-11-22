@@ -14,7 +14,8 @@ class Sprites {
 public:
     Sprites();
 
-    const QPixmap& floor(TileTextureId floor) const;
+    const QPixmap& floor(TileTextureId floor) const;               // el recorte entero (icono)
+    const QPixmap& floorTile(TileTextureId floor, int x, int y) const;  // lo que va en el tile (x, y)
     const QPixmap& element(ElementId element) const;
     const QPixmap& moveIcon() const;
     const QPixmap& eraseIcon() const;
@@ -24,6 +25,7 @@ private:
 
     std::map<std::string, QPixmap> sheets;
     std::map<TileTextureId, QPixmap> floors;
+    std::map<TileTextureId, std::vector<QPixmap>> floorTiles;  // un pedazo de 16x16 por tile del patron
     std::vector<std::pair<ElementId, QPixmap>> elements;
     QPixmap moveCursor;
     QPixmap eraseCross;

@@ -18,7 +18,7 @@ MainWindow::MainWindow(QWidget* parent): QMainWindow(parent), stack(new QStacked
 
     stack->addWidget(startScreen);
 
-    connect(startScreen, &StartScreen::createMapRequested, this, [this]() { openEditor(WorldMap()); });
+    connect(startScreen, &StartScreen::createMapRequested, this, &MainWindow::createMap);
     connect(startScreen, &StartScreen::editMapRequested, this, &MainWindow::editExistingMap);
 }
 
@@ -28,6 +28,10 @@ void MainWindow::openEditor(const WorldMap& map) {
     stack->addWidget(editor);
     stack->setCurrentWidget(editor);
     connect(editor, &MapEditorScreen::backRequested, this, &MainWindow::closeEditor);
+}
+
+void MainWindow::createMap() {
+    openEditor(readMap(BASE_MAP_PATH.toStdString()));
 }
 
 void MainWindow::editExistingMap() {
