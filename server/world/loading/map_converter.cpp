@@ -213,24 +213,38 @@ TownConfig MapConverter::convertTown(const ZoneData& zone,
 }
 
 DungeonRoomLayout MapConverter::convertRoom(const ZoneData& zone, uint8_t level) {
+    const std::string name = "mine_levels[" + std::to_string(level - 1) + "]";
+
     DungeonRoomLayout room;
-    room.terrain = convertTerrain(zone, "mine level " + std::to_string(level));
+    room.terrain = convertTerrain(zone, name);
+
     if (!zone.doorExit) {
-        throw std::invalid_argument("Missing door_exit for mine level " + std::to_string(level));
+        throw std::invalid_argument("Missing " + name + ".door_exit");
     }
-    room.passages.exit = convertPosition(room.terrain, *zone.doorExit, "mine.door_exit");
-    // exit?
+
+    room.passages.exit = convertPosition(room.terrain, *zone.doorExit, name + ".door_exit");
     room.passages.entry = room.passages.exit;
+
     if (level < DUNGEON_ROOM_COUNT) {
         if (!zone.doorNextLevel) {
-            throw std::invalid_argument("Missing door_next_level for mine level " +
-                                        std::to_string(level));
+            throw std::invalid_argument("Missing " + name + ".door_next_level");
         }
-        room.passages.nextRoom = convertPosition(room.terrain, *zone.doorNextLevel,
-                                                 "mine.door_next_level");
+
+        const Position next = convertPosition(
+                room.terrain, *zone.doorNextLevel, name + ".door_next_level");
+
+        if (room.terrain.sameBaseCell(room.passages.exit, next)) {
+            throw std::invalid_argument("Overlapping mine passages in " + name);
+        }
+        if (!room.terrain.hasBasePath(room.passages.entry, next)) {
+            throw std::invalid_argument("Disconnected mine passages in " + name);
+        }
+
+        room.passages.nextRoom = next;
     } else if (zone.doorNextLevel) {
         throw std::invalid_argument("Last mine level cannot have a next-level door");
     }
+
     return room;
 }
 
