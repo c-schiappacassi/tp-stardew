@@ -11,17 +11,19 @@
 class MapConverter {
 public:
     GameSetup convert(const MapData& data, uint8_t worldId) const;
+    ConstMapData convertVisuals(const MapData& data) const;
 
 private:
-    static ZoneMap convertTerrain(const ZoneData& zone, const std::string& name);
+    static BackgroundData convertVisualZone(const EditorZoneData& zone, const std::string& name);
+    static ZoneMap convertTerrain(const EditorZoneData& zone, const std::string& name);
     static Position convertPosition(const ZoneMap& terrain, const TilePosition& tile,
                                     const std::string& field);
     static Position findSpawn(const ZoneMap& terrain);
-    static FarmLayout convertFarm(const ZoneData& zone);
+    static FarmLayout convertFarm(const EditorZoneData& zone);
     static InteriorId townInteriorId(int buildingId);
-    static TownBuildingConfig convertTownBuilding(const BuildingData& building);
-    static TownConfig convertTown(const ZoneData& zone, std::vector<InteriorLayout>& interiors);
-    static DungeonRoomLayout convertRoom(const ZoneData& zone, uint8_t level);
+    static TownBuildingConfig convertTownBuilding(const EditorBuildingData& building);
+    static TownConfig convertTown(const EditorZoneData& zone, std::vector<InteriorLayout>& interiors);
+    static DungeonRoomLayout convertRoom(const EditorZoneData& zone, uint8_t level);
 };
 
 #endif

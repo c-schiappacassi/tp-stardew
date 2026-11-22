@@ -71,7 +71,9 @@ std::unique_ptr<Game> GameManager::makeGame(
     const std::string& mapPath) const {
     MapLoader loader;
     MapConverter converter;
-    GameSetup setup = converter.convert(loader.load(resolveMapPath(mapPath)), worldId);
+    MapData mapData = loader.load(resolveMapPath(mapPath));
+    GameSetup setup = converter.convert(mapData, worldId);
+    ConstMapData visuals = converter.convertVisuals(mapData);
     auto game = std::make_unique<Game>(id, name, worldId, config, setup.farm.playerHouses);
     if (!game->loadDungeon(setup.worldId, setup.layout)) {
         throw std::invalid_argument("Could not load the game dungeon");
@@ -86,6 +88,7 @@ std::unique_ptr<Game> GameManager::makeGame(
     if (setup.entrance && !game->configureDungeonEntrance(*setup.entrance)) {
         throw std::invalid_argument("The dungeon entrance is invalid");
     }
+    game->setMapVisuals(std::move(visuals));
     return game;
 }
 

@@ -7,7 +7,7 @@
 #include "dungeon/dungeon_config.h"
 #include "entities/entity_dimensions.h"
 
-ZoneMap MapConverter::convertTerrain(const ZoneData& zone, const std::string& name) {
+ZoneMap MapConverter::convertTerrain(const EditorZoneData& zone, const std::string& name) {
     if (zone.width <= 0 || zone.height <= 0 ||
         static_cast<int64_t>(zone.width) * entity_dimensions::TILE_SIZE > UINT16_MAX ||
         static_cast<int64_t>(zone.height) * entity_dimensions::TILE_SIZE > UINT16_MAX) {
@@ -58,7 +58,7 @@ Position MapConverter::findSpawn(const ZoneMap& terrain) {
     return positions.front();
 }
 
-FarmLayout MapConverter::convertFarm(const ZoneData& zone) {
+FarmLayout MapConverter::convertFarm(const EditorZoneData& zone) {
     FarmLayout farm;
     farm.terrain = convertTerrain(zone, "farm");
 
@@ -75,7 +75,7 @@ FarmLayout MapConverter::convertFarm(const ZoneData& zone) {
     farm.interiors.reserve(zone.buildings.size());
 
     for (std::size_t index = 0; index < zone.buildings.size(); ++index) {
-        const BuildingData& building = zone.buildings[index];
+        const EditorBuildingData& building = zone.buildings[index];
         if (building.id < static_cast<int>(BuildingId::FarmHouse) ||
             building.id > static_cast<int>(BuildingId::BrickCabin)) {
             throw std::invalid_argument("Unsupported building in farm.buildings[" +
@@ -129,7 +129,7 @@ InteriorId MapConverter::townInteriorId(int buildingId) {
     }
 }
 
-TownBuildingConfig MapConverter::convertTownBuilding(const BuildingData& building) {
+TownBuildingConfig MapConverter::convertTownBuilding(const EditorBuildingData& building) {
     TownBuildingConfig config;
     switch (static_cast<BuildingId>(building.id)) {
         case BuildingId::MarniesShop: config.id = "marnies_shop"; config.width = 8; config.height = 7; break;
@@ -149,7 +149,7 @@ TownBuildingConfig MapConverter::convertTownBuilding(const BuildingData& buildin
     return config;
 }
 
-TownConfig MapConverter::convertTown(const ZoneData& zone,
+TownConfig MapConverter::convertTown(const EditorZoneData& zone,
                                       std::vector<InteriorLayout>& interiors) {
     if (zone.width <= 0 || zone.height <= 0 || zone.width > UINT16_MAX ||
         zone.height > UINT16_MAX) {
@@ -184,7 +184,7 @@ TownConfig MapConverter::convertTown(const ZoneData& zone,
     }
 
     std::vector<bool> usedInteriors(static_cast<std::size_t>(InteriorId::ComunityCenter) + 1, false);
-    for (const BuildingData& building : zone.buildings) {
+    for (const EditorBuildingData& building : zone.buildings) {
         const InteriorId interiorId = townInteriorId(building.id);
         const std::size_t key = static_cast<std::size_t>(interiorId);
         if (usedInteriors[key]) {
@@ -212,7 +212,7 @@ TownConfig MapConverter::convertTown(const ZoneData& zone,
     return town;
 }
 
-DungeonRoomLayout MapConverter::convertRoom(const ZoneData& zone, uint8_t level) {
+DungeonRoomLayout MapConverter::convertRoom(const EditorZoneData& zone, uint8_t level) {
     const std::string name = "mine_levels[" + std::to_string(level - 1) + "]";
 
     DungeonRoomLayout room;
@@ -271,4 +271,51 @@ GameSetup MapConverter::convert(const MapData& data, uint8_t worldId) const {
         setup.entrance->returnPosition = setup.farm.mineReturn.value_or(setup.farm.spawn);
     }
     return setup;
+}
+
+BackgroundData MapConverter::convertVisualZone(const EditorZoneData& zone,
+                                                const std::string& name) {
+    BackgroundData result;
+    const int tileSize = entity_dimensions::TILE_SIZE;
+    result.floor.reserve(zone.background.size());
+    result.decor.reserve(zone.decorations.size());
+    result.buildings.reserve(zone.buildings.size());
+
+    const auto position = [&](int x, int y) -> Position {
+        if (x < 0 || y < 0 || x >= zone.width || y >= zone.height) {
+            throw std::invalid_argument("Visual element outside " + name);
+        }
+        return {x * tileSize, y * tileSize};
+    };
+    for (const FloorTile& tile : zone.background) {
+        if (tile.textureId < 0 || tile.textureId > static_cast<int>(TileTextureId::DungeonInnerCornerTopLeft)) {
+            throw std::invalid_argument("Unknown floor texture in " + name);
+        }
+        result.floor.push_back({position(tile.x, tile.y), static_cast<TileTextureId>(tile.textureId)});
+    }
+    for (const MapElement& decor : zone.decorations) {
+        if (decor.id < 0 || decor.id > static_cast<int>(DecorId::BrownArmCouch)) {
+            throw std::invalid_argument("Unknown decoration in " + name);
+        }
+        result.decor.push_back({position(decor.x, decor.y), static_cast<DecorId>(decor.id)});
+    }
+    for (const EditorBuildingData& building : zone.buildings) {
+        if (building.id < 0 || building.id > static_cast<int>(BuildingId::ComunityCenter)) {
+            throw std::invalid_argument("Unknown building in " + name);
+        }
+        result.buildings.push_back({position(building.x, building.y), static_cast<BuildingId>(building.id)});
+    }
+    return result;
+}
+
+ConstMapData MapConverter::convertVisuals(const MapData& data) const {
+    ConstMapData visuals;
+    visuals.farm = convertVisualZone(data.farm, "farm");
+    visuals.town = convertVisualZone(data.town, "town");
+    visuals.levels.reserve(data.mineLevels.size());
+    for (std::size_t index = 0; index < data.mineLevels.size(); ++index) {
+        visuals.levels.push_back(convertVisualZone(
+            data.mineLevels[index], "mine_levels[" + std::to_string(index) + "]"));
+    }
+    return visuals;
 }

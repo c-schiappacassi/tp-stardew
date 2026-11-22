@@ -29,9 +29,9 @@ private:
     static std::vector<FloorTile> readBackground(const toml::table& table, const std::string& zone);
     static std::vector<MapElement> readElements(const toml::table& table, const char* key,
                                                 const std::string& zone);
-    static std::vector<BuildingData> readBuildings(const toml::table& table, const std::string& zone);
+    static std::vector<EditorBuildingData> readBuildings(const toml::table& table, const std::string& zone);
     static std::vector<TilePosition> readLockedTiles(const toml::table& table, const std::string& zone);
-    static ZoneData readZone(const toml::table& table, const std::string& name);
+    static EditorZoneData readZone(const toml::table& table, const std::string& name);
 };
 
-#endif  // SERVER_WORLD_LOADING_MAP_LOADER_H
+#endif

@@ -95,14 +95,14 @@ std::vector<MapElement> MapLoader::readElements(const toml::table& table, const 
     return result;
 }
 
-std::vector<BuildingData> MapLoader::readBuildings(const toml::table& table, const std::string& zone) {
+std::vector<EditorBuildingData> MapLoader::readBuildings(const toml::table& table, const std::string& zone) {
     const std::string field = zone + ".buildings";
     const toml::node* node = table.get("buildings");
     if (!node) {
         return {};
     }
     const toml::array& entries = requireArray(node, field);
-    std::vector<BuildingData> result;
+    std::vector<EditorBuildingData> result;
     result.reserve(entries.size());
     for (const toml::node& item: entries) {
         const toml::array& entry = requireArray(&item, field);
@@ -129,8 +129,8 @@ std::vector<TilePosition> MapLoader::readLockedTiles(const toml::table& table, c
     return result;
 }
 
-ZoneData MapLoader::readZone(const toml::table& table, const std::string& name) {
-    ZoneData zone{};
+EditorZoneData MapLoader::readZone(const toml::table& table, const std::string& name) {
+    EditorZoneData zone{};
     zone.width = requireInt(table.get("width"), name + ".width");
     zone.height = requireInt(table.get("height"), name + ".height");
     if (zone.width <= 0 || zone.height <= 0) {
@@ -166,4 +166,3 @@ MapData MapLoader::load(const std::filesystem::path& path) const {
     }
     return map;
 }
-

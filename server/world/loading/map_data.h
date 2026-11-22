@@ -23,18 +23,18 @@ struct MapElement {
     int id;
 };
 
-struct BuildingData {
+struct EditorBuildingData {
     int x;
     int y;
     int id;
     TilePosition door;
 };
 
-struct ZoneData {
+struct EditorZoneData {
     int width;
     int height;
     std::vector<FloorTile> background;
-    std::vector<BuildingData> buildings;
+    std::vector<EditorBuildingData> buildings;
     std::vector<MapElement> decorations;
     std::vector<MapElement> frame;
     std::vector<TilePosition> lockedTiles;
@@ -47,10 +47,10 @@ struct ZoneData {
 };
 
 struct MapData {
-    ZoneData farm;
-    ZoneData town;
-    std::vector<ZoneData> mineLevels;
+    EditorZoneData farm;
+    EditorZoneData town;
+    std::vector<EditorZoneData> mineLevels;
 };
 
 
-#endif  // SERVER_WORLD_LOADING_MAP_DATA_H
+#endif
