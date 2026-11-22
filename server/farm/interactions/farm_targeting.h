@@ -9,7 +9,9 @@
 #include "protocol_types.h"
 
 class Crop;
-class FarmManager;
+class FarmTerrain;
+class CropManager;
+class AnimalManager;
 class PlayerSnapshot;
 class ZoneMap;
 
@@ -29,6 +31,6 @@ private:
 public:
     bool hasClearPath(const Position& origin, const Position& target, const ZoneMap& map) const;
     std::optional<Position> findAdjacentPosition(const PlayerSnapshot& player, Direction direction, const ZoneMap& map, const CollisionBox& collision) const;
-    const Crop* findCropToWater(const PlayerSnapshot& player, const FarmManager& farm, Direction direction) const;
-    std::optional<FarmCollectionTarget> findCollectionTarget(const PlayerSnapshot& player, const FarmManager& farm, Direction direction) const;
+    const Crop* findCropToWater(const PlayerSnapshot& player, const FarmTerrain& terrain, const CropManager& crops, Direction direction) const;
+    std::optional<FarmCollectionTarget> findCollectionTarget(const PlayerSnapshot& player, const FarmTerrain& terrain,const CropManager& crops, const AnimalManager& animals, Direction direction) const;
 };

@@ -5,9 +5,9 @@
 #include "entities/entity_id.h"
 #include "world/zone_map.h"
 
-class FarmPlacement {
+class Placement {
 public:
-    virtual ~FarmPlacement();
+    virtual ~Placement();
     virtual std::optional<ZoneMap::Cell> cellAt(const Position& base) const = 0;
     virtual bool contains(EntityId id) const = 0;
     virtual bool isAvailable(const Position& base, EntityId movingId) const = 0;

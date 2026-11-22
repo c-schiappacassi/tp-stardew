@@ -5,7 +5,8 @@
 #include <utility>
 
 #include "animal_factory.h"
-#include "farm/spatial/farm_reservation.h"
+#include "entities/entity_id_generator.h"
+#include "entities/placement/placement_reservation.h"
 #include "items/ground_items.h"
 
 namespace {
@@ -39,7 +40,7 @@ std::size_t AnimalManager::countSpecies(AnimalSpecies species) const {
 }
 
 bool AnimalManager::add(EntityId id, const Position& position, AnimalType type,
-    FarmPlacement& placement) {
+    Placement& placement) {
     const auto species = animalSpeciesForType(type);
     if (!species) {
         return false;
@@ -57,7 +58,7 @@ bool AnimalManager::add(EntityId id, const Position& position, AnimalType type,
     if (!animal) {
         return false;
     }
-    FarmReservation reservation{placement, id, position, definition->collision};
+    PlacementReservation reservation{placement, id, position, definition->collision};
     if (!reservation.isReserved() || !animals.emplace(id, std::move(animal)).second) {
         return false;
     }
@@ -65,7 +66,7 @@ bool AnimalManager::add(EntityId id, const Position& position, AnimalType type,
     return true;
 }
 
-bool AnimalManager::move(EntityId id, const Position& position, FarmPlacement& placement) {
+bool AnimalManager::move(EntityId id, const Position& position, Placement& placement) {
     const auto it = animals.find(id);
     if (it == animals.end()) {
         return false;
@@ -73,7 +74,7 @@ bool AnimalManager::move(EntityId id, const Position& position, FarmPlacement& p
     return it->second->moveTo(position, placement);
 }
 
-bool AnimalManager::remove(EntityId id, FarmPlacement& placement) {
+bool AnimalManager::remove(EntityId id, Placement& placement) {
     const auto it = animals.find(id);
     if (it == animals.end() || !placement.release(id)) {
         return false;
@@ -115,7 +116,7 @@ bool AnimalManager::dropProduction(EntityId id, GroundItems& groundItems, Entity
     return true;
 }
 
-void AnimalManager::update(std::chrono::milliseconds elapsed, FarmPlacement& placement,GroundItems& groundItems, EntityIdGenerator& entityIds) {
+void AnimalManager::update(std::chrono::milliseconds elapsed, Placement& placement,GroundItems& groundItems, EntityIdGenerator& entityIds) {
     for (auto& [id, animal] : animals) {
         animal->updateProduction(elapsed);
         if (animal->dropsProductsAutomatically()) {
@@ -135,18 +136,82 @@ const Animal* AnimalManager::find(EntityId id) const {
     }
 }
 
-std::vector<const Animal*> AnimalManager::getAnimals() const {
-    std::vector<const Animal*> result;
-    result.reserve(animals.size());
-
-    for (const auto& [id, animal] : animals) {
-        result.push_back(animal.get());
-    }
-
-    return result;
-}
+const std::map<EntityId, std::unique_ptr<Animal>>& AnimalManager::getAnimals() const { return animals; }
 
 Animal* AnimalManager::findMutable(EntityId id) {
     const auto it = animals.find(id);
     return it == animals.end() ? nullptr : it->second.get();
+}
+
+std::size_t AnimalManager::care(Placement& placement, GroundItems& groundItems, EntityIdGenerator& entityIds) {
+    for (auto& [id, animal]: animals)
+        animal->restoreProgress(std::chrono::milliseconds{0}, std::max<uint32_t>(1, animal->getAvailableProducts()));
+    update(std::chrono::milliseconds{0}, placement, groundItems, entityIds);
+    return animals.size();
+}
+
+bool AnimalManager::buy(AnimalSpecies species, uint16_t quantity, std::optional<AnimalType> variant,
+    Placement& placement, const ZoneMap& map, EntityIdGenerator& ids, std::mt19937& variants) {
+    if (quantity == 0)
+        return false;
+    const auto types = animalTypesForSpecies(species);
+    if (types.empty() || (variant && animalSpeciesForType(*variant) != species))
+        return false;
+    const auto* definition = findDefinition(species);
+    if (!definition)
+        return false;
+    const auto count = countSpecies(species);
+    if (count > definition->maxCount || quantity > definition->maxCount - count)
+        return false;
+    std::vector<EntityId> added;
+    added.reserve(quantity);
+    auto preparedIds = ids;
+    auto preparedRandom = variants;
+    std::uniform_int_distribution<std::size_t> chooseType(0, types.size() - 1);
+    const auto nextType = [&] { return variant ? *variant : types[chooseType(preparedRandom)]; };
+    const auto rollback = [&] {
+        for (const auto id: added) remove(id, placement);
+    };
+    AnimalType type = nextType();
+    try {
+        for (const auto& position: map.walkableBasePositions()) {
+            const auto id = preparedIds.getNextId();
+            if (!add(id, position, type, placement))
+                continue;
+            added.push_back(id);
+            preparedIds.generate();
+            if (added.size() == quantity) {
+                ids = preparedIds;
+                variants = preparedRandom;
+                return true;
+            }
+            type = nextType();
+        }
+    } catch (...) {
+        rollback();
+        throw;
+    }
+    rollback();
+    return false;
+}
+
+bool AnimalManager::sell(AnimalSpecies species, uint16_t quantity, Placement& placement) {
+    if (quantity == 0)
+        return false;
+    std::vector<EntityId> selected;
+    for (const auto& [id, animal]: animals) {
+        if (animal->getSpecies() == species)
+            selected.push_back(animal->getId());
+        if (selected.size() == quantity)
+            break;
+    }
+    if (selected.size() != quantity)
+        return false;
+    for (const auto id: selected) remove(id, placement);
+    return true;
+}
+
+std::optional<AnimalData> AnimalManager::dataFor(EntityId id) const {
+    const auto* entity = find(id);
+    return entity ? std::optional<AnimalData>{entity->getPublicData()} : std::nullopt;
 }

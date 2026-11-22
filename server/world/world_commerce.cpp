@@ -35,63 +35,7 @@ std::optional<NpcData> WorldManager::nearbyMerchant(const PlayerSnapshot& player
 }
 
 bool WorldManager::buyAnimals(AnimalSpecies species, uint16_t quantity, std::optional<AnimalType> variant) {
-    if (!farm.isInitialized() || quantity == 0)
-        return false;
-    const auto types = animalTypesForSpecies(species);
-    if (types.empty() || (variant && animalSpeciesForType(*variant) != species))
-        return false;
-    const auto& definitions = farm.getConfig().animals;
-    const auto definition = std::find_if(definitions.begin(), definitions.end(), [&](const auto& entry) { return entry.species == species; });
-    if (definition == definitions.end())
-        return false;
-    const auto animals = farm.getAnimals();
-    const auto count = static_cast<std::size_t>(std::count_if(animals.begin(), animals.end(), [&](const auto* animal) { return animal->getSpecies() == species; }));
-    if (count > definition->maxCount || quantity > definition->maxCount - count)
-        return false;
-    std::vector<EntityId> added;
-    added.reserve(quantity);
-    auto preparedIds = entityIds;
-    auto preparedRandom = animalRandom;
-    std::uniform_int_distribution<std::size_t> chooseType(0, types.size() - 1);
-    const auto nextType = [&] { return variant ? *variant : types[chooseType(preparedRandom)]; };
-    const auto rollback = [&] {
-        for (const auto id: added) farm.removeAnimal(id);
-    };
-    AnimalType type = nextType();
-    try {
-        for (const auto& position: farm.getMap().walkableBasePositions()) {
-            const auto id = preparedIds.getNextId();
-            if (!farm.addAnimal(id, position, type))
-                continue;
-            added.push_back(id);
-            preparedIds.generate();
-            if (added.size() == quantity) {
-                entityIds = preparedIds;
-                animalRandom = preparedRandom;
-                return true;
-            }
-            type = nextType();
-        }
-    } catch (...) {
-        rollback();
-        throw;
-    }
-    rollback();
-    return false;
+    return farm.buyAnimals(species, quantity, variant, entityIds, animalRandom);
 }
 
-bool WorldManager::sellAnimals(AnimalSpecies species, uint16_t quantity) {
-    if (!farm.isInitialized() || quantity == 0)
-        return false;
-    std::vector<EntityId> selected;
-    for (const auto* animal: farm.getAnimals()) {
-        if (animal->getSpecies() == species)
-            selected.push_back(animal->getId());
-        if (selected.size() == quantity)
-            break;
-    }
-    if (selected.size() != quantity)
-        return false;
-    for (const auto id: selected) farm.removeAnimal(id);
-    return true;
-}
+bool WorldManager::sellAnimals(AnimalSpecies species, uint16_t quantity) { return farm.sellAnimals(species, quantity); }

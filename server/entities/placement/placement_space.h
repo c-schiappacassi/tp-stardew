@@ -2,9 +2,9 @@
 
 #include <map>
 #include <vector>
-#include "farm/ports/farm_placement.h"
+#include "entities/placement/placement.h"
 
-class FarmSpace final : public FarmPlacement {
+class PlacementSpace final : public Placement {
 private:
     struct Occupant {
         Position base;
@@ -27,8 +27,7 @@ public:
     std::optional<ZoneMap::Cell> cellAt(const Position& base) const override;
     bool isAvailable(const Position& base, EntityId movingId) const override;
     bool isAvailable(const CollisionBounds& bounds, EntityId ignoredId = 0) const override;
-    bool reserve(EntityId id, const Position& base, const CollisionBox& collision,
-        bool blocksMovement = true) override;
+    bool reserve(EntityId id, const Position& base, const CollisionBox& collision,bool blocksMovement = true) override;
     bool move(EntityId id, const Position& base) override;
     bool release(EntityId id) override;
     void clearOccupants();

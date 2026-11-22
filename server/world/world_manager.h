@@ -43,7 +43,7 @@ public:
     std::optional<WorldLocation> recoveryFor(const PlayerSnapshot& player, uint16_t playerId) const override;
     const FarmManager& getFarm() const;
     void restoreFarm(const PersistenceDTO& saved);
-    void saveChestStorage(PersistenceDTO& saved) const;
+    void saveFarmAndStorage(PersistenceDTO& saved) const;
     std::optional<NpcData> nearbyMerchant(const PlayerSnapshot& player, Direction direction = Direction::None) const;
     bool buyAnimals(AnimalSpecies species, uint16_t quantity, std::optional<AnimalType> variant = std::nullopt);
     bool sellAnimals(AnimalSpecies species, uint16_t quantity);

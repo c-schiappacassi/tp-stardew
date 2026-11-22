@@ -1,3 +1,5 @@
+#include <utility>
+
 #include "player/player_manager.h"
 
 #include "world_manager.h"
@@ -34,8 +36,17 @@ void WorldManager::withdrawFromChest(PlayerManager& players, uint16_t playerId, 
     }
 }
 
-void WorldManager::saveChestStorage(PersistenceDTO& saved) const {
-    for (const auto& [id, chest]: farm.getChests()) saved.chestInventories.emplace(id, chest.getInventory().getItems());
+void WorldManager::saveFarmAndStorage(PersistenceDTO& saved) const {
+    auto farmData = farm.getPersistenceData();
+    saved.farm = std::move(farmData.farm);
+    saved.cropGrowthProgress = std::move(farmData.cropGrowthProgress);
+    saved.cropWaterRemainingTime = std::move(farmData.cropWaterRemainingTime);
+    saved.harvestedCrops = std::move(farmData.harvestedCrops);
+    saved.regrowingCrops = std::move(farmData.regrowingCrops);
+    saved.animalProductionProgress = std::move(farmData.animalProductionProgress);
+    saved.animalAvailableProducts = std::move(farmData.animalAvailableProducts);
+    saved.emptySoilElapsed = std::move(farmData.emptySoilElapsed);
+    saved.chestInventories = std::move(farmData.chestInventories);
     saved.interiors = interiors.storageData();
     saved.dungeonFurniture = dungeon.storageFurniture();
     saved.dungeonStorageLoot = dungeon.storageLoot();

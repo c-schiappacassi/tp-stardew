@@ -4,13 +4,13 @@
 
 #include "chests/chest_manager.h"
 #include "chests/loading/chest_spawn.h"
-#include "farm/spatial/farm_space.h"
+#include "entities/placement/placement_space.h"
 #include "items/ground_items.h"
 
 class ChestRoom {
 private:
     ChestManager chests;
-    FarmSpace space;
+    PlacementSpace space;
     std::vector<CollisionBounds> fixedObstacles;
     GroundItems groundItems;
 

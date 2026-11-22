@@ -18,7 +18,7 @@
 #include "entities/collision_box.h"
 #include "entities/entity_dimensions.h"
 #include "farm/animals/animal_species.h"
-#include "farm/decorations/decoration.h"
+#include "farm/decorations/decoration_items.h"
 #include "inventory/inventory.h"
 #include "town/town_map.h"
 
@@ -403,7 +403,7 @@ void validateInitialPlacements(const FarmLayout& layout,
 
     const CollisionBox decorationBox{entity_dimensions::DECORATION};
     for (const auto& spawn : layout.decorations) {
-        if (!validBase(spawn.base) || !Decoration::isDecoration(spawn.item)) {
+        if (!validBase(spawn.base) || !decoration_items::isDecoration(spawn.item)) {
             invalid("farm.furniture", "unsupported furniture or position");
         }
 
@@ -651,7 +651,7 @@ FarmLayout readFarmLayout(const toml::table& root,
                 entry, "item_id", std::numeric_limits<uint16_t>::max(),
                 field + ".item_id"));
 
-            if (!Decoration::isDecoration(item)) {
+            if (!decoration_items::isDecoration(item)) {
                 invalid(field + ".item_id", "unsupported furniture");
             }
 

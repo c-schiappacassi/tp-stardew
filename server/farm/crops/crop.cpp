@@ -9,7 +9,8 @@ Crop::Crop(EntityId id, const Position& position, const CropDefinition& definiti
     id(id), position(position), definition(definition),
     quality(dayLength, definition.wateringInterval), growthDuration(definition.growthTime),
     remainingDryTolerance(0) {
-    const bool invalidTolerance = definition.toleratedMissedWaterings != 0 &&definition.wateringInterval.count() >std::numeric_limits<int64_t>::max() / definition.toleratedMissedWaterings;
+    const bool invalidTolerance = definition.toleratedMissedWaterings != 0 &&
+        definition.wateringInterval.count() > std::numeric_limits<int64_t>::max() / definition.toleratedMissedWaterings;
     if (id == 0 || position.getX() < 0 || position.getY() <= 0 ||
         definition.growthTime.count() <= 0 || definition.regrowthTime.count() < 0 ||invalidTolerance) {
         throw std::invalid_argument("Invalid crop identifier, position or times");
@@ -50,17 +51,10 @@ CropData Crop::getPublicData() const {
 }
 
 ItemId Crop::getProduct() const {
-    switch (definition.type) {
-        case CropType::Strawberry:
-            return ItemId::Strawberry;
-        case CropType::Scallion:
-            return ItemId::Scallion;
-        case CropType::Potato:
-            return ItemId::Potato;
-        case CropType::Pumpkin:
-            return ItemId::Pumpkin;
-    }
-    throw std::invalid_argument("Unknown crop type");
+    const auto item = farm_products::cropItem(definition.type);
+    if (!item)
+        throw std::invalid_argument("Unknown crop type");
+    return *item;
 }
 
 void Crop::update(std::chrono::milliseconds elapsed) {

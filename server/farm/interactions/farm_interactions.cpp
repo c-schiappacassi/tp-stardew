@@ -1,9 +1,13 @@
 #include "farm_interactions.h"
 
-#include "chests/interactions/chest_interactions.h"
+#include "chests/chest_manager.h"
 #include "entities/entity_id_generator.h"
+#include "farm/animals/animal_manager.h"
+#include "farm/crops/crop_manager.h"
+#include "farm/decorations/decoration_manager.h"
 #include "farm/farm_constants.h"
-#include "farm/farm_manager.h"
+#include "farm/spatial/farm_terrain.h"
+#include "items/ground_items.h"
 #include "player/player_manager.h"
 
 namespace {
@@ -23,61 +27,72 @@ std::optional<CropType> cropTypeForSeed(ItemId item) {
 }
 }  // namespace
 
-bool FarmInteractions::useShovel(const PlayerManager& players, uint16_t playerId, FarmManager& farm, Direction direction, EntityIdGenerator& entityIds) const {
+FarmInteractions::FarmInteractions(FarmTerrain& terrain, CropManager& crops, AnimalManager& animals, DecorationManager& decorations,
+    ChestManager& chests, GroundItems& groundItems):
+    terrain(terrain), crops(crops), animals(animals), decorations(decorations), chests(chests), groundItems(groundItems) {}
+
+bool FarmInteractions::collectNearbyItems(PlayerManager& players, uint16_t playerId) const {
     const auto player = players.snapshot(playerId);
-    const auto position = targeting.findAdjacentPosition(player, direction, farm.getMap(), CollisionBox{entity_dimensions::CROP});
+    if (!terrain.isInitialized() || player.getZone() != Zone::Farm)
+        return false;
+    return groundItems.collect(players, playerId, [&](const Position& position) { return targeting.hasClearPath(player.getPosition(), position, terrain.getMap()); });
+}
+
+bool FarmInteractions::useShovel(const PlayerManager& players, uint16_t playerId, Direction direction, EntityIdGenerator& entityIds) const {
+    const auto player = players.snapshot(playerId);
+    const auto position = targeting.findAdjacentPosition(player, direction, terrain.getMap(), CollisionBox{entity_dimensions::CROP});
     if (!position) {
         return false;
     }
-    for (const auto& [id, decoration]: farm.getDecorations()) {
-        if (farm.getMap().sameBaseCell(decoration.getPosition(), *position)) {
-            if (!farm.getGroundItems().drop(decoration.getPosition(), decoration.getItem(), 1, Quality::None, entityIds)) {
+    for (const auto& [id, decoration]: decorations.getDecorations()) {
+        if (terrain.getMap().sameBaseCell(decoration.getPosition(), *position)) {
+            if (!groundItems.drop(decoration.getPosition(), decoration.getItem(), 1, Quality::None, entityIds)) {
                 return false;
             }
-            farm.removeDecoration(id);
+            decorations.remove(id, terrain.getSpace());
             return true;
         }
     }
-    return farm.tillSoil(*position);
+    return crops.tillSoil(*position, terrain);
 }
 
-bool FarmInteractions::waterCrop(const PlayerManager& players, uint16_t playerId, FarmManager& farm, Direction direction) const {
+bool FarmInteractions::waterCrop(const PlayerManager& players, uint16_t playerId, Direction direction) const {
     const auto player = players.snapshot(playerId);
-    const auto* crop = targeting.findCropToWater(player, farm, direction);
-    return crop && farm.waterCrop(crop->getId());
+    const auto* crop = targeting.findCropToWater(player, terrain, crops, direction);
+    return crop && crops.water(crop->getId());
 }
 
-bool FarmInteractions::collectProduct(const PlayerManager& players, uint16_t playerId, FarmManager& farm, Direction direction, EntityIdGenerator& entityIds) const {
+bool FarmInteractions::collectProduct(const PlayerManager& players, uint16_t playerId, Direction direction, EntityIdGenerator& entityIds) const {
     const auto player = players.snapshot(playerId);
-    const auto target = targeting.findCollectionTarget(player, farm, direction);
+    const auto target = targeting.findCollectionTarget(player, terrain, crops, animals, direction);
     if (!target) {
         return false;
     }
     if (target->source == FarmProductSource::Animal) {
-        return farm.dropAnimalProduct(target->id, entityIds);
+        return animals.dropProduction(target->id, groundItems, entityIds);
     }
     const auto& product = target->product;
-    if (!farm.getGroundItems().drop(target->position, product.item, product.quantity, product.quality, entityIds)) {
+    if (!groundItems.drop(target->position, product.item, product.quantity, product.quality, entityIds)) {
         return false;
     }
-    farm.harvestCrop(target->id);
+    crops.harvest(target->id, terrain.getSpace());
     return true;
 }
 
-bool FarmInteractions::placeSelectedItem(PlayerManager& players, uint16_t playerId, FarmManager& farm, EntityIdGenerator& entityIds, Direction direction, ItemId item) const {
+bool FarmInteractions::placeSelectedItem(PlayerManager& players, uint16_t playerId, EntityIdGenerator& entityIds, Direction direction, ItemId item) const {
     const auto player = players.snapshot(playerId);
     const auto cropType = cropTypeForSeed(item);
     const auto size = cropType ? entity_dimensions::CROP : entity_dimensions::DECORATION;
-    const auto position = targeting.findAdjacentPosition(player, direction, farm.getMap(), CollisionBox{size});
+    const auto position = targeting.findAdjacentPosition(player, direction, terrain.getMap(), CollisionBox{size});
     if (!position || entityIds.getNextId() == 0) {
         return false;
     }
     const auto id = entityIds.getNextId();
     bool placed = false;
     if (cropType)
-        placed = farm.plant(id, *position, *cropType);
+        placed = crops.plant(id, *position, *cropType, terrain.getSpace());
     else
-        placed = farm.placeDecoration(id, *position, item, direction);
+        placed = decorations.place(id, *position, item, terrain.getSpace(), direction);
     if (!placed) {
         return false;
     }
@@ -85,34 +100,34 @@ bool FarmInteractions::placeSelectedItem(PlayerManager& players, uint16_t player
     return players.apply(playerId, player_action::RemoveItem{player.getSelectedSlot(), 1}).applied;
 }
 
-bool FarmInteractions::applySelectedItem(PlayerManager& players, uint16_t playerId, FarmManager& farm, EntityIdGenerator& entityIds, Direction direction) const {
+bool FarmInteractions::applySelectedItem(PlayerManager& players, uint16_t playerId, EntityIdGenerator& entityIds, Direction direction) const {
     const auto player = players.snapshot(playerId);
     const auto* selectedItem = player.getSelectedItem();
     if (!selectedItem) {
-        return collectProduct(players, playerId, farm, direction, entityIds);
+        return collectProduct(players, playerId, direction, entityIds);
     }
     const auto item = selectedItem->item_id;
     switch (item) {
         case ItemId::WateringCan:
-            return waterCrop(players, playerId, farm, direction);
+            return waterCrop(players, playerId, direction);
         case ItemId::Shovel:
-            return useShovel(players, playerId, farm, direction, entityIds);
+            return useShovel(players, playerId, direction, entityIds);
         default:
             if (cropTypeForSeed(item) || Decoration::isDecoration(item)) {
-                return placeSelectedItem(players, playerId, farm, entityIds, direction, item);
+                return placeSelectedItem(players, playerId, entityIds, direction, item);
             }
-            return collectProduct(players, playerId, farm, direction, entityIds);
+            return collectProduct(players, playerId, direction, entityIds);
     }
 }
 
 bool FarmInteractions::interact(
-    PlayerManager& players, uint16_t playerId, FarmManager& farm, EntityIdGenerator& entityIds, Direction direction, std::chrono::steady_clock::time_point now) const {
+    PlayerManager& players, uint16_t playerId, EntityIdGenerator& entityIds, Direction direction, std::chrono::steady_clock::time_point now) const {
     const auto player = players.snapshot(playerId);
     if (player.getZone() != Zone::Farm || !player.canAct()) {
         return false;
     }
     const auto* selectedItem = player.getSelectedItem();
-    if (const auto handled = farm.interactWithChest(players, playerId, direction, entityIds, now))
+    if (const auto handled = chests.interact(players, playerId, terrain.getSpace(), terrain.getMap(), groundItems, direction, entityIds, now))
         return *handled;
     players.apply(playerId, player_action::CloseChest{});
     if (!player.canPerformAction(now))
@@ -121,7 +136,7 @@ bool FarmInteractions::interact(
     if (usesTool && !player.canUseTool(now)) {
         return false;
     }
-    if (!applySelectedItem(players, playerId, farm, entityIds, direction)) {
+    if (!applySelectedItem(players, playerId, entityIds, direction)) {
         return false;
     }
     players.apply(playerId, player_action::FaceDirection{direction});

@@ -2,7 +2,6 @@
 
 #include <utility>
 
-#include "chests/interactions/chest_interactions.h"
 #include "player/player_manager.h"
 
 WorldManager::WorldManager(const DungeonConfig& config, uint32_t seed, const FarmConfig& farmConfig):
@@ -12,13 +11,7 @@ WorldManager::WorldManager(const DungeonConfig& config, uint32_t seed, const Far
 ConstMapData WorldManager::buildConstMap() const {
     ConstMapData map;
 
-    for (const auto& t: farm.getBackground()) {
-        const Position px(t.tile.getX() * 16, t.tile.getY() * 16);
-        if (t.textureId > static_cast<uint16_t>(TileTextureId::Dirt)) {
-            throw std::runtime_error("unknown farm texture_id");
-        }
-        map.farm.floor.push_back({px, static_cast<TileTextureId>(t.textureId)});
-    }
+    map.farm.floor = farm.backgroundData();
 
     // TODO: decor / buildings de la granja (hoy FarmLayout no los tiene)
     if (const auto entrance = travel.getDungeonEntrance(Zone::Farm)) {
@@ -168,8 +161,8 @@ const CombatProgressData& WorldManager::getCombatProgress() const { return dunge
 void WorldManager::afterStatusPublished() { dungeon.removeBrokenMinerals(); }
 
 void WorldManager::restoreFarm(const PersistenceDTO& saved) {
-    farm.restoreData(saved.farm, saved.cropGrowthProgress, saved.cropWaterRemainingTime, saved.harvestedCrops, saved.animalProductionProgress, saved.animalAvailableProducts,
-        saved.regrowingCrops, saved.emptySoilElapsed, saved.chestInventories);
+    farm.restoreData(FarmRestoreData{saved.farm, saved.cropGrowthProgress, saved.cropWaterRemainingTime, saved.harvestedCrops, saved.regrowingCrops,
+        saved.animalProductionProgress, saved.animalAvailableProducts, saved.emptySoilElapsed, saved.chestInventories});
     uint32_t maximum = 0;
     for (const auto& item: saved.farm.crops) maximum = std::max(maximum, item.id);
     for (const auto& item: saved.farm.animals) maximum = std::max(maximum, item.id);

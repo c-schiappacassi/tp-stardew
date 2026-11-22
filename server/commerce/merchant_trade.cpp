@@ -26,19 +26,16 @@ std::string MerchantChat::buy(PlayerManager& players, uint16_t playerId, NpcId m
     const auto player = players.snapshot(playerId);
     if (merchant == NpcId::Marnie) {
         const auto species = shop_products::animal(command.product);
-        for (const auto& definition: world.getFarm().getConfig().animals) {
-            if (!species || definition.species != *species)
-                continue;
-            const uint64_t total = prices.buyingPrice(definition.basePrice) * command.quantity;
-            if (total > player.getGold())
-                return "You do not have enough gold.";
-            if (!world.buyAnimals(*species, command.quantity)) {
-                return "There is no room on the farm or the animal limit would be exceeded.";
-            }
-            players.apply(playerId, player_action::SpendGold{static_cast<uint32_t>(total)});
-            return success(command, static_cast<uint32_t>(total));
-        }
-        return "I do not sell that animal.";
+        const auto basePrice = species ? world.getFarm().animalBasePrice(*species) : std::nullopt;
+        if (!basePrice)
+            return "I do not sell that animal.";
+        const uint64_t total = prices.buyingPrice(*basePrice) * command.quantity;
+        if (total > player.getGold())
+            return "You do not have enough gold.";
+        if (!world.buyAnimals(*species, command.quantity))
+            return "There is no room on the farm or the animal limit would be exceeded.";
+        players.apply(playerId, player_action::SpendGold{static_cast<uint32_t>(total)});
+        return success(command, static_cast<uint32_t>(total));
     }
     const auto item = shop_products::item(command.product);
     std::optional<uint32_t> unitPrice;
@@ -67,35 +64,23 @@ std::string MerchantChat::sell(PlayerManager& players, uint16_t playerId, NpcId 
     const uint64_t goldSpace = std::numeric_limits<uint32_t>::max() - player.getGold();
     if (merchant == NpcId::Marnie) {
         const auto species = shop_products::animal(command.product);
-        for (const auto& definition: world.getFarm().getConfig().animals) {
-            if (!species || definition.species != *species)
-                continue;
-            const uint64_t total = prices.sellingPrice(definition.basePrice) * command.quantity;
-            if (total > goldSpace)
-                return "The sale would exceed the gold limit.";
-            if (!world.sellAnimals(*species, command.quantity))
-                return "There are not enough animals on the farm.";
-            players.apply(playerId, player_action::AddGold{static_cast<uint32_t>(total)});
-            return success(command, static_cast<uint32_t>(total));
-        }
-        return "I do not buy that animal.";
+        const auto basePrice = species ? world.getFarm().animalBasePrice(*species) : std::nullopt;
+        if (!basePrice)
+            return "I do not buy that animal.";
+        const uint64_t total = prices.sellingPrice(*basePrice) * command.quantity;
+        if (total > goldSpace)
+            return "The sale would exceed the gold limit.";
+        if (!world.sellAnimals(*species, command.quantity))
+            return "There are not enough animals on the farm.";
+        players.apply(playerId, player_action::AddGold{static_cast<uint32_t>(total)});
+        return success(command, static_cast<uint32_t>(total));
     }
     const auto item = shop_products::item(command.product);
     std::optional<uint32_t> basePrice;
     if (item && merchant == NpcId::Clint)
         basePrice = priceOf(config.minerals, *item);
-    if (item && merchant == NpcId::Pierre) {
-        for (const auto& definition: world.getFarm().getConfig().crops) {
-            if (shop_products::cropItem(definition.type) == item) {
-                basePrice = definition.basePrice;
-            }
-        }
-        for (const auto& definition: world.getFarm().getConfig().animals) {
-            const auto product = definition.species == AnimalSpecies::Cow ? ItemId::Milk : ItemId::Egg;
-            if (*item == product)
-                basePrice = definition.productPrice;
-        }
-    }
+    if (item && merchant == NpcId::Pierre)
+        basePrice = world.getFarm().productBasePrice(*item);
     if (!basePrice)
         return "I do not buy that product.";
     std::vector<std::pair<uint8_t, uint16_t>> quantities;

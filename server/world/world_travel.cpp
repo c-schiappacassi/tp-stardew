@@ -77,29 +77,30 @@ bool WorldTravel::use(PlayerManager& players, uint16_t playerId, DungeonManager&
     const auto player = players.snapshot(playerId);
     if (!player.canAct())
         return false;
-    const auto terrainFor = [&](const WorldLocation& location) -> const ZoneMap* {
+    const auto sameBaseCell = [&](const WorldLocation& location) {
         if (location.zone == Zone::Farm)
-            return &farm.getMap();
+            return farm.sameBaseCell(player.getPosition(), location.position);
         if (location.zone == Zone::Town)
-            return &town.getMap();
+            return town.getMap().sameBaseCell(player.getPosition(), location.position);
         if (location.zone == Zone::InsideHouse && location.interior) {
             const auto* room = interiors.find(*location.interior);
-            return room ? &room->terrain : nullptr;
+            return room && room->terrain.sameBaseCell(player.getPosition(), location.position);
         }
-        return nullptr;
+        return false;
+    };
+    const auto hasTerrain = [&](const WorldLocation& location) {
+        return location.zone == Zone::Farm || location.zone == Zone::Town ||
+            (location.zone == Zone::InsideHouse && location.interior && interiors.find(*location.interior));
     };
     for (const auto& portal: portals) {
         const auto& source = portal.source;
-        const auto* terrain = terrainFor(source);
-        if (source.zone != player.getZone() || source.level != player.getDungeonLevel() || source.interior != player.getInterior() || !terrain ||
-            !terrain->sameBaseCell(player.getPosition(), source.position))
+        if (source.zone != player.getZone() || source.level != player.getDungeonLevel() || source.interior != player.getInterior() || !sameBaseCell(source))
             continue;
         const auto& target = portal.destination;
-        const auto* destination = terrainFor(target);
         const auto bounds = player.getCollisionBounds(target.position);
-        const bool canWalk = target.zone == Zone::InsideHouse && target.interior ? interiors.canWalk(*target.interior, bounds) :
-                                                                                   canArrive(player, {target.zone, target.position}, farm, town);
-        return destination && canWalk && players.apply(playerId, player_action::ChangeLocation{target.zone, target.level, target.position, target.interior}).applied;
+        const bool canWalk = target.zone == Zone::InsideHouse && target.interior ?
+            interiors.canWalk(*target.interior, bounds) : canArrive(player, {target.zone, target.position}, farm, town);
+        return hasTerrain(target) && canWalk && players.apply(playerId, player_action::ChangeLocation{target.zone, target.level, target.position, target.interior}).applied;
     }
     const auto townFarmDoor = town.connectionTo(Zone::Farm);
     const auto townMineDoor = town.connectionTo(Zone::Dungeon);
@@ -115,7 +116,7 @@ bool WorldTravel::use(PlayerManager& players, uint16_t playerId, DungeonManager&
         mineReturns.erase(playerId);
         return true;
     }
-    if (player.getZone() == Zone::Farm && farmTown && townFarmDoor && farm.getMap().sameBaseCell(player.getPosition(), farmTown->door)) {
+    if (player.getZone() == Zone::Farm && farmTown && townFarmDoor && farm.sameBaseCell(player.getPosition(), farmTown->door)) {
         const ReturnPoint target{Zone::Town, *townFarmDoor};
         return canArrive(player, target, farm, town) && players.apply(playerId, player_action::ChangeLocation{target.zone, 0, target.position}).applied;
     }
@@ -129,8 +130,9 @@ bool WorldTravel::use(PlayerManager& players, uint16_t playerId, DungeonManager&
         }
     }
     if (entrance && player.getZone() == entrance->zone) {
-        const auto& terrain = entrance->zone == Zone::Farm ? farm.getMap() : town.getMap();
-        if (terrain.sameBaseCell(player.getPosition(), entrance->position)) {
+        const bool atEntrance = entrance->zone == Zone::Farm ? farm.sameBaseCell(player.getPosition(), entrance->position) :
+            town.getMap().sameBaseCell(player.getPosition(), entrance->position);
+        if (atEntrance) {
             return enterMine(players, playerId, {entrance->zone, entrance->returnPosition}, dungeon);
         }
     }

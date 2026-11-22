@@ -18,7 +18,7 @@ Direction AnimalMovement::getDirection() const { return direction; }
 bool AnimalMovement::isWalking() const { return walking; }
 
 std::optional<Position> AnimalMovement::findDestination(EntityId id,
-    const FarmPlacement& placement) const {
+    const Placement& placement) const {
     int dx = 0;
     int dy = 0;
 
@@ -65,7 +65,7 @@ std::optional<Position> AnimalMovement::findDestination(EntityId id,
     return Position{static_cast<int>(x), static_cast<int>(y)};
 }
 
-bool AnimalMovement::moveTo(EntityId id, const Position& next, FarmPlacement& placement) {
+bool AnimalMovement::moveTo(EntityId id, const Position& next, Placement& placement) {
     if (!placement.move(id, next)) {
         return false;
     }
@@ -78,7 +78,7 @@ bool AnimalMovement::moveTo(EntityId id, const Position& next, FarmPlacement& pl
     return true;
 }
 
-void AnimalMovement::tick(EntityId id, FarmPlacement& placement, std::mt19937& random) {
+void AnimalMovement::tick(EntityId id, Placement& placement, std::mt19937& random) {
     walking = false;
 
     if (!placement.hasMap()) {

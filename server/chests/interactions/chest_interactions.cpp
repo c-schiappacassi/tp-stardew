@@ -50,7 +50,7 @@ std::optional<ChestSnapshot> ChestInteractions::findTarget(const PlayerSnapshot&
     return closest ? std::optional<ChestSnapshot>{closest->snapshot()} : std::nullopt;
 }
 
-std::optional<bool> ChestInteractions::interact(PlayerManager& players, uint16_t playerId, ChestManager& chests, FarmPlacement& placement, const ZoneMap& terrain,
+std::optional<bool> ChestInteractions::interact(PlayerManager& players, uint16_t playerId, ChestManager& chests, Placement& placement, const ZoneMap& terrain,
     GroundItems& groundItems, Direction direction, EntityIdGenerator& ids, std::chrono::steady_clock::time_point now) const {
     const auto player = players.snapshot(playerId);
     if (!supportsChests(player) || !player.canAct())

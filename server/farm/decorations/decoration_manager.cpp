@@ -1,12 +1,12 @@
 #include "decoration_manager.h"
-#include "farm/spatial/farm_reservation.h"
+#include "entities/placement/placement_reservation.h"
 
 const std::map<EntityId, Decoration>& DecorationManager::getDecorations() const {
     return decorations;
 }
 
 bool DecorationManager::place(EntityId id, const Position& position, ItemId item,
-    FarmPlacement& placement, Direction direction) {
+    Placement& placement, Direction direction) {
     if (!Decoration::isDecoration(item) || id == 0 || placement.contains(id) ||
         direction < Direction::Up || direction > Direction::Right ||
         !placement.isAvailable(CollisionBox{entity_dimensions::DECORATION}.at(position))) {
@@ -14,7 +14,7 @@ bool DecorationManager::place(EntityId id, const Position& position, ItemId item
     }
     const Decoration decoration{id, position, item, direction};
     const CollisionBox collision{entity_dimensions::DECORATION};
-    FarmReservation reservation{placement, id, position, collision, decoration.blocksMovement()};
+    PlacementReservation reservation{placement, id, position, collision, decoration.blocksMovement()};
     if (!reservation.isReserved() || !decorations.emplace(id, decoration).second) {
         return false;
     }
@@ -22,7 +22,7 @@ bool DecorationManager::place(EntityId id, const Position& position, ItemId item
     return true;
 }
 
-std::optional<ItemId> DecorationManager::remove(EntityId id, FarmPlacement& placement) {
+std::optional<ItemId> DecorationManager::remove(EntityId id, Placement& placement) {
     const auto it = decorations.find(id);
     if (it == decorations.end()) {
         return std::nullopt;
@@ -40,4 +40,9 @@ const Decoration* DecorationManager::find(EntityId id) const {
     } else {
         return &it->second;
     }
+}
+
+std::optional<FurnitureData> DecorationManager::dataFor(EntityId id) const {
+    const auto* entity = find(id);
+    return entity ? std::optional<FurnitureData>{entity->getPublicData()} : std::nullopt;
 }

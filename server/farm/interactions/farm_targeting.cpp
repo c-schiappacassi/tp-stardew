@@ -4,8 +4,10 @@
 #include <cmath>
 #include <limits>
 
+#include "farm/animals/animal_manager.h"
+#include "farm/crops/crop_manager.h"
 #include "farm/farm_constants.h"
-#include "farm/farm_manager.h"
+#include "farm/spatial/farm_terrain.h"
 #include "player/queries/player_snapshot.h"
 #include "world/interaction_targeting.h"
 
@@ -27,11 +29,11 @@ std::optional<Position> FarmTargeting::findAdjacentPosition(const PlayerSnapshot
     return InteractionTargeting{}.findAdjacentPosition(player, direction, map, collision, farm_constants::INTERACTION_RANGE);
 }
 
-const Crop* FarmTargeting::findCropToWater(const PlayerSnapshot& player, const FarmManager& farm, Direction direction) const {
+const Crop* FarmTargeting::findCropToWater(const PlayerSnapshot& player, const FarmTerrain& terrain, const CropManager& crops, Direction direction) const {
     const Crop* closestCrop = nullptr;
     int64_t closestDistance = std::numeric_limits<int64_t>::max();
-    for (const auto& [id, crop]: farm.getCrops()) {
-        if (crop.isReady() || crop.isWatered() || !canReach(player, crop.getPosition(), direction, farm.getMap())) {
+    for (const auto& [id, crop]: crops.getCrops()) {
+        if (crop.isReady() || crop.isWatered() || !canReach(player, crop.getPosition(), direction, terrain.getMap())) {
             continue;
         }
         const auto distance = squaredDistance(player.getPosition(), crop.getPosition());
@@ -43,11 +45,12 @@ const Crop* FarmTargeting::findCropToWater(const PlayerSnapshot& player, const F
     return closestCrop;
 }
 
-std::optional<FarmCollectionTarget> FarmTargeting::findCollectionTarget(const PlayerSnapshot& player, const FarmManager& farm, Direction direction) const {
+std::optional<FarmCollectionTarget> FarmTargeting::findCollectionTarget(const PlayerSnapshot& player, const FarmTerrain& terrain,
+    const CropManager& crops, const AnimalManager& animals, Direction direction) const {
     std::optional<FarmCollectionTarget> closestTarget;
     int64_t closestDistance = std::numeric_limits<int64_t>::max();
     const auto considerProduct = [&](EntityId id, const Position& position, FarmProductSource source, const FarmProduct& product) {
-        if (!canReach(player, position, direction, farm.getMap())) {
+        if (!canReach(player, position, direction, terrain.getMap())) {
             return;
         }
         const auto distance = squaredDistance(player.getPosition(), position);
@@ -56,13 +59,13 @@ std::optional<FarmCollectionTarget> FarmTargeting::findCollectionTarget(const Pl
             closestDistance = distance;
         }
     };
-    for (const auto& [id, crop]: farm.getCrops()) {
+    for (const auto& [id, crop]: crops.getCrops()) {
         const auto product = crop.getHarvest();
         if (product) {
             considerProduct(id, crop.getPosition(), FarmProductSource::Crop, *product);
         }
     }
-    for (const auto* animal: farm.getAnimals()) {
+    for (const auto& [id, animal]: animals.getAnimals()) {
         if (animal->dropsProductsAutomatically()) {
             continue;
         }

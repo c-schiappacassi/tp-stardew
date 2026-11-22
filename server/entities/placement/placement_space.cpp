@@ -1,12 +1,12 @@
-#include "farm_space.h"
+#include "placement_space.h"
 
-const ZoneMap& FarmSpace::getMap() const { return terrain; }
+const ZoneMap& PlacementSpace::getMap() const { return terrain; }
 
-bool FarmSpace::hasMap() const { return !terrain.isEmpty(); }
+bool PlacementSpace::hasMap() const { return !terrain.isEmpty(); }
 
-bool FarmSpace::contains(EntityId id) const { return occupants.contains(id); }
+bool PlacementSpace::contains(EntityId id) const { return occupants.contains(id); }
 
-bool FarmSpace::setMap(const ZoneMap& map) {
+bool PlacementSpace::setMap(const ZoneMap& map) {
     if (map.isEmpty() || !occupants.empty()) {
         return false;
     }
@@ -16,9 +16,9 @@ bool FarmSpace::setMap(const ZoneMap& map) {
     return true;
 }
 
-void FarmSpace::setObstacles(const std::vector<CollisionBounds>& bounds) { obstacles = bounds; }
+void PlacementSpace::setObstacles(const std::vector<CollisionBounds>& bounds) { obstacles = bounds; }
 
-bool FarmSpace::setReservedPositions(const std::vector<Position>& positions) {
+bool PlacementSpace::setReservedPositions(const std::vector<Position>& positions) {
     if (!occupants.empty() || terrain.isEmpty()) {
         return false;
     }
@@ -34,7 +34,7 @@ bool FarmSpace::setReservedPositions(const std::vector<Position>& positions) {
     return true;
 }
 
-std::optional<ZoneMap::Cell> FarmSpace::cellAt(const Position& base) const {
+std::optional<ZoneMap::Cell> PlacementSpace::cellAt(const Position& base) const {
     if (base.getX() < 0 || base.getY() <= 0) {
         return std::nullopt;
     }
@@ -45,7 +45,7 @@ std::optional<ZoneMap::Cell> FarmSpace::cellAt(const Position& base) const {
         base.getX() / entity_dimensions::TILE_SIZE};
 }
 
-bool FarmSpace::isAvailable(const CollisionBounds& bounds, EntityId ignoredId) const {
+bool PlacementSpace::isAvailable(const CollisionBounds& bounds, EntityId ignoredId) const {
     if (!bounds.isValid() || bounds.getLeft() < 0 || bounds.getTop() < 0 ||
         (!terrain.isEmpty() && !terrain.isWalkable(bounds))) {
         return false;
@@ -68,12 +68,12 @@ bool FarmSpace::isAvailable(const CollisionBounds& bounds, EntityId ignoredId) c
     return true;
 }
 
-bool FarmSpace::isAvailable(const Position& base, EntityId movingId) const {
+bool PlacementSpace::isAvailable(const Position& base, EntityId movingId) const {
     const auto it = occupants.find(movingId);
     return it != occupants.end() && isAvailable(it->second.collision.at(base), movingId);
 }
 
-bool FarmSpace::canWalk(const CollisionBounds& bounds) const {
+bool PlacementSpace::canWalk(const CollisionBounds& bounds) const {
     if (!bounds.isValid() || bounds.getLeft() < 0 || bounds.getTop() < 0 ||
         (!terrain.isEmpty() && !terrain.isWalkable(bounds))) {
         return false;
@@ -86,7 +86,7 @@ bool FarmSpace::canWalk(const CollisionBounds& bounds) const {
     return true;
 }
 
-bool FarmSpace::reserve(EntityId id, const Position& base, const CollisionBox& collision,
+bool PlacementSpace::reserve(EntityId id, const Position& base, const CollisionBox& collision,
     bool blocksMovement) {
     if (id == 0 || contains(id) || !collision.isValid() ||
         !isAvailable(collision.at(base))) {
@@ -95,7 +95,7 @@ bool FarmSpace::reserve(EntityId id, const Position& base, const CollisionBox& c
     return occupants.emplace(id, Occupant{base, collision, blocksMovement}).second;
 }
 
-bool FarmSpace::move(EntityId id, const Position& base) {
+bool PlacementSpace::move(EntityId id, const Position& base) {
     const auto it = occupants.find(id);
     if (it == occupants.end() || !isAvailable(base, id)) {
         return false;
@@ -104,8 +104,8 @@ bool FarmSpace::move(EntityId id, const Position& base) {
     return true;
 }
 
-bool FarmSpace::release(EntityId id) {
+bool PlacementSpace::release(EntityId id) {
     return occupants.erase(id) != 0;
 }
 
-void FarmSpace::clearOccupants() { occupants.clear(); }
+void PlacementSpace::clearOccupants() { occupants.clear(); }

@@ -6,11 +6,11 @@
 #include <string>
 
 #include "config/toml_helpers.h"
-#include "farm/decorations/decoration.h"
+#include "farm/decorations/decoration_items.h"
 
 ItemId ShopTomlReader::itemFromId(uint16_t id, const std::string& field) {
     const auto item = static_cast<ItemId>(id);
-    if (item == ItemId::Chest || Decoration::isDecoration(item)) return item;
+    if (item == ItemId::Chest || decoration_items::isDecoration(item)) return item;
     toml_helpers::invalid(field, "unknown product ID or fixed furniture");
 }
 
