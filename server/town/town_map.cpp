@@ -29,15 +29,31 @@ bool TownMap::initialize(const TownConfig& config) {
     } else {
         tiles.assign(map.height, std::vector<bool>(map.width, true));
     }
+    std::vector<std::vector<bool>> buildingFootprints(
+        map.height, std::vector<bool>(map.width, false));
     for (const auto& building: config.buildings) {
         const auto right = static_cast<uint32_t>(building.position.x) + building.width;
         const auto bottom = static_cast<uint32_t>(building.position.y) + building.height;
         if (building.width == 0 || building.height == 0 || right > map.width || bottom > map.height) {
             return false;
         }
+        if (building.door.size() > 1) return false;
+        if (!building.door.empty()) {
+            const TownPosition& door = building.door.front();
+            if (door.x < building.position.x || door.x >= right ||
+                door.y < building.position.y || door.y >= bottom) {
+                return false;
+            }
+        }
         for (uint32_t row = building.position.y; row < bottom; ++row) {
             for (uint32_t col = building.position.x; col < right; ++col) {
-                if (!tiles[row][col]) return false;
+                if (buildingFootprints[row][col]) return false;
+                buildingFootprints[row][col] = true;
+                if (!building.door.empty() && building.door.front().x == col &&
+                    building.door.front().y == row) {
+                    if (!tiles[row][col]) return false;
+                    continue;
+                }
                 tiles[row][col] = false;
             }
         }

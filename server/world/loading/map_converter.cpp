@@ -61,14 +61,43 @@ Position MapConverter::findSpawn(const ZoneMap& terrain) {
 FarmLayout MapConverter::convertFarm(const ZoneData& zone) {
     FarmLayout farm;
     farm.terrain = convertTerrain(zone, "farm");
-    farm.spawn = findSpawn(farm.terrain);
-    if (zone.playerHouses) {
-        if (*zone.playerHouses < 0 || *zone.playerHouses > 4) {
-            throw std::invalid_argument("Invalid player_houses count");
-        }
-        farm.playerHouses = static_cast<uint8_t>(*zone.playerHouses);
+
+    if (zone.buildings.empty() || zone.buildings.size() > 4) {
+        throw std::invalid_argument("A playable farm must contain between 1 and 4 houses");
+    }
+    if (zone.playerHouses &&
+        (*zone.playerHouses < 1 ||
+         static_cast<std::size_t>(*zone.playerHouses) != zone.buildings.size())) {
+        throw std::invalid_argument("farm.player_houses does not match farm.buildings");
     }
 
+    farm.playerHouses = static_cast<uint8_t>(zone.buildings.size());
+    farm.interiors.reserve(zone.buildings.size());
+
+    for (std::size_t index = 0; index < zone.buildings.size(); ++index) {
+        const BuildingData& building = zone.buildings[index];
+        if (building.id < static_cast<int>(BuildingId::FarmHouse) ||
+            building.id > static_cast<int>(BuildingId::BrickCabin)) {
+            throw std::invalid_argument("Unsupported building in farm.buildings[" +
+                                        std::to_string(index) + "]");
+        }
+
+        const std::string field = "farm.buildings[" + std::to_string(index) + "]";
+        const Position outside = convertPosition(farm.terrain, building.door, field + ".door");
+        if (building.door.y >= zone.height - 1) {
+            throw std::invalid_argument("No return tile below " + field + ".door");
+        }
+        const Position returnPosition = convertPosition(
+            farm.terrain, {building.door.x, building.door.y + 1}, field + ".return");
+
+        InteriorLayout house = makePlayerHouseInterior(static_cast<uint8_t>(index));
+        house.outside.zone = Zone::Farm;
+        house.outside.position = outside;
+        house.returnPosition = returnPosition;
+        farm.interiors.push_back(std::move(house));
+    }
+
+    farm.spawn = farm.interiors.front().returnPosition;
     farm.background.reserve(zone.background.size());
     for (const FloorTile& tile : zone.background) {
         if (tile.textureId < 0 || tile.textureId > UINT16_MAX) {
@@ -89,7 +118,39 @@ FarmLayout MapConverter::convertFarm(const ZoneData& zone) {
     return farm;
 }
 
-TownConfig MapConverter::convertTown(const ZoneData& zone) {
+InteriorId MapConverter::townInteriorId(int buildingId) {
+    switch (static_cast<BuildingId>(buildingId)) {
+        case BuildingId::MarniesShop: return InteriorId::MarniesShop;
+        case BuildingId::PierresShop: return InteriorId::PierresShop;
+        case BuildingId::RobinsShop: return InteriorId::RobinsShop;
+        case BuildingId::ClintsShop: return InteriorId::ClintsShop;
+        case BuildingId::ComunityCenter: return InteriorId::ComunityCenter;
+        default: throw std::invalid_argument("Unsupported town building ID");
+    }
+}
+
+TownBuildingConfig MapConverter::convertTownBuilding(const BuildingData& building) {
+    TownBuildingConfig config;
+    switch (static_cast<BuildingId>(building.id)) {
+        case BuildingId::MarniesShop: config.id = "marnies_shop"; config.width = 8; config.height = 7; break;
+        case BuildingId::PierresShop: config.id = "pierres_shop"; config.width = 11; config.height = 10; break;
+        case BuildingId::RobinsShop: config.id = "robins_shop"; config.width = 10; config.height = 13; break;
+        case BuildingId::ClintsShop: config.id = "clints_shop"; config.width = 9; config.height = 8; break;
+        case BuildingId::ComunityCenter: config.id = "community_center"; config.width = 12; config.height = 10; break;
+        default: throw std::invalid_argument("Unsupported town building ID");
+    }
+    if (building.x < 0 || building.y < 0 ||
+        building.x > UINT16_MAX || building.y > UINT16_MAX) {
+        throw std::invalid_argument("Invalid town building coordinates");
+    }
+    config.position = {static_cast<uint16_t>(building.x), static_cast<uint16_t>(building.y)};
+    config.door.push_back({static_cast<uint16_t>(building.door.x),
+                           static_cast<uint16_t>(building.door.y)});
+    return config;
+}
+
+TownConfig MapConverter::convertTown(const ZoneData& zone,
+                                      std::vector<InteriorLayout>& interiors) {
     if (zone.width <= 0 || zone.height <= 0 || zone.width > UINT16_MAX ||
         zone.height > UINT16_MAX) {
         throw std::invalid_argument("Invalid town dimensions");
@@ -122,6 +183,32 @@ TownConfig MapConverter::convertTown(const ZoneData& zone) {
                                                   static_cast<uint16_t>(zone.doorMines->y)}});
     }
 
+    std::vector<bool> usedInteriors(static_cast<std::size_t>(InteriorId::ComunityCenter) + 1, false);
+    for (const BuildingData& building : zone.buildings) {
+        const InteriorId interiorId = townInteriorId(building.id);
+        const std::size_t key = static_cast<std::size_t>(interiorId);
+        if (usedInteriors[key]) {
+            throw std::invalid_argument("Duplicate town interior in TOML");
+        }
+        usedInteriors[key] = true;
+
+        TownBuildingConfig config = convertTownBuilding(building);
+        if (building.door.x < 0 || building.door.y < 0 ||
+            building.door.x >= zone.width || building.door.y >= zone.height ||
+            building.door.x < building.x || building.door.y < building.y ||
+            building.door.x >= building.x + config.width ||
+            building.door.y >= building.y + config.height) {
+            throw std::invalid_argument("Invalid town building door");
+        }
+        const Position door = convertPosition(terrain, building.door, "town.building.door");
+        const Position returnPosition = convertPosition(
+            terrain, {building.door.x, building.door.y + 1}, "town.building.return");
+        InteriorLayout room = makeTownInterior(interiorId);
+        room.outside.position = door;
+        room.returnPosition = returnPosition;
+        interiors.push_back(std::move(room));
+        town.buildings.push_back(std::move(config));
+    }
     return town;
 }
 
@@ -155,7 +242,7 @@ GameSetup MapConverter::convert(const MapData& data, uint8_t worldId) const {
     GameSetup setup;
     setup.worldId = worldId;
     setup.farm = convertFarm(data.farm);
-    setup.townConfig = convertTown(data.town);
+    setup.townConfig = convertTown(data.town, setup.farm.interiors);
 
     for (std::size_t index = 0; index < data.mineLevels.size(); ++index) {
         const uint8_t level = static_cast<uint8_t>(index + 1);

@@ -18,7 +18,9 @@ private:
                                     const std::string& field);
     static Position findSpawn(const ZoneMap& terrain);
     static FarmLayout convertFarm(const ZoneData& zone);
-    static TownConfig convertTown(const ZoneData& zone);
+    static InteriorId townInteriorId(int buildingId);
+    static TownBuildingConfig convertTownBuilding(const BuildingData& building);
+    static TownConfig convertTown(const ZoneData& zone, std::vector<InteriorLayout>& interiors);
     static DungeonRoomLayout convertRoom(const ZoneData& zone, uint8_t level);
 };
 
