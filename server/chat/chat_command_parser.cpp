@@ -2,6 +2,7 @@
 
 #include <algorithm>
 #include <charconv>
+#include <iomanip>
 #include <limits>
 #include <sstream>
 #include <string_view>
@@ -31,6 +32,28 @@ ParsedChatCommand trade(const std::vector<std::string>& tokens, TradeAction acti
             "Usage: /sell product amount (1 to 65535)"};
     }
     return TradeCommand{action, tokens[1], static_cast<uint16_t>(quantity)};
+}
+
+ParsedChatCommand gift(const std::string& text, GiftAction action) {
+    const std::string usage = action == GiftAction::Offer ? "Usage: /gift @username [amount] (1 to 65535)" :
+        action == GiftAction::Accept ? "Usage: /accept @username" : "Usage: /reject @username";
+    std::istringstream input(text);
+    std::string command;
+    std::string player;
+    input >> command >> std::ws;
+    if (input.peek() == '@')
+        input.get();
+    if (!(input >> std::quoted(player)) || player.empty())
+        return ChatCommandError{usage};
+
+    uint32_t quantity = 1;
+    std::string amount;
+    std::string extra;
+    if (input >> amount) {
+        if (action != GiftAction::Offer || !number(amount, std::numeric_limits<uint16_t>::max(), quantity) || (input >> extra))
+            return ChatCommandError{usage};
+    }
+    return GiftCommand{action, std::move(player), static_cast<uint16_t>(quantity)};
 }
 
 ParsedChatCommand cheat(const std::vector<std::string>& tokens) {
@@ -136,6 +159,13 @@ ParsedChatCommand ChatCommandParser::parse(const std::string& text) {
     if (command == "/players") {
         if (tokens.size() != 1) return ChatCommandError{"Usage: /players"};
         return ChatPlayers{};
+    }
+    if (command == "/gift") return gift(text, GiftAction::Offer);
+    if (command == "/accept") return gift(text, GiftAction::Accept);
+    if (command == "/reject") return gift(text, GiftAction::Reject);
+    if (command == "/cancel_gift") {
+        if (tokens.size() != 1) return ChatCommandError{"Usage: /cancel_gift"};
+        return GiftCommand{GiftAction::Cancel, {}};
     }
     if (command == "/center") {
         if (tokens.size() > 2) return ChatCommandError{"Usage: /center [crops|metals|animals|combat|money]"};

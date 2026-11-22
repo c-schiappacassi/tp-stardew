@@ -5,6 +5,7 @@
 #include <string>
 
 #include "chat/chat_services.h"
+#include "player_gifts.h"
 
 #include "protocol_types.h"
 
@@ -17,10 +18,11 @@ class PlayerChat {
 private:
     PlayerManager& manager;
     ChatServices services;
+    PlayerGifts gifts;
 
     static void reply(PlayerRecord& sender, const std::string& text);
     static void privateMessage(PlayerRoster& players, PlayerRecord& sender,const std::string& text);
-    void command(const PlayerRoster& players, PlayerRecord& sender, const std::string& text,bool actionsBlocked) const;
+    void command(PlayerRoster& players, PlayerRecord& sender, const std::string& text,bool actionsBlocked);
     void listCheats(PlayerRecord& sender) const;
 
 public:
@@ -28,8 +30,9 @@ public:
 
     explicit PlayerChat(PlayerManager& manager, ChatServices services = {});
     bool interact(PlayerRecord& sender, Direction direction) const;
-    void onDisconnect(uint16_t playerId) const noexcept;
+    void onDisconnect(uint16_t playerId) noexcept;
+    void clearGifts() noexcept;
     void collectCommunityRewards(PlayerRecord& player, bool actionsBlocked = false) const;
     void donate(PlayerRecord& player, const DonateDTO& command, bool actionsBlocked) const;
-    void handle(PlayerRoster& players, uint16_t senderId, const std::string& text,bool actionsBlocked = false) const;
+    void handle(PlayerRoster& players, uint16_t senderId, const std::string& text,bool actionsBlocked = false);
 };

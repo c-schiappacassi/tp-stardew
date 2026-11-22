@@ -27,7 +27,7 @@ void PlayerChat::listCheats(PlayerRecord& sender) const {
         reply(sender, services.community ? "Only community center cheats are currently available." :"Cheats are not available yet.");
 }
 
-void PlayerChat::command(const PlayerRoster& players, PlayerRecord& sender, const std::string& text,bool actionsBlocked) const {
+void PlayerChat::command(PlayerRoster& players, PlayerRecord& sender, const std::string& text,bool actionsBlocked) {
     const auto parsed = ChatCommandParser::parse(text);
     if (const auto* error = std::get_if<ChatCommandError>(&parsed)) {
         reply(sender, error->text);
@@ -49,7 +49,10 @@ void PlayerChat::command(const PlayerRoster& players, PlayerRecord& sender, cons
     const ChatCommandContext context{sender.getId(), sender.getName(), manager, actionsBlocked};
     std::vector<ChatMessageData> responses;
     try {
-        if (const auto* request = std::get_if<TradeCommand>(&parsed)) {
+        if (const auto* request = std::get_if<GiftCommand>(&parsed)) {
+            gifts.execute(players, sender, *request, actionsBlocked);
+            return;
+        } else if (const auto* request = std::get_if<TradeCommand>(&parsed)) {
             if (!services.merchants) {
                 reply(sender, "Trading is not available yet.");
                 return;

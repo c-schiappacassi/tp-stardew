@@ -21,6 +21,7 @@ target_sources(taller_server_core
         network/client_sender.cpp
         network/server_protocol.cpp
         player/chat/player_chat.cpp
+        player/chat/player_gifts.cpp
         chat/chat_command_parser.cpp
         chat/cheat_chat.cpp
         community/domain/community_bundle.cpp
@@ -155,10 +156,12 @@ target_sources(taller_server_core
         network/client_sender.h
         network/server_protocol.h
         player/chat/player_chat.h
+        player/chat/player_gifts.h
         chat/chat_command_context.h
         chat/chat_services.h
         chat/parsed_chat_command.h
         chat/commands/trade_command.h
+        chat/commands/gift_command.h
         chat/commands/cheat_command.h
         chat/commands/community_command.h
         chat/services/merchant_chat_service.h

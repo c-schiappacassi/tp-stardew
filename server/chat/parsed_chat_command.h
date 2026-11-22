@@ -5,6 +5,7 @@
 
 #include "commands/cheat_command.h"
 #include "commands/community_command.h"
+#include "commands/gift_command.h"
 #include "commands/trade_command.h"
 
 struct ChatCheats {};
@@ -17,6 +18,7 @@ struct ChatCommandError {
 using ParsedChatCommand = std::variant<
     ChatCheats,
     ChatPlayers,
+    GiftCommand,
     TradeCommand,
     CommunityCommand,
     CheatCommand,

@@ -95,6 +95,7 @@ public:
     const Stack* getSelectedItem() const;
     uint8_t getSelectedSlot() const;
     bool transferItemsTo(Inventory& destination, uint8_t slot, uint16_t quantity);
+    bool transferItemsTo(Player& destination, uint8_t slot, uint16_t quantity);
     bool transferItemsFrom(Inventory& source, uint8_t slot, uint16_t quantity);
     bool openChest(uint32_t id);
     void closeChest();

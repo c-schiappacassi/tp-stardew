@@ -63,7 +63,10 @@ bool PlayerManager::advanceDay(std::chrono::milliseconds elapsed) {
     participants.reserve(roster.size());
     for (auto& [id, record]: roster)
         participants.push_back({id, record.getPlayer(), record.isConnected()});
-    return day.advance(elapsed, participants, spawns);
+    const bool nextDay = day.advance(elapsed, participants, spawns);
+    if (nextDay || day.hasEnded())
+        chat.clearGifts();
+    return nextDay;
 }
 
 bool PlayerManager::isDayEnded() const { return day.hasEnded(); }
@@ -77,6 +80,7 @@ void PlayerManager::collectCommunityRewards() {
 }
 
 void PlayerManager::finishGame() {
+    chat.clearGifts();
     for (auto& [id, record]: roster) {
         record.getPlayer().setMovement(Direction::None);
         record.getPlayer().closeChest();

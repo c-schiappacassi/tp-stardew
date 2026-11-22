@@ -29,7 +29,8 @@ bool PlayerChat::interact(PlayerRecord& sender, Direction direction) const {
     return true;
 }
 
-void PlayerChat::onDisconnect(uint16_t playerId) const noexcept {
+void PlayerChat::onDisconnect(uint16_t playerId) noexcept {
+    gifts.onDisconnect(playerId);
     if (services.merchants)
         services.merchants->onDisconnect(playerId);
     if (services.cheats)
@@ -37,6 +38,8 @@ void PlayerChat::onDisconnect(uint16_t playerId) const noexcept {
     if (services.community)
         services.community->onDisconnect(playerId);
 }
+
+void PlayerChat::clearGifts() noexcept { gifts.clear(); }
 
 void PlayerChat::reply(PlayerRecord& sender, const std::string& text) {
     sender.enqueueMessage({"Server", text});
@@ -97,7 +100,7 @@ void PlayerChat::privateMessage(PlayerRoster& players, PlayerRecord& sender,cons
         sender.enqueueMessage({sender.getName(), text});
 }
 
-void PlayerChat::handle(PlayerRoster& players, uint16_t senderId, const std::string& text,bool actionsBlocked) const {
+void PlayerChat::handle(PlayerRoster& players, uint16_t senderId, const std::string& text,bool actionsBlocked) {
     auto* senderRecord = players.find(senderId);
     if (!senderRecord || !senderRecord->isConnected())
         return;

@@ -249,6 +249,10 @@ bool Player::transferItemsTo(Inventory& destination, uint8_t slot, uint16_t quan
     return canAct() && inventory.transferTo(destination, slot, quantity);
 }
 
+bool Player::transferItemsTo(Player& destination, uint8_t slot, uint16_t quantity) {
+    return canAct() && destination.canAct() && inventory.transferTo(destination.inventory, slot, quantity);
+}
+
 bool Player::transferItemsFrom(Inventory& source, uint8_t slot, uint16_t quantity) {
     return canAct() && source.transferTo(inventory, slot, quantity);
 }
