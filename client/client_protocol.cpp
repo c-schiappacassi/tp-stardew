@@ -408,6 +408,7 @@ void ClientProtocol::send(const CreateGameDTO& dto) {
     out.putString(dto.userName);
     out.putString(dto.characterName);
     out.putString(dto.gameName);
+    out.putString(dto.mapPath);
     out.putUint8(dto.worldId);
     out.putUint16(dto.hairModel);
     out.putUint16(dto.shirtModel);

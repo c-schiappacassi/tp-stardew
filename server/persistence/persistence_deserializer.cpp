@@ -400,6 +400,7 @@ GameIndexDTO PersistenceDeserializer::deserializeIndex(const toml::table& table)
     GameIndexDTO result;
     result.id = string(table, "id");
     result.farmName = string(table, "farmName");
+    result.mapPath = table["mapPath"].value<std::string>().value_or("");
     result.users = strings(requiredArray(table, "users"));
     result.isMultiplayer = boolean(table, "isMultiplayer");
     const toml::table& previews = requiredTable(table, "playerPreviews");

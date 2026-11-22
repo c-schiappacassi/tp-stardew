@@ -38,5 +38,5 @@ struct TownConfig {
     std::vector<TownBuildingConfig> buildings;
     std::vector<TownNpcConfig> npcs;
     std::vector<TownConnectionConfig> connections;
-    std::vector<std::vector<bool>> walkableTiles;   // vacio = default
+    std::vector<std::vector<bool>> walkableTiles;
 };

@@ -509,6 +509,7 @@ CreateGameDTO ServerProtocol::receiveCreateGame() {
     CreateGameDTO dto(base.receiveString());
     dto.characterName = base.receiveString();
     dto.gameName = base.receiveString();
+    dto.mapPath = base.receiveString();
     dto.worldId = base.receiveUint8();
     dto.hairModel = base.receiveUint16();
     dto.shirtModel = base.receiveUint16();

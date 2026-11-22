@@ -27,6 +27,13 @@ bool PersistenceManager::gameExists(const std::string& gameId) const {
     return false;
 }
 
+std::string PersistenceManager::mapPathFor(const std::string& gameId) const {
+    for (const GameIndexDTO& entry : games) {
+        if (entry.id == gameId) return entry.mapPath;
+    }
+    throw std::runtime_error("Game is not registered: " + gameId);
+}
+
 void PersistenceManager::saveIndex() const {
     writer.writeIndex(games);
 }
@@ -103,12 +110,16 @@ void PersistenceManager::updateGameIndex(const GameIndexDTO& game) {
     throw std::runtime_error("Game is not registered: " + game.id);
 }
 
-void PersistenceManager::createGame(const PersistenceDTO& game) {
+void PersistenceManager::createGame(const PersistenceDTO& game, const std::string& mapPath) {
     if (gameExists(game.id)) {
         throw std::runtime_error("Game already exists: " + game.id);
     }
 
+    if (mapPath.empty()) {
+        throw std::invalid_argument("Game map path is required");
+    }
     GameIndexDTO entry = indexFromGame(game);
+    entry.mapPath = mapPath;
 
     writer.writeGame(game);
 
@@ -133,7 +144,9 @@ void PersistenceManager::saveGame(const PersistenceDTO& game) {
     for (GameIndexDTO& entry : games) {
         if (entry.id == game.id) {
             writer.writeGame(game);
-            updateGameIndex(indexFromGame(game));
+            GameIndexDTO updated = indexFromGame(game);
+            updated.mapPath = entry.mapPath;
+            updateGameIndex(updated);
             return;
         }
     }

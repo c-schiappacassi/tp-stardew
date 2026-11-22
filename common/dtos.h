@@ -334,6 +334,7 @@ struct CommandDTO {
 struct CreateGameDTO : public CommandDTO {
     std::string characterName;
     std::string gameName;
+    std::string mapPath;
     uint8_t worldId = 0;
     uint16_t hairModel = 0;
     uint16_t shirtModel = 0;
