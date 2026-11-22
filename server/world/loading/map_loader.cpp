@@ -158,7 +158,8 @@ MapData MapLoader::load(const std::filesystem::path& path) const {
     map.farm = readZone(requireTable(file.get("farm"), "farm"), "farm");
     map.town = readZone(requireTable(file.get("town"), "town"), "town");
 
-    const toml::array& levels = requireArray(file.get("mine_levels"), "mine_levels");
+    const std::string field = "mine_levels";
+    const toml::array& levels = requireArray(file.get(field), field);
     map.mineLevels.reserve(levels.size());
     for (std::size_t i = 0; i < levels.size(); ++i) {
         const std::string name = "mine_levels[" + std::to_string(i) + "]";

@@ -286,7 +286,7 @@ BackgroundData MapConverter::convertVisualZone(const EditorZoneData& zone,
         if (x < 0 || y < 0 || x >= zone.width || y >= zone.height) {
             throw std::invalid_argument("Visual element outside " + name);
         }
-        return {x * tileSize, y * tileSize};
+        return Position(x * tileSize, y * tileSize);
     };
     for (const FloorTile& tile : zone.background) {
         if (tile.textureId < 0 || tile.textureId > static_cast<int>(TileTextureId::DungeonInnerCornerTopLeft)) {
@@ -295,7 +295,7 @@ BackgroundData MapConverter::convertVisualZone(const EditorZoneData& zone,
         result.floor.push_back({position(tile.x, tile.y), static_cast<TileTextureId>(tile.textureId)});
     }
     for (const MapElement& decor : zone.decorations) {
-        if (decor.id < 0 || decor.id > static_cast<int>(DecorId::BrownArmCouch)) {
+        if (decor.id < 0 || decor.id > static_cast<int>(DecorId::SmallBlueFlower)) {
             throw std::invalid_argument("Unknown decoration in " + name);
         }
         result.decor.push_back({position(decor.x, decor.y), static_cast<DecorId>(decor.id)});
