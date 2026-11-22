@@ -257,3 +257,36 @@ TODO: de abril
     -   kill enemigos para probar minas
 - fix: visual feedback de golpes - sdlpuro
 - pantalla fin de juego - TBD: QT o SDL
+
+TODO: nuestro:
+- sdl pantalla de noche/carga cuando duerme un jugador y espera al resto.
+
+    - resto del tp:
+    para el martes que viene tenemos ultima call y tenemos una pre-demo o demo parcial con feedback (como estuvimos teniendo, sin codigo y sin nota)
+    del 19 al 24 podemos implementar:
+    --> del 24 al 1 podemos seguir avanzando con el codigo pero sin feedback de abril (salvo que le escribamos)
+    la nocha del martes 1 cierra la entrega y hay que dejar de pushear al repo! (no se entrega por sercomni nada)
+
+    - video lo podemos hacer despues asi hasta el primero tenemos el CODIGO perfecto (no bugs, features completos)!
+    refactorizar el codigo para que quede lo mas lindo posible y que siga las buenas practcas y prinicpios
+    tenemos hasta el 3/4 para hacer el video y la documentacion y tests (protocolo)
+    video corto, no mas de 3 minutos, mostrar todo lo que hace el tp! intentar vender el tp pero sin mentir! lindo musica venta edicion! (estetico)
+    sencilla la documentacion --> que abril entienda, cortita y al pie que se entienda todo que corto y claro a cabeza! (no mas de 5 paginas)
+    que sea facil de leer para alguien que no programo el tp con nosotros
+
+    - orales: individuales y el docente pregunta que hicimos y nos hace preguntas respecto a eso (vamos a tener que compartir pantalla)
+    si nos pregunta por algo que no hicimos le decimos "yo esto no lo hice"
+
+    - post martes 1 abril comeinza a hacer su correccion buscando que este todo lo que el tp tiene que cumplir (desde el enunciado)
+
+    - si el docente te pide que levantes el tp y le muestres --> lo involucras y le creas un usuario a el y etc... QUE SE SIENTA INCLUIDO
+
+    - docu, reglas, cheats, como moverse, como interactuar con las cosas o realizar acciones (comerciantes, regar, etc)
+    - docu, vitacora del tp de como vivimos nosotros el tp
+    - docu, arquietctura del tp, division del tp (que tareas tuvo cada uno), estructura general del codigo (diagramas)
+
+
+PARA LA SEMANA QUE VIENE:
+
+    - todo ja
+    - si ya esta todo listo, podemos agregar cosas nuevas (la nota maxima con o sin cosas nuevas es 10 asi que depende de nosotros y el tiempo entra que le queramos dedicar al tp, pero nos puede ayudar a subir un poquito si hay algo que esta mas o menos)
