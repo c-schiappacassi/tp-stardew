@@ -19,7 +19,16 @@ bool TownMap::initialize(const TownConfig& config) {
         return false;
     }
 
-    std::vector<std::vector<bool>> tiles(map.height, std::vector<bool>(map.width, true));
+    std::vector<std::vector<bool>> tiles;
+    if (!config.walkableTiles.empty()) {
+        if (config.walkableTiles.size() != map.height) return false;
+        for (const auto& row : config.walkableTiles) {
+            if (row.size() != map.width) return false;
+        }
+        tiles = config.walkableTiles;
+    } else {
+        tiles.assign(map.height, std::vector<bool>(map.width, true));
+    }
     for (const auto& building: config.buildings) {
         const auto right = static_cast<uint32_t>(building.position.x) + building.width;
         const auto bottom = static_cast<uint32_t>(building.position.y) + building.height;

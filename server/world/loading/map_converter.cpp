@@ -38,7 +38,6 @@ ZoneMap MapConverter::convertTerrain(const ZoneData& zone, const std::string& na
         }
     }
 
-    // @lu las lockedtiles estan separadas en walkable y unwalkable?
     return ZoneMap(walkable, entity_dimensions::TILE_SIZE);
 }
 
@@ -101,6 +100,17 @@ TownConfig MapConverter::convertTown(const ZoneData& zone) {
                 static_cast<uint16_t>(entity_dimensions::TILE_SIZE)};
 
     const ZoneMap terrain = convertTerrain(zone, "town");
+    std::vector<std::vector<bool>> walkable(
+        static_cast<std::size_t>(zone.height),
+        std::vector<bool>(static_cast<std::size_t>(zone.width), false));
+    for (int y = 0; y < zone.height; ++y) {
+        for (int x = 0; x < zone.width; ++x) {
+            const auto base = terrain.baseAt({y, x});
+            walkable[y][x] = base && terrain.isWalkableBase(*base);
+        }
+    }
+    town.walkableTiles = std::move(walkable);
+
     if (zone.doorFarm) {
         convertPosition(terrain, *zone.doorFarm, "town.door_farm");
         town.connections.push_back({"farm", {static_cast<uint16_t>(zone.doorFarm->x),
@@ -122,7 +132,7 @@ DungeonRoomLayout MapConverter::convertRoom(const ZoneData& zone, uint8_t level)
         throw std::invalid_argument("Missing door_exit for mine level " + std::to_string(level));
     }
     room.passages.exit = convertPosition(room.terrain, *zone.doorExit, "mine.door_exit");
-    // falta definir pasadizos
+    // exit?
     room.passages.entry = room.passages.exit;
     if (level < DUNGEON_ROOM_COUNT) {
         if (!zone.doorNextLevel) {

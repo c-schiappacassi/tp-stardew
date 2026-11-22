@@ -1,6 +1,7 @@
 #pragma once
 
 #include <cstdint>
+#include <optional>
 #include <string>
 #include <vector>
 
@@ -37,4 +38,5 @@ struct TownConfig {
     std::vector<TownBuildingConfig> buildings;
     std::vector<TownNpcConfig> npcs;
     std::vector<TownConnectionConfig> connections;
+    std::vector<std::vector<bool>> walkableTiles;   // vacio indica default
 };
