@@ -4,9 +4,12 @@
 #include <optional>
 
 #include "dungeon/combat/dungeon_combat.h"
+#include "dungeon/interactions/dungeon_interactions.h"
 #include "dungeon/loading/dungeon_loader.h"
 #include "dungeon/mining/dungeon_mining.h"
 #include "dungeon/mining/mineral_generator.h"
+#include "dungeon/persistence/dungeon_persistence.h"
+#include "dungeon/rooms/dungeon_rooms.h"
 #include "dungeon/rooms/dungeon_travel.h"
 
 class PlayerSnapshot;
@@ -14,18 +17,23 @@ class PlayerManager;
 
 class DungeonManager {
 private:
-    std::map<uint8_t, DungeonRoom> rooms;
+    DungeonRooms rooms;
     MineralGenerator generator;
-    std::mt19937 placementRandom;
     DungeonMining mining;
     DungeonTravel travel;
     DungeonLoader loader;
     DungeonCombat combat;
-    DungeonRoom* findRoom(uint8_t number);
-    const DungeonRoom* findRoom(uint8_t number) const;
+    DungeonInteractions interactions;
+    DungeonPersistence persistence;
 
 public:
     explicit DungeonManager(const DungeonConfig& config = {}, uint32_t seed = std::random_device{}());
+
+    DungeonManager(const DungeonManager&) = delete;
+    DungeonManager& operator=(const DungeonManager&) = delete;
+    DungeonManager(DungeonManager&&) = delete;
+    DungeonManager& operator=(DungeonManager&&) = delete;
+
     bool initialize(const std::map<uint8_t, DungeonRoomLayout>& layout, EntityIdGenerator& entityIds);
     std::optional<WorldLocation> spawnFor(const PlayerSnapshot& player) const;
     bool canWalk(uint8_t number, const CollisionBounds& bounds) const;
@@ -38,7 +46,7 @@ public:
     void update(
         std::chrono::milliseconds elapsed, const std::vector<Combatant>& combatants, PlayerManager& players, EntityIdGenerator& ids, std::chrono::steady_clock::time_point now);
     void onTravel(uint16_t playerId, uint8_t room, bool survived);
-    const CombatProgressData& getCombatProgress() const;
+    CombatProgressData getCombatProgress() const;
     bool combatCompleted() const;
     std::optional<DungeonCombatData> getCombatData(uint8_t room) const;
     bool enter(PlayerManager& players, uint16_t playerId);
@@ -50,8 +58,8 @@ public:
     bool canExit(const PlayerSnapshot& player) const;
     void removeBrokenMinerals();
     std::optional<OpenChestData> openChestFor(const PlayerSnapshot& player) const;
-    void depositInChest(PlayerManager& players, uint16_t playerId, const ItemTransferDTO& command);
-    void withdrawFromChest(PlayerManager& players, uint16_t playerId, const SelectItemDTO& command);
+    bool depositInChest(PlayerManager& players, uint16_t playerId, const ItemTransferDTO& command);
+    bool withdrawFromChest(PlayerManager& players, uint16_t playerId, const SelectItemDTO& command);
     std::map<uint8_t, std::vector<FurnitureData>> storageFurniture() const;
     std::map<uint8_t, std::vector<LootData>> storageLoot() const;
     void saveInventories(std::map<uint32_t, std::map<uint8_t, Stack>>& inventories) const;

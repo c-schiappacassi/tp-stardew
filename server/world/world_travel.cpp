@@ -1,6 +1,6 @@
 #include "world_travel.h"
 
-#include "dungeon/dungeon_entrance.h"
+#include "dungeon/contracts/dungeon_entrance.h"
 #include "dungeon/dungeon_manager.h"
 #include "farm/farm_manager.h"
 #include "farm/loading/farm_layout.h"

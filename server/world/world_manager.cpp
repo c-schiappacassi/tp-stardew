@@ -156,7 +156,7 @@ bool WorldManager::combatCompleted() const { return dungeon.combatCompleted(); }
 
 std::optional<DungeonCombatData> WorldManager::getCombatData(uint8_t number) const { return dungeon.getCombatData(number); }
 
-const CombatProgressData& WorldManager::getCombatProgress() const { return dungeon.getCombatProgress(); }
+CombatProgressData WorldManager::getCombatProgress() const { return dungeon.getCombatProgress(); }
 
 void WorldManager::afterStatusPublished() { dungeon.removeBrokenMinerals(); }
 

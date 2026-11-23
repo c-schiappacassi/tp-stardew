@@ -3,8 +3,8 @@
 #include <algorithm>
 #include <cmath>
 
+#include "dungeon/dungeon_room.h"
 #include "dungeon/enemies/enemy_navigation.h"
-#include "dungeon/rooms/dungeon_room.h"
 #include "player/player_manager.h"
 
 #include "combat_context.h"
@@ -52,7 +52,7 @@ void projectile_combat::launch(CombatContext& context, const Enemy& enemy, const
         return;
     }
     const bool green = context.generator.roll(50);
-    const auto origin = enemy.bounds(enemy.data.pos).center();
+    const auto origin = enemy.bounds(enemy.getPosition()).center();
     const auto destination = target.getHitboxCenter();
     const double dx = destination.getX() - origin.getX();
     const double dy = destination.getY() - origin.getY();

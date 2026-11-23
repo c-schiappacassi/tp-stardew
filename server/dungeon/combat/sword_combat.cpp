@@ -3,8 +3,8 @@
 #include <algorithm>
 #include <limits>
 
+#include "dungeon/dungeon_room.h"
 #include "dungeon/enemies/enemy_navigation.h"
-#include "dungeon/rooms/dungeon_room.h"
 #include "player/player_manager.h"
 
 #include "combat_context.h"
@@ -29,7 +29,7 @@ Enemy* findTarget(const PlayerSnapshot& player, DungeonRoom& room, Direction dir
         if (!enemy.alive()) {
             continue;
         }
-        const auto target = enemy.bounds(enemy.data.pos).center();
+        const auto target = enemy.bounds(enemy.getPosition()).center();
         const auto distance = enemy_navigation::squaredDistance(origin, target);
         if (distance <= squaredRange && distance < nearestDistance && enemy_navigation::isInFront(direction, origin, target) && room.hasClearLine(origin, target)) {
             nearestEnemy = &enemy;

@@ -3,7 +3,7 @@
 #include <cmath>
 #include <limits>
 
-#include "dungeon/rooms/dungeon_room.h"
+#include "dungeon/dungeon_room.h"
 #include "player/player_manager.h"
 
 #include "mineral_generator.h"

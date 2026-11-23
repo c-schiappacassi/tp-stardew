@@ -3,8 +3,8 @@
 #include <algorithm>
 #include <limits>
 
+#include "dungeon/dungeon_room.h"
 #include "dungeon/enemies/enemy_navigation.h"
-#include "dungeon/rooms/dungeon_room.h"
 #include "player/player_manager.h"
 
 #include "combat_context.h"
@@ -43,7 +43,7 @@ bool isOccupied(const TrapData& trap, const DungeonRoom& room, const std::vector
         }
     }
     for (const auto& [id, enemy]: room.getCombat().enemies) {
-        if (enemy.alive() && bounds.intersects(enemy.bounds(enemy.data.pos))) {
+        if (enemy.alive() && bounds.intersects(enemy.bounds(enemy.getPosition()))) {
             return true;
         }
     }

@@ -1,6 +1,7 @@
 #pragma once
 
 #include <optional>
+
 #include "position.h"
 
 struct DungeonRoomPassages {

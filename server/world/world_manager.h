@@ -3,7 +3,7 @@
 #include <optional>
 #include <random>
 
-#include "dungeon/dungeon_entrance.h"
+#include "dungeon/contracts/dungeon_entrance.h"
 #include "dungeon/dungeon_manager.h"
 #include "entities/entity_id_generator.h"
 #include "farm/farm_manager.h"
@@ -50,7 +50,7 @@ public:
     void update(std::chrono::milliseconds elapsed, PlayerManager& players, std::chrono::steady_clock::time_point now = std::chrono::steady_clock::now());
     bool combatCompleted() const;
     std::optional<DungeonCombatData> getCombatData(uint8_t room) const;
-    const CombatProgressData& getCombatProgress() const;
+    CombatProgressData getCombatProgress() const;
     bool loadDungeon(uint8_t worldId, const std::map<uint8_t, DungeonRoomLayout>& layout);
     bool configureDungeonEntrance(const DungeonEntrance& data);
     bool acceptsWorld(uint8_t worldId) const;

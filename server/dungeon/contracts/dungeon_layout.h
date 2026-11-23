@@ -3,7 +3,7 @@
 #include <vector>
 
 #include "chests/loading/chest_spawn.h"
-#include "dungeon/rooms/dungeon_room_passages.h"
+#include "dungeon/contracts/dungeon_room_passages.h"
 #include "world/zone_map.h"
 
 #include "dtos.h"

@@ -4,7 +4,7 @@
 #include <map>
 #include <queue>
 
-#include "dungeon/rooms/dungeon_room.h"
+#include "dungeon/dungeon_room.h"
 
 #include "protocol_types.h"
 
@@ -29,7 +29,7 @@ Direction enemy_navigation::facing(const Position& from, const Position& target)
     return Direction::Down;
 }
 
-bool enemy_navigation::isInFront(Direction direction, const Position& from,const Position& target) {
+bool enemy_navigation::isInFront(Direction direction, const Position& from, const Position& target) {
     const int dx = target.getX() - from.getX();
     const int dy = target.getY() - from.getY();
     if (dx == 0 && dy == 0) {
@@ -49,7 +49,7 @@ bool enemy_navigation::isInFront(Direction direction, const Position& from,const
     }
 }
 
-Position enemy_navigation::offsetPosition(const Position& position, Direction direction,int distance) {
+Position enemy_navigation::offsetPosition(const Position& position, Direction direction, int distance) {
     switch (direction) {
         case Direction::Up:
             return Position{position.getX(), position.getY() - distance};
@@ -64,7 +64,7 @@ Position enemy_navigation::offsetPosition(const Position& position, Direction di
     }
 }
 
-std::optional<Position> enemy_navigation::nextWaypoint(const DungeonRoom& room,const Position& from,const Position& target) {
+std::optional<Position> enemy_navigation::nextWaypoint(const DungeonRoom& room, const Position& from, const Position& target) {
     const auto& map = room.getMap();
     const auto start = map.baseCellAt(from);
     const auto goal = map.baseCellAt(target);

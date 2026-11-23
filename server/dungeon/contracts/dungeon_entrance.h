@@ -1,7 +1,8 @@
 #pragma once
 
-#include "protocol_types.h"
 #include "world/zone_map.h"
+
+#include "protocol_types.h"
 
 struct DungeonEntrance {
     Zone zone = Zone::Farm;

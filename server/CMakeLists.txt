@@ -9,7 +9,6 @@ target_sources(taller_server_core
         dungeon/combat/combat_progress.cpp
         dungeon/combat/dungeon_combat.cpp
         dungeon/combat/combat_damage.cpp
-        dungeon/combat/combat_cheats.cpp
         dungeon/combat/enemy_defeat.cpp
         dungeon/combat/sword_combat.cpp
         dungeon/combat/enemy_behavior.cpp
@@ -61,7 +60,11 @@ target_sources(taller_server_core
         player/state/player_location.cpp
         player/state/player_vitals.cpp
         dungeon/mining/mineral.cpp
-        dungeon/rooms/dungeon_room.cpp
+        dungeon/dungeon_room.cpp
+        dungeon/contracts/enemy_definition.cpp
+        dungeon/rooms/dungeon_rooms.cpp
+        dungeon/interactions/dungeon_interactions.cpp
+        dungeon/persistence/dungeon_persistence.cpp
         dungeon/dungeon_manager.cpp
         entities/entity_id_generator.cpp
         entities/collision_box.cpp
@@ -138,7 +141,7 @@ target_sources(taller_server_core
     PUBLIC
     # .h files
         dungeon/enemies/enemy.h
-        dungeon/enemies/enemy_definition.h
+        dungeon/contracts/enemy_definition.h
         dungeon/enemies/enemy_generator.h
         dungeon/enemies/enemy_navigation.h
         dungeon/combat/dungeon_combat.h
@@ -213,8 +216,12 @@ target_sources(taller_server_core
         entities/collision_box.h
         entities/collision_bounds.h
         entities/entity_dimensions.h
-        dungeon/rooms/dungeon_room.h
+        dungeon/dungeon_room.h
         dungeon/mining/mineral.h
+        dungeon/rooms/dungeon_rooms.h
+        dungeon/interactions/dungeon_interactions.h
+        dungeon/persistence/dungeon_persistence.h
+        dungeon/contracts/dungeon_entrance.h
         dungeon/dungeon_manager.h
         entities/entity_id_generator.h
         dungeon/dungeon_config.h
@@ -237,10 +244,10 @@ target_sources(taller_server_core
         dungeon/rooms/room_minerals.h
         dungeon/rooms/dungeon_travel.h
         dungeon/rooms/room_geometry.h
-        dungeon/rooms/dungeon_room_passages.h
+        dungeon/contracts/dungeon_room_passages.h
         dungeon/mining/dungeon_mining.h
         dungeon/loading/dungeon_loader.h
-        dungeon/loading/dungeon_layout.h
+        dungeon/contracts/dungeon_layout.h
         dungeon/mining/mineral_placement.h
         game/game_setup.h
         farm/spatial/farm_terrain.h
