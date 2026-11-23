@@ -92,10 +92,10 @@ const std::map<BuildingId, Shape>& buildings() {
             ".........",
             ".........",
             "#####....",
-            "########.",
-            "########.",
-            "########.",
-            "########.",
+            "#####....",
+            "#########",
+            "#########",
+            "#########",
             "...DD...."})},
         // Community center (12x10 tiles):
         {BuildingId::ComunityCenter, Shape::parse({
