@@ -110,4 +110,4 @@ target_sources(taller_client
 
 add_subdirectory(qt)
 target_include_directories(taller_client PRIVATE ${CMAKE_CURRENT_SOURCE_DIR})
-target_compile_definitions(taller_client PRIVATE ASSETS_DIR="${PROJECT_SOURCE_DIR}/common/assets")
+target_compile_definitions(taller_client PRIVATE ASSETS_DIR="${PROJECT_SOURCE_DIR}/common/assets" MAPS_DIR="${PROJECT_SOURCE_DIR}/maps")

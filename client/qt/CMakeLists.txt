@@ -26,5 +26,6 @@ target_sources(taller_client PRIVATE
     join_character_screen.h join_character_screen.cpp
     sprite_button.h sprite_button.cpp
     menu_helpers.h menu_helpers.cpp
+    map_selector.h map_selector.cpp
 )
 target_link_libraries(taller_client PRIVATE Qt6::Core Qt6::Widgets)

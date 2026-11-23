@@ -14,7 +14,6 @@ const QRect buttonHoverRect(800, 760, 300, 80);
 const QRect backNormalRect(296, 252, 66, 28);
 const QRect backHoverRect(296, 280, 66, 26);
 const QSize logoSize(960, 449);
-const QSize buttonSize(320, 80);
 const QSize backSize(200, 85);
 }
 
@@ -47,9 +46,9 @@ QLabel* MenuHelpers::makeInputFrame(QLineEdit* input, const QRect& rect, const Q
     return field;
 }
 
-SpriteButton* MenuHelpers::makePushButton(const QString& text, QWidget* parent) const {
+SpriteButton* MenuHelpers::makePushButton(const QString& text, QWidget* parent, const QSize& size) const {
     SpriteButton* button = new SpriteButton(frames.copy(buttonRect), frames.copy(buttonHoverRect), parent);
-    button->setFixedSize(buttonSize);
+    button->setFixedSize(size);
 
     QLabel* label = new QLabel(text, button);
     label->setGeometry(button->rect());

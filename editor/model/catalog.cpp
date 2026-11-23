@@ -89,7 +89,7 @@ ElementInfo portal(PortalId id, const std::string& name, const std::string& shee
                    int x, int y, int width, int height) {
     ElementInfo info = make(portalElement(id), name, sheet, x, y, width, height);
     const map_rules::Shape& shape = map_rules::shapeOf(id);
-    requireSameSize(info, shape, 1);
+    requireSameSize(info, shape, 2);
     if (info.tilesHeight != map_rules::spriteRowsOf(id)) {
         throw std::logic_error("el alto del sprite de " + info.name + " no coincide con el de map_shapes");
     }
