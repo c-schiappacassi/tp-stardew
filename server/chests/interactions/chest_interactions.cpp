@@ -75,6 +75,10 @@ std::optional<bool> ChestInteractions::interact(PlayerManager& players, uint16_t
         if (!chests.removeEmpty(target->getId(), placement))
             return false;
         players.apply(playerId, player_action::CloseChest{});
+        for (const auto otherId: players.connectedPlayerIds()) {
+            if (players.snapshot(otherId).getOpenChestId() == target->getId())
+                players.apply(otherId, player_action::CloseChest{});
+        }
         players.apply(playerId, player_action::FaceDirection{direction});
         return players.apply(playerId, player_action::UseTool{now}).applied;
     }

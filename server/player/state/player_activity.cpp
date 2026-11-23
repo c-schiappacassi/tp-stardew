@@ -1,7 +1,7 @@
 #include "player_activity.h"
 
 PlayerActivity::PlayerActivity(const PlayerData& initialData):
-        state(initialData.state), direction(initialData.dir) {
+        state(initialData.state == PlayerState::LookingChest ? PlayerState::Idle : initialData.state), direction(initialData.dir) {
     if (state == PlayerState::Walking)
         movementDirection = direction;
 }
@@ -11,7 +11,7 @@ PlayerState PlayerActivity::getState() const { return state; }
 Direction PlayerActivity::getDirection() const { return direction; }
 
 bool PlayerActivity::canAct() const {
-    return state == PlayerState::Idle || state == PlayerState::Walking;
+    return state == PlayerState::Idle || state == PlayerState::Walking || state == PlayerState::LookingChest;
 }
 
 bool PlayerActivity::isResting() const {
@@ -43,7 +43,7 @@ void PlayerActivity::setMovement(Direction requested) {
     movementDirection = requested;
     if (requested != Direction::None)
         closeChest();
-    if (state == PlayerState::UsingTool)
+    if (state == PlayerState::UsingTool || state == PlayerState::LookingChest)
         return;
     if (requested == Direction::None) {
         state = PlayerState::Idle;
@@ -134,7 +134,7 @@ void PlayerActivity::reset() {
 
 void PlayerActivity::restoreData(const PlayerData& saved) {
     closeChest();
-    state = saved.state;
+    state = saved.state == PlayerState::LookingChest ? PlayerState::Idle : saved.state;
     direction = saved.dir;
     movementDirection = Direction::None;
     bedReady = false;
@@ -147,8 +147,13 @@ std::chrono::steady_clock::time_point PlayerActivity::actionReadyAt() const {
 void PlayerActivity::openChest(uint32_t id) {
     setMovement(Direction::None);
     openChestId = id;
+    state = PlayerState::LookingChest;
 }
 
-void PlayerActivity::closeChest() { openChestId.reset(); }
+void PlayerActivity::closeChest() {
+    openChestId.reset();
+    if (state == PlayerState::LookingChest)
+        state = PlayerState::Idle;
+}
 
 std::optional<uint32_t> PlayerActivity::getOpenChestId() const { return openChestId; }

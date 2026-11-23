@@ -88,7 +88,8 @@ enum class PlayerState : uint8_t {
     Walking = 1,
     UsingTool = 2,
     Unconscious = 3,
-    Sleeping = 4
+    Sleeping = 4,
+    LookingChest = 5
 };
 
 // ENEMIES
