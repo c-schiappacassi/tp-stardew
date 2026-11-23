@@ -12,7 +12,9 @@ bool RoomGeometry::canWalk(const ZoneMap& map, const RoomMinerals& minerals,cons
 }
 
 bool RoomGeometry::isPassageCell(const ZoneMap& map,const DungeonRoomPassages& data, const Position& pos) const {
-    return map.sameBaseCell(pos, data.entry) || map.sameBaseCell(pos, data.exit) ||(data.nextRoom && map.sameBaseCell(pos, *data.nextRoom));
+    return map.sameBaseCell(pos, data.entry) || map.sameBaseCell(pos, data.exit) ||(data.nextRoom && map.sameBaseCell(pos, *data.nextRoom)) ||
+           std::any_of(data.extraExits.begin(), data.extraExits.end(),
+                       [&](const Position& door) { return map.sameBaseCell(pos, door); });
 }
 
 bool RoomGeometry::arePassagesValid(uint8_t number, const ZoneMap& map,const DungeonRoomPassages& data) const {

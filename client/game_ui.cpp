@@ -46,17 +46,18 @@ void GameUI::update_camera(const State& state) {
 
     if (const PlayerData* me = state.find_player(local_player)) {
         currentZone = me->currentZone;
+        cam.set_world_size(world.world_size());
         cam.center_on(me->pos.getX(), me->pos.getY());
     }
 }
 
 void GameUI::update(const State& state, long long it) {
+    world.update(state);
     update_camera(state);
 
     renderer.SetDrawColor(0, 0, 0, 255);
     renderer.Clear();
 
-    world.update(state);
     ui.update(state);
 
     RenderInfo ctx{renderer, asset_manager, state, cam, currentZone, it};

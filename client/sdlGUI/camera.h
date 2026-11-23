@@ -1,5 +1,8 @@
 #pragma once
 
+#include <algorithm>
+#include <optional>
+
 #include <SDL2pp/SDL2pp.hh>
 
 class Camera {
@@ -11,6 +14,15 @@ private:
     int viewport_w;
     int viewport_h;
     int zoom;
+    std::optional<SDL2pp::Point> world_size;
+
+    int clamp_axis(int target, int world, int viewport) const {
+        const int half = (viewport + 2 * zoom - 1) / (2 * zoom);
+        if (half > world - half) {
+            return world / 2;
+        }
+        return std::clamp(target, half, world - half);
+    }
 
     static int to_texels(int world_units) {
         return static_cast<int>(static_cast<float>(world_units) * TEXELS_PER_UNIT);
@@ -29,9 +41,16 @@ public:
         viewport_h = h;
     }
 
+    void set_world_size(std::optional<SDL2pp::Point> size) { world_size = size; }
+
     void center_on(int world_x, int world_y) {
-        center_x = world_x;
-        center_y = world_y;
+        if (world_size) {
+            center_x = clamp_axis(world_x, world_size->x, viewport_w);
+            center_y = clamp_axis(world_y, world_size->y, viewport_h);
+        } else {
+            center_x = world_x;
+            center_y = world_y;
+        }
     }
 
     SDL2pp::Point world_to_screen(int world_x, int world_y) const {

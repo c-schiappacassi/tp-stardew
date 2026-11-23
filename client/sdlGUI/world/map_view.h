@@ -55,6 +55,16 @@ public:
         if (ZoneView* view = current_view()) view->collect_drawables(ctx, out);
     }
 
+    std::optional<SDL2pp::Point> world_size() const override {
+        switch (current) {
+            case Zone::Dungeon: return mines.world_size();
+            case Zone::Farm: return farm.world_size();
+            case Zone::Town: return town.world_size();
+            case Zone::InsideHouse: return interiors.world_size();
+        }
+        return std::nullopt;
+    }
+
     SDL_Color ambient_light(const RenderInfo& ctx) override {
         if (ZoneView* view = current_view()) return view->ambient_light(ctx);
         return lighting::DAYLIGHT;

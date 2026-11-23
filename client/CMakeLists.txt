@@ -27,6 +27,8 @@ target_sources(taller_client
     sdlGUI/world/farm/crop_view.cpp
     sdlGUI/world/farm/animal_view.cpp
 
+    ${CMAKE_SOURCE_DIR}/common/map/map_shapes.cpp
+
     PUBLIC
     # .h files
     game.h

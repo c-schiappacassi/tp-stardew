@@ -1,5 +1,4 @@
-#ifndef START_SCREEN_H
-#define START_SCREEN_H
+#pragma once
 
 #include <QWidget>
 
@@ -13,5 +12,3 @@ signals:
     void createMapRequested();
     void editMapRequested();
 };
-
-#endif  // START_SCREEN_H

@@ -1,5 +1,4 @@
-#ifndef MAIN_WINDOW_H
-#define MAIN_WINDOW_H
+#pragma once
 
 #include <QMainWindow>
 
@@ -17,6 +16,7 @@ public:
 
 private:
     void openEditor(const WorldMap& map);
+    void openMapFile(const QString& path);
     void createMap();
     void editExistingMap();
     void closeEditor();
@@ -25,5 +25,3 @@ private:
     StartScreen* startScreen;
     MapEditorScreen* editor = nullptr;
 };
-
-#endif  // MAIN_WINDOW_H

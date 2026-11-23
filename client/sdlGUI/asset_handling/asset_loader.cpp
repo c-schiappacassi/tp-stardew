@@ -49,6 +49,14 @@ namespace {
         return Sprite{r.sprite, r.x, r.y, r.w, r.h, static_cast<int16_t>(-r.w / 2), static_cast<int16_t>(-r.h)};
     }
 
+    Sprite make_tile_anchored_sprite(const SpriteDefs::SpriteRect& r) {
+        const int tiles_w = (r.w + TILE_TO_PIXEL - 1) / TILE_TO_PIXEL;
+        const int tiles_h = (r.h + TILE_TO_PIXEL - 1) / TILE_TO_PIXEL;
+        return Sprite{r.sprite, r.x, r.y, r.w, r.h,
+                      static_cast<int16_t>((tiles_w * TILE_TO_PIXEL - r.w) / 2),
+                      static_cast<int16_t>(tiles_h * TILE_TO_PIXEL - r.h)};
+    }
+
     template <class Map, class State, std::size_t N>
     void register_rect_clips(Map& clips, SpriteId sprite, const SpriteDefs::RectClipDef<State> (&defs)[N], bool mirror_right_to_left) {
         auto build = [&](const SpriteDefs::RectClipDef<State>& d, bool flip) {
@@ -151,18 +159,39 @@ namespace {
     }
 
     void load_tile_sprites(AssetTables& out) {
-        for (const auto& d : SpriteDefs::TILES)
+        for (const auto& d : SpriteDefs::TILES) {
             out.tile_sprites.insert_or_assign(d.id, make_tile_sprite(d.rect));
+
+            const auto& r = d.rect;
+            std::vector<Sprite>& pieces = out.tile_pieces[d.id];
+            pieces.clear();
+            const int cols = std::max(1, r.w / TILE_TO_PIXEL);
+            const int rows = std::max(1, r.h / TILE_TO_PIXEL);
+            for (int row = 0; row < rows; ++row) {
+                for (int col = 0; col < cols; ++col) {
+                    pieces.push_back(Sprite{r.sprite,
+                        static_cast<uint16_t>(r.x + col * TILE_TO_PIXEL),
+                        static_cast<uint16_t>(r.y + row * TILE_TO_PIXEL),
+                        static_cast<uint16_t>(std::min<int>(TILE_TO_PIXEL, r.w)),
+                        static_cast<uint16_t>(std::min<int>(TILE_TO_PIXEL, r.h))});
+                }
+            }
+        }
     }
 
     void load_decor_sprites(AssetTables& out) {
         for (const auto& d : SpriteDefs::DECOR)
-            out.decor_sprites.insert_or_assign(d.id, make_standing_sprite(d.rect));
+            out.decor_sprites.insert_or_assign(d.id, make_tile_anchored_sprite(d.rect));
     }
 
     void load_building_sprites(AssetTables& out) {
         for (const auto& d : SpriteDefs::BUILDINGS)
-            out.building_sprites.insert_or_assign(d.id, make_standing_sprite(d.rect));
+            out.building_sprites.insert_or_assign(d.id, make_tile_anchored_sprite(d.rect));
+    }
+
+    void load_frame_sprites(AssetTables& out) {
+        for (const auto& d : SpriteDefs::FRAMES)
+            out.frame_sprites.insert_or_assign(d.id, make_tile_anchored_sprite(d.rect));
     }
 
     void load_furniture_sprites(AssetTables& out) {
@@ -271,6 +300,7 @@ AssetTables load_assets(SDL2pp::Renderer& renderer, const std::filesystem::path&
     load_tile_sprites(out);
     load_decor_sprites(out);
     load_building_sprites(out);
+    load_frame_sprites(out);
     load_furniture_sprites(out);
     load_skeleton_clips(out);
     load_golem_clips(out);

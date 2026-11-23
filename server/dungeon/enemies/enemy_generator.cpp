@@ -27,6 +27,8 @@ bool isSpawnPositionValid(const DungeonRoom& room, const Position& position,cons
     if (!room.canWalk(bounds) ||
         enemy_navigation::squaredDistance(position, passages.entry) < squaredSafetyRange ||
         room.getMap().sameBaseCell(position, passages.exit) ||
+        std::any_of(passages.extraExits.begin(), passages.extraExits.end(),
+                    [&](const Position& door) { return room.getMap().sameBaseCell(position, door); }) ||
         (passages.nextRoom && room.getMap().sameBaseCell(position, *passages.nextRoom))) {
         return false;
     }

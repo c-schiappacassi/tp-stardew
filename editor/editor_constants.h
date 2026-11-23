@@ -1,5 +1,4 @@
-#ifndef EDITOR_CONSTANTS_H
-#define EDITOR_CONSTANTS_H
+#pragma once
 
 #include <QString>
 
@@ -42,5 +41,3 @@ const QString BUTTON_STYLE = R"(
     QPushButton:hover { background: #dcb072; }
     QPushButton:pressed { background: #f6d7a0; }
 )";
-
-#endif  // EDITOR_CONSTANTS_H

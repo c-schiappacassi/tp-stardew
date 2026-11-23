@@ -1,5 +1,4 @@
-#ifndef SPRITE_BUTTON_H
-#define SPRITE_BUTTON_H
+#pragma once
 
 #include <QAbstractButton>
 #include <QPixmap>
@@ -17,5 +16,3 @@ private:
     QPixmap normal;
     QPixmap hover;
 };
-
-#endif  // SPRITE_BUTTON_H

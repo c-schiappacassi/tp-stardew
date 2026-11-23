@@ -24,6 +24,7 @@ bool FarmLoader::load(const FarmLayout& layout, FarmManager& farm, EntityIdGener
     std::vector<Position> triggers;
     if (layout.mineDoor) triggers.push_back(*layout.mineDoor);
     if (layout.townDoor) triggers.push_back(*layout.townDoor);
+    for (const auto& extra: layout.extraTownDoors) triggers.push_back(extra);
     for (const auto& room: layout.interiors) {
         if (room.outside.zone == Zone::Farm) {
             triggers.push_back(room.outside.position);

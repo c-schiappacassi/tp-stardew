@@ -3,7 +3,7 @@
 #include <algorithm>
 #include <filesystem>
 
-#include "world/loading/map_loader.h"
+#include "common/map/map_loader.h"
 #include "world/loading/map_converter.h"
 
 #include <exception>
@@ -132,7 +132,6 @@ GameSession GameManager::joinGame(const JoinGameDTO& dto,
         session.status.errorMsg = "No game exists with that code";
         return session;
     }
-    // The game loop owns subsequent saves, including new players and disconnects.
     return it->second->joinGame(dto, output);
 }
 

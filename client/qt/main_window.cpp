@@ -128,6 +128,7 @@ MainWindow::MainWindow(NetworkManager& net, QWidget *parent) : QMainWindow(paren
         CreateGameDTO dto(username);
         dto.characterName = newGameScreen->characterName().toStdString();
         dto.gameName = newGameScreen->farmName().toStdString();
+        dto.mapPath = "maps/custom/prueba.toml"; 
         dto.worldId = 0;
         dto.hairModel = newGameScreen->hairModel();
         dto.shirtModel = newGameScreen->shirtModel();

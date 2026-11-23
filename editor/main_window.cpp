@@ -2,7 +2,10 @@
 
 #include <QDir>
 #include <QFileDialog>
+#include <QMessageBox>
 #include <QStackedWidget>
+
+#include <exception>
 
 #include "editor_constants.h"
 #include "map_editor_screen.h"
@@ -31,7 +34,7 @@ void MainWindow::openEditor(const WorldMap& map) {
 }
 
 void MainWindow::createMap() {
-    openEditor(readMap(BASE_MAP_PATH.toStdString()));
+    openMapFile(BASE_MAP_PATH);
 }
 
 void MainWindow::editExistingMap() {
@@ -40,7 +43,15 @@ void MainWindow::editExistingMap() {
     if (path.isEmpty()) {
         return;
     }
-    openEditor(readMap(path.toStdString()));
+    openMapFile(path);
+}
+
+void MainWindow::openMapFile(const QString& path) {
+    try {
+        openEditor(readMap(path.toStdString()));
+    } catch (const std::exception& error) {
+        QMessageBox::warning(this, "Open map", QString("Could not open ") + path + ":\n" + error.what());
+    }
 }
 
 void MainWindow::closeEditor() {

@@ -1,6 +1,6 @@
-#ifndef CATALOG_H
-#define CATALOG_H
+#pragma once
 
+#include <optional>
 #include <string>
 #include <vector>
 
@@ -48,6 +48,11 @@ struct TileArea {
     int height;
 };
 
+struct TileOffset {
+    int x;
+    int y;
+};
+
 struct ElementInfo {
     ElementId element;
     std::string name;
@@ -58,8 +63,9 @@ struct ElementInfo {
     int spriteHeight;
     int tilesWidth;
     int tilesHeight;
-    TileArea footprint;  // que tiles ocupa en el PISO
-    int doorColumn = 0;
+    std::vector<TileOffset> occupied;
+    std::vector<TileOffset> blocked;
+    std::optional<TileOffset> door;
 };
 
 class ElementCatalog {
@@ -67,5 +73,3 @@ public:
     static const ElementInfo& infoOf(ElementId element);
     static const std::vector<ElementInfo>& all();
 };
-
-#endif  // ELEMENT_CATALOG_H

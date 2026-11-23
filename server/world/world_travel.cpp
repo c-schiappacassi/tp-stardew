@@ -1,5 +1,7 @@
 #include "world_travel.h"
 
+#include <algorithm>
+
 #include "dungeon/dungeon_entrance.h"
 #include "dungeon/dungeon_manager.h"
 #include "farm/farm_manager.h"
@@ -19,10 +21,15 @@ void WorldTravel::configureFarm(const FarmLayout& layout) {
         auto outsideReturn = room.outside;
         outsideReturn.position = room.returnPosition;
         portals.push_back({room.outside, inside});
+        for (const auto& position: room.extraOutside) {
+            auto extra = room.outside;
+            extra.position = position;
+            portals.push_back({extra, inside});
+        }
         portals.push_back({exit, outsideReturn});
     }
     if (layout.townDoor) {
-        farmTown = FarmTownPassage{*layout.townDoor, layout.townReturn.value_or(layout.spawn)};
+        farmTown = FarmTownPassage{*layout.townDoor, layout.townReturn.value_or(layout.spawn), layout.extraTownDoors};
     }
 }
 
@@ -52,6 +59,8 @@ bool WorldTravel::canConnectTown(const TownMap& town, const FarmManager& farm) c
     }
     const CollisionBox playerBox{entity_dimensions::PLAYER};
     return farm.canWalk(playerBox.at(farmTown->door)) &&
+           std::all_of(farmTown->extraDoors.begin(), farmTown->extraDoors.end(),
+                       [&](const Position& door) { return farm.canWalk(playerBox.at(door)); }) &&
            farm.canWalk(playerBox.at(farmTown->returnPosition));
 }
 
@@ -113,14 +122,20 @@ bool WorldTravel::use(Player& player, uint16_t playerId, DungeonManager& dungeon
         mineReturns.erase(playerId);
         return true;
     }
-    if (player.getZone() == Zone::Farm && farmTown && townFarmDoor &&
-        farm.getMap().sameBaseCell(player.getPosition(), farmTown->door)) {
+    const auto onFarmDoor = [&] {
+        const auto& map = farm.getMap();
+        const auto& position = player.getPosition();
+        return farmTown && (map.sameBaseCell(position, farmTown->door) ||
+            std::any_of(farmTown->extraDoors.begin(), farmTown->extraDoors.end(),
+                        [&](const Position& door) { return map.sameBaseCell(position, door); }));
+    };
+    if (player.getZone() == Zone::Farm && townFarmDoor && onFarmDoor()) {
         const ReturnPoint target{Zone::Town, *townFarmDoor};
         return canArrive(player, target, farm, town) &&
                player.changeLocation(target.zone, 0, target.position);
     }
     if (player.getZone() == Zone::Town) {
-        if (townFarmDoor && farmTown && town.getMap().sameBaseCell(player.getPosition(), *townFarmDoor)) {
+        if (townFarmDoor && farmTown && town.isFarmDoor(player.getPosition())) {
             const ReturnPoint target{Zone::Farm, farmTown->returnPosition};
             return canArrive(player, target, farm, town) &&
                    player.changeLocation(target.zone, 0, target.position);

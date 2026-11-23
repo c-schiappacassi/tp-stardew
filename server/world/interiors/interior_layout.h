@@ -7,6 +7,7 @@ struct InteriorLayout {
     InteriorLocation location;
     ZoneMap terrain;
     WorldLocation outside;
+    std::vector<Position> extraOutside;
     Position returnPosition{0, 0};
     Position entry{0, 0};
     Position exit{0, 0};

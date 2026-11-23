@@ -20,6 +20,8 @@ bool isValid(const TrapData& trap, const DungeonRoom& room, const DungeonRoomPas
     const auto& map = room.getMap();
     if (!room.canWalk(trapBounds(trap)) ||
         map.sameBaseCell(trap.pos, passages.entry) || map.sameBaseCell(trap.pos, passages.exit) ||
+        std::any_of(passages.extraExits.begin(), passages.extraExits.end(),
+                    [&](const Position& door) { return map.sameBaseCell(trap.pos, door); }) ||
         (passages.nextRoom && map.sameBaseCell(trap.pos, *passages.nextRoom)) ||
         static_cast<uint8_t>(trap.type) > static_cast<uint8_t>(TrapType::WallFlame) ||
         trap.dir == Direction::None ||

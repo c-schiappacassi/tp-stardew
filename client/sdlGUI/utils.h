@@ -51,6 +51,7 @@ enum class SpriteId : uint16_t {
     TownSpring,
     CavernPlants,
     DungeonWallTiles,
+    MinesTiles,
     LevelPortals,
     Furniture,
     

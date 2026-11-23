@@ -1,6 +1,7 @@
 #pragma once
 
 #include <chrono>
+#include <vector>
 #include <optional>
 #include "dungeon/combat/dungeon_combat.h"
 #include "dungeon/loading/dungeon_loader.h"

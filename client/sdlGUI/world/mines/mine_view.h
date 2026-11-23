@@ -20,7 +20,7 @@ public:
             levels.try_emplace(number, number, level_backgrounds[i], assets);
         }
     }
-
+    std::optional<SDL2pp::Point> world_size() const override;
     void update(const MineData& data);  
     void draw_background(const RenderInfo& ctx) override;
     void collect_drawables(const RenderInfo& ctx, std::vector<Drawable>& out) override;

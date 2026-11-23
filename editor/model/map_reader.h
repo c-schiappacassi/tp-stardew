@@ -1,10 +1,11 @@
-#ifndef MAP_READER_H
-#define MAP_READER_H
+#pragma once
 
 #include <string>
 
+#include "common/map/map_data.h"
 #include "world_map.h"
 
-WorldMap readMap(const std::string& path);
+WorldMap toWorldMap(const MapData& data);
 
-#endif  // MAP_READER_H
+
+WorldMap readMap(const std::string& path);

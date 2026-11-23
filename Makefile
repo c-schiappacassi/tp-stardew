@@ -1,4 +1,4 @@
-.PHONY: all test clean editor client common server build compile-debug run-tests run-client run-server
+.PHONY: all test clean editor client common server build compile-debug run-tests run-client run-server run-editor
 
 HOST ?= 127.0.0.1
 PORT ?= 12345
@@ -17,6 +17,9 @@ run-client: compile-debug
 
 run-server: compile-debug
 	./build/taller_server $(PORT)
+
+run-editor: compile-debug
+	./build/taller_editor
 
 clean:
 	rm -Rf build/

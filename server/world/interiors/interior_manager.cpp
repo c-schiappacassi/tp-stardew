@@ -177,7 +177,6 @@ InteriorData InteriorManager::dataFor(const InteriorLocation& location) const {
 void InteriorManager::completeMap(ConstMapData& map) const {
     for (const auto& room: rooms) {
         BackgroundData background = room.background;
-        background.portals.push_back({room.exit, PortalId::ToNextLevel});
         for (const auto& bed: room.beds) {
             background.furniture.push_back({bed, FurnitureId::Bed, Direction::None});
             background.furniture.push_back({bed, FurnitureId::BedSheet, Direction::None});
@@ -195,7 +194,5 @@ void InteriorManager::completeMap(ConstMapData& map) const {
             case InteriorId::MarniesShop: map.marnies = std::move(background); break;
             case InteriorId::ComunityCenter: map.community_center = std::move(background); break;
         }
-        auto& outside = room.outside.zone == Zone::Farm ? map.farm : map.town;
-        outside.portals.push_back({room.outside.position, PortalId::ToNextLevel});
     }
 }

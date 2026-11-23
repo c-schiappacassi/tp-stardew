@@ -1,18 +1,31 @@
 #pragma once
 
+#include <algorithm>
+#include <optional>
+
 #include "../../utils.h"
+#include "../../asset_handling/sprite_defs.h"
 #include "../../draw_region.h"
 #include "../entity_view.h"
 #include "protocol_types.h"
 #include "dtos.h"
+#include "common/map/map_shapes.h"
 
 class TileView {
 private:
     Position pos;
     const Sprite& texture_sprite;
+    const Sprite* under = nullptr;
 public:
-    explicit TileView(const TileData& data, AssetManager& assets): pos(data.pos), texture_sprite(assets.get_sprite(data.id)){};
+    explicit TileView(const TileData& data, AssetManager& assets)
+        : pos(data.pos),
+          texture_sprite(assets.get_tile_sprite(data.id, data.pos.getX() / TILE_TO_PIXEL, data.pos.getY() / TILE_TO_PIXEL)) {
+        if (SpriteDefs::is_over_dungeon_floor(data.id)) {
+            under = &assets.get_tile_sprite(TileTextureId::DungeonFloor, 0, 0);
+        }
+    }
     void draw(const RenderInfo& ctx){
+        if (under) draw_sprite_at(ctx, *under, pos);
         draw_sprite_at(ctx, this->texture_sprite, pos);
     };
 };
@@ -23,16 +36,22 @@ private:
     Position pos;
     const Sprite& sprite;
     bool flip;
+    std::optional<int> sort_y;
 public:
-    StaticSpriteView(Position pos, const Sprite& sprite, bool flip = false)
-        : pos(pos), sprite(sprite), flip(flip) {}
+    StaticSpriteView(Position pos, const Sprite& sprite, bool flip = false, std::optional<int> sort_y = std::nullopt)
+        : pos(pos), sprite(sprite), flip(flip), sort_y(sort_y) {}
 
     void draw(const RenderInfo& ctx) override {
         draw_sprite_at(ctx, sprite, pos, flip);
     }
 
     std::optional<float> depth(const RenderInfo& ctx) const override {
-        return depth_if_visible(ctx, pos, sprite.height);
+        const int bottom = sprite.offset_y + sprite.height;
+        const Position center(pos.getX() + sprite.offset_x + sprite.width / 2, pos.getY() + sprite.offset_y + sprite.height / 2);
+        if (!on_screen(ctx, center, std::max<int>(sprite.width, sprite.height))) {
+            return std::nullopt;
+        }
+        return static_cast<float>(sort_y ? *sort_y : static_cast<int>(pos.getY()) + bottom);
     }
 };
 
@@ -48,6 +67,7 @@ private:
         const Sprite& sprite;
     };
     std::optional<InteriorSprite> interior;
+    SDL2pp::Point world_size{0, 0};
 
     static bool is_flat(PortalId id) {
         return id == PortalId::ToNextLevel;
@@ -57,17 +77,25 @@ public:
     explicit Background(const BackgroundData& data, AssetManager& assets) {
         if (data.interior) {
             interior.emplace(InteriorSprite{data.interior->pos, assets.get_sprite(data.interior->interior_id)});
+            world_size.x = interior->pos.getX() + interior->sprite.width;
+            world_size.y = interior->pos.getY() + interior->sprite.height;
         }
 
         floor.reserve(data.floor.size());
-        for (const auto& t : data.floor)
+        for (const auto& t : data.floor) {
             floor.emplace_back(t, assets);
+            world_size.x = std::max<int>(world_size.x, t.pos.getX() + TILE_TO_PIXEL);
+            world_size.y = std::max<int>(world_size.y, t.pos.getY() + TILE_TO_PIXEL);
+        }
 
-        props.reserve(data.decor.size() + data.buildings.size() + data.furniture.size() + data.portals.size() + 1);
+        props.reserve(data.decor.size() + data.frame.size() + data.buildings.size() + data.furniture.size() + data.portals.size() + 1);
         for (const DecorData& d : data.decor)
             props.emplace_back(d.pos, assets.get_sprite(d.id));
+        for (const FramePieceData& f : data.frame)
+            props.emplace_back(f.pos, assets.get_sprite(f.id));
         for (const BuildingData& b : data.buildings)
-            props.emplace_back(b.pos, assets.get_sprite(b.id));
+            props.emplace_back(b.pos, assets.get_sprite(b.id), false,
+                               map_rules::doorRowSortY(b.id, b.pos.getY(), TILE_TO_PIXEL));
         for (const StaticFurnitureData& f : data.furniture) {
             const FlippableSprite& fs = assets.get_sprite(f.id, f.dir);
             props.emplace_back(f.pos, fs.sprite, fs.flip);
@@ -79,9 +107,12 @@ public:
 
         for (const PortalData& p : data.portals) {
             auto& target = is_flat(p.id) ? flat_props : props;
-            target.emplace_back(p.pos, assets.get_sprite(p.id));
+            const int sort_y = map_rules::portalSortY(p.id, p.pos.getY(), TILE_TO_PIXEL);
+            target.emplace_back(p.pos, assets.get_sprite(p.id), false, sort_y);
         }
     }
+
+    SDL2pp::Point size() const { return world_size; }
 
     void draw(const RenderInfo& ctx) {
         if (interior) {

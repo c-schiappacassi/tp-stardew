@@ -1,10 +1,13 @@
-#ifndef MAP_WRIITER_H
-#define MAP_WRIITER_H
+#pragma once
 
 #include <string>
+#include <vector>
 
+#include "common/map/map_data.h"
 #include "world_map.h"
 
-bool writeMap(const WorldMap& map, const std::string& path);
+std::vector<bool> bakedWalkability(const ZoneMap& zone);
 
-#endif  // MAP_WRIITER_H
+MapData toMapData(const WorldMap& map);
+
+bool writeMap(const WorldMap& map, const std::string& path);

@@ -3,6 +3,7 @@
 #include <cstdint>
 #include <map>
 #include <optional>
+#include <vector>
 
 #include "position.h"
 #include "protocol_types.h"
@@ -32,6 +33,7 @@ private:
     struct FarmTownPassage {
         Position door;
         Position returnPosition;
+        std::vector<Position> extraDoors;
     };
 
     std::optional<Entrance> entrance;

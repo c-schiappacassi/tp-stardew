@@ -1,5 +1,4 @@
-#ifndef MAP_EDITOR_SCREEN_H
-#define MAP_EDITOR_SCREEN_H
+#pragma once
 
 #include <QWidget>
 #include "model/world_map.h"
@@ -19,5 +18,3 @@ private:
     Sprites sprites;
     WorldMap map;
 };
-
-#endif  // MAP_EDITOR_SCREEN_H

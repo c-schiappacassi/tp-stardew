@@ -23,6 +23,8 @@ protected:
         sync_views(loot, data, [](const LootData& l) { return l.id; });
     }
 public:
+    std::optional<SDL2pp::Point> world_size() const final { return back.size(); }
+
     void draw_background(const RenderInfo& ctx) final { 
         back.draw(ctx);
         draw_floor_overlay(ctx);

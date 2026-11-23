@@ -32,6 +32,8 @@ private:
 public:
     explicit WorldView(const std::string& local_name, const ConstMapData& map_data, AssetManager& assets) : local_name(local_name), map(map_data, assets) {}
     
+    std::optional<SDL2pp::Point> world_size() const { return map.world_size(); }
+
     void update(const State& state) {
         this->update_players_and_list(state.get_players());
         this->map.update(state);

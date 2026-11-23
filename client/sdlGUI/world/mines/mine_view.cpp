@@ -21,4 +21,9 @@ void MinesView::collect_drawables(const RenderInfo& ctx, std::vector<Drawable>& 
     }
 }
 
+std::optional<SDL2pp::Point> MinesView::world_size() const {
+    const auto it = levels.find(current_level);
+    return it != levels.end() ? it->second.world_size() : std::nullopt;
+}
+
 SDL_Color MinesView::ambient_light(const RenderInfo&) { return lighting::dungeon_ambient(); }

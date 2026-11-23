@@ -1,4 +1,6 @@
 #include "dungeon_travel.h"
+
+#include <algorithm>
 #include "player/player.h"
 
 const DungeonRoom* DungeonTravel::findRoom(const std::map<uint8_t, DungeonRoom>& rooms, uint8_t number) {
@@ -50,5 +52,13 @@ bool DungeonTravel::canExit(const Player& player, const std::map<uint8_t, Dungeo
     }
 
     const auto* room = findRoom(rooms, player.getDungeonLevel());
-    return room && room->getPassages() && room->getMap().sameBaseCell(player.getPosition(), room->getPassages()->exit);
+    if (!room || !room->getPassages()) {
+        return false;
+    }
+    const auto& passages = *room->getPassages();
+    const auto& map = room->getMap();
+    const auto& position = player.getPosition();
+    return map.sameBaseCell(position, passages.exit) ||
+           std::any_of(passages.extraExits.begin(), passages.extraExits.end(),
+                       [&](const Position& door) { return map.sameBaseCell(position, door); });
 }

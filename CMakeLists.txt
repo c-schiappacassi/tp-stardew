@@ -138,6 +138,13 @@ if(TALLER_SERVER OR TALLER_TESTS OR TALLER_EDITOR)
         )
         FetchContent_MakeAvailable(tomlplusplus)
     endif()
+
+    # Todo lo del mapa que comparten el editor y el servidor: el formato (loader y writer), las
+    # formas de los edificios y las reglas de validez. Va aparte de taller_common porque necesita toml++.
+    add_library(taller_map STATIC)
+    add_subdirectory(common/map)
+    target_link_libraries(taller_map PUBLIC taller_common tomlplusplus::tomlplusplus)
+    set_project_warnings(taller_map ${TALLER_MAKE_WARNINGS_AS_ERRORS} FALSE)
 endif()
 
 # Program section
@@ -176,7 +183,7 @@ if(TALLER_SERVER)
     set_project_warnings(taller_server ${TALLER_MAKE_WARNINGS_AS_ERRORS} FALSE)
 
     # Link the taller_common lib target
-    target_link_libraries(taller_server taller_common tomlplusplus::tomlplusplus)
+    target_link_libraries(taller_server taller_common taller_map tomlplusplus::tomlplusplus)
 endif()
 
 if(TALLER_EDITOR)
@@ -198,7 +205,7 @@ if(TALLER_EDITOR)
 
     set_project_warnings(taller_editor ${TALLER_MAKE_WARNINGS_AS_ERRORS} FALSE)
 
-    target_link_libraries(taller_editor PRIVATE taller_common Qt6::Widgets tomlplusplus::tomlplusplus)
+    target_link_libraries(taller_editor PRIVATE taller_common taller_map Qt6::Widgets tomlplusplus::tomlplusplus)
 endif()
 
 
@@ -250,6 +257,7 @@ if(TALLER_TESTS)
     # Change this if you have to.
     target_link_libraries(taller_tests
         taller_common
+        taller_map
         GTest::gtest_main
         tomlplusplus::tomlplusplus
     )

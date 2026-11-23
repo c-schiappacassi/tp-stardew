@@ -6,7 +6,7 @@
 #include <vector>
 
 #include "game/game_setup.h"
-#include "map_data.h"
+#include "common/map/map_data.h"
 
 class MapConverter {
 public:
@@ -19,9 +19,12 @@ private:
     static Position convertPosition(const ZoneMap& terrain, const TilePosition& tile,
                                     const std::string& field);
     static Position findSpawn(const ZoneMap& terrain);
+    static std::vector<Position> extraDoorTiles(const ZoneMap& terrain, const std::vector<TilePosition>& doors,
+                                                const std::string& field);
+    static std::vector<Position> extraDoors(const ZoneMap& terrain, const EditorBuildingData& building,
+                                            const std::string& field);
     static FarmLayout convertFarm(const EditorZoneData& zone);
     static InteriorId townInteriorId(int buildingId);
-    static TownBuildingConfig convertTownBuilding(const EditorBuildingData& building);
     static TownConfig convertTown(const EditorZoneData& zone, std::vector<InteriorLayout>& interiors);
     static DungeonRoomLayout convertRoom(const EditorZoneData& zone, uint8_t level);
 };

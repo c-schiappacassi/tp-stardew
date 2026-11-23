@@ -1,6 +1,9 @@
 #include "catalog.h"
 
 #include <stdexcept>
+#include <string>
+
+#include "common/map/map_shapes.h"
 
 namespace {
 const int TILE_PIXELS = 16;
@@ -35,28 +38,82 @@ int tilesFor(int pixels) {
     return (pixels + TILE_PIXELS - 1) / TILE_PIXELS;
 }
 
+std::vector<TileOffset> tilesOf(const TileArea& area) {
+    std::vector<TileOffset> tiles;
+    for (int y = area.y; y < area.y + area.height; ++y) {
+        for (int x = area.x; x < area.x + area.width; ++x) {
+            tiles.push_back({x, y});
+        }
+    }
+    return tiles;
+}
+
 ElementInfo make(ElementId element, const std::string& name, const std::string& sheet, int x, int y, int width, int height) {
     const int tilesWidth = tilesFor(width);
     const int tilesHeight = tilesFor(height);
-    return {element, name, sheet, x, y, width, height, tilesWidth, tilesHeight, {0, tilesHeight - 1, tilesWidth, 1}};
+    ElementInfo info{element, name, sheet, x, y, width, height, tilesWidth, tilesHeight, {}, {}, std::nullopt};
+    info.occupied = tilesOf({0, tilesHeight - 1, tilesWidth, 1});
+    info.blocked = info.occupied;
+    return info;
 }
 
-ElementInfo building(BuildingId id, const std::string& name, const std::string& sheet, int x, int y, int width, int height, int doorColumn) {
+void requireSameSize(const ElementInfo& info, const map_rules::Shape& shape, int extraRows) {
+    if (shape.width() != info.tilesWidth || shape.height() < info.tilesHeight ||
+        shape.height() > info.tilesHeight + extraRows) {
+        throw std::logic_error("la forma de " + info.name + " no coincide con el tamanio del sprite");
+    }
+}
+
+ElementInfo building(BuildingId id, const std::string& name, const std::string& sheet,
+                     int x, int y, int width, int height) {
     ElementInfo info = make(buildingElement(id), name, sheet, x, y, width, height);
-    info.footprint = {0, 0, info.tilesWidth, info.tilesHeight};
-    info.doorColumn = doorColumn;
+    const map_rules::Shape& shape = map_rules::shapeOf(id);
+    requireSameSize(info, shape, 1);
+    info.blocked.clear();
+    for (int tileY = 0; tileY < shape.height(); ++tileY) {
+        for (int tileX = 0; tileX < shape.width(); ++tileX) {
+            if (shape.blocks(tileX, tileY)) {
+                info.blocked.push_back({tileX, tileY});
+            }
+        }
+    }
+    info.occupied = info.blocked;
+    info.door = TileOffset{shape.doorX(), shape.doorY()};
+    for (const auto& [doorX, doorY]: shape.doors()) {
+        info.occupied.push_back({doorX, doorY});
+    }
     return info;
 }
 
-ElementInfo portal(PortalId id, const std::string& name, const std::string& sheet, int x, int y, int width, int height) {
+ElementInfo portal(PortalId id, const std::string& name, const std::string& sheet,
+                   int x, int y, int width, int height) {
     ElementInfo info = make(portalElement(id), name, sheet, x, y, width, height);
-    info.footprint = {0, 0, info.tilesWidth, info.tilesHeight};
+    const map_rules::Shape& shape = map_rules::shapeOf(id);
+    requireSameSize(info, shape, 1);
+    if (info.tilesHeight != map_rules::spriteRowsOf(id)) {
+        throw std::logic_error("el alto del sprite de " + info.name + " no coincide con el de map_shapes");
+    }
+    info.blocked.clear();
+    for (int tileY = 0; tileY < shape.height(); ++tileY) {
+        for (int tileX = 0; tileX < shape.width(); ++tileX) {
+            if (shape.blocks(tileX, tileY)) {
+                info.blocked.push_back({tileX, tileY});
+            }
+        }
+    }
+    info.occupied = info.blocked;
+    for (const auto& [doorX, doorY]: shape.doors()) {
+        info.occupied.push_back({doorX, doorY});
+    }
+    info.door = TileOffset{shape.doorX(), shape.doorY()};
     return info;
 }
+
 
 ElementInfo tree(DecorId id, const std::string& name, const std::string& sheet, int x, int y, int width, int height) {
     ElementInfo info = make(decorElement(id), name, sheet, x, y, width, height);
-    info.footprint = {info.tilesWidth / 2, info.tilesHeight - 1, 1, 1};
+    info.occupied = tilesOf({info.tilesWidth / 2, info.tilesHeight - 1, 1, 1});
+    info.blocked = info.occupied;
     return info;
 }
 
@@ -66,21 +123,22 @@ ElementInfo decor(DecorId id, const std::string& name, const std::string& sheet,
 
 ElementInfo wall(FramePieceId id, const std::string& name, const std::string& sheet, int x, int y, int width, int height) {
     ElementInfo info = make(wallElement(id), name, sheet, x, y, width, height);
-    info.footprint = {0, 0, info.tilesWidth, info.tilesHeight};
+    info.occupied = tilesOf({0, 0, info.tilesWidth, info.tilesHeight});
+    info.blocked = info.occupied;
     return info;
 }
 
 const std::vector<ElementInfo>& elements() {
     static const std::vector<ElementInfo> list{
-        building(BuildingId::FarmHouse, "Farm house", "farm/environment/farm_buildings.png", 157, 268, 144, 145, 5),
-        building(BuildingId::StoneCabin, "Stone cabin", "farm/environment/cabins.png", 80, 336, 80, 112, 2),
-        building(BuildingId::WoodCabin, "Wood cabin", "farm/environment/cabins.png", 80, 0, 80, 112, 2),
-        building(BuildingId::BrickCabin, "Brick cabin", "farm/environment/cabins.png", 80, 112, 80, 112, 2),
-        building(BuildingId::MarniesShop, "Marnie's ranch", "market/world/buildings.png", 291, 0, 128, 112, 3),
-        building(BuildingId::PierresShop, "Pierre's general store", "market/world/buildings.png", 0, 0, 161, 160, 6),
-        building(BuildingId::RobinsShop, "Robin's carpenter shop", "market/world/buildings.png", 192, 127, 157, 193, 6),
-        building(BuildingId::ClintsShop, "Clint's blacksmith", "market/world/buildings.png", 161, 0, 130, 127, 3),
-        building(BuildingId::ComunityCenter, "Community center", "market/world/buildings.png", 0, 160, 192, 160, 6),
+        building(BuildingId::FarmHouse, "Farm house", "farm/environment/farm_buildings.png", 157, 268, 144, 145),
+        building(BuildingId::StoneCabin, "Stone cabin", "farm/environment/cabins.png", 80, 336, 80, 112),
+        building(BuildingId::WoodCabin, "Wood cabin", "farm/environment/cabins.png", 80, 0, 80, 112),
+        building(BuildingId::BrickCabin, "Brick cabin", "farm/environment/cabins.png", 80, 112, 80, 112),
+        building(BuildingId::MarniesShop, "Marnie's ranch", "market/world/buildings.png", 291, 0, 128, 112),
+        building(BuildingId::PierresShop, "Pierre's general store", "market/world/buildings.png", 0, 0, 161, 160),
+        building(BuildingId::RobinsShop, "Robin's carpenter shop", "market/world/buildings.png", 192, 127, 157, 193),
+        building(BuildingId::ClintsShop, "Clint's blacksmith", "market/world/buildings.png", 161, 0, 130, 127),
+        building(BuildingId::ComunityCenter, "Community center", "market/world/buildings.png", 0, 160, 192, 160),
 
         tree(DecorId::MapleTree, "Maple tree", "enviroment/trees.png", 0, 0, 48, 97),
         tree(DecorId::PineTree, "Pine tree", "enviroment/trees.png", 0, 320, 48, 97),
@@ -123,9 +181,9 @@ const std::vector<ElementInfo>& elements() {
         decor(DecorId::PottedPlants, "Potted plants", TOWN, 368, 476, 47, 36),
         decor(DecorId::SmallBlueFlower, "Small blue flower", TOWN, 353, 432, 16, 16),
 
-        portal(PortalId::FarmToMine, "Mine entrance", OUTDOORS, 608, 160, 48, 48),
-        portal(PortalId::ToNextLevel, "Ladder to next level", "caverns/level_portals.png", 0, 0, 16, 16),
-        portal(PortalId::MineToFarm, "Mine exit", "caverns/level_portals.png", 0, 16, 16, 64),
+        portal(PortalId::FarmToMine, "Mine entrance", OUTDOORS, 608,160,48,48),
+        portal(PortalId::ToNextLevel, "Ladder to next level",  "caverns/level_portals.png", 0,0,16,16),
+        portal(PortalId::MineToFarm, "Mine exit",  "caverns/level_portals.png", 0,16,16,64),
 
         wall(FramePieceId::StoneCliftTop, "Cliff top", OUTDOORS, 272, 288, 32, 64),
         wall(FramePieceId::StoneCliftTopLeftCorner, "Cliff top left corner", OUTDOORS, 336, 176, 16, 64),

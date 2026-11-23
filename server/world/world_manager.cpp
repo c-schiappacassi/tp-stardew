@@ -2,6 +2,7 @@
 
 #include <utility>
 
+#include "common/map/map_shapes.h"
 #include "player/player.h"
 
 WorldManager::WorldManager(const DungeonConfig& config, uint32_t seed, const FarmConfig& farmConfig)
@@ -21,7 +22,8 @@ ConstMapData WorldManager::buildConstMap() const {
 
     // TODO: decor / buildings de la granja (hoy FarmLayout no los tiene)
     if (const auto entrance = travel.getDungeonEntrance(Zone::Farm)) {
-        map.farm.portals.push_back({*entrance, PortalId::FarmToMine});
+        const int rowsBelow = map_rules::doorRowsBelowSprite(PortalId::FarmToMine);
+        map.farm.portals.push_back({Position(entrance->getX(), entrance->getY() - rowsBelow * 16), PortalId::FarmToMine});
     }
     // TODO: fondo de los niveles. Por ahora vacios, pero en orden: MinesView numera por indice (i + 1)
     map.levels.resize(DUNGEON_ROOM_COUNT);
@@ -84,6 +86,18 @@ bool WorldManager::loadTown(const TownConfig& config) {
             if (prepared.getMap().sameBaseCell(door, room.outside.position)) return false;
         }
         townDoors.push_back(room.outside.position);
+        for (const auto& position: room.extraOutside) {
+            if (!prepared.canWalk(playerBox.at(position)) ||
+                !prepared.getMap().hasBasePath(position, room.returnPosition)) return false;
+            for (const auto destination: {Zone::Farm, Zone::Dungeon}) {
+                const auto door = prepared.connectionTo(destination);
+                if (door && prepared.getMap().sameBaseCell(*door, position)) return false;
+            }
+            for (const auto& door: townDoors) {
+                if (prepared.getMap().sameBaseCell(door, position)) return false;
+            }
+            townDoors.push_back(position);
+        }
     }
     town = std::move(prepared);
     return true;

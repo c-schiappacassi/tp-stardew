@@ -1,5 +1,4 @@
-#ifndef WORLD_MAP_H
-#define WORLD_MAP_H
+#pragma once
 
 #include <vector>
 
@@ -12,5 +11,3 @@ struct WorldMap {
 
     WorldMap();
 };
-
-#endif  // WORLD_MAP_H

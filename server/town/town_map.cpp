@@ -1,5 +1,6 @@
 #include "town_map.h"
 
+#include <algorithm>
 #include <cstdint>
 #include <limits>
 #include <set>
@@ -83,10 +84,20 @@ bool TownMap::initialize(const TownConfig& config) {
             return false;
         }
     }
+    std::vector<Position> extraFarm;
+    for (const auto& extra: config.extraFarmDoors) {
+        const ZoneMap::Cell cell{extra.y, extra.x};
+        const auto base = prepared.baseAt(cell);
+        if (!base || !prepared.isWalkable(playerBox.at(*base)) || !cells.insert(cell).second) {
+            return false;
+        }
+        extraFarm.push_back(*base);
+    }
     if (!toFarm || (toMine && !prepared.hasBasePath(*toFarm, *toMine))) return false;
 
     terrain = std::move(prepared);
     farmDoor = toFarm;
+    farmDoorExtras = std::move(extraFarm);
     mineDoor = toMine;
     widthTiles = map.width;
     heightTiles = map.height;
@@ -98,6 +109,13 @@ const ZoneMap& TownMap::getMap() const { return terrain; }
 
 bool TownMap::canWalk(const CollisionBounds& bounds) const {
     return !terrain.isEmpty() && terrain.isWalkable(bounds);
+}
+
+bool TownMap::isFarmDoor(const Position& position) const {
+    if (!farmDoor) return false;
+    return terrain.sameBaseCell(position, *farmDoor) ||
+           std::any_of(farmDoorExtras.begin(), farmDoorExtras.end(),
+                       [&](const Position& door) { return terrain.sameBaseCell(position, door); });
 }
 
 std::optional<Position> TownMap::connectionTo(Zone destination) const {

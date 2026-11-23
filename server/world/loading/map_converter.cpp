@@ -4,8 +4,12 @@
 #include <stdexcept>
 #include <utility>
 
+#include "common/map/map_rules.h"
 #include "dungeon/dungeon_config.h"
 #include "entities/entity_dimensions.h"
+
+static_assert(DUNGEON_ROOM_COUNT == map_rules::MINE_LEVEL_COUNT,
+              "el editor y el servidor tienen que coincidir en la cantidad de niveles de la mina");
 
 ZoneMap MapConverter::convertTerrain(const EditorZoneData& zone, const std::string& name) {
     if (zone.width <= 0 || zone.height <= 0 ||
@@ -58,6 +62,19 @@ Position MapConverter::findSpawn(const ZoneMap& terrain) {
     return positions.front();
 }
 
+std::vector<Position> MapConverter::extraDoors(const ZoneMap& terrain, const EditorBuildingData& building, const std::string& field) {
+    return extraDoorTiles(terrain, map_rules::doorsOf(map_rules::shapeOf(static_cast<BuildingId>(building.id)),
+                                                      building.x, building.y), field);
+}
+
+std::vector<Position> MapConverter::extraDoorTiles(const ZoneMap& terrain, const std::vector<TilePosition>& doors, const std::string& field) {
+    std::vector<Position> extra;
+    for (std::size_t i = 1; i < doors.size(); ++i) {
+        extra.push_back(convertPosition(terrain, doors[i], field + ".door[" + std::to_string(i) + "]"));
+    }
+    return extra;
+}
+
 FarmLayout MapConverter::convertFarm(const EditorZoneData& zone) {
     FarmLayout farm;
     farm.terrain = convertTerrain(zone, "farm");
@@ -88,11 +105,12 @@ FarmLayout MapConverter::convertFarm(const EditorZoneData& zone) {
             throw std::invalid_argument("No return tile below " + field + ".door");
         }
         const Position returnPosition = convertPosition(
-            farm.terrain, {building.door.x, building.door.y + 1}, field + ".return");
+            farm.terrain, map_rules::returnTileOf(building.door), field + ".return");
 
         InteriorLayout house = makePlayerHouseInterior(static_cast<uint8_t>(index));
         house.outside.zone = Zone::Farm;
         house.outside.position = outside;
+        house.extraOutside = extraDoors(farm.terrain, building, field);
         house.returnPosition = returnPosition;
         farm.interiors.push_back(std::move(house));
     }
@@ -109,11 +127,14 @@ FarmLayout MapConverter::convertFarm(const EditorZoneData& zone) {
 
     if (zone.doorTown) {
         farm.townDoor = convertPosition(farm.terrain, *zone.doorTown, "farm.door_town");
-        farm.townReturn = farm.spawn;
+        farm.extraTownDoors = extraDoorTiles(farm.terrain, map_rules::passageTiles(*zone.doorTown), "farm.door_town");
+        // al volver del pueblo se aparece en el tile del medio de la entrada (el (63, 9) con 3 tiles de alto)
+        const std::vector<TilePosition> passage = map_rules::passageTiles(*zone.doorTown);
+        farm.townReturn = convertPosition(farm.terrain, passage[passage.size() / 2], "farm.town_return");
     }
     if (zone.doorMines) {
         farm.mineDoor = convertPosition(farm.terrain, *zone.doorMines, "farm.door_mines");
-        farm.mineReturn = farm.spawn;
+        farm.mineReturn = farm.mineDoor;   // al volver de la mina se aparece en la puerta de la mina
     }
     return farm;
 }
@@ -127,26 +148,6 @@ InteriorId MapConverter::townInteriorId(int buildingId) {
         case BuildingId::ComunityCenter: return InteriorId::ComunityCenter;
         default: throw std::invalid_argument("Unsupported town building ID");
     }
-}
-
-TownBuildingConfig MapConverter::convertTownBuilding(const EditorBuildingData& building) {
-    TownBuildingConfig config;
-    switch (static_cast<BuildingId>(building.id)) {
-        case BuildingId::MarniesShop: config.id = "marnies_shop"; config.width = 8; config.height = 7; break;
-        case BuildingId::PierresShop: config.id = "pierres_shop"; config.width = 11; config.height = 10; break;
-        case BuildingId::RobinsShop: config.id = "robins_shop"; config.width = 10; config.height = 13; break;
-        case BuildingId::ClintsShop: config.id = "clints_shop"; config.width = 9; config.height = 8; break;
-        case BuildingId::ComunityCenter: config.id = "community_center"; config.width = 12; config.height = 10; break;
-        default: throw std::invalid_argument("Unsupported town building ID");
-    }
-    if (building.x < 0 || building.y < 0 ||
-        building.x > UINT16_MAX || building.y > UINT16_MAX) {
-        throw std::invalid_argument("Invalid town building coordinates");
-    }
-    config.position = {static_cast<uint16_t>(building.x), static_cast<uint16_t>(building.y)};
-    config.door.push_back({static_cast<uint16_t>(building.door.x),
-                           static_cast<uint16_t>(building.door.y)});
-    return config;
 }
 
 TownConfig MapConverter::convertTown(const EditorZoneData& zone,
@@ -176,6 +177,12 @@ TownConfig MapConverter::convertTown(const EditorZoneData& zone,
         convertPosition(terrain, *zone.doorFarm, "town.door_farm");
         town.connections.push_back({"farm", {static_cast<uint16_t>(zone.doorFarm->x),
                                                static_cast<uint16_t>(zone.doorFarm->y)}});
+        const std::vector<TilePosition> passage = map_rules::passageTiles(*zone.doorFarm);
+        for (std::size_t i = 1; i < passage.size(); ++i) {
+            convertPosition(terrain, passage[i], "town.door_farm[" + std::to_string(i) + "]");
+            town.extraFarmDoors.push_back({static_cast<uint16_t>(passage[i].x),
+                                           static_cast<uint16_t>(passage[i].y)});
+        }
     }
     if (zone.doorMines) {
         convertPosition(terrain, *zone.doorMines, "town.door_mines");
@@ -192,22 +199,17 @@ TownConfig MapConverter::convertTown(const EditorZoneData& zone,
         }
         usedInteriors[key] = true;
 
-        TownBuildingConfig config = convertTownBuilding(building);
-        if (building.door.x < 0 || building.door.y < 0 ||
-            building.door.x >= zone.width || building.door.y >= zone.height ||
-            building.door.x < building.x || building.door.y < building.y ||
-            building.door.x >= building.x + config.width ||
-            building.door.y >= building.y + config.height) {
-            throw std::invalid_argument("Invalid town building door");
-        }
+        // Los edificios del pueblo ya vienen horneados en `walkableTiles` (el `background` del
+        // TOML es la unica verdad), asi que no se le pasan rectangulos al TownMap para que
+        // vuelva a bloquearlos.
         const Position door = convertPosition(terrain, building.door, "town.building.door");
         const Position returnPosition = convertPosition(
-            terrain, {building.door.x, building.door.y + 1}, "town.building.return");
+            terrain, map_rules::returnTileOf(building.door), "town.building.return");
         InteriorLayout room = makeTownInterior(interiorId);
         room.outside.position = door;
+        room.extraOutside = extraDoors(terrain, building, "town.building");
         room.returnPosition = returnPosition;
         interiors.push_back(std::move(room));
-        town.buildings.push_back(std::move(config));
     }
     return town;
 }
@@ -224,6 +226,10 @@ DungeonRoomLayout MapConverter::convertRoom(const EditorZoneData& zone, uint8_t 
 
     room.passages.exit = convertPosition(room.terrain, *zone.doorExit, name + ".door_exit");
     room.passages.entry = room.passages.exit;
+    const map_rules::Shape& exitShape = map_rules::shapeOf(PortalId::MineToFarm);
+    const TilePosition exitOrigin = map_rules::originOf(exitShape, *zone.doorExit);
+    room.passages.extraExits = extraDoorTiles(room.terrain, map_rules::doorsOf(exitShape, exitOrigin.x, exitOrigin.y), name + ".door_exit");
+    
 
     if (level < DUNGEON_ROOM_COUNT) {
         if (!zone.doorNextLevel) {
@@ -249,6 +255,11 @@ DungeonRoomLayout MapConverter::convertRoom(const EditorZoneData& zone, uint8_t 
 }
 
 GameSetup MapConverter::convert(const MapData& data, uint8_t worldId) const {
+    // las mismas reglas que aplica el editor al guardar
+    const std::vector<std::string> errors = map_rules::validateMap(data);
+    if (!errors.empty()) {
+        throw std::invalid_argument("Invalid map: " + map_rules::joinErrors(errors));
+    }
     if (data.mineLevels.size() != DUNGEON_ROOM_COUNT) {
         throw std::invalid_argument("Unexpected number of mine levels");
     }

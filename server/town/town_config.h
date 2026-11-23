@@ -38,5 +38,6 @@ struct TownConfig {
     std::vector<TownBuildingConfig> buildings;
     std::vector<TownNpcConfig> npcs;
     std::vector<TownConnectionConfig> connections;
+    std::vector<TownPosition> extraFarmDoors;
     std::vector<std::vector<bool>> walkableTiles;
 };

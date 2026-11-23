@@ -1,5 +1,4 @@
-#ifndef ZONE_OPTIONS_H
-#define ZONE_OPTIONS_H
+#pragma once
 
 #include <vector>
 
@@ -13,5 +12,3 @@ struct ZoneOptions {
 ZoneOptions farmOptions();
 ZoneOptions townOptions();
 ZoneOptions mineOptions();
-
-#endif  // ZONE_OPTIONS_H

@@ -1,5 +1,4 @@
-#ifndef ZONE_MAP_H
-#define ZONE_MAP_H
+#pragma once
 
 #include <map>
 #include <optional>
@@ -35,7 +34,6 @@ public:
     std::optional<PlacedElement> elementAt(int x, int y) const;
     bool removeAt(int x, int y);
 
-    //portales fijos del mapa base (door_town, door_farm). no se editan, se guardan tal cual
     const std::map<std::string, std::pair<int, int>>& getFixedDoors() const;
     void setFixedDoor(const std::string& key, int x, int y);
 
@@ -50,5 +48,3 @@ private:
     std::vector<PlacedElement> elements;
     std::map<std::string, std::pair<int, int>> fixedDoors;
 };
-
-#endif  // ZONE_MAP_H
