@@ -5,21 +5,22 @@
 #include <stdexcept>
 #include <utility>
 
+#include "commerce/commerce_manager.h"
 #include "player/player_manager.h"
 #include "world/world_manager.h"
 
-CommunityRewards::CommunityRewards(const CommunityCenter& center, WorldManager& world, MarketPrices& market): center(center), world(world), market(market) {}
+CommunityRewards::CommunityRewards(const CommunityCenter& center, WorldManager& world, CommerceManager& commerce): center(center), world(world), commerce(commerce) {}
 
 void CommunityRewards::updateMarket() {
     if (center.isComplete(CommunityBundle::Money) && !marketRewardScheduled) {
-        market.scheduleDiscount();
+        commerce.scheduleDiscount();
         marketRewardScheduled = true;
         ++revision;
     }
 }
 
 uint64_t CommunityRewards::grantAnimals(AnimalSpecies species, uint16_t quantity) {
-    const auto price = world.getFarm().animalBasePrice(species);
+    const auto price = world.animalBasePrice(species);
     if (!price)
         return 0;
     uint64_t coins = 0;
@@ -84,7 +85,7 @@ CommunityPlayerRewards CommunityRewards::pendingFor(const std::string& name) con
 }
 
 const std::map<std::string, CommunityPlayerRewards>& CommunityRewards::getPlayers() const { return players; }
-MarketDiscount CommunityRewards::discountState() const { return market.discountState(); }
+MarketDiscount CommunityRewards::discountState() const { return commerce.discountState(); }
 uint64_t CommunityRewards::getRevision() const { return revision; }
 
 void CommunityRewards::validate(const std::map<std::string, CommunityPlayerRewards>& saved, const CommunityProgress& progress, MarketDiscount discount) const {
@@ -105,8 +106,8 @@ void CommunityRewards::validate(const std::map<std::string, CommunityPlayerRewar
         }
         uint64_t maximumCoins = rewards.granted.contains(CommunityBundle::Metals) ? center.getConfig().metalGoldReward : 0;
         if (rewards.granted.contains(CommunityBundle::Animals)) {
-            maximumCoins += world.getFarm().animalBasePrice(AnimalSpecies::Cow).value_or(0);
-            maximumCoins += 2 * static_cast<uint64_t>(world.getFarm().animalBasePrice(AnimalSpecies::Chicken).value_or(0));
+            maximumCoins += world.animalBasePrice(AnimalSpecies::Cow).value_or(0);
+            maximumCoins += 2 * static_cast<uint64_t>(world.animalBasePrice(AnimalSpecies::Chicken).value_or(0));
         }
         if (rewards.pendingCoins > maximumCoins)
             throw std::invalid_argument("Invalid pending coins");
@@ -117,6 +118,6 @@ void CommunityRewards::restore(std::map<std::string, CommunityPlayerRewards> sav
     validate(saved, center.getProgress(), discount);
     players = std::move(saved);
     marketRewardScheduled = center.isComplete(CommunityBundle::Money);
-    market.restoreDiscount(discount);
+    commerce.restoreDiscount(discount);
     ++revision;
 }

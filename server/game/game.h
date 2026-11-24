@@ -16,8 +16,7 @@
 #include "world/world_manager.h"
 #include "player/player_manager.h"
 #include "player/player_config.h"
-#include "commerce/merchant_chat.h"
-#include "commerce/market_prices.h"
+#include "commerce/commerce_manager.h"
 #include "community/domain/community_center.h"
 #include "community/application/community_rewards.h"
 
@@ -35,8 +34,7 @@ private:
     bool configured = false;
     bool endDayRequested = false;
     WorldManager world;
-    MarketPrices marketPrices;
-    std::shared_ptr<MerchantChat> merchants;
+    std::shared_ptr<CommerceManager> commerce;
     CommunityCenter community;
     CommunityRewards communityRewards;
     std::shared_ptr<CommunityChat> communityChat;

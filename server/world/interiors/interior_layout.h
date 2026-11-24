@@ -16,3 +16,6 @@ struct InteriorLayout {
     BackgroundData background;
     std::vector<ChestSpawn> chests;
 };
+
+InteriorLayout makePlayerHouseInterior(uint8_t houseIndex);
+InteriorLayout makeTownInterior(InteriorId interiorId);

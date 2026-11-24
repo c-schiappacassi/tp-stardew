@@ -34,13 +34,12 @@ target_sources(taller_server_core
         persistence/community_persistence.cpp
         player/chat/player_chat_commands.cpp
         config/community_toml_reader.cpp
-        commerce/merchant_chat.cpp
+        commerce/commerce_manager.cpp
+        commerce/chat/merchant_chat.cpp
         commerce/market_prices.cpp
-        commerce/merchant_catalog.cpp
-        commerce/merchant_trade.cpp
+        commerce/catalog/merchant_catalog.cpp
+        commerce/trading/merchant_trade.cpp
         commerce/shop_products.cpp
-        world/world_commerce.cpp
-        world/world_cheats.cpp
         game/game.cpp
         game/game_setup.cpp
         game/game_manager.cpp
@@ -48,8 +47,6 @@ target_sources(taller_server_core
         chests/chest.cpp
         chests/chest_manager.cpp
         chests/rooms/chest_room.cpp
-        world/interaction_targeting.cpp
-        world/world_chests.cpp
         chests/queries/chest_snapshot.cpp
         chests/commands/chest_commands.cpp
         chests/interactions/chest_interactions.cpp
@@ -69,16 +66,22 @@ target_sources(taller_server_core
         entities/entity_id_generator.cpp
         entities/collision_box.cpp
         entities/collision_bounds.cpp
+        world/interactions/world_interactions.cpp
+        world/interiors/interior.cpp
+        world/interiors/interior_layout.cpp
+        world/interiors/interior_rooms.cpp
         world/loading/map_converter.cpp
+        world/loading/world_loader.cpp
+        world/persistence/world_persistence.cpp
+        world/queries/world_queries.cpp
+        world/travel/world_travel.cpp
+        world/world_manager.cpp
         world/zone_map.cpp
         player/sessions/player_factory.cpp
         player/player_manager.cpp
         player/sessions/player_record.cpp
         player/sessions/player_roster.cpp
         player/player_config.cpp
-        world/world_manager.cpp
-        world/world_travel.cpp
-        world/interiors/interior_manager.cpp
         player/time/day_cycle.cpp
         town/town_map.cpp
         player/updates/player_updates.cpp
@@ -92,7 +95,6 @@ target_sources(taller_server_core
         dungeon/rooms/room_geometry.cpp
         dungeon/mining/dungeon_mining.cpp
         dungeon/loading/dungeon_loader.cpp
-        world/zone_map_positions.cpp
         dungeon/mining/mineral_placement.cpp
         farm/farm_product.cpp
         farm/spatial/farm_terrain.cpp
@@ -122,7 +124,6 @@ target_sources(taller_server_core
         farm/decorations/decoration.cpp
         farm/decorations/decoration_manager.cpp
         game/time/game_clock.cpp
-        world/world_farm.cpp
         player/ports/player_spawn_source.cpp
         player/ports/movement_rules.cpp
         player/ports/player_interactions.cpp
@@ -187,7 +188,10 @@ target_sources(taller_server_core
         persistence/community_persistence.h
         persistence/community_save_data.h
         config/community_toml_reader.h
-        commerce/merchant_chat.h
+        commerce/commerce_manager.h
+        commerce/chat/merchant_chat.h
+        commerce/catalog/merchant_catalog.h
+        commerce/trading/merchant_trade.h
         commerce/market_prices.h
         commerce/shop_config.h
         commerce/shop_products.h
@@ -201,7 +205,6 @@ target_sources(taller_server_core
         chests/chest_manager.h
         chests/rooms/chest_room.h
         chests/loading/chest_spawn.h
-        world/interaction_targeting.h
         chests/queries/chest_snapshot.h
         chests/commands/chest_commands.h
         chests/commands/chest_action.h
@@ -227,12 +230,21 @@ target_sources(taller_server_core
         entities/entity_id_generator.h
         dungeon/dungeon_config.h
         player/player_config.h
+        world/contracts/world_setup.h
+        world/interactions/world_interactions.h
+        world/interiors/interior.h
+        world/interiors/interior_layout.h
+        world/interiors/interior_rooms.h
         world/loading/map_converter.h
+        world/loading/world_loader.h
+        world/persistence/world_persistence.h
+        world/queries/world_queries.h
+        world/travel/world_travel.h
+        world/world_location.h
+        world/world_manager.h
         world/zone_map.h
         player/sessions/player_factory.h
         player/player_manager.h
-        world/world_manager.h
-        world/world_travel.h
         player/time/day_cycle.h
         town/town_map.h
         player/ports/combatant.h

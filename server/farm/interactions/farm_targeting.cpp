@@ -9,7 +9,7 @@
 #include "farm/farm_constants.h"
 #include "farm/spatial/farm_terrain.h"
 #include "player/queries/player_snapshot.h"
-#include "world/interaction_targeting.h"
+#include "world/zone_map.h"
 
 namespace {
 int64_t squaredDistance(const Position& origin, const Position& target) {
@@ -19,14 +19,14 @@ int64_t squaredDistance(const Position& origin, const Position& target) {
 }
 }  // namespace
 
-bool FarmTargeting::hasClearPath(const Position& origin, const Position& target, const ZoneMap& map) const { return InteractionTargeting{}.hasClearPath(origin, target, map); }
+bool FarmTargeting::hasClearPath(const Position& origin, const Position& target, const ZoneMap& map) const { return map.hasClearPath(origin, target); }
 
 bool FarmTargeting::canReach(const PlayerSnapshot& player, const Position& position, Direction direction, const ZoneMap& map) const {
-    return InteractionTargeting{}.canReach(player, position, direction, map, farm_constants::INTERACTION_RANGE);
+    return map.canReach(player.getPosition(), position, direction, farm_constants::INTERACTION_RANGE);
 }
 
 std::optional<Position> FarmTargeting::findAdjacentPosition(const PlayerSnapshot& player, Direction direction, const ZoneMap& map, const CollisionBox& collision) const {
-    return InteractionTargeting{}.findAdjacentPosition(player, direction, map, collision, farm_constants::INTERACTION_RANGE);
+    return map.findAdjacentPosition(player.getPosition(), direction, player.getCollisionBounds(player.getPosition()), collision, farm_constants::INTERACTION_RANGE);
 }
 
 const Crop* FarmTargeting::findCropToWater(const PlayerSnapshot& player, const FarmTerrain& terrain, const CropManager& crops, Direction direction) const {
