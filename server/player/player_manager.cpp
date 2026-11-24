@@ -143,3 +143,7 @@ PlayerActionResult PlayerManager::apply(uint16_t playerId, const PlayerAction& a
 }
 
 std::vector<Combatant> PlayerManager::combatants() const { return roster.combatants(); }
+
+bool PlayerManager::hasAvailableSlot() const {
+    return roster.hasAvailableSlot();
+}

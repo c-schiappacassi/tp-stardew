@@ -38,5 +38,6 @@ public:
     bool codeExists(const std::string& code);
     std::vector<GameInfoDTO> listGames(const std::string& userName);
     CommandSubmission enqueueCommand(const std::string& gameId, uint16_t playerId, std::shared_ptr<CommandDTO> command);
+    qtStatus checkJoin(const CheckCodeDTO& dto);
     void stopAll();
 };

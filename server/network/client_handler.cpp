@@ -51,12 +51,7 @@ ClientHandler::ClientHandler(Socket&& socket, GameManager& manager):
         }},
         {MessageType::CheckCode, [this] {
             const CheckCodeDTO dto = protocol.receiveCheckCode();
-            qtStatus reply;
-            reply.status = StatusCode::Ok;
-            if (!this->manager.codeExists(dto.code)) {
-                reply.status = StatusCode::Error;
-                reply.errorMsg = "invalid code";
-            }
+            const qtStatus reply = this->manager.checkJoin(dto);
             protocol.sendQtStatus(reply);
         }},
     };

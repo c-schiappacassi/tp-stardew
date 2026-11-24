@@ -213,6 +213,30 @@ void Game::updateCommunity() {
     playerManager.collectCommunityRewards();
 }
 
+qtStatus Game::checkJoin(const CheckCodeDTO& dto) const {
+    std::lock_guard<std::mutex> lock(mtx);
+
+    qtStatus reply{};
+
+    if (!configured || dto.code != id) {
+        reply.status = StatusCode::Error;
+        reply.errorMsg = "No game exists with that code";
+    } else if (community.finished()) {
+        reply.status = StatusCode::Error;
+        reply.errorMsg = "The game has already ended";
+    } else if (playerManager.dataFor(dto.userName).has_value()) {
+        reply.status = StatusCode::Error;
+        reply.errorMsg = "A player with that name already exists";
+    } else if (!playerManager.hasAvailableSlot()) {
+        reply.status = StatusCode::Error;
+        reply.errorMsg = "The game is full";
+    } else {
+        reply.status = StatusCode::Ok;
+    }
+
+    return reply;
+}
+
 void Game::run() {
     const auto rate = std::chrono::duration_cast<std::chrono::milliseconds>(std::chrono::duration<float, std::milli>{TICK_MS});
     GameClock clock;

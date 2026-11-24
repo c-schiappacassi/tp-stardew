@@ -92,6 +92,19 @@ CommandSubmission GameManager::enqueueCommand(const std::string& gameId, uint16_
     return game ? game->enqueueCommand(playerId, std::move(command)) : CommandSubmission::GameNotFound;
 }
 
+qtStatus GameManager::checkJoin(const CheckCodeDTO& dto) {
+    std::lock_guard<std::mutex> lock(lifecycleMtx);
+    const auto game = games.find(dto.code);
+    qtStatus reply{};
+    if (game) {
+        reply = game->checkJoin(dto);
+    } else {
+        reply.status = StatusCode::Error;
+        reply.errorMsg = "No game exists with that code";
+    }
+    return reply;
+}
+
 void GameManager::stopAll() {
     std::lock_guard<std::mutex> lock(lifecycleMtx);
     games.stopAll();
