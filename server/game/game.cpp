@@ -1,93 +1,81 @@
 #include "game.h"
 
-#include <utility>
-#include <limits>
+#include <algorithm>
+#include <iostream>
+#include <random>
 #include <stdexcept>
+#include <thread>
+#include <utility>
 
-#include "community/chat/community_chat.h"
 #include "chat/cheat_chat.h"
+#include "community/chat/community_chat.h"
+#include "constants.h"
+#include "loading/game_loader.h"
 #include "persistence/community_persistence.h"
+#include "time/game_clock.h"
 
-Game::Game(const std::string& id, const std::string& name, uint8_t worldId,
-        const GameConfig& config, uint8_t maxPlayers, ChatServices chatServices):
-    id(id),
-    name(name),
-    worldId(worldId),
-    input(std::make_shared<CommandQueue>()),
+Game::Game(const std::string& id, const std::string& name, uint8_t worldId, PreparedWorld prepared, const GameConfig& config, ChatServices chatServices):
+    id(id), name(name), worldId(worldId),
     world(config.dungeon, std::random_device{}(), config.farm),
     commerce(std::make_shared<CommerceManager>(world, config.market)),
-    community(config.community),
-    communityRewards(community, world, *commerce),
+    community(config.community), communityRewards(community, world, *commerce),
     communityChat(std::make_shared<CommunityChat>(community, communityRewards)),
-    playerManager(config.player, world, world, world, world, maxPlayers,
+    playerManager(config.player, world, world, world, world, prepared.setup.farm.playerHouses,
         ChatServices{chatServices.merchants ? std::move(chatServices.merchants) : commerce,
-                     chatServices.cheats ? std::move(chatServices.cheats) :
-                         std::make_shared<CheatChat>(world, [this] { endDayRequested = true; }),
-                     chatServices.community ? std::move(chatServices.community) : communityChat}) {}
-
-bool Game::loadFarm(uint8_t selectedWorldId, const FarmLayout& layout) {
-    std::lock_guard<std::mutex> lock(mtx);
-    return !configured && world.loadFarm(selectedWorldId, layout);
+            chatServices.cheats ? std::move(chatServices.cheats) : std::make_shared<CheatChat>(world, [this] { endDayRequested = true; }),
+            chatServices.community ? std::move(chatServices.community) : communityChat}),
+    sessions(this->id, this->worldId, playerManager, world, std::move(prepared.visuals)) {
+    GameLoader::initialize(world, prepared.setup);
 }
 
-bool Game::loadTown(const TownConfig& config) {
+GameSession Game::createGame(const CreateGameDTO& dto, const std::shared_ptr<OutQueue>& output) {
     std::lock_guard<std::mutex> lock(mtx);
-    return !configured && world.loadTown(config);
+    if (configured)
+        return GameSessions::failure("The game has already been created");
+    if (dto.gameName.empty())
+        return GameSessions::failure("The game name is required");
+    if (!world.acceptsWorld(dto.worldId))
+        return GameSessions::failure("The loaded dungeon belongs to another world");
+
+    name = dto.gameName;
+    worldId = dto.worldId;
+    auto session = sessions.createPlayer(dto, output);
+    configured = session.status.status == StatusCode::Ok;
+    return completeEntry(std::move(session));
 }
 
-std::shared_ptr<const ConstMapData> Game::mapForSession() {
-    if (!constMap) {
-        ConstMapData assembled = world.buildConstMap();
-        if (hasMapVisuals) {
-            assembled.farm.floor = std::move(mapVisuals.farm.floor);
-            assembled.farm.decor = std::move(mapVisuals.farm.decor);
-            assembled.farm.frame = std::move(mapVisuals.farm.frame);
-            assembled.farm.buildings = std::move(mapVisuals.farm.buildings);
-            assembled.town.floor = std::move(mapVisuals.town.floor);
-            assembled.town.decor = std::move(mapVisuals.town.decor);
-            assembled.town.frame = std::move(mapVisuals.town.frame);
-            assembled.town.buildings = std::move(mapVisuals.town.buildings);
-            if (assembled.levels.size() != mapVisuals.levels.size()) {
-                throw std::runtime_error("Mine visuals do not match dungeon levels");
-            }
-            for (std::size_t i = 0; i < assembled.levels.size(); ++i) {
-                assembled.levels[i].floor = std::move(mapVisuals.levels[i].floor);
-                assembled.levels[i].decor = std::move(mapVisuals.levels[i].decor);
-                assembled.levels[i].frame = std::move(mapVisuals.levels[i].frame);
-                assembled.levels[i].buildings = std::move(mapVisuals.levels[i].buildings);
-            }
-            hasMapVisuals = false;
-        }
-        constMap = std::make_shared<const ConstMapData>(std::move(assembled));
+GameSession Game::joinGame(const JoinGameDTO& dto, const std::shared_ptr<OutQueue>& output) {
+    std::lock_guard<std::mutex> lock(mtx);
+    if (!configured || dto.code != id || community.finished())
+        return GameSessions::failure(community.finished() ? "The game has already ended" : "No game exists with that code");
+    return completeEntry(sessions.joinPlayer(dto, output));
+}
+
+GameSession Game::resumeGame(const ResumeGameDTO& dto, const std::shared_ptr<OutQueue>& output) {
+    std::lock_guard<std::mutex> lock(mtx);
+    if (!configured || dto.gameId != id) {
+        auto failure = GameSessions::failure("That game does not exist");
+        failure.userName = dto.userName;
+        return failure;
     }
-    return constMap;
+    return completeEntry(sessions.resumePlayer(dto.userName, output));
 }
 
-void Game::setMapVisuals(ConstMapData visuals) {
-    std::lock_guard<std::mutex> lock(mtx);
-    if (constMap || configured) {
-        throw std::logic_error("Map visuals cannot be replaced after initialization");
+GameSession Game::completeEntry(GameSession session) {
+    if (session.status.status == StatusCode::Ok) {
+        session.status.gameCompleted = community.finished();
+        ++saveRequests;
     }
-    mapVisuals = std::move(visuals);
-    hasMapVisuals = true;
+    return session;
 }
 
-const std::string& Game::getId() const {
-    return id;
-}
-
-std::string Game::getName() const {
-    std::lock_guard<std::mutex> lock(mtx);
-    return name;
-}
-
-uint8_t Game::getWorldId() const {
-    std::lock_guard<std::mutex> lock(mtx);
-    return worldId;
-}
-
-std::shared_ptr<CommandQueue> Game::getInputQueue() const {
-    return input;
+CommandSubmission Game::enqueueCommand(uint16_t playerId, std::shared_ptr<CommandDTO> command) {
+    try {
+        input.push({playerId, std::move(command)});
+        return CommandSubmission::Enqueued;
+    } catch (const ClosedQueue&) {
+        return CommandSubmission::GameClosed;
+    }
 }
 
 void Game::setSaveCallback(std::function<void(const PersistenceDTO&)> callback) {
@@ -109,13 +97,46 @@ PersistenceDTO Game::buildPersistenceData() const {
     snapshot.currentDay = currentDay;
     snapshot.players = playerManager.getPersistencePlayers();
     snapshot.communityCenterActionProgress = CommunityPersistence::save(community, communityRewards);
-
-    for (const auto& [userName, player] : snapshot.players) {
+    for (const auto& [userName, player]: snapshot.players)
         snapshot.users.push_back(userName);
-    }
-
     world.saveFarmAndStorage(snapshot);
     return snapshot;
+}
+
+void Game::restorePersistenceData(const PersistenceDTO& saved) {
+    std::lock_guard<std::mutex> lock(mtx);
+    if (configured || saved.id != id || saved.mapId != worldId || saved.currentDay == 0)
+        throw std::runtime_error("Cannot restore game with mismatched identity or state");
+    world.restoreFarm(saved);
+    CommunityPersistence::restore(community, communityRewards, saved.communityCenterActionProgress);
+    playerManager.restorePlayers(saved.players);
+    name = saved.farmName;
+    currentDay = saved.currentDay;
+    configured = true;
+    updateCommunity();
+}
+
+void Game::saveIfNeeded(bool force) {
+    try {
+        PersistenceDTO snapshot;
+        std::function<void(const PersistenceDTO&)> callback;
+        SaveRevision revision{};
+        {
+            std::lock_guard<std::mutex> lock(mtx);
+            if (!configured || !saveCallback)
+                return;
+            revision = {saveRequests, community.getRevision(), communityRewards.getRevision()};
+            if (!force && savedRevision && *savedRevision == revision)
+                return;
+            snapshot = buildPersistenceData();
+            callback = saveCallback;
+        }
+        callback(snapshot);
+        std::lock_guard<std::mutex> lock(mtx);
+        savedRevision = revision;
+    } catch (const std::exception& error) {
+        std::cerr << "Error saving game " << id << ": " << error.what() << '\n';
+    }
 }
 
 ServerStatus Game::buildStatus() const {
@@ -127,33 +148,120 @@ ServerStatus Game::buildStatus() const {
     return status;
 }
 
-bool Game::configureDungeonEntrance(const DungeonEntrance& entrance) {
+void Game::updateToolStates() {
     std::lock_guard<std::mutex> lock(mtx);
-    if (configured) {
-        return false;
-    }
-    return world.configureDungeonEntrance(entrance);
+    playerManager.updateToolStates(std::chrono::steady_clock::now());
 }
 
-bool Game::loadDungeon(uint8_t selectedWorldId,
-        const std::map<uint8_t, DungeonRoomLayout>& layout) {
+void Game::advancePlayers() {
     std::lock_guard<std::mutex> lock(mtx);
-    if (configured) {
-        return false;
-    }
-    return world.loadDungeon(selectedWorldId, layout);
+    if (!community.finished())
+        playerManager.advancePlayers(PLAYER_STEP);
 }
 
-void Game::restorePersistenceData(const PersistenceDTO& saved) {
+void Game::sendStatus() {
     std::lock_guard<std::mutex> lock(mtx);
-    if (configured || saved.id != id || saved.mapId != worldId || saved.currentDay == 0) {
-        throw std::runtime_error("Cannot restore game with mismatched identity or state");
+    playerManager.publishStatus(buildStatus());
+    world.afterStatusPublished();
+}
+
+void Game::advanceWorld(std::chrono::milliseconds elapsed) {
+    std::lock_guard<std::mutex> lock(mtx);
+    if (community.finished()) {
+        updateCommunity();
+        return;
     }
-    world.restoreFarm(saved);
-    CommunityPersistence::restore(community, communityRewards, saved.communityCenterActionProgress);
-    playerManager.restorePlayers(saved.players);
-    name = saved.farmName;
-    currentDay = saved.currentDay;
-    configured = true;
+    if (endDayRequested) {
+        elapsed = std::max(elapsed, playerManager.remainingDayTime());
+        endDayRequested = false;
+    }
+    const auto activeTime = playerManager.isDayEnded() ? std::chrono::milliseconds{0} : std::min(elapsed, playerManager.remainingDayTime());
+    const auto remainingTime = playerManager.remainingDayTime() - activeTime;
+    if (!playerManager.isDayEnded() && playerManager.hasConnectedPlayers())
+        world.update(activeTime, playerManager);
     updateCommunity();
+    if (community.finished())
+        return;
+    if (playerManager.advanceDay(elapsed)) {
+        world.finishDay(playerManager, remainingTime);
+        commerce->finishDay();
+        ++currentDay;
+        ++saveRequests;
+        updateCommunity();
+    }
+}
+
+void Game::processCommands() {
+    PlayerCommand command;
+    while (should_keep_running() && input.try_pop(command)) {
+        std::lock_guard<std::mutex> lock(mtx);
+        playerManager.handleCommand(command, community.finished());
+        if (command.command && command.command->type() == MessageType::ExitGame)
+            ++saveRequests;
+        updateCommunity();
+    }
+}
+
+void Game::updateCommunity() {
+    community.observeCombat(world.getCombatProgress());
+    communityRewards.updateMarket();
+    if (community.finished() && !completionHandled) {
+        playerManager.finishGame();
+        completionHandled = true;
+        ++saveRequests;
+    }
+    playerManager.collectCommunityRewards();
+}
+
+void Game::run() {
+    const auto rate = std::chrono::duration_cast<std::chrono::milliseconds>(std::chrono::duration<float, std::milli>{TICK_MS});
+    GameClock clock;
+    try {
+        auto nextTick = std::chrono::steady_clock::now();
+        while (should_keep_running()) {
+            updateToolStates();
+            processCommands();
+            advancePlayers();
+            advanceWorld(clock.advance());
+            saveIfNeeded();
+            if (should_keep_running())
+                sendStatus();
+            nextTick += rate;
+            const auto now = std::chrono::steady_clock::now();
+            if (nextTick < now) {
+                const auto missedTicks = (now - nextTick) / rate;
+                nextTick += rate * (missedTicks + 1);
+            }
+            std::this_thread::sleep_until(nextTick);
+        }
+    } catch (const ClosedQueue&) {
+        // La entrada se cerro durante la detencion de la partida.
+    } catch (const std::exception& error) {
+        std::cerr << "Error in Game: " << error.what() << '\n';
+    } catch (...) {
+        std::cerr << "Unknown error in Game\n";
+    }
+    saveIfNeeded(true);
+    closeAll();
+}
+
+void Game::closeAll() {
+    {
+        std::lock_guard<std::mutex> lock(mtx);
+        playerManager.closeOutputs();
+    }
+    try {
+        input.close();
+    } catch (const std::runtime_error&) {
+        // stop() puede haber cerrado la entrada.
+    }
+}
+
+void Game::stop() {
+    Thread::stop();
+    try {
+        input.close();
+    } catch (const std::runtime_error&) {
+        // La partida ya estaba cerrada.
+    }
 }

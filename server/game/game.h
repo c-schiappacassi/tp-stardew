@@ -1,35 +1,36 @@
 #pragma once
 
+#include <chrono>
 #include <cstdint>
 #include <functional>
-#include <map>
 #include <memory>
 #include <mutex>
 #include <optional>
 #include <string>
 
-#include "game_types.h"
-#include "config/game_config.h"
-#include "persistence/persistence_dto.h"
 #include "chat/chat_services.h"
-#include "thread.h"
-#include "world/world_manager.h"
-#include "player/player_manager.h"
-#include "player/player_config.h"
+#include "commands/game_command_queue.h"
 #include "commerce/commerce_manager.h"
-#include "community/domain/community_center.h"
 #include "community/application/community_rewards.h"
+#include "community/domain/community_center.h"
+#include "config/game_config.h"
+#include "game_types.h"
+#include "persistence/persistence_dto.h"
+#include "player/player_manager.h"
+#include "sessions/game_sessions.h"
+#include "thread.h"
+#include "world/contracts/world_setup.h"
+#include "world/world_manager.h"
 
 class CommunityChat;
 
-class Game : public Thread {
-
+class Game: public Thread {
 private:
     std::string id;
     std::string name;
     uint8_t worldId;
     uint32_t currentDay = 1;
-    std::shared_ptr<CommandQueue> input;
+    CommandQueue input;
     mutable std::mutex mtx;
     bool configured = false;
     bool endDayRequested = false;
@@ -39,9 +40,7 @@ private:
     CommunityRewards communityRewards;
     std::shared_ptr<CommunityChat> communityChat;
     PlayerManager playerManager;
-    std::shared_ptr<const ConstMapData> constMap;
-    ConstMapData mapVisuals;
-    bool hasMapVisuals = false;
+    GameSessions sessions;
     std::function<void(const PersistenceDTO&)> saveCallback;
     bool completionHandled = false;
 
@@ -54,42 +53,33 @@ private:
     uint64_t saveRequests = 0;
     std::optional<SaveRevision> savedRevision;
 
-    std::shared_ptr<const ConstMapData> mapForSession();
+    GameSession completeEntry(GameSession session);
     PersistenceDTO buildPersistenceData() const;
     void saveIfNeeded(bool force = false);
-
+    ServerStatus buildStatus() const;
     void processCommands();
     void sendStatus();
     void advancePlayers();
-    bool advanceWorld(std::chrono::milliseconds elapsed);
+    void advanceWorld(std::chrono::milliseconds elapsed);
     void updateCommunity();
     void updateToolStates();
     void closeAll();
-    ServerStatus buildStatus() const;
-    GameSession addPlayer(const std::string& playerName, const PlayerData& data,
-                          const std::shared_ptr<OutQueue>& output, const std::string& successMsg);
 
 public:
-    Game(const std::string& id, const std::string& name, uint8_t worldId,
-         const GameConfig& config = {}, uint8_t maxPlayers = 4, ChatServices chatServices = {});
+    Game(const std::string& id, const std::string& name, uint8_t worldId, PreparedWorld prepared, const GameConfig& config = {}, ChatServices chatServices = {});
 
-    const std::string& getId() const;
-    std::string getName() const;
-    uint8_t getWorldId() const;
+    Game(const Game&) = delete;
+    Game& operator=(const Game&) = delete;
+    Game(Game&&) = delete;
+    Game& operator=(Game&&) = delete;
+
     PersistenceDTO getPersistenceData() const;
     void restorePersistenceData(const PersistenceDTO& saved);
     void setSaveCallback(std::function<void(const PersistenceDTO&)> callback);
-    std::shared_ptr<CommandQueue> getInputQueue() const;
-
-    GameSession createGame(const CreateGameDTO& dto,const std::shared_ptr<OutQueue>& output);
-    GameSession joinGame(const JoinGameDTO& dto,const std::shared_ptr<OutQueue>& output);
+    GameSession createGame(const CreateGameDTO& dto, const std::shared_ptr<OutQueue>& output);
+    GameSession joinGame(const JoinGameDTO& dto, const std::shared_ptr<OutQueue>& output);
     GameSession resumeGame(const ResumeGameDTO& dto, const std::shared_ptr<OutQueue>& output);
-    std::optional<GameInfoDTO> infoFor(const std::string& userName) const;
-    bool loadDungeon(uint8_t selectedWorldId,const std::map<uint8_t, DungeonRoomLayout>& layout);
-    bool loadFarm(uint8_t selectedWorldId, const FarmLayout& layout);
-    void setMapVisuals(ConstMapData visuals);
-    bool loadTown(const TownConfig& config);
-    bool configureDungeonEntrance(const DungeonEntrance& entrance);
+    CommandSubmission enqueueCommand(uint16_t playerId, std::shared_ptr<CommandDTO> command);
 
     void run() override;
     void stop() override;

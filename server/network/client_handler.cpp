@@ -113,12 +113,13 @@ void ClientHandler::runGame() {
         }
         const auto it = gameReceivers.find(type);
         if (it == gameReceivers.end()) throw ProtocolError("unexpected message");
-        session.input->push(PlayerCommand{session.playerId, it->second()});
+        if (manager.enqueueCommand(session.gameId, session.playerId, it->second()) != CommandSubmission::Enqueued)
+            return;
     }
 }
 
 bool ClientHandler::answerEntry() {
-    const bool joined = session.status.status == StatusCode::Ok && session.input;
+    const bool joined = session.status.status == StatusCode::Ok;
     protocol.sendStatus(session.status);
     if (joined) {
         protocol.sendConstMap(*session.map);
@@ -137,13 +138,8 @@ void ClientHandler::stop() {
 
 void ClientHandler::disconnect() {
     stop();
-    if (session.input) {
-        try {
-            session.input->push(PlayerCommand{session.playerId, std::make_shared<DisconnectDTO>(session.userName)});
-        } catch (const ClosedQueue&) {
-            // TODO
-        }
-    }
+    if (session.status.status == StatusCode::Ok && session.playerId != 0)
+        manager.enqueueCommand(session.gameId, session.playerId, std::make_shared<DisconnectDTO>(session.userName));
     try {
         outQueue->close();
     } catch (const std::exception&) {
