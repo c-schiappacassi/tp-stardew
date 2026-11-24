@@ -286,8 +286,8 @@ BackgroundData MapConverter::convertVisualZone(const EditorZoneData& zone, const
         }
         result.floor.push_back({position(tile.x, tile.y), static_cast<TileTextureId>(tile.textureId)});
     }
-    for (const MapElement& decor: zone.decorations) {
-        if (decor.id < 0 || decor.id > static_cast<int>(DecorId::SmallBlueFlower)) {
+    for (const MapElement& decor : zone.decorations) {
+        if (decor.id < 0 || decor.id > static_cast<int>(DecorId::SignPost)) {
             throw std::invalid_argument("Unknown decoration in " + name);
         }
         result.decor.push_back({position(decor.x, decor.y), static_cast<DecorId>(decor.id)});

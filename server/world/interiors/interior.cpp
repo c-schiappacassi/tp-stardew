@@ -12,6 +12,7 @@
 
 namespace {
 const CollisionBox BED_BOX{22, 32};
+constexpr int OFFSET_Y  = -22;
 
 bool validPosition(const Position& position) {
     return position.getX() >= 0 && position.getY() >= 0 && position.getX() <= std::numeric_limits<uint16_t>::max() &&
@@ -154,7 +155,7 @@ bool Interior::useBed(PlayerManager& players, uint16_t playerId) const {
         return false;
     for (const auto& bed: beds) {
         if (canApproachBed(player.getPosition(), bed))
-            return players.apply(playerId, player_action::Sleep{bed}).applied;
+            return players.apply(playerId, player_action::Sleep{Position{bed.getX(), bed.getY() + OFFSET_Y}}).applied;
     }
     return false;
 }
