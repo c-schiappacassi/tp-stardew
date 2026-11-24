@@ -4,7 +4,7 @@
 | Rol   | Alumno    | Función   |
 | :---  | :---      | :---      |
 |A      | Ciro      |implementa la parte de SDL del cliente|
-|B      | Luisa     |implementa la parte de QT del cliente (con editor)|
+|B      | Luisana   |implementa la parte de QT del cliente (con editor)|
 |C      | Caro      |implementa la parte de comunicación entre cliente y servidor, threads, protocolo, testing y tareas extras (persistencia, configuración, etc)|
 |D      | Agus      |implementa la parte de lógica del servidor|
 
@@ -103,3 +103,190 @@
     - cant hilos, clases, modelado de datos, seguir KISS, composición por sobre la herencia, etc...
 - conexión cliente-servidor simple funcionando para tener de base. 
 - SDL y QT: investiguen en la semana (QT juga con inputs) (SDL pp haga algo y se pueda interactuar)
+
+
+# 2da Reunión 20-10-2026
+
+### Preguntas y respuestas
+- **El server solo envia struct serverStatus a los clientes**
+- **Cada vez qeu corres el juego, el cliente tiene que ingresar su nombre de usuario(unico e identificador de cliente)**
+- Map de funciones: se guarda una referencia a la funcion, el map te devuelve eso y lo ejecutas
+- Class Player: no compartido
+- Se puede usar std::variant? abril dice que se puede usar eso o herencia. como quieran
+- Enums para los items o toml puro? enums
+- Hitbox: servidor, sdl manda al servidor la posicion a donde voy, el server me devuelve donde termino estando (si se pudo, me va a devolver la pos que le mande, si no, me devuelve donde estaba)
+- Dimenciones de los colisionables en un constastes.h
+- Cliente: antes de renderizar chequear que del serverStatus entra en mi vista/cuadrado 
+- Estaciones?  una vez que este lo del enuciado podemos ver si llegamos con extras
+
+### TODO para la proxima reunión:
+- QT: para pantallas de inicio son 2 semanas (ingresar ususario, crear partida, elegir mapa, elegir aspecto, joinear partida)
+- Protocolo:
+    - una semana: base del protocolo (ej hacer el serializador, definir que info se manda y su modelado)
+    - 2 semanas: concurrencia(poder tener multiples partidas y multiples juagdores)
+- Servidor + SDL:
+    - Constant Rate loop - gameloop - leer el articulo
+    - feat/movimiento completo
+    - dto directo cada comando del sdl
+- feat/mineria + inventario (1 semana)
+  - picar los minerales
+  - inventario (10 slots de stacks de 50)
+  - conseguir la reconpensa de minar
+- feat/granja (3 semanas)
+  - logica animales (caminan)
+
+# 3ra Reunión 27-10-2026
+- preguntas: Zonas separadas por una loading screen como en el juego? - como les resulte más simple
+
+### Para la semana que viene:
+
+#### lo que no llegamos
+- QT: para pantallas de inicio son 2 semanas (ingresar ususario, crear partida, elegir mapa, elegir aspecto, joinear partida)
+- Protocolo:
+    - 2 semanas: concurrencia(poder tener multiples partidas y multiples juagdores)
+- Server: Diseño/Arqui
+- feat/mineria + inventario (1 semana)
+  - picar los minerales
+  - inventario (10 slots de stacks de 50)
+  - conseguir la reconpensa de minar
+- feat/granja (3 semanas)
+  - logica animales (caminan)
+
+#### lo que es para la proxima
+- Camara: coali con la pared del mapa
+- feat/cultivos -> implica tiempo
+- feat/caverna
+- feat/mapa
+- QT COMPLETO: HANDSHAKE INCLUIDO
+- Concurrencia Completa
+- la idea era que tuvieramos regalos y enemigos
+
+# 4ra Reunión 03-11-2026
+
+- Desmayo/dormir es todo SDL
+- Json para el formato del mapa o toml. el que sea mas comodo 
+- World le pregunta a farm si hay crops ready y este le avisa a HUD (patron publish subscriber es medio overkill)
+- Cultivos NO como el jeugo - Chrono interno
+    -   15min = un dia de juego - se puede calcular con librerias
+    -   06am a 2am(sino se desmaya) - el cliente solo recibe hora falsa, pasar la hora hora de a 10-15 min al final del proyecto
+- Constantes en un archivo
+- Editar sprites solo si tenes el tiempo
+- InsideBuildingXXX como zona
+- Comerciatenas fijos en edif(editor valida que esten todos)
+- Inical Status para crear lo fijo del mapa y no estar mandando siempre mucha info 
+
+#### lo que es para la proxima:
+- QT:
+    -   Comenzar Editor (mario maker) (2 o maybe 3 semanas)
+        -   granja con casa
+        -   town con comerciantes
+        -   geo de niveles de la mina (geo fija pero aleatoreo el orden) -> cambio en el client
+        -   para todos, walkable tile o no
+        -   validacion de mapa
+        -   deco (individual y bloques predeterminados para hacer mas rápido, onda rompecabezas)
+        -   mapa: si hay tres casas se pueden unir max 3 personas - MAX POSIBLE SIEMPRE ES 4 (como en el juego)
+    -   Fin de juego
+
+- Feat:
+    - terminar granja
+    - mapa
+    - barra de energia
+    - regalos - 1 semana
+    - enemigos - comienzo enemigos - uno completo y extendemos
+    - vida player + consecuencias de desmayarse
+    - cama + ok irse a dormir
+        - cama fija
+
+- Client:
+    - sound manager
+
+- Server: ayuda C pero no descuida el protocolo y el testing.
+
+
+# 5ra Reunión 10-11-2026
+
+## TODO:
+### Quedo:
+- QT:
+    -   Fin de juego
+
+- Feat:
+    - terminar granja - piso, aviso de la vaca
+    - mapa
+    - cofre - click
+    - barra de energia - label
+    - regalos
+    - enemigos - trampas
+    - consecuencias de desmayarse
+    - cama + ok irse a dormir
+        - cama fija
+    - NPCs
+    - chat 
+        - hablar con comerciantes (hacer primero)
+        - otro players (@ para mensaje directo, sino es general)
+    - community center
+    - persistencia 
+ 
+- Client:
+    - sound manager
+
+# 6ra Reunión 10-11-2026
+
+### Preguntas
+- en la ultima semana de tp, no se pueden implementar nuevas features?
+- el video se tiene que tener terminado para la semana que viene?
+- la docu se entraga al mismo tiempo que el vid o tenemos un tiempo despues?
+- Docu era: diseño y manual de usuario nada más?
+- server status change para minimap? -> manda a todos siempre
+
+TODO: nuestro:
+    - sdl pantalla de noche/carga cuando duerme un jugador y espera al resto.
+    - cambiar hitbox de combate del player
+    - ajustar colition box de muebles en server
+    - completar minimap
+    - pasar a planta final after cosecha?
+
+TODO: de abril
+- BUG MAX CANT GRANJEROS - no era un bug, solo paso que habian 2 casas en el mapa je - DONE
+- fix: broadcast general - DONE
+- fix: golpe menor cuando poca vida
+- agregar nombre de usuario arriba - DONE
+- script: sobre mint 20 o 22
+- cheats: 
+    -   forzar calidad - DONE
+    -   kill enemigos para probar minas - DONE
+- fix: visual feedback de golpes - sdlpuro - DONE
+- pantalla fin de juego - TBD: QT o SDL
+
+TODO: nuestro:
+- sdl pantalla de noche/carga cuando duerme un jugador y espera al resto.
+
+    - resto del tp:
+    para el martes que viene tenemos ultima call y tenemos una pre-demo o demo parcial con feedback (como estuvimos teniendo, sin codigo y sin nota)
+    del 19 al 24 podemos implementar:
+    --> del 24 al 1 podemos seguir avanzando con el codigo pero sin feedback de abril (salvo que le escribamos)
+    la nocha del martes 1 cierra la entrega y hay que dejar de pushear al repo! (no se entrega por sercomni nada)
+
+    - video lo podemos hacer despues asi hasta el primero tenemos el CODIGO perfecto (no bugs, features completos)!
+    refactorizar el codigo para que quede lo mas lindo posible y que siga las buenas practcas y prinicpios
+    tenemos hasta el 3/4 para hacer el video y la documentacion y tests (protocolo)
+    video corto, no mas de 3 minutos, mostrar todo lo que hace el tp! intentar vender el tp pero sin mentir! lindo musica venta edicion! (estetico)
+    sencilla la documentacion --> que abril entienda, cortita y al pie que se entienda todo que corto y claro a cabeza! (no mas de 5 paginas)
+    que sea facil de leer para alguien que no programo el tp con nosotros
+
+    - orales: individuales y el docente pregunta que hicimos y nos hace preguntas respecto a eso (vamos a tener que compartir pantalla)
+    si nos pregunta por algo que no hicimos le decimos "yo esto no lo hice"
+
+    - post martes 1 abril comeinza a hacer su correccion buscando que este todo lo que el tp tiene que cumplir (desde el enunciado)
+
+    - si el docente te pide que levantes el tp y le muestres --> lo involucras y le creas un usuario a el y etc... QUE SE SIENTA INCLUIDO
+
+    - docu, reglas, cheats, como moverse, como interactuar con las cosas o realizar acciones (comerciantes, regar, etc)
+    - docu, vitacora del tp de como vivimos nosotros el tp
+    - docu, arquietctura del tp, division del tp (que tareas tuvo cada uno), estructura general del codigo (diagramas)
+
+
+PARA LA SEMANA QUE VIENE:
+
+    - todo ja
+    - si ya esta todo listo, podemos agregar cosas nuevas (la nota maxima con o sin cosas nuevas es 10 asi que depende de nosotros y el tiempo entra que le queramos dedicar al tp, pero nos puede ayudar a subir un poquito si hay algo que esta mas o menos)

@@ -1,0 +1,444 @@
+[death]
+gold_drop = 100
+
+[community_center]
+money_required = 10000
+seed_reward = 5
+metal_gold_reward = 500
+
+[community_center.requirements]
+strawberry = 3
+scallion = 3
+potato = 3
+pumpkin = 3
+coal = 10
+lapis = 7
+silver = 5
+gold = 3
+milk = 5
+egg = 10
+
+[shops.robin]
+# Siete decoraciones por dia el cofre siempre esta disponible.
+daily_rotation_count = 7
+
+[[shops.robin.products]]
+item_id = 50
+price = 250
+rotates = false
+
+[[shops.robin.products]]
+item_id = 51
+price = 500
+rotates = true
+
+[[shops.robin.products]]
+item_id = 52
+price = 300
+rotates = true
+
+[[shops.robin.products]]
+item_id = 68
+price = 400
+rotates = true
+
+[[shops.robin.products]]
+item_id = 59
+price = 200
+rotates = true
+
+[[shops.robin.products]]
+item_id = 55
+price = 350
+rotates = true
+
+[[shops.robin.products]]
+item_id = 69
+price = 600
+rotates = true
+
+[[shops.robin.products]]
+item_id = 56
+price = 450
+rotates = true
+
+[[shops.robin.products]]
+item_id = 72
+price = 150
+rotates = true
+
+
+# Precios unitarios del mercado; los cultivos y animales usan FarmConfig.
+[shops.pierre]
+products = [
+    { item_id = 10, price = 10 },
+    { item_id = 11, price = 5 },
+    { item_id = 12, price = 8 },
+    { item_id = 13, price = 20 },
+]
+
+[shops.clint]
+products = [
+    { item_id = 30, price = 10 },
+    { item_id = 31, price = 40 },
+    { item_id = 32, price = 50 },
+    { item_id = 33, price = 80 },
+]
+
+# FARM
+
+# Escenario ampliado de farm (16x12). Coordenadas en tiles de 16x16.
+# texture_id = 0: pasto; texture_id = 1: tierra cultivable (TileTextureId::Dirt).
+
+[farm]
+width = 16
+height = 12
+player_houses = 2
+spawn = { x = 2, y = 2 }
+door_mines = { x = 0, y = 0 }
+mine_return = { x = 13, y = 2 }
+door_town = { x = 14, y = 10 }
+town_return = { x = 13, y = 10 }
+# Puertas exteriores y geometria de cada interior, en tiles.
+# interior_id: 0 = casa; house_index distingue las casas.
+interiors = [
+    { interior_id = 0, house_index = 0, door = { x = 2, y = 3 }, return = { x = 2, y = 4 }, width = 17, height = 17, walkable_areas = [{ x = 1, y = 4, width = 15, height = 10 }, { x = 3, y = 14, width = 1, height = 3 }], entry = { x = 3, y = 13 }, exit = { x = 3, y = 15 }, beds = [{ x = 12, y = 6 }] },
+    { interior_id = 0, house_index = 1, door = { x = 3, y = 3 }, return = { x = 3, y = 4 }, width = 17, height = 17, walkable_areas = [{ x = 1, y = 4, width = 15, height = 10 }, { x = 3, y = 14, width = 1, height = 3 }], entry = { x = 3, y = 13 }, exit = { x = 3, y = 15 }, beds = [{ x = 12, y = 6 }] },
+    { interior_id = 1, house_index = 0, outside_zone = "town", door = { x = 5, y = 12 }, return = { x = 5, y = 13 }, width = 17, height = 17, entry = { x = 8, y = 13 }, exit = { x = 8, y = 15 }, npc = { x = 8, y = 6 } },
+    { interior_id = 2, house_index = 0, outside_zone = "town", door = { x = 8, y = 12 }, return = { x = 8, y = 13 }, width = 17, height = 17, entry = { x = 8, y = 13 }, exit = { x = 8, y = 15 }, npc = { x = 8, y = 6 } },
+    { interior_id = 3, house_index = 0, outside_zone = "town", door = { x = 20, y = 12 }, return = { x = 20, y = 13 }, width = 17, height = 17, entry = { x = 8, y = 13 }, exit = { x = 8, y = 15 }, npc = { x = 8, y = 6 } },
+    { interior_id = 4, house_index = 0, outside_zone = "town", door = { x = 26, y = 12 }, return = { x = 26, y = 13 }, width = 17, height = 17, entry = { x = 8, y = 13 }, exit = { x = 8, y = 15 }, npc = { x = 8, y = 6 } },
+    { interior_id = 5, house_index = 0, outside_zone = "town", door = { x = 14, y = 12 }, return = { x = 14, y = 13 }, width = 17, height = 17, entry = { x = 8, y = 13 }, exit = { x = 8, y = 15 } },
+]
+
+background_default = { texture_id = 1, state = "walkable" }
+background_overrides = [
+    { x = 0, y = 0, texture_id = 0, state = "walkable" },
+    { x = 1, y = 0, texture_id = 0, state = "walkable" },
+    { x = 2, y = 0, texture_id = 0, state = "walkable" },
+    { x = 3, y = 0, texture_id = 0, state = "walkable" },
+    { x = 4, y = 0, texture_id = 0, state = "walkable" },
+    { x = 5, y = 0, texture_id = 0, state = "walkable" },
+    { x = 6, y = 0, texture_id = 0, state = "walkable" },
+    { x = 7, y = 0, texture_id = 0, state = "walkable" },
+    { x = 8, y = 0, texture_id = 0, state = "walkable" },
+    { x = 9, y = 0, texture_id = 0, state = "walkable" },
+    { x = 10, y = 0, texture_id = 0, state = "walkable" },
+    { x = 11, y = 0, texture_id = 0, state = "walkable" },
+    { x = 12, y = 0, texture_id = 0, state = "walkable" },
+    { x = 13, y = 0, texture_id = 0, state = "walkable" },
+    { x = 14, y = 0, texture_id = 0, state = "walkable" },
+    { x = 15, y = 0, texture_id = 0, state = "walkable" },
+    { x = 0, y = 1, texture_id = 0, state = "walkable" },
+    { x = 15, y = 1, texture_id = 0, state = "walkable" },
+    { x = 0, y = 2, texture_id = 0, state = "walkable" },
+    { x = 15, y = 2, texture_id = 0, state = "walkable" },
+    { x = 0, y = 3, texture_id = 0, state = "walkable" },
+    { x = 15, y = 3, texture_id = 0, state = "walkable" },
+    { x = 0, y = 4, texture_id = 0, state = "walkable" },
+    { x = 15, y = 4, texture_id = 0, state = "walkable" },
+    { x = 0, y = 5, texture_id = 0, state = "walkable" },
+    { x = 15, y = 5, texture_id = 0, state = "walkable" },
+    { x = 0, y = 6, texture_id = 0, state = "walkable" },
+    { x = 15, y = 6, texture_id = 0, state = "walkable" },
+    { x = 0, y = 7, texture_id = 0, state = "walkable" },
+    { x = 15, y = 7, texture_id = 0, state = "walkable" },
+    { x = 0, y = 8, texture_id = 0, state = "walkable" },
+    { x = 15, y = 8, texture_id = 0, state = "walkable" },
+    { x = 0, y = 9, texture_id = 0, state = "walkable" },
+    { x = 15, y = 9, texture_id = 0, state = "walkable" },
+    { x = 0, y = 10, texture_id = 0, state = "walkable" },
+    { x = 15, y = 10, texture_id = 0, state = "walkable" },
+    { x = 0, y = 11, texture_id = 0, state = "walkable" },
+    { x = 1, y = 11, texture_id = 0, state = "walkable" },
+    { x = 2, y = 11, texture_id = 0, state = "walkable" },
+    { x = 3, y = 11, texture_id = 0, state = "walkable" },
+    { x = 4, y = 11, texture_id = 0, state = "walkable" },
+    { x = 5, y = 11, texture_id = 0, state = "walkable" },
+    { x = 6, y = 11, texture_id = 0, state = "walkable" },
+    { x = 7, y = 11, texture_id = 0, state = "walkable" },
+    { x = 8, y = 11, texture_id = 0, state = "walkable" },
+    { x = 9, y = 11, texture_id = 0, state = "walkable" },
+    { x = 10, y = 11, texture_id = 0, state = "walkable" },
+    { x = 11, y = 11, texture_id = 0, state = "walkable" },
+    { x = 12, y = 11, texture_id = 0, state = "walkable" },
+    { x = 13, y = 11, texture_id = 0, state = "walkable" },
+    { x = 14, y = 11, texture_id = 0, state = "walkable" },
+    { x = 15, y = 11, texture_id = 0, state = "walkable" },
+]
+
+# El suelo preparado para los cultivos
+tilled_soil = [
+    { x = 3, y = 9 },
+    { x = 4, y = 9 },
+    { x = 5, y = 9 },
+    { x = 6, y = 9 },
+]
+
+# Cultivos
+crops = [
+    { type = "strawberry", position = { x = 3, y = 6 }, watered = true },
+    { type = "scallion",   position = { x = 4, y = 6 }, watered = false },
+    { type = "potato",     position = { x = 5, y = 6 }, watered = true },
+    { type = "pumpkin",    position = { x = 6, y = 6 }, watered = false },
+]
+
+# Animales
+animals = [
+    { type = "brown_cow",     position = { x = 10, y = 8 } },
+    { type = "brown_chicken", position = { x = 12, y = 9 } },
+]
+
+# Muebles
+furniture = [
+    { item_id = 51, position = { x = 10, y = 3 } },
+    { item_id = 52, position = { x = 11, y = 3 } },
+    { item_id = 59, position = { x = 11, y = 6 } },
+]
+
+
+# MAZMORRA
+
+[dungeon]
+mining_range = 64
+mineral_density_percent = 10
+mineral_density_by_room = []
+
+# Geometria de las 10 habitaciones. Todas las coordenadas se expresan
+# en tiles: x es la columna e y es la fila.
+# default_walkable define el estado inicial de todas las celdas.
+# walkable_tiles y blocked_tiles permiten sobrescribir celdas puntuales.
+[dungeon.map]
+width = 32
+height = 24
+tile_size = 16
+default_walkable = true
+
+[[dungeon.rooms]]
+number = 1
+entry = { x = 3, y = 3 }
+exit = { x = 1, y = 3 }
+next_room = { x = 29, y = 21 }
+reserved_positions = []
+walkable_tiles = []
+blocked_tiles = []
+
+[[dungeon.rooms]]
+number = 2
+entry = { x = 3, y = 3 }
+exit = { x = 1, y = 3 }
+next_room = { x = 29, y = 21 }
+reserved_positions = []
+walkable_tiles = []
+blocked_tiles = []
+
+[[dungeon.rooms]]
+number = 3
+entry = { x = 3, y = 3 }
+exit = { x = 1, y = 3 }
+next_room = { x = 29, y = 21 }
+reserved_positions = []
+walkable_tiles = []
+blocked_tiles = []
+
+[[dungeon.rooms]]
+number = 4
+entry = { x = 3, y = 3 }
+exit = { x = 1, y = 3 }
+next_room = { x = 29, y = 21 }
+reserved_positions = []
+walkable_tiles = []
+blocked_tiles = []
+
+[[dungeon.rooms]]
+number = 5
+entry = { x = 3, y = 3 }
+exit = { x = 1, y = 3 }
+next_room = { x = 29, y = 21 }
+reserved_positions = []
+walkable_tiles = []
+blocked_tiles = []
+
+[[dungeon.rooms]]
+number = 6
+entry = { x = 3, y = 3 }
+exit = { x = 1, y = 3 }
+next_room = { x = 29, y = 21 }
+reserved_positions = []
+walkable_tiles = []
+blocked_tiles = []
+
+[[dungeon.rooms]]
+number = 7
+entry = { x = 3, y = 3 }
+exit = { x = 1, y = 3 }
+next_room = { x = 29, y = 21 }
+reserved_positions = []
+walkable_tiles = []
+blocked_tiles = []
+
+[[dungeon.rooms]]
+number = 8
+entry = { x = 3, y = 3 }
+exit = { x = 1, y = 3 }
+next_room = { x = 29, y = 21 }
+reserved_positions = []
+walkable_tiles = []
+blocked_tiles = []
+
+[[dungeon.rooms]]
+number = 9
+entry = { x = 3, y = 3 }
+exit = { x = 1, y = 3 }
+next_room = { x = 29, y = 21 }
+reserved_positions = []
+walkable_tiles = []
+blocked_tiles = []
+
+[[dungeon.rooms]]
+number = 10
+entry = { x = 3, y = 3 }
+exit = { x = 1, y = 3 }
+reserved_positions = []
+walkable_tiles = []
+blocked_tiles = []
+
+[[dungeon.minerals]]
+type = "CoalRock"
+hits_to_break = 2
+spawn_weight = 60
+first_room = 1
+reward_item = "Coal"
+reward_quantity = 1
+reward_quality = "None"
+reward_chance = 100
+
+[[dungeon.minerals]]
+type = "LapisRock"
+hits_to_break = 4
+spawn_weight = 25
+first_room = 1
+reward_item = "Lapis"
+reward_quantity = 1
+reward_quality = "None"
+reward_chance = 85
+
+[[dungeon.minerals]]
+type = "SilverRock"
+hits_to_break = 6
+spawn_weight = 10
+first_room = 1
+reward_item = "Silver"
+reward_quantity = 1
+reward_quality = "None"
+reward_chance = 100
+
+[[dungeon.minerals]]
+type = "GoldRock"
+hits_to_break = 8
+spawn_weight = 5
+first_room = 5
+reward_item = "Gold"
+reward_quantity = 1
+reward_quality = "None"
+reward_chance = 100
+
+
+# TOWN
+
+[town.map]
+width = 40
+height = 30
+tile_size = 16
+
+[[town.buildings]]
+id = "blacksmith"
+position = { x = 10, y = 5 }
+width = 6
+height = 5
+
+[[town.npcs]]
+id = "merchant"
+position = { x = 17, y = 8 }
+
+[[town.connections]]
+destination = "farm"
+position = { x = 2, y = 15 }
+
+[[town.connections]]
+destination = "dungeon"
+position = { x = 35, y = 15 }
+
+# COMBATE:
+
+[player]
+sword_damage = 20
+sword_range = 40
+sword_energy_cost = 2
+sword_interval_ms = 500
+damage_grace_ms = 350
+passout_gold_percent = 10
+day_duration_ms = 840000
+
+[combat]
+skeleton_revive_ms = 7000
+vampire_revive_ms = 3000
+blood_radius = 80
+flame_speed = 80
+flame_lifetime_ms = 4000
+trap_inactive_ms = 2000
+trap_warning_ms = 700
+trap_active_ms = 1000
+trap_hit_ms = 800
+trap_damage = 12
+wall_flame_range = 64
+orc_silver_chance = 20
+mining_ambush_chance = 10
+gold_chance = 75
+gold_min = 2
+gold_max = 10
+
+[spawns]
+safety_range = 64
+skeletons_per_room = 1
+spikes_per_room = 1
+wall_flames_per_room = 1
+orc_group_every = 3
+vampire_pair_every = 4
+skull_every = 5
+max_enemies_per_room = 32
+
+[enemies.skeleton]
+health = 40
+damage = 8
+speed = 32
+range = 20
+attack_ms = 1000
+
+[enemies.orc]
+health = 70
+damage = 12
+speed = 36
+range = 20
+attack_ms = 1200
+
+[enemies.vampire_male]
+health = 100
+damage = 18
+speed = 40
+range = 22
+attack_ms = 1000
+
+[enemies.vampire_female]
+health = 90
+damage = 12
+speed = 60
+range = 22
+attack_ms = 900
+
+[enemies.skull]
+health = 1
+damage = 10
+speed = 0
+range = 160
+attack_ms = 1500

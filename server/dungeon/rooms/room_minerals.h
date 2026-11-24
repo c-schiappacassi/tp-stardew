@@ -1,0 +1,22 @@
+#pragma once
+
+#include <map>
+
+#include "dungeon/mining/mineral.h"
+#include "world/zone_map.h"
+
+class RoomMinerals {
+private:
+    std::map<EntityId, Mineral> minerals;
+    std::map<ZoneMap::Cell, EntityId> byCell;
+
+public:
+    bool add(Mineral mineral, const ZoneMap& terrain);
+    bool remove(EntityId id, const ZoneMap& terrain);
+    Mineral* find(EntityId id);
+    const Mineral* find(EntityId id) const;
+    const std::map<EntityId, Mineral>& all() const;
+    bool blocks(const CollisionBounds& bounds) const;
+    void removeBroken(const ZoneMap& terrain);
+    std::vector<MineralData> getPublicData(bool includeBroken) const;
+};

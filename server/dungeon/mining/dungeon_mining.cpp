@@ -1,0 +1,70 @@
+#include "dungeon_mining.h"
+
+#include <cmath>
+#include <limits>
+
+#include "dungeon/dungeon_room.h"
+#include "player/player_manager.h"
+
+#include "mineral_generator.h"
+
+DungeonMining::DungeonMining(uint16_t range): range(range) {}
+
+MiningResult DungeonMining::mine(PlayerManager& players, uint16_t playerId, DungeonRoom& room, EntityId id, MineralGenerator& generator, EntityIdGenerator& ids,
+    std::chrono::steady_clock::time_point now) const {
+    const auto player = players.snapshot(playerId);
+    if (player.getZone() != Zone::Dungeon || player.getDungeonLevel() != room.getNumber() || !player.canUsePickaxe(now)) {
+        return MiningResult();
+    }
+    auto* mineral = room.findMineral(id);
+    if (!mineral || mineral->isDepleted() || !player.canReach(mineral->getPosition(), range) || !room.hasClearLine(player.getCollisionCenter(), mineral->getCollisionCenter())) {
+        return MiningResult();
+    }
+    players.apply(playerId, player_action::FaceTarget{mineral->getPosition()});
+    if (!players.apply(playerId, player_action::UseTool{now}).applied) {
+        return MiningResult();
+    }
+    bool droppedSilver = false;
+    auto preparedMineral = *mineral;
+    if (preparedMineral.hit(player.getMiningPower())) {
+        const auto reward = generator.rollReward(mineral->getType());
+        if (reward) {
+            if (!room.getGroundItems().drop(mineral->getPosition(), reward->item_id, reward->quantity, reward->qual, ids)) {
+                return {true, false};
+            }
+            droppedSilver = reward->item_id == ItemId::Silver;
+        }
+    }
+    *mineral = preparedMineral;
+    return {true, droppedSilver};
+}
+
+EntityId DungeonMining::chooseMineral(const PlayerSnapshot& player, const DungeonRoom& room, Direction direction) const {
+    EntityId chosen = 0;
+    double nearest = std::numeric_limits<double>::max();
+    for (const auto& [id, mineral]: room.getMinerals()) {
+        if (mineral.isDepleted() || !player.canReach(mineral.getPosition(), range) || !room.hasClearLine(player.getCollisionCenter(), mineral.getCollisionCenter())) {
+            continue;
+        }
+        const double dx = static_cast<double>(mineral.getPosition().getX()) - player.getPosition().getX();
+        const double dy = static_cast<double>(mineral.getPosition().getY()) - player.getPosition().getY();
+        const bool ahead = (direction == Direction::Up && dy < 0 && std::abs(dx) <= -dy) || (direction == Direction::Down && dy > 0 && std::abs(dx) <= dy) ||
+            (direction == Direction::Left && dx < 0 && std::abs(dy) <= -dx) || (direction == Direction::Right && dx > 0 && std::abs(dy) <= dx);
+        const double distance = dx * dx + dy * dy;
+        if (ahead && distance < nearest) {
+            nearest = distance;
+            chosen = id;
+        }
+    }
+    return chosen;
+}
+
+MiningResult DungeonMining::useSelectedItem(PlayerManager& players, uint16_t playerId, DungeonRoom& room, MineralGenerator& generator, EntityIdGenerator& ids, Direction direction,
+    std::chrono::steady_clock::time_point now) const {
+    const auto player = players.snapshot(playerId);
+    if (player.getZone() != Zone::Dungeon || !player.canUsePickaxe(now)) {
+        return MiningResult();
+    }
+    const EntityId chosen = chooseMineral(player, room, direction);
+    return chosen != 0 ? mine(players, playerId, room, chosen, generator, ids, now) : MiningResult{};
+}
