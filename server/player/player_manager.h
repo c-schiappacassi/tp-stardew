@@ -65,4 +65,5 @@ public:
     void advancePlayers(int normalStep);
     void publishStatus(const ServerStatus& base);
     void handleCommand(const PlayerCommand& command, bool gameCompleted = false);
+    bool hasAvailableSlot() const;
 };

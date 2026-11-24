@@ -80,6 +80,7 @@ public:
     GameSession joinGame(const JoinGameDTO& dto, const std::shared_ptr<OutQueue>& output);
     GameSession resumeGame(const ResumeGameDTO& dto, const std::shared_ptr<OutQueue>& output);
     CommandSubmission enqueueCommand(uint16_t playerId, std::shared_ptr<CommandDTO> command);
+    qtStatus checkJoin(const CheckCodeDTO& dto) const;
 
     void run() override;
     void stop() override;

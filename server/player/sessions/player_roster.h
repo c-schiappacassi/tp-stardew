@@ -50,6 +50,7 @@ public:
     std::vector<CollisionBounds> getCollisionBounds(Zone zone) const;
     std::vector<uint16_t> connectedPlayerIds() const;
     std::vector<Combatant> combatants() const;
+    bool hasAvailableSlot() const;
 
     iterator begin();
     iterator end();

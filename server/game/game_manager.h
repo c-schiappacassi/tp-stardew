@@ -21,6 +21,7 @@ private:
     std::mutex persistenceMtx;
     GameRegistry games;
 
+    std::shared_ptr<Game> loadSavedGame(const std::string& code);
     void startGame(const std::string& id, const std::shared_ptr<Game>& game);
 
 public:
@@ -38,5 +39,6 @@ public:
     bool codeExists(const std::string& code);
     std::vector<GameInfoDTO> listGames(const std::string& userName);
     CommandSubmission enqueueCommand(const std::string& gameId, uint16_t playerId, std::shared_ptr<CommandDTO> command);
+    qtStatus checkJoin(const CheckCodeDTO& dto);
     void stopAll();
 };

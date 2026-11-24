@@ -17,9 +17,8 @@ PlayerRoster::Admission PlayerRoster::addPlayer(const std::string& name,const Pl
             return entry.second.getPlayer().getCharacterName() == appearance.characterName;
         }))
         return {nullptr, "A character with that name already exists in this game"};
-    if (players.size() >= maxPlayers)
+    if (!hasAvailableSlot())
         return {nullptr, "The game is full"};
-
     auto player = factory.create(appearance);
     const auto spawn = spawns.spawnFor(player.snapshot());
     if (!spawn ||
@@ -138,6 +137,10 @@ std::vector<Combatant> PlayerRoster::combatants() const {
             result.push_back({id, record.getPlayer().snapshot()});
     }
     return result;
+}
+
+bool PlayerRoster::hasAvailableSlot() const {
+    return players.size() < maxPlayers;
 }
 
 const PlayerRecord& PlayerRoster::require(uint16_t id) const {
