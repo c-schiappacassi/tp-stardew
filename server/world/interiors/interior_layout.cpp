@@ -15,7 +15,7 @@ InteriorLayout makePlayerHouseInterior(uint8_t houseIndex) {
     house.outside.zone = Zone::Farm;
     house.entry = house.terrain.baseAt({16, 3}).value();
     house.exit = house.terrain.baseAt({16, 3}).value();
-    house.beds = {house.terrain.baseAt({6, 12}).value()};
+    house.beds = {house.terrain.baseAt({5, 12}).value()};
     house.background.interior = InteriorBackgroundData{
         Position{0, 0}, InteriorId::PlayerHouse, std::nullopt};
     return house;
