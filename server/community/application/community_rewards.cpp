@@ -20,7 +20,7 @@ void CommunityRewards::updateMarket() {
 }
 
 uint64_t CommunityRewards::grantAnimals(AnimalSpecies species, uint16_t quantity) {
-    const auto price = world.getFarm().animalBasePrice(species);
+    const auto price = world.animalBasePrice(species);
     if (!price)
         return 0;
     uint64_t coins = 0;
@@ -106,8 +106,8 @@ void CommunityRewards::validate(const std::map<std::string, CommunityPlayerRewar
         }
         uint64_t maximumCoins = rewards.granted.contains(CommunityBundle::Metals) ? center.getConfig().metalGoldReward : 0;
         if (rewards.granted.contains(CommunityBundle::Animals)) {
-            maximumCoins += world.getFarm().animalBasePrice(AnimalSpecies::Cow).value_or(0);
-            maximumCoins += 2 * static_cast<uint64_t>(world.getFarm().animalBasePrice(AnimalSpecies::Chicken).value_or(0));
+            maximumCoins += world.animalBasePrice(AnimalSpecies::Cow).value_or(0);
+            maximumCoins += 2 * static_cast<uint64_t>(world.animalBasePrice(AnimalSpecies::Chicken).value_or(0));
         }
         if (rewards.pendingCoins > maximumCoins)
             throw std::invalid_argument("Invalid pending coins");

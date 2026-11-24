@@ -1,23 +1,29 @@
 #pragma once
 
-#include "chests/rooms/chest_room.h"
+#include <vector>
 
-#include "interior_layout.h"
+#include "interior.h"
 
-class PlayerSnapshot;
-class PlayerManager;
+class InteriorRooms {
+private:
+    std::vector<Interior> rooms;
 
-class InteriorManager {
-    std::vector<InteriorLayout> rooms;
-    std::map<std::pair<InteriorId, uint8_t>, ChestRoom> storage;
+    Interior* find(const InteriorLocation& location);
+    Interior* roomFor(const PlayerSnapshot& player);
+    const Interior* roomFor(const PlayerSnapshot& player) const;
 
 public:
+    using const_iterator = std::vector<Interior>::const_iterator;
+
     bool initialize(const std::vector<InteriorLayout>& layouts, EntityIdGenerator& ids);
-    const InteriorLayout* find(const InteriorLocation& location) const;
-    const std::vector<InteriorLayout>& layouts() const { return rooms; }
+    const Interior* find(const InteriorLocation& location) const;
+    const_iterator begin() const;
+    const_iterator end() const;
     bool canWalk(const InteriorLocation& location, const CollisionBounds& bounds) const;
+    bool canMove(const PlayerSnapshot& player, const Position& next) const;
     bool useBed(PlayerManager& players, uint16_t playerId) const;
     std::optional<WorldLocation> recoveryFor(const PlayerSnapshot& player, uint16_t playerId) const;
+    std::optional<NpcData> nearbyMerchant(const PlayerSnapshot& player, Direction direction) const;
     InteriorData dataFor(const InteriorLocation& location) const;
     void completeMap(ConstMapData& map) const;
     bool interactWithChest(PlayerManager& players, uint16_t playerId, Direction direction, EntityIdGenerator& ids, std::chrono::steady_clock::time_point now);

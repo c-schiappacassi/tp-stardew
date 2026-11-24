@@ -4,7 +4,7 @@
 #include <filesystem>
 
 #include "common/map/map_loader.h"
-#include "world/loading/map_converter.h"
+#include "world/world_manager.h"
 
 #include <exception>
 #include <optional>
@@ -70,10 +70,9 @@ std::unique_ptr<Game> GameManager::makeGame(
     const std::string& id, const std::string& name, uint8_t worldId,
     const std::string& mapPath) const {
     MapLoader loader;
-    MapConverter converter;
     MapData mapData = loader.load(resolveMapPath(mapPath));
-    GameSetup setup = converter.convert(mapData, worldId);
-    ConstMapData visuals = converter.convertVisuals(mapData);
+    auto prepared = WorldManager::prepareMap(mapData, worldId);
+    const auto& setup = prepared.setup;
     auto game = std::make_unique<Game>(id, name, worldId, config, setup.farm.playerHouses);
     if (!game->loadDungeon(setup.worldId, setup.layout)) {
         throw std::invalid_argument("Could not load the game dungeon");
@@ -88,7 +87,7 @@ std::unique_ptr<Game> GameManager::makeGame(
     if (setup.entrance && !game->configureDungeonEntrance(*setup.entrance)) {
         throw std::invalid_argument("The dungeon entrance is invalid");
     }
-    game->setMapVisuals(std::move(visuals));
+    game->setMapVisuals(std::move(prepared.visuals));
     return game;
 }
 
