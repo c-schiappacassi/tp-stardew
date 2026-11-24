@@ -20,6 +20,7 @@ struct TownBuildingConfig {
     TownPosition position;
     uint16_t width = 0;
     uint16_t height = 0;
+    std::vector<TownPosition> door;
 };
 
 struct TownNpcConfig {
@@ -37,4 +38,6 @@ struct TownConfig {
     std::vector<TownBuildingConfig> buildings;
     std::vector<TownNpcConfig> npcs;
     std::vector<TownConnectionConfig> connections;
+    std::vector<TownPosition> extraFarmDoors;
+    std::vector<std::vector<bool>> walkableTiles;
 };

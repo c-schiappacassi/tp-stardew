@@ -63,6 +63,7 @@ struct InteriorData {
     InteriorId interior_id = InteriorId::PlayerHouse;
     uint8_t house_index = 0;
     std::vector<FurnitureData> furniture;
+    std::vector<LootData> loot;
 };
 
 // FIN Farm
@@ -126,6 +127,7 @@ struct LevelData {
     Position exit{0, 0};
     std::vector<MineralData> minerals;
     DungeonCombatData combat;
+    std::vector<FurnitureData> furniture;
 };
 
 struct MineData{
@@ -155,6 +157,11 @@ struct DecorData { // para cosas como arboles y plantas
     DecorId id = DecorId::MapleTree;
 };
 
+struct FramePieceData {
+    Position pos{0, 0};
+    FramePieceId id = FramePieceId::StoneCliftTop;
+};
+
 struct BuildingData {
     Position pos{0,0};
     BuildingId id = BuildingId::FarmHouse;
@@ -180,6 +187,7 @@ struct InteriorBackgroundData
 struct BackgroundData{
     std::vector<TileData> floor;
     std::vector<DecorData> decor;
+    std::vector<FramePieceData> frame;
     std::vector<BuildingData> buildings; // Exteriores, para los interiores son una zona distinta, asi que les llega su propio BackgroundData
     std::vector<StaticFurnitureData> furniture;
     std::vector<PortalData> portals;
@@ -213,6 +221,12 @@ struct Stack {
     ItemId item_id;
     uint16_t quantity;
     Quality qual;
+};
+
+struct OpenChestData {
+    uint32_t id = 0;
+    uint8_t capacity = 0;
+    std::map<uint8_t, Stack> items;
 };
 
 struct CommunityRequirementData {
@@ -309,6 +323,7 @@ struct PlayerDataLocal : public PlayerData {
     ZoneData zoneData{std::monostate{}};
     CombatProgressData combatProgress;
     std::vector<ChatMessageData> newMessages;
+    std::optional<OpenChestData> openChest;
 
     PlayerDataLocal() = default;
     explicit PlayerDataLocal(const PlayerData& publicData): PlayerData(publicData) {}
@@ -335,6 +350,7 @@ struct CommandDTO {
 struct CreateGameDTO : public CommandDTO {
     std::string characterName;
     std::string gameName;
+    std::string mapPath;
     uint8_t worldId = 0;
     uint16_t hairModel = 0;
     uint16_t shirtModel = 0;
@@ -431,6 +447,29 @@ struct SelectSlotDTO : public CommandDTO {
 
     MessageType type() const override { return MessageType::SelectSlot; }
     explicit SelectSlotDTO(const std::string& name) : CommandDTO(name) {}
+};
+
+struct ItemTransferDTO: public CommandDTO {
+    uint32_t chestId = 0;
+    uint8_t slot = 0;
+    uint16_t quantity = 0;
+
+    MessageType type() const override { return MessageType::ItemTransfer; }
+    explicit ItemTransferDTO(const std::string& name): CommandDTO(name) {}
+};
+
+struct SelectItemDTO: public CommandDTO {
+    uint32_t chestId = 0;
+    uint8_t slot = 0;
+    uint16_t quantity = 0;
+
+    MessageType type() const override { return MessageType::SelectItem; }
+    explicit SelectItemDTO(const std::string& name): CommandDTO(name) {}
+};
+
+struct CloseChestDTO: public CommandDTO {
+    MessageType type() const override { return MessageType::CloseChest; }
+    explicit CloseChestDTO(const std::string& name): CommandDTO(name) {}
 };
 
 struct ListGamesDTO : public CommandDTO {

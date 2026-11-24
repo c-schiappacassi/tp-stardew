@@ -1,33 +1,14 @@
 #include "player.h"
 
 #include <algorithm>
-#include <cmath>
 #include <limits>
 #include <stdexcept>
 #include <utility>
 
-namespace {
-uint16_t improvedMaximum(uint16_t value) {
-    const uint32_t improved = static_cast<uint32_t>(value) * 5 / 4;
-    return static_cast<uint16_t>(
-            std::min<uint32_t>(std::numeric_limits<uint16_t>::max(), improved));
-}
-}
-
-Player::Player(
-    const PlayerData& initialData, 
-    uint8_t inventoryCapacity, 
-    uint16_t maxHealth,
-    uint16_t maxEnergy, 
-    uint32_t initialGold,
-     const PlayerConfig& config):
+Player::Player(const PlayerData& initialData, uint8_t inventoryCapacity, uint16_t maxHealth,uint16_t maxEnergy, uint32_t initialGold, const PlayerConfig& config):
         characterName(initialData.characterName),
-        pos(initialData.pos),
-        state(initialData.state),
-        dir(initialData.dir),
-        zone(initialData.currentZone),
-        interior(initialData.interior),
-        dungeonLevel(initialData.dungeonLevel),
+        location(initialData),
+        activity(initialData),
         hairModel(initialData.hairModel),
         shirtModel(initialData.shirtModel),
         pantsModel(initialData.pantsModel),
@@ -35,114 +16,145 @@ Player::Player(
         pantsColor(initialData.pantsColor),
         inventory(inventoryCapacity),
         gold(initialGold),
-        health(maxHealth),
-        maxHealth(maxHealth),
-        energy(maxEnergy),
-        maxEnergy(maxEnergy),
+        vitals(maxHealth, maxEnergy),
         config(config) {
-    if (maxHealth == 0 || maxEnergy == 0) {
-        throw std::invalid_argument("Maximum health and energy must be greater than zero");
-    }
     config.validate();
-    if (state == PlayerState::Walking) {
-        movementDirection = dir;
-    }
 }
 
-void Player::setMovement(Direction direction) {
-    switch (direction) {
-        case Direction::None:
-        case Direction::Up:
-        case Direction::Down:
-        case Direction::Left:
-        case Direction::Right:
-            break;
-        default:
-            return;
-    }
+void Player::setMovement(Direction direction) { activity.setMovement(direction); }
 
-    if (state == PlayerState::Unconscious || state == PlayerState::Sleeping) {
-        return;
-    }
-
-    movementDirection = direction;
-
-    if (state == PlayerState::UsingTool) {
-        return;
-    }
-    if (direction == Direction::None) {
-        state = PlayerState::Idle;
-        return;
-    }
-
-    dir = direction;
-    state = PlayerState::Walking;
+void Player::advance(int step) {
+    if (activity.getState() == PlayerState::Walking)
+        location.advance(activity.getDirection(), step);
 }
 
 Position Player::getNextPosition(int step) const {
-    if (state != PlayerState::Walking || step <= 0) {
-        return pos;
-    }
-
-    int x = pos.getX();
-    int y = pos.getY();
-
-    switch (dir) {
-        case Direction::Up:
-            y -= step;
-            break;
-        case Direction::Down:
-            y += step;
-            break;
-        case Direction::Left:
-            x -= step;
-            break;
-        case Direction::Right:
-            x += step;
-            break;
-        default:
-            return pos;
-    }
-
-    return Position(std::max(0, x), std::max(0, y));
+    if (activity.getState() != PlayerState::Walking)
+        return location.getPosition();
+    return location.nextPosition(activity.getDirection(), step);
 }
 
-void Player::advance(int step) { 
-    pos = getNextPosition(step);
- }
-
-PlayerData Player::getPublicData() const {
-    PlayerData data;
-    data.characterName = characterName;
-    data.pos = pos;
-    data.state = state;
-    data.dir = dir;
-    data.currentZone = zone;
-    data.dungeonLevel = dungeonLevel;
-    data.interior = interior;
-    const Stack* item = getSelectedItem();
-    if (item != nullptr) {
-        data.heldItem = item->item_id;
-    }
-    data.hairModel = hairModel;
-    data.shirtModel = shirtModel;
-    data.pantsModel = pantsModel;
-    data.hairColor = hairColor;
-    data.pantsColor = pantsColor;
-    data.health = health;
-    data.maxHealth = maxHealth;
-    return data;
+void Player::faceTarget(const Position& target) {
+    if (!canAct())
+        return;
+    if (const auto direction = location.directionTo(target))
+        faceDirection(*direction);
 }
 
-PlayerDataLocal Player::getLocalData() const {
-    PlayerDataLocal data(getPublicData());
-    data.items = inventory.getItems();
-    data.cap_inventory = inventory.getCapacity();
-    data.current_slot = currentSlot;
-    data.gold = gold;
-    data.energy = energy;
-    data.maxEnergy = maxEnergy;
-    return data;
+void Player::faceDirection(Direction direction) {
+    if (canAct())
+        activity.faceDirection(direction);
+}
+
+int Player::getMovementStep(int normalStep) const { return vitals.movementStep(normalStep); }
+
+Direction Player::getDirection() const { return activity.getDirection(); }
+
+Zone Player::getZone() const { return location.getZone(); }
+
+uint8_t Player::getDungeonLevel() const { return location.getDungeonLevel(); }
+
+const Position& Player::getPosition() const { return location.getPosition(); }
+
+const std::optional<InteriorLocation>& Player::getInterior() const {
+    return location.getInterior();
+}
+
+bool Player::changeLocation(Zone destination, uint8_t level, const Position& target,std::optional<InteriorLocation> inside) {
+    return canAct() && restoreLocation(destination, level, target, inside);
+}
+
+bool Player::restoreLocation(Zone destination, uint8_t level, const Position& target,std::optional<InteriorLocation> inside) {
+    if (!location.relocate(destination, level, target, inside))
+        return false;
+    activity.stopMovementAfterRelocation();
+    return true;
+}
+
+bool Player::canReach(const Position& target, uint16_t range) const {
+    return location.canReach(target, range);
+}
+
+CollisionBounds Player::getCollisionBounds(const Position& position) const {
+    return config.collision.at(position);
+}
+
+Position Player::getCollisionCenter() const { return getCollisionBounds(getPosition()).center(); }
+
+CollisionBounds Player::getHitboxBounds() const { return config.hitbox.at(getPosition()); }
+
+Position Player::getHitboxCenter() const { return getHitboxBounds().center(); }
+
+bool Player::canAct() const { return activity.canAct() && vitals.hasResources(); }
+
+bool Player::canBeAttacked() const { return vitals.hasResources() && !activity.isResting(); }
+
+bool Player::isResting() const { return activity.isResting(); }
+
+bool Player::isSleeping() const { return activity.isSleeping(); }
+
+bool Player::canUseBed() const { return activity.isBedReady() && canAct(); }
+
+void Player::leaveBedArea() { activity.leaveBedArea(); }
+
+void Player::passOut() {
+    if (activity.passOut())
+        gold -= static_cast<uint32_t>(static_cast<uint64_t>(gold) * config.passoutGoldPercent /
+                                      100);
+}
+
+bool Player::sleep() {
+    if (!canAct())
+        return false;
+    activity.sleep();
+    return true;
+}
+
+bool Player::cancelSleep() { return activity.cancelSleep(); }
+
+void Player::wakeUp() {
+    vitals.recover(isSleeping());
+    activity.wakeUp();
+    vitals.clearDamageGrace();
+}
+
+void Player::setVitals(uint16_t newHealth, uint16_t newEnergy) {
+    vitals.set(newHealth, newEnergy);
+    if (!vitals.hasResources()) {
+        passOut();
+    } else if (activity.getState() == PlayerState::Unconscious) {
+        resetActivity();
+    }
+}
+
+void Player::restoreVitals() {
+    vitals.recover(true);
+    resetActivity();
+}
+
+bool Player::canPerformAction(std::chrono::steady_clock::time_point now) const {
+    return canAct() && activity.cooldownEnded(now);
+}
+
+bool Player::performAction(uint16_t energyCost, std::chrono::milliseconds interval,std::chrono::steady_clock::time_point now) {
+    if (!canPerformAction(now) || interval.count() < 0)
+        return false;
+    vitals.consumeEnergy(energyCost);
+    activity.startCooldown(now, interval);
+    if (!vitals.hasResources()) {
+        passOut();
+    } else {
+        activity.resumeMovement();
+    }
+    return true;
+}
+
+bool Player::canUsePickaxe(std::chrono::steady_clock::time_point now) const {
+    if (!canUseTool(now)) {
+        return false;
+    }
+
+    return getSelectedItem()->item_id == ItemId::Pickaxe;
 }
 
 bool Player::canUseTool(std::chrono::steady_clock::time_point now) const {
@@ -158,157 +170,103 @@ bool Player::canUseTool(std::chrono::steady_clock::time_point now) const {
     return config.tools.contains(item->item_id);
 }
 
-bool Player::canUsePickaxe(std::chrono::steady_clock::time_point now) const {
-    if (!canUseTool(now)) {
-        return false;
-    }
-
-    return getSelectedItem()->item_id == ItemId::Pickaxe;
-}
-
 bool Player::useTool(std::chrono::steady_clock::time_point now) {
-
     if (!canUseTool(now)) {
         return false;
     }
 
     const ItemId item = getSelectedItem()->item_id;
     const ToolConfig& tool = config.tools.at(item);
-    const Direction toolDirection = dir;
+    const Direction toolDirection = activity.getDirection();
     if (!performAction(tool.energyCost, std::chrono::milliseconds{tool.intervalMs}, now)) {
         return false;
     }
-    if (state != PlayerState::Unconscious) {
-        dir = toolDirection;
-        state = PlayerState::UsingTool;
-    }
-    return true;
-}
-
-bool Player::canPerformAction(std::chrono::steady_clock::time_point now) const {
-    return canAct() && now >= nextActionTime;
-}
-
-bool Player::performAction(uint16_t energyCost, std::chrono::milliseconds interval,
-                           std::chrono::steady_clock::time_point now) {
-    if (!canPerformAction(now) || interval.count() < 0) {
-        return false;
-    }
-
-    if (energyCost >= energy) {
-        energy = 0;
-    } else {
-        energy -= energyCost;
-    }
-
-    nextActionTime = now + interval;
-    if (energy == 0) {
-        passOut();
-    } else {
-        setMovement(movementDirection);
-    }
-
+    activity.startTool(toolDirection);
     return true;
 }
 
 void Player::updateToolState(std::chrono::steady_clock::time_point now) {
-    if (state != PlayerState::UsingTool) {
-        return;
-    }
-
-    if (now >= nextActionTime) {
-        state = PlayerState::Idle;
-        setMovement(movementDirection);
-    }
+    activity.updateToolState(now);
 }
-
-bool Player::canReach(const Position& target, uint16_t range) const {
-    const double distanceX =static_cast<double>(pos.getX()) - target.getX();
-    const double distanceY =static_cast<double>(pos.getY()) - target.getY();
-
-    const double distanceSquared =distanceX * distanceX + distanceY * distanceY;
-    const double rangeSquared =static_cast<double>(range) * range;
-
-    return distanceSquared <= rangeSquared;
-}
-
-Zone Player::getZone() const {
-     return zone; 
-    }
-
-uint8_t Player::getDungeonLevel() const { 
-    return dungeonLevel; 
-}
-
-const Position& Player::getPosition() const {
-     return pos; 
-    }
-
-CollisionBounds Player::getCollisionBounds(const Position& position) const {
-    return config.collision.at(position);
-}
-
-Position Player::getCollisionCenter() const {
-     return getCollisionBounds(pos).center(); 
-    }
-
-CollisionBounds Player::getHitboxBounds() const {
-    return config.hitbox.at(pos);
-}
-
-Position Player::getHitboxCenter() const {
-    return getHitboxBounds().center();
-}
-
-bool Player::canAct() const {
-    return(state == PlayerState::Idle ||state == PlayerState::Walking) &&health > 0 &&energy > 0;
-}
-
-bool Player::canBeAttacked() const {
-    return health > 0 && energy > 0 && state != PlayerState::Unconscious &&state != PlayerState::Sleeping;
-}
-
-bool Player::isResting() const {
-    return state == PlayerState::Sleeping || state == PlayerState::Unconscious;
-}
-
-bool Player::isSleeping() const { return state == PlayerState::Sleeping; }
-
-bool Player::canUseBed() const { return bedReady && canAct(); }
-
-void Player::leaveBedArea() { bedReady = true; }
-
-const std::optional<InteriorLocation>& Player::getInterior() const { return interior; }
 
 uint16_t Player::receiveDamage(uint16_t damage, std::chrono::steady_clock::time_point now) {
-    if (!canBeAttacked() || damage == 0 || now < nextDamageTime) {
+    if (!canBeAttacked())
         return 0;
-    }
-    const uint16_t applied = std::min(health, damage);
-    health -= applied;
-    nextDamageTime = now + std::chrono::milliseconds{config.damageGraceMs};
-    if (health == 0) {
+    const auto applied =
+            vitals.receiveDamage(damage, now, std::chrono::milliseconds{config.damageGraceMs});
+    if (vitals.getHealth() == 0)
         passOut();
-    }
     return applied;
 }
 
-bool Player::hasLowHealth() const {
-    return static_cast<uint32_t>(health) * 5 <= maxHealth;
-}
+uint16_t Player::getSwordDamage() const { return vitals.swordDamage(config.swordDamage); }
 
-uint16_t Player::getSwordDamage() const {
-    if (hasLowHealth() && config.swordDamage > 0) {
-        return std::max<uint16_t>(1, config.swordDamage / 2);
-    }
-    return config.swordDamage;
-}
-
-uint16_t Player::getMiningPower() const {
-    return hasLowHealth() ? 1 : 2;
-}
+uint16_t Player::getMiningPower() const { return vitals.hasLowHealth() ? 1 : 2; }
 
 uint16_t Player::getSwordRange() const { return config.swordRange; }
+
+void Player::applyCombatBonus() { vitals.applyCombatBonus(); }
+
+bool Player::selectSlot(uint8_t slot) {
+    if (!canAct()) {
+        return false;
+    }
+    if (slot >= inventory.getCapacity()) {
+        return false;
+    }
+
+    currentSlot = slot;
+    return true;
+}
+
+bool Player::addItem(const Stack& stack) { return inventory.add(stack); }
+
+uint16_t Player::addItemUpTo(const Stack& stack) { return inventory.addUpTo(stack); }
+
+bool Player::removeItem(uint8_t slot, uint16_t quantity) {
+    return inventory.remove(slot, quantity);
+}
+
+bool Player::removeItems(const std::vector<std::pair<uint8_t, uint16_t>>& quantities) {
+    if (!canAct() || quantities.empty())
+        return false;
+    Inventory prepared = inventory;
+    for (const auto& [slot, quantity]: quantities) {
+        if (!prepared.remove(slot, quantity))
+            return false;
+    }
+    inventory = std::move(prepared);
+    return true;
+}
+
+const std::map<uint8_t, Stack>& Player::getInventoryItems() const { return inventory.getItems(); }
+
+const Stack* Player::getSelectedItem() const { return inventory.getSlot(currentSlot); }
+
+uint8_t Player::getSelectedSlot() const { return currentSlot; }
+
+bool Player::transferItemsTo(Inventory& destination, uint8_t slot, uint16_t quantity) {
+    return canAct() && inventory.transferTo(destination, slot, quantity);
+}
+
+bool Player::transferItemsTo(Player& destination, uint8_t slot, uint16_t quantity) {
+    return canAct() && destination.canAct() && inventory.transferTo(destination.inventory, slot, quantity);
+}
+
+bool Player::transferItemsFrom(Inventory& source, uint8_t slot, uint16_t quantity) {
+    return canAct() && source.transferTo(inventory, slot, quantity);
+}
+
+bool Player::openChest(uint32_t id) {
+    const bool validZone = getZone() == Zone::Farm || getZone() == Zone::Dungeon ||
+        (getZone() == Zone::InsideHouse && getInterior() && getInterior()->interior_id == InteriorId::PlayerHouse);
+    if (id == 0 || !validZone || !canAct())
+        return false;
+    activity.openChest(id);
+    return true;
+}
+
+void Player::closeChest() { activity.closeChest(); }
 
 uint32_t Player::addGold(uint32_t amount) {
     const auto received = std::min(amount, std::numeric_limits<uint32_t>::max() - gold);
@@ -316,167 +274,83 @@ uint32_t Player::addGold(uint32_t amount) {
     return received;
 }
 
+uint32_t Player::getGold() const { return gold; }
+
 bool Player::spendGold(uint32_t amount) {
-    if (gold < amount) return false;
+    if (gold < amount)
+        return false;
     gold -= amount;
     return true;
 }
 
-void Player::applyCombatBonus() {
-    if (combatBonus) {
-        return;
-    }
-    maxHealth = improvedMaximum(maxHealth);
-    maxEnergy = improvedMaximum(maxEnergy);
-    combatBonus = true;
-}
-
-void Player::passOut() {
-    if (state == PlayerState::Unconscious || state == PlayerState::Sleeping) {
-        return;
-    }
-    gold -= static_cast<uint32_t>(static_cast<uint64_t>(gold) * config.passoutGoldPercent / 100);
-    state = PlayerState::Unconscious;
-    movementDirection = Direction::None;
-}
-
-bool Player::sleep() {
-    if (!canAct()) {
+bool Player::buyItem(const Stack& stack, uint32_t price) {
+    if (!canAct() || gold < price)
         return false;
-    }
-    state = PlayerState::Sleeping;
-    movementDirection = Direction::None;
+    Inventory prepared = inventory;
+    if (!prepared.add(stack))
+        return false;
+    inventory = std::move(prepared);
+    gold -= price;
     return true;
 }
 
-bool Player::cancelSleep() {
-    if (!isSleeping()) return false;
-    state = PlayerState::Idle;
-    movementDirection = Direction::None;
-    bedReady = false;
+bool Player::sellItems(const std::vector<std::pair<uint8_t, uint16_t>>& quantities,
+                       uint32_t price) {
+    if (price > std::numeric_limits<uint32_t>::max() - gold)
+        return false;
+    if (!removeItems(quantities))
+        return false;
+    gold += price;
     return true;
 }
 
-void Player::wakeUp() {
-    const bool rested = state == PlayerState::Sleeping;
-    health = rested ? maxHealth : std::max<uint16_t>(1, maxHealth / 2);
-    energy = rested ? maxEnergy : std::max<uint16_t>(1, maxEnergy / 2);
-    state = PlayerState::Idle;
-    bedReady = false;
-    movementDirection = Direction::None;
-    nextActionTime = {};
-    nextDamageTime = {};
+PlayerData Player::getPublicData() const {
+    PlayerData data;
+    data.characterName = characterName;
+    data.pos = location.getPosition();
+    data.state = activity.getState();
+    data.dir = activity.getDirection();
+    data.currentZone = location.getZone();
+    data.dungeonLevel = location.getDungeonLevel();
+    data.interior = location.getInterior();
+    const Stack* item = getSelectedItem();
+    if (item != nullptr)
+        data.heldItem = item->item_id;
+    data.hairModel = hairModel;
+    data.shirtModel = shirtModel;
+    data.pantsModel = pantsModel;
+    data.hairColor = hairColor;
+    data.pantsColor = pantsColor;
+    data.health = vitals.getHealth();
+    data.maxHealth = vitals.getMaxHealth();
+    return data;
 }
 
-bool Player::changeLocation(Zone destination,uint8_t level,const Position& target,
-                            std::optional<InteriorLocation> inside) {
-    if (!canAct() || !restoreLocation(destination, level, target, inside)) {
-        return false;
-    }
-    state = PlayerState::Idle;
-    return true;
-}
-
-bool Player::restoreLocation(Zone destination, uint8_t level, const Position& target,
-                             std::optional<InteriorLocation> inside) {
-    if (target.getX() < 0 || target.getY() < 0) {
-        return false;
-    }
-
-    if ((destination == Zone::InsideHouse) != inside.has_value() ||
-        (inside && inside->interior_id > InteriorId::ComunityCenter)) {
-        return false;
-    }
-    if (destination == Zone::Dungeon) {
-        if (level == 0) {
-            return false;
-        }
-    } else if (destination == Zone::Farm || destination == Zone::Town ||
-               destination == Zone::InsideHouse) {
-        if (level != 0) {
-            return false;
-        }
-
-    } else {
-        return false;
-    }
-
-    pos = target;
-    zone = destination;
-    interior = inside;
-    dungeonLevel = level;
-    movementDirection = Direction::None;
-    if (state == PlayerState::Walking) state = PlayerState::Idle;
-
-    return true;
-}
-
-void Player::faceTarget(const Position& target) {
-    if (!canAct()) {
-        return;
-    }
-
-    const double dx =static_cast<double>(target.getX()) - pos.getX();
-
-    const double dy =static_cast<double>(target.getY()) - pos.getY();
-
-    if (dx == 0 && dy == 0) {
-        return;
-    }
-
-    if (std::abs(dx) >= std::abs(dy)) {
-        faceDirection(dx > 0 ? Direction::Right : Direction::Left);
-    } else {
-        faceDirection(dy > 0 ? Direction::Down : Direction::Up);
-    }
-}
-
-void Player::faceDirection(Direction direction) {
-    if (!canAct()) {
-        return;
-    }
-    switch (direction) {
-        case Direction::Up:
-        case Direction::Down:
-        case Direction::Left:
-        case Direction::Right:
-            dir = direction;
-            break;
-        default:
-            break;
-    }
-}
-
-int Player::getMovementStep(int normalStep) const {
-    if (normalStep <= 0) {
-        return 0;
-    }
-
-    if (hasLowHealth() || static_cast<uint32_t>(energy) * 10 <= maxEnergy) {
-        return std::max(1, normalStep / 2);
-    }
-
-    return normalStep;
+PlayerDataLocal Player::getLocalData() const {
+    PlayerDataLocal data(getPublicData());
+    data.items = inventory.getItems();
+    data.cap_inventory = inventory.getCapacity();
+    data.current_slot = currentSlot;
+    data.gold = gold;
+    data.energy = vitals.getEnergy();
+    data.maxEnergy = vitals.getMaxEnergy();
+    return data;
 }
 
 void Player::restoreData(const PlayerDataLocal& saved) {
     const auto capacity = saved.cap_inventory == 0 ? inventory.getCapacity() : saved.cap_inventory;
-    if (saved.current_slot >= capacity || saved.maxHealth == 0 ||
-        saved.maxEnergy == 0 || saved.health > saved.maxHealth || saved.energy > saved.maxEnergy) {
+    if (saved.current_slot >= capacity)
         throw std::invalid_argument("Invalid saved player stats");
-    }
+
+    auto restoredVitals = vitals;
+    restoredVitals.restoreData(saved);
     Inventory restoredInventory(capacity);
     restoredInventory.restoreSlots(saved.items);
+
     inventory = std::move(restoredInventory);
     characterName = saved.characterName;
-    pos = saved.pos;
-    state = saved.state;
-    bedReady = false;
-    dir = saved.dir;
-    movementDirection = Direction::None;
-    zone = saved.currentZone;
-    dungeonLevel = saved.dungeonLevel;
-    interior = saved.interior;
+    location = PlayerLocation{saved};
+    activity.restoreData(saved);
     hairModel = saved.hairModel;
     shirtModel = saved.shirtModel;
     pantsModel = saved.pantsModel;
@@ -484,8 +358,14 @@ void Player::restoreData(const PlayerDataLocal& saved) {
     pantsColor = saved.pantsColor;
     currentSlot = saved.current_slot;
     gold = saved.gold;
-    health = saved.health;
-    maxHealth = saved.maxHealth;
-    energy = saved.energy;
-    maxEnergy = saved.maxEnergy;
+    vitals = restoredVitals;
+}
+
+void Player::resetActivity() {
+    activity.reset();
+    vitals.clearDamageGrace();
+}
+
+PlayerSnapshot Player::snapshot() const {
+    return PlayerSnapshot{*this, config, activity.actionReadyAt()};
 }

@@ -34,7 +34,7 @@ signals:
     void confirmed();
 
 protected:
-    void buildLayout(QVBoxLayout* rightColumn);
+    void buildLayout(QVBoxLayout* rightColumn, QWidget* sidePanel = nullptr);
     virtual void confirm() = 0;
     static QLabel* makeLabel(const QString& text, QWidget* parent);
 

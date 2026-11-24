@@ -7,6 +7,7 @@
 
 #include "menu_helpers.h"
 #include "qt_constants.h"
+#include "map_selector.h"
 
 namespace {
 const QSize fieldSize(400, 90);
@@ -35,7 +36,8 @@ NewGameScreen::NewGameScreen(QWidget* parent): CharacterScreen(parent) {
     rightColumn->addLayout(fieldsLayout);
     rightColumn->addStretch(1);
 
-    buildLayout(rightColumn);
+    mapSelector = new MapSelector(menu, this);
+    buildLayout(rightColumn, mapSelector);
 
     connect(farmNameInput, &QLineEdit::textChanged, this, [this]() { errorLabel->clear(); });
 }
@@ -48,4 +50,8 @@ void NewGameScreen::confirm() {
 
 QString NewGameScreen::farmName() const {
     return farmNameInput->text().trimmed();
+}
+
+std::string NewGameScreen::mapPath() const {
+    return mapSelector->mapPath();
 }

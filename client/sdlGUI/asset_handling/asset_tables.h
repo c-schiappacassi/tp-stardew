@@ -31,8 +31,10 @@ struct AssetTables {
     std::map<SoundId, Sound> sounds;
     std::map<std::pair<ItemId, Direction>, std::vector<ToolFrame>> tool_frames;
     std::map<TileTextureId, Sprite> tile_sprites;
+    std::map<TileTextureId, std::vector<Sprite>> tile_pieces;
     std::map<DecorId, Sprite> decor_sprites;
     std::map<BuildingId, Sprite> building_sprites;
+    std::map<FramePieceId, Sprite> frame_sprites;
     std::map<std::pair<FurnitureId, Direction>, FlippableSprite> furniture_sprites;
     std::map<EmoteId, Sprite> emote_sprites;
     std::map<PortalId, Sprite> portal_sprites;

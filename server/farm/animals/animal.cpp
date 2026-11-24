@@ -36,11 +36,11 @@ AnimalState Animal::getState() const {
     }
 }
 
-bool Animal::moveTo(const Position& position, FarmPlacement& placement) {
+bool Animal::moveTo(const Position& position, Placement& placement) {
     return movement.moveTo(id, position, placement);
 }
 
-void Animal::advanceMovement(FarmPlacement& placement, std::mt19937& random) {
+void Animal::advanceMovement(Placement& placement, std::mt19937& random) {
     movement.tick(id, placement, random);
 }
 

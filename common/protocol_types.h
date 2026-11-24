@@ -22,6 +22,7 @@ enum class MessageType : uint8_t {
     ItemTransfer = 0x18, // inventario a cofre
     SelectSlot = 0x19,
     DayCancel = 0x1A,
+    CloseChest = 0x1B,
 
     Status = 0x80,
     GameList = 0x81,
@@ -87,7 +88,8 @@ enum class PlayerState : uint8_t {
     Walking = 1,
     UsingTool = 2,
     Unconscious = 3,
-    Sleeping = 4
+    Sleeping = 4,
+    LookingChest = 5
 };
 
 // ENEMIES
@@ -257,7 +259,39 @@ enum class TileTextureId : uint8_t{
     ConnctionStonePathGrassTop,
     ConnctionStonePathGrassBottom,
     WateredDirt,
-    TilledDirt
+    TilledDirt,
+    DungeonFloor,
+    DungeonVoid,
+    DungeonLeftWall,
+    DungeonRightWall,
+    DungeonBottom,
+    DungeonBottomLeftCorner1,
+    DungeonBottomRightCorner1,
+    DungeonInnerCornerTopRight,
+    DungeonInnerCornerTopLeft,
+};
+
+enum class FramePieceId : uint8_t{
+    StoneCliftTop,
+    StoneCliftTopLeftCorner,
+    StoneCliftDropRight,
+    StoneCliftLeftSide,
+    StoneCliftRightSide,
+    StoneCliftBottom,
+    StoneCliftTopRightCorner,
+    StoneCliftDropLeft,
+    StoneCliftBottomLeftCorner,
+    StoneCliftBottomRightCorner,
+    DungeonTopWall,
+    DungeonTopLeftCorner1,
+    DungeonTopLeftCorner2,
+    DungeonTopRightCorner1,
+    DungeonTopRightCorner2,
+    DungeonBottomLeftCorner2,
+    DungeonBottomRightCorner2,
+    DungeonLantern,
+    DungeonTopWallEndRight,
+    DungeonTopWallEndLeft,
 };
 
 enum class DecorId : uint8_t{
@@ -336,6 +370,7 @@ enum class FurnitureId : uint8_t{
     GreenStool,
     BrownSofa,
     BrownArmCouch,
+    Chest,
 };
 
 enum class BuildingId : uint8_t{

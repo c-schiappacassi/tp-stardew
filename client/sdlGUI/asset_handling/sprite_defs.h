@@ -59,6 +59,9 @@ namespace Dimentions {
     constexpr uint16_t FLAME_CELL_H = 8;
 
     constexpr uint16_t QUALITY_SIZE = 8;
+
+    constexpr uint16_t CHEST_CELL_W = 16;
+    constexpr uint16_t CHEST_CELL_H = 32;
 }
 
 namespace SpriteDefs {
@@ -113,6 +116,7 @@ namespace SpriteDefs {
         {SpriteId::TownSpring,      "market/world/town_spring.png"},
         {SpriteId::CavernPlants,    "caverns/plants.png"},
         {SpriteId::DungeonWallTiles, "caverns/wall_tiles.png"},
+        {SpriteId::MinesTiles,       "caverns/mines_tiles.png"},
         {SpriteId::Furniture,       "farm/environment/furniture.png"},
         {SpriteId::LevelPortals,    "caverns/level_portals.png"},
         {SpriteId::TilledDirt,      "farm/environment/tilled_dirt.png"},
@@ -204,6 +208,8 @@ namespace SpriteDefs {
     struct BuildingDef  { BuildingId id;    SpriteRect rect; };
     struct FurnitureDef { FurnitureId id; Direction dir; SpriteRect rect; };
     struct PortalDef { PortalId id; SpriteRect rect; };
+    struct FramePieceDef { FramePieceId id; SpriteRect rect; };
+
 
     struct InteriorDef  { InteriorId id;    SpriteRect rect; };
     inline constexpr InteriorDef INTERIORS[] = {
@@ -242,7 +248,32 @@ namespace SpriteDefs {
         {TileTextureId::ConnctionStonePathGrassBottom,   {SpriteId::TownSpring, 16, 336, 16, 16}},
         {TileTextureId::TilledDirt,   {SpriteId::TilledDirt, 0,0, 16, 16}},
         {TileTextureId::WateredDirt,   {SpriteId::TilledDirt, 64,0, 16, 16}},
+
+        {TileTextureId::DungeonFloor,                 {SpriteId::MinesTiles, 1216, 704, 16, 16}},
+        {TileTextureId::DungeonVoid,                  {SpriteId::MinesTiles, 1264, 640, 16, 16}},
+        {TileTextureId::DungeonLeftWall,              {SpriteId::MinesTiles, 1088, 704, 16, 64}},
+        {TileTextureId::DungeonRightWall,             {SpriteId::MinesTiles, 1264, 736, 16, 64}},
+        {TileTextureId::DungeonBottom,                {SpriteId::MinesTiles, 1120, 784, 32, 16}},
+        {TileTextureId::DungeonBottomLeftCorner1,     {SpriteId::MinesTiles, 1088, 768, 16, 16}},
+        {TileTextureId::DungeonBottomRightCorner1,    {SpriteId::MinesTiles, 1248, 768, 16, 16}},
+        {TileTextureId::DungeonInnerCornerTopRight,   {SpriteId::MinesTiles, 1104, 768, 16, 16}},
+        {TileTextureId::DungeonInnerCornerTopLeft,    {SpriteId::MinesTiles, 1232, 768, 16, 16}},
     };
+
+    inline constexpr bool is_over_dungeon_floor(TileTextureId id) {
+        switch (id) {
+            case TileTextureId::DungeonLeftWall:
+            case TileTextureId::DungeonRightWall:
+            case TileTextureId::DungeonBottom:
+            case TileTextureId::DungeonBottomLeftCorner1:
+            case TileTextureId::DungeonBottomRightCorner1:
+            case TileTextureId::DungeonInnerCornerTopRight:
+            case TileTextureId::DungeonInnerCornerTopLeft:
+                return true;
+            default:
+                return false;
+        }
+    }
 
     inline constexpr DecorDef DECOR[] = {
         {DecorId::MapleTree,         {SpriteId::Trees, 0, 0, 48, 97}},
@@ -334,6 +365,31 @@ namespace SpriteDefs {
         {BuildingId::BrickCabin,     {SpriteId::Cabins, 80, 112, 80, 112}},
     };
 
+    // Frame
+    inline constexpr FramePieceDef FRAMES[] = {
+        {FramePieceId::StoneCliftTop,               {SpriteId::OutdoorsSpring, 272, 288, 32, 64}},
+        {FramePieceId::StoneCliftTopLeftCorner,     {SpriteId::OutdoorsSpring, 336, 176, 16, 64}},
+        {FramePieceId::StoneCliftTopRightCorner,    {SpriteId::OutdoorsSpring, 384, 176, 16, 64}},
+        {FramePieceId::StoneCliftDropRight,         {SpriteId::OutdoorsSpring, 464, 400, 64, 64}},
+        {FramePieceId::StoneCliftDropLeft,          {SpriteId::OutdoorsSpring, 464, 464, 64, 64}},
+        {FramePieceId::StoneCliftLeftSide,          {SpriteId::OutdoorsSpring, 304, 224, 16, 48}},
+        {FramePieceId::StoneCliftRightSide,         {SpriteId::OutdoorsSpring, 256, 224, 16, 48}},
+        {FramePieceId::StoneCliftBottom,            {SpriteId::OutdoorsSpring, 208, 256, 16, 16}},
+        {FramePieceId::StoneCliftBottomLeftCorner,  {SpriteId::OutdoorsSpring, 192, 256, 16, 16}},
+        {FramePieceId::StoneCliftBottomRightCorner, {SpriteId::OutdoorsSpring, 240, 256, 16, 16}},
+
+        {FramePieceId::DungeonTopWall,              {SpriteId::MinesTiles, 1168, 640, 64, 64}},
+        {FramePieceId::DungeonTopLeftCorner1,       {SpriteId::MinesTiles, 1088, 664, 16, 40}},
+        {FramePieceId::DungeonTopLeftCorner2,       {SpriteId::MinesTiles, 1104, 640, 32, 80}},
+        {FramePieceId::DungeonTopRightCorner1,      {SpriteId::MinesTiles, 1232, 656, 32, 80}},
+        {FramePieceId::DungeonTopRightCorner2,      {SpriteId::MinesTiles, 1264, 692, 16, 44}},
+        {FramePieceId::DungeonBottomLeftCorner2,    {SpriteId::MinesTiles, 1104, 768, 16, 32}},
+        {FramePieceId::DungeonBottomRightCorner2,   {SpriteId::MinesTiles, 1232, 768, 16, 32}},
+        {FramePieceId::DungeonTopWallEndLeft,       {SpriteId::MinesTiles, 1151, 640, 16, 64}},
+        {FramePieceId::DungeonTopWallEndRight,      {SpriteId::MinesTiles, 1137, 640, 16, 64}},
+        {FramePieceId::DungeonLantern,              {SpriteId::MinesTiles, 1040, 672, 16, 16}},
+    };
+
     inline constexpr  PortalDef PORTALS[] = {
         {PortalId::FarmToMine,  {SpriteId::OutdoorsSpring, 608, 160, 48, 48}},
         {PortalId::ToNextLevel,  {SpriteId::LevelPortals, 0, 0, 16, 16}},
@@ -361,7 +417,7 @@ namespace SpriteDefs {
         {ItemId::Scallion,           SpriteId::Harvest,    240,  256, 16, 16},
         {ItemId::Potato,             SpriteId::Harvest,     0,  128, 16, 16},
         {ItemId::Pumpkin,            SpriteId::Harvest,    192,  176, 16, 16},
-        {ItemId::Chest,              SpriteId::Craftables,  32,  520, 16, 24},
+        {ItemId::Chest,              SpriteId::Craftables,  32,  512, 16, 32},
         {ItemId::Chair,              SpriteId::Furniture,   0,    0, 16, 32},
         {ItemId::Table,              SpriteId::Furniture,   0,  569, 32, 39},
         {ItemId::Bed,                SpriteId::Furniture,   0, 1032, 32, 55},
@@ -869,6 +925,25 @@ namespace SpriteDefs {
 
     inline constexpr int WALL_FLAME_STATE_MS   = 400;
     inline constexpr int WALL_FLAME_WARNING_MS = 150;
+
+
+    inline constexpr int CHEST_FRAME_MS = 60;
+
+    inline constexpr RectClipDef<ChestState> CHEST_CLIPS[] = {
+        rect_clip(ChestState::Closed,  Direction::None, true,  {{ 32, 512, Dimentions::CHEST_CELL_W, Dimentions::CHEST_CELL_H, CHEST_FRAME_MS}}),
+        rect_clip(ChestState::Opening, Direction::None, false, {{ 32, 512, Dimentions::CHEST_CELL_W, Dimentions::CHEST_CELL_H, CHEST_FRAME_MS},
+                                                                { 48, 512, Dimentions::CHEST_CELL_W, Dimentions::CHEST_CELL_H, CHEST_FRAME_MS},
+                                                                { 64, 512, Dimentions::CHEST_CELL_W, Dimentions::CHEST_CELL_H, CHEST_FRAME_MS},
+                                                                { 80, 512, Dimentions::CHEST_CELL_W, Dimentions::CHEST_CELL_H, CHEST_FRAME_MS},
+                                                                { 96, 512, Dimentions::CHEST_CELL_W, Dimentions::CHEST_CELL_H, CHEST_FRAME_MS},
+                                                                {112, 512, Dimentions::CHEST_CELL_W, Dimentions::CHEST_CELL_H, CHEST_FRAME_MS}}),
+        rect_clip(ChestState::Closing, Direction::None, false, {{112, 512, Dimentions::CHEST_CELL_W, Dimentions::CHEST_CELL_H, CHEST_FRAME_MS},
+                                                                { 96, 512, Dimentions::CHEST_CELL_W, Dimentions::CHEST_CELL_H, CHEST_FRAME_MS},
+                                                                { 80, 512, Dimentions::CHEST_CELL_W, Dimentions::CHEST_CELL_H, CHEST_FRAME_MS},
+                                                                { 64, 512, Dimentions::CHEST_CELL_W, Dimentions::CHEST_CELL_H, CHEST_FRAME_MS},
+                                                                { 48, 512, Dimentions::CHEST_CELL_W, Dimentions::CHEST_CELL_H, CHEST_FRAME_MS},
+                                                                { 32, 512, Dimentions::CHEST_CELL_W, Dimentions::CHEST_CELL_H, CHEST_FRAME_MS}}),
+    };
 
     inline constexpr RectClipDef<TrapState> WALL_FLAME_CLIPS[] = {
         rect_clip(TrapState::Inactive, Direction::Down, true,  {{ 0, 22, 11, 15, WALL_FLAME_STATE_MS}}),

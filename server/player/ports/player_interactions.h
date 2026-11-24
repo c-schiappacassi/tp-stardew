@@ -1,13 +1,17 @@
 #pragma once
 #include <cstdint>
+
 #include "protocol_types.h"
 
-class Player;
-struct InteractDTO;
+class PlayerManager;
+struct ItemTransferDTO;
+struct SelectItemDTO;
 
 class PlayerInteractions {
 public:
-    virtual void interact(Player& player, Direction direction, uint16_t playerId = 0) = 0;
+    virtual void interact(PlayerManager& players, uint16_t playerId, Direction direction) = 0;
+    virtual void depositInChest(PlayerManager& players, uint16_t playerId, const ItemTransferDTO& command) = 0;
+    virtual void withdrawFromChest(PlayerManager& players, uint16_t playerId, const SelectItemDTO& command) = 0;
 
-    virtual ~PlayerInteractions() = default;
+    virtual ~PlayerInteractions();
 };

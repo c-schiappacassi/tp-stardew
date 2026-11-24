@@ -19,7 +19,7 @@ public:
     QLabel* makeLogo(QWidget* parent) const;
     QLabel* makePanel(const QRect& rect, const QSize& size, QWidget* parent) const;
     QLabel* makeInputFrame(QLineEdit* input, const QRect& rect, const QSize& size, QWidget* parent) const;
-    SpriteButton* makePushButton(const QString& text, QWidget* parent) const;
+    SpriteButton* makePushButton(const QString& text, QWidget* parent, const QSize& size = QSize(320, 80)) const;
     SpriteButton* makeBackButton(QWidget* parent) const;
 
 private:

@@ -16,11 +16,12 @@ public:
 
     std::vector<GameIndexDTO> getGames() const;
     bool gameExists(const std::string& gameId) const;
+    std::string mapPathFor(const std::string& gameId) const;
     std::vector<GameInfoDTO> listGamesFor(const std::string& userName) const;
     void registerGame(const GameIndexDTO& game);
     void updateGameIndex(const GameIndexDTO& game);
 
-    void createGame(const PersistenceDTO& game);
+    void createGame(const PersistenceDTO& game, const std::string& mapPath);
     PersistenceDTO loadGame(const std::string& gameId) const;
     void saveGame(const PersistenceDTO& game);
 

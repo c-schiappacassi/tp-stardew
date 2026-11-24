@@ -50,6 +50,9 @@ public:
     const Sprite& get_sprite(TileTextureId id) const;
     const Sprite& get_sprite(DecorId id) const;
     const Sprite& get_sprite(BuildingId id) const;
+    const Sprite& get_sprite(FramePieceId id) const;
+ 
+    const Sprite& get_tile_sprite(TileTextureId id, int tile_x, int tile_y) const;
     const Sprite& get_sprite(EmoteId id) const;
     const Sprite& get_sprite(CropType type, CropState state) const;
     const Sprite& get_sprite(ResourceType type, ResourceState state) const;

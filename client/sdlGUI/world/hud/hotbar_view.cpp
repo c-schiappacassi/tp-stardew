@@ -4,19 +4,9 @@
 #include <string>
 
 #include "../../draw_region.h"
-#include "pixel_font.h"
 
 namespace {
-    constexpr int BAR_CORNER = 16;
-    constexpr int SLOT_PX = 64;
     constexpr int BOTTOM_MARGIN = 8;
-    constexpr int ICON_BOX = 48;
-
-    constexpr int INDEX_MARGIN = 6;
-    constexpr int INDEX_PX = 2;
-    constexpr int QUANTITY_MARGIN = 4;
-    constexpr int QUANTITY_PX = 3;
-    constexpr int QUALITY_SCALE = 2;
 
     struct Layout {
         int u;
@@ -24,64 +14,50 @@ namespace {
         int slots;
 
         SDL2pp::Rect slot(int i) const {
-            const int size = SLOT_PX * u;
-            return SDL2pp::Rect(bar.x + BAR_CORNER * u + i * size, bar.y + BAR_CORNER * u, size, size);
+            const int size = slot_layout::SLOT_PX * u;
+            return SDL2pp::Rect(bar.x + slot_layout::PANEL_CORNER * u + i * size, bar.y + slot_layout::PANEL_CORNER * u, size, size);
         }
     };
 
     Layout make_layout(const UiFrame& f, int slots) {
-        const int pad = BAR_CORNER * f.u;
-        const int w = slots * SLOT_PX * f.u + 2 * pad;
-        const int h = SLOT_PX * f.u + 2 * pad;
+        const int pad = slot_layout::PANEL_CORNER * f.u;
+        const int w = slots * slot_layout::SLOT_PX * f.u + 2 * pad;
+        const int h = slot_layout::SLOT_PX * f.u + 2 * pad;
         return Layout{f.u, aligned_rect(f.rect(), w, h, HAlign::Center, VAlign::Bottom, 0, BOTTOM_MARGIN * f.u), slots};
     }
 }
 
+HotbarView::HotbarView(): slot_views(SLOTS) {
+    for (std::size_t i = 0; i < slot_views.size(); ++i) {
+        slot_views[i].set_label(std::to_string(i + 1));
+    }
+}
+
 void HotbarView::update(const PlayerDataLocal& local) {
-    items = local.items;
-    current_slot = local.current_slot;
-}
-
-void HotbarView::draw_stack(const RenderInfo& ctx, const Stack& stack, const SDL2pp::Rect& slot_rect, int u) {
-    draw_item_icon(ctx, stack.item_id, slot_rect, ICON_BOX * u);
-
-    if (stack.quantity > 1) {
-        draw_text_in(ctx, std::to_string(stack.quantity), slot_rect, QUANTITY_PX * u, HAlign::Right, VAlign::Bottom,
-                     pixel_font::TEXT_COLOR, QUANTITY_MARGIN * u, QUANTITY_MARGIN * u,
-                     pixel_font::SHADOW_COLOR, QUANTITY_PX * u);
+    for (std::size_t i = 0; i < slot_views.size(); ++i) {
+        const auto it = local.items.find(static_cast<uint8_t>(i));
+        slot_views[i].set_stack(it == local.items.end() ? std::nullopt : std::optional<Stack>{it->second});
+        slot_views[i].set_selected(i == local.current_slot);
     }
-
-    if (stack.qual > Quality::Base) {
-        const Sprite& star = ctx.assets.get_sprite(stack.qual);
-        const int scale = QUALITY_SCALE * u;
-        const SDL2pp::Rect icon_area = centered_rect(slot_rect, ICON_BOX * u, ICON_BOX * u);
-        const SDL2pp::Rect dst = aligned_rect(icon_area, star.width * scale, star.height * scale, HAlign::Right, VAlign::Top, 0, 0);
-        draw_sprite_in(ctx, star, dst);
-    }
-}
-void HotbarView::draw_slot( const RenderInfo& ctx, uint8_t slot, const SDL2pp::Rect& rect, int u) {
-    draw_ui(ctx, UiSpriteId::HotbarSlot, rect);
-    draw_ui(ctx, UiSpriteId::HotbarSlotOutline, rect);
-
-    if (const auto it = items.find(slot); it != items.end()) {
-        draw_stack(ctx, it->second, rect, u);
-    }
-
-    if (slot == current_slot) {
-        draw_ui(ctx, UiSpriteId::HotbarSlotSelected, rect);
-    }
-
-    draw_text_in( ctx, std::to_string(slot + 1), rect, INDEX_PX * u, HAlign::Left, VAlign::Top, 
-        pixel_font::TEXT_COLOR, INDEX_MARGIN * u, INDEX_MARGIN * u, pixel_font::SHADOW_COLOR, INDEX_PX * u
-    );
 }
 
 void HotbarView::draw(const RenderInfo& ctx) {
-    const Layout layout = make_layout(ui_frame(ctx), int(this->cap));
-
-    draw_ui_box(ctx, UiSpriteId::HotbarBar, layout.bar, BAR_CORNER, layout.u);
-
+    const Layout layout = make_layout(ui_frame(ctx), static_cast<int>(slot_views.size()));
+ 
+    draw_ui_box(ctx, UiSpriteId::HotbarBar, layout.bar, slot_layout::PANEL_CORNER, layout.u);
+ 
     for (int i = 0; i < layout.slots; ++i) {
-        draw_slot(ctx, static_cast<uint8_t>(i), layout.slot(i), layout.u);
+        slot_views[static_cast<std::size_t>(i)].draw(ctx, layout.slot(i), layout.u);
     }
+}
+
+std::vector<SDL2pp::Rect> HotbarView::slot_rects(const RenderInfo& ctx) {
+    const Layout layout = make_layout(ui_frame(ctx), SLOTS);
+ 
+    std::vector<SDL2pp::Rect> rects;
+    rects.reserve(SLOTS);
+    for (int i = 0; i < layout.slots; ++i) {
+        rects.push_back(layout.slot(i));
+    }
+    return rects;
 }

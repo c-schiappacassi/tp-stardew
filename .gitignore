@@ -46,3 +46,10 @@ build
 # IDEs
 .idea/
 .qtcreator/
+build-server/
+build-editor/
+
+# mapas deleditor
+maps/custom/
+
+saves/

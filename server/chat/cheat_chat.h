@@ -6,15 +6,14 @@
 
 class WorldManager;
 
-class CheatChat final : public CheatChatService {
+class CheatChat final: public CheatChatService {
     WorldManager& world;
     std::function<void()> endDay;
 
-    std::string giveItem(Player& player, const CheatCommand& command) const;
+    std::string giveItem(PlayerManager& players, uint16_t playerId, const CheatCommand& command) const;
     std::string warp(const ChatCommandContext& context, const CheatCommand& command) const;
 
 public:
     explicit CheatChat(WorldManager& world, std::function<void()> endDay = {});
-    std::vector<ChatMessageData> execute(
-        const ChatCommandContext& context, const CheatCommand& command) override;
+    std::vector<ChatMessageData> execute(const ChatCommandContext& context, const CheatCommand& command) override;
 };

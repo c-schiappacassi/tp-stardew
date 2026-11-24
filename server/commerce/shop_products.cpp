@@ -3,6 +3,8 @@
 #include <algorithm>
 #include <cctype>
 
+#include "farm/farm_product.h"
+
 namespace {
 struct ProductName {
     ItemId item;
@@ -122,12 +124,4 @@ std::optional<uint64_t> shop_products::salePriceQuarters(uint32_t basePrice, Qua
     return static_cast<uint64_t>(basePrice) * quarters;
 }
 
-std::optional<ItemId> shop_products::cropItem(CropType type) {
-    switch (type) {
-        case CropType::Strawberry: return ItemId::Strawberry;
-        case CropType::Scallion: return ItemId::Scallion;
-        case CropType::Potato: return ItemId::Potato;
-        case CropType::Pumpkin: return ItemId::Pumpkin;
-    }
-    return std::nullopt;
-}
+std::optional<ItemId> shop_products::cropItem(CropType type) { return farm_products::cropItem(type); }

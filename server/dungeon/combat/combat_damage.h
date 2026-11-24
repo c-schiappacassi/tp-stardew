@@ -3,9 +3,10 @@
 #include <cstdint>
 
 class DungeonRoom;
-class Player;
+class PlayerManager;
+class PlayerSnapshot;
 struct CombatContext;
 
 namespace combat_damage {
-void apply(CombatContext& context, Player& player, uint16_t playerId, uint16_t amount,DungeonRoom& room);
+void apply(CombatContext& context, uint16_t playerId, uint16_t amount, DungeonRoom& room);
 }

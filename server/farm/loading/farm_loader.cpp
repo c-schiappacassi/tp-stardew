@@ -1,61 +1,33 @@
 #include "farm_loader.h"
 
 #include <limits>
+#include <stdexcept>
 
+#include "chests/chest_manager.h"
 #include "entities/entity_id_generator.h"
-#include "farm/farm_manager.h"
+#include "farm/animals/animal_manager.h"
+#include "farm/crops/crop_manager.h"
+#include "farm/decorations/decoration_manager.h"
+#include "farm/spatial/farm_terrain.h"
 
-bool FarmLoader::load(const FarmLayout& layout, FarmManager& farm, EntityIdGenerator& ids) const {
+bool FarmLoader::load(const FarmLayout& layout, FarmTerrain& terrain, CropManager& crops,
+    AnimalManager& animals, DecorationManager& decorations, ChestManager& chests, EntityIdGenerator& ids) const {
     const auto validBase = [](const Position& base) {
         return base.getX() >= 0 && base.getY() > 0 &&
             base.getX() <= std::numeric_limits<uint16_t>::max() &&
             base.getY() <= std::numeric_limits<uint16_t>::max();
     };
-    if (!validBase(layout.spawn)) {
+    if (!terrain.initialize(layout))
         return false;
-    }
-    for (const auto& base : layout.terrain.walkableBasePositions()) {
-        if (!validBase(base)) {
-            return false;
-        }
-    }
-    auto reserved = layout.reservedPositions;
-    reserved.push_back(layout.spawn);
-    std::vector<Position> triggers;
-    if (layout.mineDoor) triggers.push_back(*layout.mineDoor);
-    if (layout.townDoor) triggers.push_back(*layout.townDoor);
-    for (const auto& room: layout.interiors) {
-        if (room.outside.zone == Zone::Farm) {
-            triggers.push_back(room.outside.position);
-            reserved.push_back(room.returnPosition);
-        }
-    }
-    for (std::size_t i = 0; i < triggers.size(); ++i) {
-        if (!validBase(triggers[i]) ||
-            !layout.terrain.isWalkable(CollisionBox{entity_dimensions::PLAYER}.at(triggers[i])) ||
-            !layout.terrain.hasBasePath(layout.spawn, triggers[i])) {
-            return false;
-        }
-        for (std::size_t j = 0; j < i; ++j) {
-            if (layout.terrain.sameBaseCell(triggers[i], triggers[j])) return false;
-        }
-        reserved.push_back(triggers[i]);
-    }
-    if (layout.playerHouses == 0 || layout.playerHouses > 4 || (layout.mineReturn && !layout.mineDoor) ||
-        (layout.townReturn && !layout.townDoor)) return false;
-    if (layout.mineReturn) reserved.push_back(*layout.mineReturn);
-    if (layout.townReturn) reserved.push_back(*layout.townReturn);
-    if (!farm.setMap(layout.terrain) || !farm.setReservedPositions(reserved)) {
-        return false;
-    }
+    auto& space = terrain.getSpace();
     for (const auto& base : layout.tilledSoil) {
-        if (!farm.tillSoil(base)) {
+        if (!crops.tillSoil(base, terrain)) {
             return false;
         }
     }
     for (const auto& spawn : layout.animals) {
         if (!validBase(spawn.base) || ids.getNextId() == 0 ||
-            !farm.addAnimal(ids.getNextId(), spawn.base, spawn.type)) {
+            !animals.add(ids.getNextId(), spawn.base, spawn.type, space)) {
             return false;
         }
         ids.generate();
@@ -64,23 +36,35 @@ bool FarmLoader::load(const FarmLayout& layout, FarmManager& farm, EntityIdGener
         if (!validBase(spawn.base)) {
             return false;
         }
-        if (!farm.isTilled(spawn.base) && !farm.tillSoil(spawn.base)) {
+        if (!crops.isTilled(spawn.base, space) && !crops.tillSoil(spawn.base, terrain)) {
             return false;
         }
-        if (ids.getNextId() == 0 || !farm.plant(ids.getNextId(), spawn.base, spawn.type)) {
+        if (ids.getNextId() == 0 || !crops.plant(ids.getNextId(), spawn.base, spawn.type, space)) {
             return false;
         }
         if (spawn.watered) {
-            farm.waterCrop(ids.getNextId());
+            crops.water(ids.getNextId());
         }
         ids.generate();
     }
     for (const auto& spawn : layout.decorations) {
         if (!validBase(spawn.base) || ids.getNextId() == 0 ||
-            !farm.placeDecoration(ids.getNextId(), spawn.base, spawn.item)) {
+            !decorations.place(ids.getNextId(), spawn.base, spawn.item, space)) {
             return false;
         }
         ids.generate();
     }
-    return farm.canWalk(CollisionBox{entity_dimensions::PLAYER}.at(layout.spawn));
+    for (const auto& spawn: layout.chests) {
+        if (!validBase(spawn.base) || ids.getNextId() == 0) {
+            return false;
+        }
+        try {
+            if (!chests.place(ids.getNextId(), spawn.base, space, spawn.items))
+                return false;
+        } catch (const std::invalid_argument&) {
+            return false;
+        }
+        ids.generate();
+    }
+    return terrain.canWalk(CollisionBox{entity_dimensions::PLAYER}.at(layout.spawn));
 }

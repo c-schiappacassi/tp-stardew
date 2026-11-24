@@ -22,8 +22,8 @@ private:
     uint32_t availableProducts = 0;
 
     friend class AnimalManager;
-    bool moveTo(const Position& base, FarmPlacement& placement);
-    void advanceMovement(FarmPlacement& placement, std::mt19937& random);
+    bool moveTo(const Position& base, Placement& placement);
+    void advanceMovement(Placement& placement, std::mt19937& random);
 
 protected:
     enum class ProductionMode {

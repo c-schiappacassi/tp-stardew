@@ -6,12 +6,12 @@
 
 #include "position.h"
 
-class Player;
+class PlayerManager;
 
 struct ChatCommandContext {
     uint16_t playerId;
     const std::string& playerName;
-    Player& player;
+    PlayerManager& players;
     bool actionsBlocked;
     std::vector<Position> occupiedPositions{};
 };

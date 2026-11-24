@@ -31,6 +31,9 @@ public:
         current = find_view(d);
         if (current) current->update(d);
     }
+    std::optional<SDL2pp::Point> world_size() const override {
+        return current ? current->world_size() : std::nullopt;
+    }
     void draw_background(const RenderInfo& ctx) override {
         if (current) current->draw_background(ctx);
     }

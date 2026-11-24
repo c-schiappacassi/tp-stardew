@@ -128,6 +128,24 @@ const Sprite& AssetManager::get_sprite(BuildingId id) const {
     return lookup(tables.building_sprites, id, "BuildingId", placeholders::PLACEHOLDER_SPRITE);
 }
 
+const Sprite& AssetManager::get_sprite(FramePieceId id) const {
+    return lookup(tables.frame_sprites, id, "FramePieceId", placeholders::PLACEHOLDER_SPRITE);
+}
+
+const Sprite& AssetManager::get_tile_sprite(TileTextureId id, int tile_x, int tile_y) const {
+    const auto it = tables.tile_pieces.find(id);
+    if (it == tables.tile_pieces.end() || it->second.empty()) {
+        report_missing("TileTextureId", describe(id));
+        return placeholders::PLACEHOLDER_SPRITE;
+    }
+    const Sprite& whole = get_sprite(id);
+    const int cols = std::max(1, whole.width / TILE_TO_PIXEL);
+    const int rows = std::max(1, whole.height / TILE_TO_PIXEL);
+    const int col = ((tile_x % cols) + cols) % cols;
+    const int row = ((tile_y % rows) + rows) % rows;
+    return it->second[static_cast<std::size_t>(row * cols + col)];
+}
+
 const Sprite& AssetManager::get_sprite(CropType type, CropState state) const {
     return lookup(tables.crop_sprites, {type, state}, "Crop(type,state)", placeholders::PLACEHOLDER_SPRITE);
 }

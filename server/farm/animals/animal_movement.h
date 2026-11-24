@@ -5,7 +5,7 @@
 #include <random>
 
 #include "animal_movement_config.h"
-#include "farm/ports/farm_placement.h"
+#include "entities/placement/placement.h"
 #include "protocol_types.h"
 
 class AnimalMovement {
@@ -18,7 +18,7 @@ private:
     uint32_t ticksUntilDecision = 0;
     bool walking = false;
 
-    std::optional<Position> findDestination(EntityId id, const FarmPlacement& placement) const;
+    std::optional<Position> findDestination(EntityId id, const Placement& placement) const;
 
 public:
     AnimalMovement(const Position& position, const AnimalMovementConfig& config);
@@ -27,6 +27,6 @@ public:
     Direction getDirection() const;
     bool isWalking() const;
 
-    bool moveTo(EntityId id, const Position& next, FarmPlacement& placement);
-    void tick(EntityId id, FarmPlacement& placement, std::mt19937& random);
+    bool moveTo(EntityId id, const Position& next, Placement& placement);
+    void tick(EntityId id, Placement& placement, std::mt19937& random);
 };

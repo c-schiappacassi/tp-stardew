@@ -19,6 +19,7 @@ struct GameIndexPlayerDTO {
 struct GameIndexDTO {
     std::string id;
     std::string farmName;
+    std::string mapPath;
     std::vector<std::string> users;
     bool isMultiplayer = false;
     std::map<std::string, GameIndexPlayerDTO> playerPreviews;

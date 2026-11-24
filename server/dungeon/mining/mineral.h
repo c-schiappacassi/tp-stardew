@@ -1,10 +1,12 @@
 #pragma once
 #include <cstdint>
-#include "entities/entity_id.h"
+
 #include "entities/collision_bounds.h"
+#include "entities/entity_id.h"
+
+#include "dtos.h"
 #include "position.h"
 #include "protocol_types.h"
-#include "dtos.h"
 
 class Mineral {
 private:
@@ -14,7 +16,7 @@ private:
     uint32_t remainingDurability;
 
 public:
-    Mineral(EntityId id,const Position& pos,ResourceType type,uint16_t hitsToBreak);
+    Mineral(EntityId id, const Position& pos, ResourceType type, uint16_t hitsToBreak);
 
     EntityId getId() const;
     const Position& getPosition() const;

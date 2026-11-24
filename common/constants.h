@@ -31,6 +31,8 @@ const char* const SOCKET_ERROR_MSG = "Socket error: ";
 const char* const UNKNOWN_OPERATOR_MSG = "Unknown operation";
 
 const uint8_t PLAYER_INVENTORY_CAPACITY = 9;
+inline constexpr uint8_t CHEST_INVENTORY_CAPACITY = 30;
+inline constexpr uint16_t INVENTORY_STACK_LIMIT = 50;
 const uint16_t PLAYER_INITIAL_HEALTH = 100;
 const uint16_t PLAYER_INITIAL_ENERGY = 100;
 

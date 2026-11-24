@@ -8,6 +8,7 @@ void LevelView::update(const LevelData& level) {
     sync_views(enemies, level.combat.enemies, [](const EnemySnapshot& d) { return d.id; });
     sync_views(traps, level.combat.traps, [](const TrapData& d) { return d.id; });
     sync_views(projectiles, level.combat.projectiles, [](const ProjectileData& d) { return d.id; });
+    furniture.update(level.furniture);
     update_loot(level.combat.loot);
 }
 
@@ -16,4 +17,5 @@ void LevelView::collect_entities(const RenderInfo& ctx, std::vector<Drawable>& o
     collect_from(ctx, enemies, out, tie);
     collect_from(ctx, traps, out, tie);
     collect_from(ctx, projectiles, out, tie);
+    furniture.collect(ctx, out,tie);
 }

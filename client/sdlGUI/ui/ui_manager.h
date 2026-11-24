@@ -13,6 +13,7 @@
 #include "world_input.h"
 
 #include "layers/chat_layer.h"
+#include "layers/chest_layer.h"
 #include "layers/hud_layer.h"
 #include "layers/minimap_layer.h"
 #include "layers/quit_layer.h"
@@ -59,6 +60,7 @@ private:
 public:
     explicit UiManager(const std::string& player_name): world(player_name) {
         emplace<HudLayer>();
+        emplace<ChestLayer>(player_name);
 
         NightSkyLayer& sky = emplace<NightSkyLayer>(); 
 

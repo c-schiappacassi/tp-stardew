@@ -77,7 +77,7 @@ CharacterScreen::CharacterScreen(QWidget* parent): QWidget(parent) {
     portrait->setFixedSize(PORTRAIT_SIZE);
 }
 
-void CharacterScreen::buildLayout(QVBoxLayout* rightColumn) {
+void CharacterScreen::buildLayout(QVBoxLayout* rightColumn, QWidget* sidePanel) {
     QHBoxLayout* topRow = new QHBoxLayout();
     topRow->setSpacing(40);
     topRow->addWidget(portrait, 0, Qt::AlignTop);
@@ -109,8 +109,18 @@ void CharacterScreen::buildLayout(QVBoxLayout* rightColumn) {
 
     SpriteButton* backButton = menu.makeBackButton(this);
 
+
+    QHBoxLayout* center = new QHBoxLayout();
+    center->setSpacing(40);
+    center->addStretch(1);
+    center->addWidget(panel);
+    if (sidePanel != nullptr) {
+        center->addWidget(sidePanel);
+    }
+    center->addStretch(1);
+
     QGridLayout* layout = new QGridLayout(this);
-    layout->addWidget(panel, 0, 0, Qt::AlignCenter);
+    layout->addLayout(center, 0, 0);
     layout->addWidget(backButton, 0, 0, Qt::AlignRight | Qt::AlignBottom);
 
     connect(backButton, &QAbstractButton::clicked, this, &CharacterScreen::backRequested);

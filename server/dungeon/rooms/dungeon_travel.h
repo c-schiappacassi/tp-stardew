@@ -1,17 +1,17 @@
 #pragma once
 
-#include <map>
-#include "dungeon_room.h"
+#include "world/world_location.h"
 
-class Player;
+#include "dungeon_rooms.h"
+
+class PlayerSnapshot;
+class PlayerManager;
 
 class DungeonTravel {
-private:
-    static const DungeonRoom* findRoom(const std::map<uint8_t, DungeonRoom>& rooms, uint8_t number);
-
 public:
-    bool spawnPlayer(Player& player, const std::map<uint8_t, DungeonRoom>& rooms) const;
-    bool enter(Player& player,const std::map<uint8_t, DungeonRoom>& rooms) const;
-    bool advanceRoom(Player& player,const std::map<uint8_t, DungeonRoom>& rooms) const;
-    bool canExit(const Player& player,const std::map<uint8_t, DungeonRoom>& rooms) const;
+    std::optional<WorldLocation> spawnFor(const PlayerSnapshot& player, const DungeonRooms& rooms) const;
+    bool enter(PlayerManager& players, uint16_t playerId, const DungeonRooms& rooms) const;
+    bool advanceRoom(PlayerManager& players, uint16_t playerId, const DungeonRooms& rooms) const;
+    bool teleportToRoom(PlayerManager& players, uint16_t playerId, uint8_t number, const DungeonRooms& rooms) const;
+    bool canExit(const PlayerSnapshot& player, const DungeonRooms& rooms) const;
 };

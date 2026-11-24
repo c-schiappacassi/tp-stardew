@@ -3,148 +3,138 @@
 #include <utility>
 
 PlayerManager::PlayerManager(const PlayerConfig& config, const MovementRules& movement,
-        const ZoneDataSource& zones, PlayerInteractions& interactions, const PlayerSpawnSource& spawns,
-        uint8_t maxPlayers, ChatServices chatServices):
-        maxPlayers(maxPlayers),
-        factory(config),
+                             const ZoneDataSource& zones, PlayerInteractions& interactions,
+                             const PlayerSpawnSource& spawns, uint8_t maxPlayers,
+                             ChatServices chatServices):
+        roster(config, movement, spawns, maxPlayers),
+        day(std::chrono::milliseconds{config.dayDurationMs}),
+        chat(*this, std::move(chatServices)),
+        commands(*this, roster, day, chat, interactions),
         updates(movement),
         playerStatus(zones),
-        actions(interactions),
-        chat(std::move(chatServices)),
-        spawns(spawns),
-        zones(zones),
-        movement(movement),
-        day(std::chrono::milliseconds{config.dayDurationMs}) {}
+        spawns(spawns) {}
 
-
-void PlayerManager::disconnectPlayer(uint16_t playerId) {
-    const auto it = players.find(playerId);
-    if (it != players.end()) {
-        if (it->second.connected) chat.onDisconnect(playerId);
-        it->second.connected = false;
-        day.forgetConfirmation(playerId);
-        it->second.output.reset();
-        it->second.chatMessages.clear();
-        it->second.lastDonation.reset();
-        it->second.player.setMovement(Direction::None);
-    }
+ServerStatus PlayerManager::addPlayer(const std::string& name, const PlayerData& appearance,const std::shared_ptr<OutQueue>& output) {
+    return completeEntry(roster.addPlayer(name, appearance, output));
 }
 
-void PlayerManager::closeOutputs() {
-    for (auto& [id, record] : players) {
-        if (!record.output) continue;
-        try {
-            record.output->close();
-        } catch (const std::runtime_error&) {}
-    }
+ServerStatus PlayerManager::resumePlayer(const std::string& name,const std::shared_ptr<OutQueue>& output) {
+    return completeEntry(roster.resumePlayer(name, output));
 }
+
+ServerStatus PlayerManager::completeEntry(const PlayerRoster::Admission& admission) {
+    if (!admission.record)
+        return PlayerStatus::registrationFailure(admission.error);
+
+    auto& record = *admission.record;
+    if (day.hasEnded())
+        record.getPlayer().passOut();
+    day.forgetConfirmation(record.getId());
+    chat.collectCommunityRewards(record, day.hasEnded());
+    auto status = playerStatus.buildForPlayer(roster, record, &day);
+    status.dayEnded = !status.gameCompleted && day.hasEnded();
+    return status;
+}
+
+std::optional<PlayerData> PlayerManager::dataFor(const std::string& name) const {
+    return roster.dataFor(name);
+}
+
+std::map<std::string, PlayerDataLocal> PlayerManager::getPersistencePlayers() const {
+    return playerStatus.getPersistencePlayers(roster);
+}
+
+void PlayerManager::restorePlayers(const std::map<std::string, PlayerDataLocal>& saved) {
+    roster.restorePlayers(saved);
+}
+
+bool PlayerManager::isMultiplayer() const { return roster.isMultiplayer(); }
 
 std::vector<CollisionBounds> PlayerManager::getCollisionBounds(Zone zone) const {
-    std::vector<CollisionBounds> result;
-    for (const auto& [id, record] : players) {
-        if (record.connected && record.player.getZone() == zone) {
-            result.push_back(record.player.getCollisionBounds(record.player.getPosition()));
-        }
-    }
-    return result;
+    return roster.getCollisionBounds(zone);
 }
 
-void PlayerManager::updateToolStates(
-    std::chrono::steady_clock::time_point now) {
-    updates.updateToolStates(players, now);
-}
-
-void PlayerManager::advancePlayers(int normalStep) { 
-    updates.advancePlayers(players, normalStep); 
-}
-
-void PlayerManager::publishStatus(const ServerStatus& base) {
-    auto status = base;
-    status.dayEnded = !base.gameCompleted && day.hasEnded();
-    playerStatus.publish(players, status, &day);
-}
-
-void PlayerManager::handleCommand(const PlayerCommand& command, bool gameCompleted) {
-    if (!command.command) {
-        return;
-    }
-    if (command.command->type() == MessageType::ExitGame) {
-        disconnectPlayer(command.playerId);
-        return;
-    }
-
-    auto it = players.find(command.playerId);
-    if (it == players.end() || !it->second.connected) {
-        return;
-    }
-
-    if (command.command->type() == MessageType::Chat) {
-        chat.handle(players, command.playerId, static_cast<const ChatDTO&>(*command.command).text,
-                    day.hasEnded() || gameCompleted);
-        return;
-    }
-
-    if (command.command->type() == MessageType::Donate) {
-        chat.donate(it->second, static_cast<const DonateDTO&>(*command.command),
-                    day.hasEnded() || gameCompleted);
-        return;
-    }
-
-    if (gameCompleted) return;
-
-    if (command.command->type() == MessageType::DayOk) {
-        day.acknowledge(command.playerId, it->second.player, isMultiplayer());
-        return;
-    }
-
-    if (command.command->type() == MessageType::DayCancel) {
-        day.cancel(command.playerId, it->second.player);
-        return;
-    }
-
-    if (!day.hasEnded()) {
-        if (command.command->type() == MessageType::Interact &&
-            chat.interact(it->second, static_cast<const InteractDTO&>(*command.command).dir, false)) {
-            return;
-        }
-        actions.execute(it->second.player, *command.command, command.playerId);
-    }
-}
-
-std::vector<Combatant> PlayerManager::getCombatants() {
-    std::vector<Combatant> result;
-    for (auto& [id, record]: players) {
-        if (record.connected) {
-            result.push_back(Combatant{id, &record.player});
-        }
-    }
-    return result;
+std::vector<uint16_t> PlayerManager::connectedPlayerIds() const {
+    return roster.connectedPlayerIds();
 }
 
 bool PlayerManager::advanceDay(std::chrono::milliseconds elapsed) {
     std::vector<DayCycle::Participant> participants;
-    participants.reserve(players.size());
-    for (auto& [id, record]: players) {
-        participants.push_back({id, record.player, record.connected});
-    }
-    return day.advance(elapsed, participants, spawns);
+    participants.reserve(roster.size());
+    for (auto& [id, record]: roster)
+        participants.push_back({id, record.getPlayer(), record.isConnected()});
+    const bool nextDay = day.advance(elapsed, participants, spawns);
+    if (nextDay || day.hasEnded())
+        chat.clearGifts();
+    return nextDay;
 }
 
 bool PlayerManager::isDayEnded() const { return day.hasEnded(); }
 
 std::chrono::milliseconds PlayerManager::remainingDayTime() const { return day.remainingTime(); }
 
-bool PlayerManager::hasConnectedPlayers() const {
-    for (const auto& [id, record]: players) {
-        if (record.connected) return true;
-    }
-    return false;
-}
+bool PlayerManager::hasConnectedPlayers() const { return roster.hasConnectedPlayers(); }
 
 void PlayerManager::collectCommunityRewards() {
-    for (auto& [id, record] : players) chat.collectCommunityRewards(record, day.hasEnded());
+    for (auto& [id, record]: roster) chat.collectCommunityRewards(record, day.hasEnded());
 }
 
 void PlayerManager::finishGame() {
-    for (auto& [id, record] : players) record.player.setMovement(Direction::None);
+    chat.clearGifts();
+    for (auto& [id, record]: roster) {
+        record.getPlayer().setMovement(Direction::None);
+        record.getPlayer().closeChest();
+    }
 }
+
+void PlayerManager::disconnectPlayer(uint16_t playerId) {
+    auto* record = roster.find(playerId);
+    if (!record)
+        return;
+    if (record->isConnected())
+        chat.onDisconnect(playerId);
+    day.forgetConfirmation(playerId);
+    record->disconnect();
+}
+
+void PlayerManager::closeOutputs() {
+    for (auto& [id, record]: roster) record.closeOutput();
+}
+
+void PlayerManager::updateToolStates(std::chrono::steady_clock::time_point now) {
+    updates.updateToolStates(roster, now);
+}
+
+void PlayerManager::advancePlayers(int normalStep) { updates.advancePlayers(roster, normalStep); }
+
+void PlayerManager::publishStatus(const ServerStatus& base) {
+    auto status = base;
+    status.dayEnded = !base.gameCompleted && day.hasEnded();
+    playerStatus.publish(roster, status, &day);
+}
+
+void PlayerManager::handleCommand(const PlayerCommand& command, bool gameCompleted) {
+    if (!command.command)
+        return;
+    if (command.command->type() == MessageType::ExitGame) {
+        disconnectPlayer(command.playerId);
+        return;
+    }
+    auto* record = roster.find(command.playerId);
+    if (record && record->isConnected())
+        commands.dispatch(*record, *command.command, gameCompleted);
+}
+
+PlayerSnapshot PlayerManager::snapshot(uint16_t playerId) const {
+    return roster.require(playerId).getPlayer().snapshot();
+}
+
+std::map<uint8_t, Stack> PlayerManager::inventory(uint16_t playerId) const {
+    return roster.require(playerId).getPlayer().getInventoryItems();
+}
+
+PlayerActionResult PlayerManager::apply(uint16_t playerId, const PlayerAction& action) {
+    return commands.apply(playerId, action);
+}
+
+std::vector<Combatant> PlayerManager::combatants() const { return roster.combatants(); }

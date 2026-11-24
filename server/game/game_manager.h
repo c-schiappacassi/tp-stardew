@@ -1,6 +1,7 @@
 #ifndef GAME_MANAGER_H
 #define GAME_MANAGER_H
 
+#include <filesystem>
 #include <map>
 #include <memory>
 #include <mutex>
@@ -24,7 +25,9 @@ private:
     PersistenceManager persistence;
     std::mutex persistenceMtx;
 
-    std::unique_ptr<Game> makeGame(const std::string& id, const std::string& name, uint8_t worldId) const;
+    static std::filesystem::path resolveMapPath(const std::string& mapPath);
+    std::unique_ptr<Game> makeGame(const std::string& id, const std::string& name,
+                                   uint8_t worldId, const std::string& mapPath) const;
 
 public:
     explicit GameManager(const GameConfig& config = {},

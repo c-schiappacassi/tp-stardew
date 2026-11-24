@@ -2,6 +2,17 @@
 
 #include <algorithm>
 #include <stdexcept>
+#include <utility>
+
+namespace {
+bool validStack(const Stack& stack) {
+    const auto item = stack.item_id;
+    const bool knownItem = (item >= ItemId::Pickaxe && item <= ItemId::Sword) || (item >= ItemId::StrawberrySeed && item <= ItemId::PumpkinSeed) ||
+        (item >= ItemId::Strawberry && item <= ItemId::Pumpkin) || (item >= ItemId::Coal && item <= ItemId::Gold) || (item >= ItemId::Milk && item <= ItemId::Egg) ||
+        (item >= ItemId::Chest && item <= ItemId::BrownArmCouch);
+    return knownItem && stack.quantity != 0 && stack.qual <= Quality::Perfect;
+}
+}  // namespace
 
 uint16_t Inventory::getStackLimit(ItemId item) const {
     const bool isTool =
@@ -20,9 +31,7 @@ Inventory::Inventory(uint8_t capacity, uint16_t stackLimit):capacity(capacity), 
     }
 }
 
-bool Inventory::canAdd(const Stack& stack) const {
-    return stack.quantity != 0 && availableSpace(stack) >= stack.quantity;
-}
+bool Inventory::canAdd(const Stack& stack) const { return validStack(stack) && availableSpace(stack) >= stack.quantity; }
 
 uint32_t Inventory::availableSpace(const Stack& stack) const {
     const uint16_t limit = getStackLimit(stack.item_id);
@@ -42,6 +51,8 @@ uint32_t Inventory::availableSpace(const Stack& stack) const {
 }
 
 uint16_t Inventory::addUpTo(const Stack& stack) {
+    if (!validStack(stack))
+        return 0;
     const auto amount = static_cast<uint16_t>(std::min<uint32_t>(
         stack.quantity, availableSpace(stack)));
     if (amount != 0) {
@@ -107,6 +118,21 @@ bool Inventory::remove(uint8_t slot, uint16_t quantity) {
     return true;
 }
 
+bool Inventory::transferTo(Inventory& destination, uint8_t slot, uint16_t quantity) {
+    const auto* source = getSlot(slot);
+    if (&destination == this || !source || quantity == 0 || source->quantity < quantity) {
+        return false;
+    }
+    const Stack transferred{source->item_id, quantity, source->qual};
+    Inventory prepared = destination;
+    if (!prepared.add(transferred))
+        return false;
+
+    remove(slot, quantity);
+    destination = std::move(prepared);
+    return true;
+}
+
 const Stack* Inventory::getSlot(uint8_t slot) const {
     const auto it = slots.find(slot);
     return it == slots.end() ? nullptr : &it->second;
@@ -122,7 +148,7 @@ const std::map<uint8_t, Stack>& Inventory::getItems() const {
 
 void Inventory::restoreSlots(const std::map<uint8_t, Stack>& saved) {
     for (const auto& [slot, stack] : saved) {
-        if (slot >= capacity || stack.quantity == 0 || stack.quantity > getStackLimit(stack.item_id)) {
+        if (slot >= capacity || !validStack(stack) || stack.quantity > getStackLimit(stack.item_id)) {
             throw std::invalid_argument("Invalid saved inventory slot");
         }
     }
