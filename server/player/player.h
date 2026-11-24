@@ -67,7 +67,7 @@ public:
     bool canUseBed() const;
     void leaveBedArea();
     void passOut();
-    bool sleep();
+    bool sleep(std::optional<Position> bed = std::nullopt);
     bool cancelSleep();
     void wakeUp();
     void setVitals(uint16_t newHealth, uint16_t newEnergy);

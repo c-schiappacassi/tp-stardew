@@ -16,6 +16,7 @@
 class DungeonRoom {
 private:
     uint8_t number;
+    uint8_t visitDepth;
     PlacementSpace space;
     RoomMinerals minerals;
     RoomGeometry geometry;
@@ -23,7 +24,6 @@ private:
     RoomCombat combat;
     GroundItems groundItems;
     ChestManager chests;
-    // Chest drops keep their existing pickup and persistence rules, separate from combat loot.
     GroundItems storageItems;
 
     void clearChestOverlaps(const std::vector<FurnitureData>& furniture);
@@ -32,6 +32,8 @@ public:
     explicit DungeonRoom(uint8_t number);
     bool initialize(const ZoneMap& map, const DungeonRoomPassages& data, const std::vector<Position>& reserved, const std::vector<ChestSpawn>& initial, EntityIdGenerator& ids);
     uint8_t getNumber() const;
+    uint8_t getVisitDepth() const;
+    void setVisitDepth(uint8_t depth);
     bool addMineral(Mineral mineral);
     bool removeMineral(EntityId id);
     Mineral* findMineral(EntityId id);

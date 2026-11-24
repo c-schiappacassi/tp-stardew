@@ -103,8 +103,8 @@ void Player::passOut() {
                                       100);
 }
 
-bool Player::sleep() {
-    if (!canAct())
+bool Player::sleep(std::optional<Position> bed) {
+    if (!canAct() || (bed && !location.relocate(getZone(), getDungeonLevel(), *bed, getInterior())))
         return false;
     activity.sleep();
     return true;

@@ -29,7 +29,7 @@ public:
     uint16_t timeOfDayMinutes() const;
     bool requiresConfirmation(uint16_t playerId, const Player& player, bool multiplayer) const;
     void acknowledge(uint16_t playerId, const Player& player, bool multiplayer);
-    bool cancel(uint16_t playerId, Player& player);
+    bool cancel(uint16_t playerId, Player& player, const PlayerSpawnSource& spawns);
     void forgetConfirmation(uint16_t playerId);
     bool advance(std::chrono::milliseconds time, std::span<const Participant> players,const PlayerSpawnSource& spawns);
 };

@@ -4,6 +4,7 @@
 
 #include "player/chat/player_chat.h"
 #include "player/player.h"
+#include "player/player_manager.h"
 #include "player/ports/player_interactions.h"
 #include "player/sessions/player_roster.h"
 #include "player/time/day_cycle.h"
@@ -84,7 +85,7 @@ bool CommandRouter::handleDayCommand(PlayerRecord& record, const CommandDTO& com
             day.acknowledge(record.getId(), record.getPlayer(), roster.isMultiplayer());
             return true;
         case MessageType::DayCancel:
-            day.cancel(record.getId(), record.getPlayer());
+            manager.cancelSleep(record.getId());
             return true;
         default:
             return false;
@@ -132,8 +133,8 @@ PlayerActionResult applyAction(Player& player, const player_action::UseTool& act
 PlayerActionResult applyAction(Player& player, const player_action::PerformAction& action) {
     return {player.performAction(action.energyCost, action.interval, action.now), 0};
 }
-PlayerActionResult applyAction(Player& player, const player_action::Sleep&) {
-    return {player.sleep(), 0};
+PlayerActionResult applyAction(Player& player, const player_action::Sleep& action) {
+    return {player.sleep(action.bed), 0};
 }
 PlayerActionResult applyAction(Player& player, const player_action::LeaveBedArea&) {
     player.leaveBedArea();

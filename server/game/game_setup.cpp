@@ -53,9 +53,7 @@ GameSetup makeDefaultGameSetup(uint8_t worldId) {
         room.terrain = terrain;
         room.passages.entry = terrain.baseAt({3, 3}).value();
         room.passages.exit = terrain.baseAt({3, 1}).value();
-        if (level < DUNGEON_ROOM_COUNT) {
-            room.passages.nextRoom = terrain.baseAt({21, 29}).value();
-        }
+        room.passages.nextRoom = terrain.baseAt({21, 29}).value();
         setup.layout.emplace(level, std::move(room));
     }
     setup.entrance.emplace();

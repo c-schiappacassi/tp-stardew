@@ -1,6 +1,7 @@
 #pragma once
 
 #include <map>
+#include <random>
 
 #include "chat/services/merchant_chat_service.h"
 
@@ -20,7 +21,7 @@ class MerchantChat final: public MerchantChatService {
     MarketConfig config;
     std::map<uint16_t, Conversation> conversations;
     std::vector<RobinProductConfig> robinCatalog;
-    std::size_t rotation = 0;
+    std::mt19937 random;
 
     void rotateCatalog();
     std::vector<ChatMessageData> catalog(NpcId merchant) const;
@@ -28,7 +29,7 @@ class MerchantChat final: public MerchantChatService {
     std::string sell(PlayerManager& players, uint16_t playerId, NpcId merchant, const TradeCommand& command);
 
 public:
-    MerchantChat(WorldManager& world, const MarketPrices& prices, const MarketConfig& config = {});
+    MerchantChat(WorldManager& world, const MarketPrices& prices, const MarketConfig& config = {}, uint32_t seed = std::random_device{}());
     std::optional<std::vector<ChatMessageData>> interact(const ChatCommandContext& context, Direction direction) override;
     std::vector<ChatMessageData> execute(const ChatCommandContext& context, const TradeCommand& command) override;
     void onDisconnect(uint16_t playerId) noexcept override;

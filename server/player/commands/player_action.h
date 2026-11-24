@@ -53,7 +53,9 @@ struct PerformAction {
     std::chrono::milliseconds interval;
     std::chrono::steady_clock::time_point now;
 };
-struct Sleep {};
+struct Sleep {
+    std::optional<Position> bed = std::nullopt;
+};
 struct LeaveBedArea {};
 struct SetVitals {
     uint16_t health;

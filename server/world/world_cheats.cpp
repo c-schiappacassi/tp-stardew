@@ -10,7 +10,7 @@ bool WorldManager::teleport(PlayerManager& players, uint16_t playerId, Zone dest
     const bool wasInMine = player.getZone() == Zone::Dungeon;
     bool moved = false;
     if (destination == Zone::Dungeon) {
-        moved = dungeon.teleportToRoom(players, playerId, level);
+        moved = dungeon.teleportToRoom(players, playerId, level, entityIds);
     } else if (destination == Zone::Farm) {
         const auto spawn = farm.spawnFor(player);
         moved = spawn && players.apply(playerId, player_action::RestoreLocation{spawn->zone, spawn->level, spawn->position, spawn->interior}).applied;

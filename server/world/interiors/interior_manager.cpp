@@ -139,14 +139,18 @@ bool InteriorManager::useBed(PlayerManager& players, uint16_t playerId) const {
     const auto& pos = player.getPosition();
     for (const auto& bed: room->beds) {
         if (canApproachBed(*room, pos, bed))
-            return player.canUseBed() && players.apply(playerId, player_action::Sleep{}).applied;
+            return player.canUseBed() && players.apply(playerId, player_action::Sleep{bed}).applied;
     }
     players.apply(playerId, player_action::LeaveBedArea{});
     return false;
 }
 
 std::optional<WorldLocation> InteriorManager::recoveryFor(const PlayerSnapshot& player, uint16_t playerId) const {
-    const InteriorLayout* house = playerId >= 1 && playerId <= 4 ? find({InteriorId::PlayerHouse, static_cast<uint8_t>(playerId - 1)}) : nullptr;
+    const InteriorLayout* house = nullptr;
+    if (player.isSleeping() && player.getZone() == Zone::InsideHouse && player.getInterior() && player.getInterior()->interior_id == InteriorId::PlayerHouse)
+        house = find(*player.getInterior());
+    if (!house)
+        house = playerId >= 1 && playerId <= 4 ? find({InteriorId::PlayerHouse, static_cast<uint8_t>(playerId - 1)}) : nullptr;
     if (!house || house->beds.empty()) {
         const auto fallback = std::find_if(rooms.begin(), rooms.end(), [](const auto& room) { return room.location.interior_id == InteriorId::PlayerHouse && !room.beds.empty(); });
         if (fallback == rooms.end())

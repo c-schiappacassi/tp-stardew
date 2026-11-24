@@ -36,8 +36,16 @@ void DayCycle::acknowledge(uint16_t playerId, const Player& player, bool multipl
     }
 }
 
-bool DayCycle::cancel(uint16_t playerId, Player& player) {
-    return !ended && !confirmations.contains(playerId) && player.cancelSleep();
+bool DayCycle::cancel(uint16_t playerId, Player& player, const PlayerSpawnSource& spawns) {
+    if (ended || confirmations.contains(playerId) || !player.isSleeping())
+        return false;
+    const auto destination = spawns.recoveryFor(player.snapshot(), playerId);
+    auto prepared = player;
+    if (!destination || !prepared.cancelSleep() ||
+        !prepared.restoreLocation(destination->zone, destination->level, destination->position, destination->interior))
+        return false;
+    player = std::move(prepared);
+    return true;
 }
 
 void DayCycle::forgetConfirmation(uint16_t playerId) { confirmations.erase(playerId); }
@@ -81,8 +89,8 @@ bool DayCycle::advance(std::chrono::milliseconds time, std::span<const Participa
     prepared.reserve(players.size());
     for (const auto& participant: players) {
         prepared.push_back(participant.player);
+        const auto destination = spawns.recoveryFor(participant.player.snapshot(), participant.id);
         prepared.back().wakeUp();
-        const auto destination = spawns.recoveryFor(prepared.back().snapshot(), participant.id);
         
         if (!destination ||!prepared.back().restoreLocation(destination->zone, destination->level,destination->position, destination->interior)) {
             return false;

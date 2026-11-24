@@ -231,11 +231,7 @@ DungeonRoomLayout MapConverter::convertRoom(const EditorZoneData& zone, uint8_t 
     room.passages.extraExits = extraDoorTiles(room.terrain, map_rules::doorsOf(exitShape, exitOrigin.x, exitOrigin.y), name + ".door_exit");
     
 
-    if (level < DUNGEON_ROOM_COUNT) {
-        if (!zone.doorNextLevel) {
-            throw std::invalid_argument("Missing " + name + ".door_next_level");
-        }
-
+    if (zone.doorNextLevel) {
         const Position next = convertPosition(
                 room.terrain, *zone.doorNextLevel, name + ".door_next_level");
 
@@ -247,18 +243,26 @@ DungeonRoomLayout MapConverter::convertRoom(const EditorZoneData& zone, uint8_t 
         }
 
         room.passages.nextRoom = next;
-    } else if (zone.doorNextLevel) {
-        throw std::invalid_argument("Last mine level cannot have a next-level door");
+    } else if (level < DUNGEON_ROOM_COUNT) {
+        throw std::invalid_argument("Missing " + name + ".door_next_level");
     }
 
     return room;
 }
 
 GameSetup MapConverter::convert(const MapData& data, uint8_t worldId) const {
-    // las mismas reglas que aplica el editor al guardar
-    const std::vector<std::string> errors = map_rules::validateMap(data);
+    auto validationData = data;
+    if (!validationData.mineLevels.empty())
+        validationData.mineLevels.back().doorNextLevel.reset();
+    auto errors = map_rules::validateMap(validationData);
     if (!errors.empty()) {
         throw std::invalid_argument("Invalid map: " + map_rules::joinErrors(errors));
+    }
+    if (data.mineLevels.back().doorNextLevel) {
+        validationData.mineLevels.front() = data.mineLevels.back();
+        errors = map_rules::validateMap(validationData);
+        if (!errors.empty())
+            throw std::invalid_argument("Invalid last mine template: " + map_rules::joinErrors(errors));
     }
     if (data.mineLevels.size() != DUNGEON_ROOM_COUNT) {
         throw std::invalid_argument("Unexpected number of mine levels");

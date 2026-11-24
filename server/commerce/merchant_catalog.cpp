@@ -1,5 +1,6 @@
 #include "merchant_chat.h"
 
+#include <algorithm>
 #include <set>
 #include <stdexcept>
 
@@ -7,8 +8,8 @@
 #include "shop_products.h"
 #include "world/world_manager.h"
 
-MerchantChat::MerchantChat(WorldManager& world, const MarketPrices& prices, const MarketConfig& config) :
-    world(world), prices(prices), config(config) {
+MerchantChat::MerchantChat(WorldManager& world, const MarketPrices& prices, const MarketConfig& config, uint32_t seed) :
+    world(world), prices(prices), config(config), random(seed) {
     std::set<ItemId> registered;
     std::size_t rotating = 0;
     for (const auto& product : config.robin.products) {
@@ -32,10 +33,8 @@ void MerchantChat::rotateCatalog() {
         if (product.rotates) rotating.push_back(product);
         else robinCatalog.push_back(product);
     }
-    for (std::size_t i = 0; i < config.robin.dailyRotationCount; ++i) {
-        robinCatalog.push_back(rotating[(rotation + i) % rotating.size()]);
-    }
-    if (!rotating.empty()) rotation = (rotation + config.robin.dailyRotationCount) % rotating.size();
+    std::shuffle(rotating.begin(), rotating.end(), random);
+    robinCatalog.insert(robinCatalog.end(), rotating.begin(), rotating.begin() + config.robin.dailyRotationCount);
 }
 
 std::vector<ChatMessageData> MerchantChat::catalog(NpcId merchant) const {
