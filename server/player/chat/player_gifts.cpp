@@ -49,12 +49,12 @@ void PlayerGifts::execute(PlayerRoster& players, PlayerRecord& sender, const Gif
     }
     PlayerRecord* target = nullptr;
     for (auto& [id, record]: players) {
-        if (record.getName() == command.player) {
+        if (record.isConnected() && record.getPlayer().getCharacterName() == command.player) {
             target = &record;
             break;
         }
     }
-    if (!target || !target->isConnected()) {
+    if (!target) {
         reply(sender, "The player does not exist or is offline.");
         return;
     }
@@ -97,8 +97,8 @@ void PlayerGifts::offer(PlayerRecord& sender, PlayerRecord& recipient, uint16_t 
     }
     const Stack stack{selected->item_id, quantity, selected->qual};
     offers.emplace(sender.getId(), Offer{recipient.getId(), player.getSelectedSlot(), stack});
-    reply(sender, "Gift offered to " + recipient.getName() + ": " + description(stack) + ". Waiting for a response.");
-    reply(recipient, sender.getName() + " offers you " + description(stack) + ". Use /accept " + mention(sender.getName()) + " or /reject " + mention(sender.getName()) + ".");
+    reply(sender, "Gift offered to " + recipient.getPlayer().getCharacterName() + ": " + description(stack) + ". Waiting for a response.");
+    reply(recipient, player.getCharacterName() + " offers you " + description(stack) + ". Use /accept " + mention(player.getCharacterName()) + " or /reject " + mention(player.getCharacterName()) + ".");
 }
 
 void PlayerGifts::respond(PlayerRecord& recipient, PlayerRecord& sender, bool accepted, bool actionsBlocked) {
@@ -109,8 +109,8 @@ void PlayerGifts::respond(PlayerRecord& recipient, PlayerRecord& sender, bool ac
     }
     if (!accepted) {
         offers.erase(found);
-        reply(sender, recipient.getName() + " rejected your gift.");
-        reply(recipient, "You rejected the gift from " + sender.getName() + ".");
+        reply(sender, recipient.getPlayer().getCharacterName() + " rejected your gift.");
+        reply(recipient, "You rejected the gift from " + sender.getPlayer().getCharacterName() + ".");
         return;
     }
     auto& source = sender.getPlayer();
@@ -137,8 +137,8 @@ void PlayerGifts::respond(PlayerRecord& recipient, PlayerRecord& sender, bool ac
         return;
     }
     offers.erase(found);
-    reply(sender, recipient.getName() + " accepted your gift: " + description(offer.stack) + ".");
-    reply(recipient, "You received " + description(offer.stack) + " from " + sender.getName() + ".");
+    reply(sender, destination.getCharacterName() + " accepted your gift: " + description(offer.stack) + ".");
+    reply(recipient, "You received " + description(offer.stack) + " from " + source.getCharacterName() + ".");
 }
 
 void PlayerGifts::cancel(PlayerRoster& players, PlayerRecord& sender) {
@@ -151,7 +151,7 @@ void PlayerGifts::cancel(PlayerRoster& players, PlayerRecord& sender) {
     offers.erase(found);
     reply(sender, "You cancelled your gift.");
     if (recipient && recipient->isConnected())
-        reply(*recipient, sender.getName() + " cancelled the gift offer.");
+        reply(*recipient, sender.getPlayer().getCharacterName() + " cancelled the gift offer.");
 }
 
 void PlayerGifts::onDisconnect(uint16_t playerId) noexcept {

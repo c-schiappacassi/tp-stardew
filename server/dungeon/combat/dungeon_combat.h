@@ -21,6 +21,7 @@ private:
     EnemyConfig config;
     EnemyGenerator generator;
     std::mt19937 trapRandom;
+    std::mt19937 routeRandom;
     CombatProgress progress;
     CombatTime clock{0};
     uint32_t visit = 0;
@@ -32,7 +33,6 @@ private:
 
     bool regenerate(DungeonRooms& rooms, EntityIdGenerator& ids);
     void endVisit();
-    bool prepareVisit(const PlayerManager& players, uint16_t playerId, DungeonRooms& rooms, EntityIdGenerator& ids);
     bool spawnEnemies(DungeonRoom& room, EnemyType type, uint16_t quantity, bool pairs, EntityIdGenerator& ids, const std::vector<Position>& occupied);
     uint16_t killEnemies(PlayerManager& players, uint16_t playerId, DungeonRoom& room, bool nearestOnly, EntityIdGenerator& ids);
     PlayersByRoom updatePresence(const std::vector<Combatant>& combatants, PlayerManager& players, std::map<uint16_t, uint8_t> current, DungeonRooms& rooms);
@@ -41,6 +41,7 @@ private:
 public:
     DungeonCombat(const EnemyConfig& config, uint32_t seed);
     bool initialize(DungeonRooms& rooms, const std::map<uint8_t, DungeonRoomLayout>& layouts, EntityIdGenerator& ids);
+    bool prepareEntry(const PlayerManager& players, DungeonRooms& rooms, EntityIdGenerator& ids);
     bool attack(PlayerManager& players, uint16_t playerId, DungeonRoom& room, Direction direction, EntityIdGenerator& ids, std::chrono::steady_clock::time_point now);
     void silverMined(DungeonRoom& room);
     void update(CombatTime elapsed, DungeonRooms& rooms, const std::vector<Combatant>& combatants, PlayerManager& players, EntityIdGenerator& ids,

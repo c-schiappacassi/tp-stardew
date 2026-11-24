@@ -299,6 +299,7 @@ blocked_tiles = []
 number = 10
 entry = { x = 3, y = 3 }
 exit = { x = 1, y = 3 }
+next_room = { x = 29, y = 21 }
 reserved_positions = []
 walkable_tiles = []
 blocked_tiles = []

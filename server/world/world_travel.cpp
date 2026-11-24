@@ -71,14 +71,14 @@ bool WorldTravel::canArrive(const PlayerSnapshot& player, const ReturnPoint& tar
     return target.zone == Zone::Town && town.canWalk(bounds);
 }
 
-bool WorldTravel::enterMine(PlayerManager& players, uint16_t playerId, const ReturnPoint& origin, DungeonManager& dungeon) {
-    if (!dungeon.enter(players, playerId))
+bool WorldTravel::enterMine(PlayerManager& players, uint16_t playerId, const ReturnPoint& origin, DungeonManager& dungeon, EntityIdGenerator& ids) {
+    if (!dungeon.enter(players, playerId, ids))
         return false;
     mineReturns.insert_or_assign(playerId, origin);
     return true;
 }
 
-bool WorldTravel::use(PlayerManager& players, uint16_t playerId, DungeonManager& dungeon, const FarmManager& farm, const TownMap& town, const InteriorManager& interiors) {
+bool WorldTravel::use(PlayerManager& players, uint16_t playerId, DungeonManager& dungeon, const FarmManager& farm, const TownMap& town, const InteriorManager& interiors, EntityIdGenerator& ids) {
     const auto player = players.snapshot(playerId);
     if (!player.canAct())
         return false;
@@ -131,14 +131,14 @@ bool WorldTravel::use(PlayerManager& players, uint16_t playerId, DungeonManager&
             return canArrive(player, target, farm, town) && players.apply(playerId, player_action::ChangeLocation{target.zone, 0, target.position}).applied;
         }
         if (townMineDoor && town.getMap().sameBaseCell(player.getPosition(), *townMineDoor)) {
-            return enterMine(players, playerId, {Zone::Town, *townMineDoor}, dungeon);
+            return enterMine(players, playerId, {Zone::Town, *townMineDoor}, dungeon, ids);
         }
     }
     if (entrance && player.getZone() == entrance->zone) {
         const bool atEntrance = entrance->zone == Zone::Farm ? farm.sameBaseCell(player.getPosition(), entrance->position) :
             town.getMap().sameBaseCell(player.getPosition(), entrance->position);
         if (atEntrance) {
-            return enterMine(players, playerId, {entrance->zone, entrance->returnPosition}, dungeon);
+            return enterMine(players, playerId, {entrance->zone, entrance->returnPosition}, dungeon, ids);
         }
     }
     return false;

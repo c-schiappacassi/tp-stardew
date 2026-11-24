@@ -53,6 +53,7 @@ public:
     std::map<uint8_t, Stack> inventory(uint16_t playerId) const;
     PlayerActionResult apply(uint16_t playerId, const PlayerAction& action);
     bool advanceDay(std::chrono::milliseconds elapsed);
+    bool cancelSleep(uint16_t playerId);
     bool isDayEnded() const;
     std::chrono::milliseconds remainingDayTime() const;
     bool hasConnectedPlayers() const;

@@ -6,10 +6,10 @@
 #include "player/player_manager.h"
 
 std::optional<WorldLocation> DungeonTravel::spawnFor(const PlayerSnapshot& player, const DungeonRooms& rooms) const {
-    const auto* first = rooms.find(1);
+    const auto* first = rooms.find(rooms.firstNumber());
     if (!first || !first->getPassages() || !first->canWalk(player.getCollisionBounds(first->getPassages()->entry)))
         return std::nullopt;
-    return WorldLocation{Zone::Dungeon, 1, std::nullopt, first->getPassages()->entry};
+    return WorldLocation{Zone::Dungeon, first->getNumber(), std::nullopt, first->getPassages()->entry};
 }
 
 bool DungeonTravel::enter(PlayerManager& players, uint16_t playerId, const DungeonRooms& rooms) const {
@@ -36,7 +36,8 @@ bool DungeonTravel::advanceRoom(PlayerManager& players, uint16_t playerId, const
         return false;
     }
 
-    const auto* next = rooms.find(player.getDungeonLevel() + 1);
+    const auto nextNumber = rooms.nextNumber(player.getDungeonLevel());
+    const auto* next = nextNumber ? rooms.find(*nextNumber) : nullptr;
     if (!next || !next->getPassages() || !next->canWalk(player.getCollisionBounds(next->getPassages()->entry))) {
         return false;
     }

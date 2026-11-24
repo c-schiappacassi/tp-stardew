@@ -22,7 +22,8 @@ ConstMapData WorldManager::buildConstMap() const {
     // TODO: fondo de los niveles. Por ahora vacios, pero en orden: MinesView numera por indice (i + 1)
     map.levels.resize(DUNGEON_ROOM_COUNT);
     for (uint8_t number = 1; number <= DUNGEON_ROOM_COUNT; ++number) {
-        map.levels[number - 1].portals = dungeon.getPortals(number);
+
+        map.levels[number - 1].portals = dungeon.getPortals(number, false);
     }
     // TODO: edificios y NPCs del pueblo cuando exista BuildingId/sprites para ellos
     const int townTile = town.getTileSize();
@@ -115,6 +116,12 @@ bool WorldManager::canMove(const PlayerSnapshot& player, const Position& next) c
         return farm.canWalk(bounds);
     }
     if (player.getZone() == Zone::InsideHouse && player.getInterior()) {
+        // A sleeping player's feet deliberately overlap the bed. Keep that valid on reconnect.
+        if (player.isSleeping() && next.getX() == player.getPosition().getX() && next.getY() == player.getPosition().getY()) {
+            const auto* room = interiors.find(*player.getInterior());
+            if (room && std::any_of(room->beds.begin(), room->beds.end(), [&](const auto& bed) { return bed.getX() == next.getX() && bed.getY() == next.getY(); }))
+                return true;
+        }
         return interiors.canWalk(*player.getInterior(), bounds);
     }
     return player.getZone() == Zone::Town && town.canWalk(bounds);
@@ -148,7 +155,7 @@ void WorldManager::interact(PlayerManager& players, uint16_t playerId, Direction
     if (!player.canAct())
         return;
     const auto previousZone = player.getZone();
-    if (travel.use(players, playerId, dungeon, farm, town, interiors)) {
+    if (travel.use(players, playerId, dungeon, farm, town, interiors, entityIds)) {
         const auto arrived = players.snapshot(playerId);
         if (previousZone == Zone::Dungeon || arrived.getZone() == Zone::Dungeon) {
             dungeon.onTravel(playerId, arrived.getDungeonLevel(), arrived.canBeAttacked());

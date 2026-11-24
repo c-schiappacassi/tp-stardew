@@ -40,6 +40,7 @@ private:
 public:
     Player(const PlayerData& initialData, uint8_t inventoryCapacity, uint16_t maxHealth,uint16_t maxEnergy, uint32_t initialGold, const PlayerConfig& config = {});
 
+    const std::string& getCharacterName() const;
     void setMovement(Direction direction);
     void advance(int step);
     Position getNextPosition(int step) const;
@@ -67,7 +68,7 @@ public:
     bool canUseBed() const;
     void leaveBedArea();
     void passOut();
-    bool sleep();
+    bool sleep(std::optional<Position> bed = std::nullopt);
     bool cancelSleep();
     void wakeUp();
     void setVitals(uint16_t newHealth, uint16_t newEnergy);

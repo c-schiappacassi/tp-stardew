@@ -27,7 +27,7 @@ bool hasSkull(const DungeonRoom& room) {
 }
 }  // namespace
 
-DungeonCombat::DungeonCombat(const EnemyConfig& config, uint32_t seed): config(config), generator(config, seed), trapRandom(seed) {}
+DungeonCombat::DungeonCombat(const EnemyConfig& config, uint32_t seed): config(config), generator(config, seed), trapRandom(seed), routeRandom(seed) {}
 
 bool DungeonCombat::initialize(DungeonRooms& rooms, const std::map<uint8_t, DungeonRoomLayout>& data, EntityIdGenerator& ids) {
     if (rooms.size() == 0 || rooms.size() != data.size()) {
@@ -55,6 +55,8 @@ bool DungeonCombat::regenerate(DungeonRooms& rooms, EntityIdGenerator& ids) {
     auto preparedIds = ids;
     auto preparedGenerator = generator;
     auto preparedTrapRandom = trapRandom;
+    auto preparedRouteRandom = routeRandom;
+    preparedRooms.shuffle(preparedRouteRandom);
     for (auto& [number, room]: preparedRooms) {
         const auto& layout = layouts.at(number);
         if (layout.traps.size() > 256 || room.getMap().getCellSize() > std::numeric_limits<uint16_t>::max()) {
@@ -68,11 +70,21 @@ bool DungeonCombat::regenerate(DungeonRooms& rooms, EntityIdGenerator& ids) {
     ids = preparedIds;
     generator = std::move(preparedGenerator);
     trapRandom = preparedTrapRandom;
+    routeRandom = preparedRouteRandom;
     ++visit;
     visitEnded = false;
     progress.newVisit();
     presence.clear();
     return true;
+}
+
+bool DungeonCombat::prepareEntry(const PlayerManager& players, DungeonRooms& rooms, EntityIdGenerator& ids) {
+    const auto combatants = players.combatants();
+    if (std::any_of(combatants.begin(), combatants.end(), [](const auto& actor) { return actor.player.getZone() == Zone::Dungeon; }))
+        return true;
+    // A disconnect and the next entrance can arrive in the same command batch.
+    endVisit();
+    return !visitEnded || regenerate(rooms, ids);
 }
 
 bool DungeonCombat::attack(PlayerManager& players, uint16_t playerId, DungeonRoom& room, Direction direction, EntityIdGenerator& ids, std::chrono::steady_clock::time_point now) {
@@ -112,7 +124,8 @@ DungeonCombat::PlayersByRoom DungeonCombat::updatePresence(
         }
         auto player = actor.player;
         if (lastVisits.contains(actor.id) && lastVisits.at(actor.id) != visit) {
-            players.apply(actor.id, player_action::ChangeLocation{Zone::Dungeon, 1, rooms.at(1).getPassages()->entry});
+            const auto first = rooms.firstNumber();
+            players.apply(actor.id, player_action::ChangeLocation{Zone::Dungeon, first, rooms.at(first).getPassages()->entry});
             player = players.snapshot(actor.id);
         }
         lastVisits[actor.id] = visit;
@@ -163,9 +176,7 @@ void DungeonCombat::update(
         endVisit();
         return;
     }
-    if (visitEnded && !regenerate(rooms, ids)) {
-        return;
-    }
+
     occupied = true;
     const auto byRoom = updatePresence(combatants, players, std::move(current), rooms);
     CombatContext context{players, config, generator, progress, ids, clock, now};
@@ -199,16 +210,6 @@ const CombatProgressData& DungeonCombat::getProgress() const { return progress.d
 bool DungeonCombat::completed() const { return progress.complete(); }
 
 uint32_t DungeonCombat::getVisit() const { return visit; }
-
-bool DungeonCombat::prepareVisit(const PlayerManager& players, uint16_t playerId, DungeonRooms& rooms, EntityIdGenerator& ids) {
-    const auto player = players.snapshot(playerId);
-    if (!visitEnded)
-        return true;
-    if (!regenerate(rooms, ids))
-        return false;
-    onTravel(playerId, player.getDungeonLevel(), player.canBeAttacked(), rooms);
-    return true;
-}
 
 bool DungeonCombat::spawnEnemies(DungeonRoom& room, EnemyType type, uint16_t quantity, bool pairs, EntityIdGenerator& ids, const std::vector<Position>& occupied) {
     const auto layout = layouts.find(room.getNumber());
@@ -255,7 +256,7 @@ uint16_t DungeonCombat::killEnemies(PlayerManager& players, uint16_t playerId, D
 bool DungeonCombat::spawnEnemies(const PlayerManager& players, uint16_t playerId, DungeonRooms& rooms, EnemyType type, uint16_t quantity, bool pairs, EntityIdGenerator& ids,
     const std::vector<Position>& occupiedPositions) {
     const auto player = players.snapshot(playerId);
-    if (player.getZone() != Zone::Dungeon || !player.canAct() || !prepareVisit(players, playerId, rooms, ids))
+    if (player.getZone() != Zone::Dungeon || !player.canAct())
         return false;
     auto* room = rooms.find(player.getDungeonLevel());
     if (!room)
@@ -267,7 +268,7 @@ bool DungeonCombat::spawnEnemies(const PlayerManager& players, uint16_t playerId
 
 uint16_t DungeonCombat::killEnemies(PlayerManager& players, uint16_t playerId, DungeonRooms& rooms, bool nearestOnly, EntityIdGenerator& ids) {
     const auto player = players.snapshot(playerId);
-    if (player.getZone() != Zone::Dungeon || !prepareVisit(players, playerId, rooms, ids))
+    if (player.getZone() != Zone::Dungeon)
         return 0;
     auto* room = rooms.find(player.getDungeonLevel());
     return room ? killEnemies(players, playerId, *room, nearestOnly, ids) : 0;
