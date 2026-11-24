@@ -4,7 +4,7 @@
 #include "dungeon/mining/dungeon_mining.h"
 #include "dungeon/rooms/dungeon_rooms.h"
 #include "player/player_manager.h"
-#include "world/interaction_targeting.h"
+#include "world/zone_map.h"
 
 DungeonInteractions::DungeonInteractions(DungeonRooms& rooms, DungeonMining& mining, MineralGenerator& generator, DungeonCombat& combat):
     rooms(rooms), mining(mining), generator(generator), combat(combat) {}
@@ -48,7 +48,7 @@ bool DungeonInteractions::collectNearbyItems(PlayerManager& players, uint16_t pl
     if (!room)
         return false;
     const bool stored = room->getStorageItems().collect(
-        players, playerId, [&](const Position& position) { return InteractionTargeting{}.hasClearPath(player.getPosition(), position, room->getMap()); });
+        players, playerId, [&](const Position& position) { return room->getMap().hasClearPath(player.getPosition(), position); });
     const bool collected = room->getGroundItems().collect(players, playerId, [&](const Position& position) {
         return room->hasClearLine(player.getCollisionCenter(), Position{position.getX(), position.getY() - 1});
     });

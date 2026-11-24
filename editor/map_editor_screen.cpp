@@ -31,13 +31,13 @@ MapEditorScreen::MapEditorScreen(const WorldMap& startingMap, QWidget* parent): 
     const ZoneOptions farm = farmOptions();
     const ZoneOptions town = townOptions();
     const ZoneOptions mine = mineOptions();
-    tabs->addTab(new ZoneTab(map.farm, sprites, farm.floors, farm.elements, this), "Farm");
-    tabs->addTab(new ZoneTab(map.town, sprites, town.floors, town.elements, this), "Town");
+    tabs->addTab(new ZoneTab(map.farm, sprites, farm.floors, farm.elements, true, this), "Farm");
+    tabs->addTab(new ZoneTab(map.town, sprites, town.floors, town.elements, false, this), "Town");
 
     QTabWidget* levels = new QTabWidget(this);
     levels->setTabPosition(QTabWidget::South);
     for (std::size_t i = 0; i < map.mineLevels.size(); ++i) {
-        levels->addTab(new ZoneTab(map.mineLevels[i], sprites, mine.floors, mine.elements, this), QString("Level %1").arg(i + 1));
+        levels->addTab(new ZoneTab(map.mineLevels[i], sprites, mine.floors, mine.elements, false, this), QString("Level %1").arg(i + 1));
     }
     tabs->addTab(levels, "Dungeon levels");
     tabs->setStyleSheet(TABS_STYLE);

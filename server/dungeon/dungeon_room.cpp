@@ -6,7 +6,7 @@
 
 #include "dungeon_config.h"
 
-DungeonRoom::DungeonRoom(uint8_t number): number(number) {
+DungeonRoom::DungeonRoom(uint8_t number): number(number), visitDepth(number) {
     if (number < 1 || number > DUNGEON_ROOM_COUNT)
         throw std::invalid_argument("Room number must be between 1 and 10");
 }
@@ -40,6 +40,8 @@ bool DungeonRoom::initialize(
 }
 
 uint8_t DungeonRoom::getNumber() const { return number; }
+uint8_t DungeonRoom::getVisitDepth() const { return visitDepth; }
+void DungeonRoom::setVisitDepth(uint8_t depth) { visitDepth = depth; }
 const ZoneMap& DungeonRoom::getMap() const { return space.getMap(); }
 const std::optional<DungeonRoomPassages>& DungeonRoom::getPassages() const { return passages; }
 

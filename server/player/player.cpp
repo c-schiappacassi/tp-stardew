@@ -21,6 +21,8 @@ Player::Player(const PlayerData& initialData, uint8_t inventoryCapacity, uint16_
     config.validate();
 }
 
+const std::string& Player::getCharacterName() const { return characterName; }
+
 void Player::setMovement(Direction direction) { activity.setMovement(direction); }
 
 void Player::advance(int step) {
@@ -93,18 +95,14 @@ bool Player::isResting() const { return activity.isResting(); }
 
 bool Player::isSleeping() const { return activity.isSleeping(); }
 
-bool Player::canUseBed() const { return activity.isBedReady() && canAct(); }
-
-void Player::leaveBedArea() { activity.leaveBedArea(); }
-
 void Player::passOut() {
     if (activity.passOut())
         gold -= static_cast<uint32_t>(static_cast<uint64_t>(gold) * config.passoutGoldPercent /
                                       100);
 }
 
-bool Player::sleep() {
-    if (!canAct())
+bool Player::sleep(std::optional<Position> bed) {
+    if (!canAct() || (bed && !location.relocate(getZone(), getDungeonLevel(), *bed, getInterior())))
         return false;
     activity.sleep();
     return true;

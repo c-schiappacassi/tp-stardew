@@ -14,5 +14,6 @@ public:
     InteriorView(const BackgroundData& d, AssetManager& a): BackgroundZoneView(d, a) {}
     void update(const InteriorData& d) {
         furniture.update(d.furniture);
+        update_loot(d.loot);
     }
 };

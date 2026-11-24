@@ -20,8 +20,6 @@ bool PlayerActivity::isResting() const {
 
 bool PlayerActivity::isSleeping() const { return state == PlayerState::Sleeping; }
 
-bool PlayerActivity::isBedReady() const { return bedReady; }
-
 bool PlayerActivity::cooldownEnded(std::chrono::steady_clock::time_point now) const {
     return now >= nextActionTime;
 }
@@ -99,6 +97,7 @@ bool PlayerActivity::passOut() {
     if (isResting())
         return false;
     state = PlayerState::Unconscious;
+    direction = Direction::Down;
     movementDirection = Direction::None;
     return true;
 }
@@ -106,6 +105,7 @@ bool PlayerActivity::passOut() {
 void PlayerActivity::sleep() {
     closeChest();
     state = PlayerState::Sleeping;
+    direction = Direction::Down;
     movementDirection = Direction::None;
 }
 
@@ -114,16 +114,12 @@ bool PlayerActivity::cancelSleep() {
         return false;
     state = PlayerState::Idle;
     movementDirection = Direction::None;
-    bedReady = false;
     return true;
 }
 
 void PlayerActivity::wakeUp() {
-    bedReady = false;
     reset();
 }
-
-void PlayerActivity::leaveBedArea() { bedReady = true; }
 
 void PlayerActivity::reset() {
     closeChest();
@@ -137,7 +133,6 @@ void PlayerActivity::restoreData(const PlayerData& saved) {
     state = saved.state == PlayerState::LookingChest ? PlayerState::Idle : saved.state;
     direction = saved.dir;
     movementDirection = Direction::None;
-    bedReady = false;
 }
 
 std::chrono::steady_clock::time_point PlayerActivity::actionReadyAt() const {

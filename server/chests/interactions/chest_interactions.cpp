@@ -6,7 +6,7 @@
 #include "entities/entity_id_generator.h"
 #include "items/ground_items.h"
 #include "player/player_manager.h"
-#include "world/interaction_targeting.h"
+#include "world/zone_map.h"
 
 namespace {
 constexpr uint16_t INTERACTION_RANGE = 32;
@@ -31,14 +31,14 @@ bool overlapsPlayer(const PlayerManager& players, const PlayerSnapshot& player, 
 
 bool ChestInteractions::canAccess(const PlayerSnapshot& player, const ChestSnapshot& chest, const ZoneMap& terrain) const {
     return supportsChests(player) && player.canAct() && player.canReach(chest.getPosition(), INTERACTION_RANGE) &&
-        InteractionTargeting{}.hasClearPath(player.getPosition(), chest.getPosition(), terrain);
+        terrain.hasClearPath(player.getPosition(), chest.getPosition());
 }
 
 std::optional<ChestSnapshot> ChestInteractions::findTarget(const PlayerSnapshot& player, const ChestManager& chests, const ZoneMap& terrain, Direction direction) const {
     const Chest* closest = nullptr;
     int64_t closestDistance = std::numeric_limits<int64_t>::max();
     for (const auto& [id, chest]: chests.getChests()) {
-        if (!InteractionTargeting{}.canReach(player, chest.getPosition(), direction, terrain, INTERACTION_RANGE))
+        if (!terrain.canReach(player.getPosition(), chest.getPosition(), direction, INTERACTION_RANGE))
             continue;
         const int64_t dx = static_cast<int64_t>(player.getPosition().getX()) - chest.getPosition().getX();
         const int64_t dy = static_cast<int64_t>(player.getPosition().getY()) - chest.getPosition().getY();
@@ -67,7 +67,8 @@ std::optional<bool> ChestInteractions::interact(PlayerManager& players, uint16_t
         return players.apply(playerId, player_action::OpenChest{target->getId()}).applied;
     }
     if (target && shovel) {
-        const auto adjacent = InteractionTargeting{}.findAdjacentPosition(player, direction, terrain, CollisionBox{entity_dimensions::DECORATION});
+        const auto adjacent = terrain.findAdjacentPosition(player.getPosition(), direction,
+            player.getCollisionBounds(player.getPosition()), CollisionBox{entity_dimensions::DECORATION});
         if (!adjacent || !terrain.sameBaseCell(*adjacent, target->getPosition()))
             return std::nullopt;
         if (!target->isEmpty() || !player.canUseTool(now) || !groundItems.drop(target->getPosition(), ItemId::Chest, 1, Quality::None, ids))
@@ -86,7 +87,8 @@ std::optional<bool> ChestInteractions::interact(PlayerManager& players, uint16_t
         return std::nullopt;
     if (!player.canPerformAction(now) || ids.getNextId() == 0)
         return false;
-    const auto position = InteractionTargeting{}.findAdjacentPosition(player, direction, terrain, CollisionBox{entity_dimensions::DECORATION});
+    const auto position = terrain.findAdjacentPosition(player.getPosition(), direction,
+        player.getCollisionBounds(player.getPosition()), CollisionBox{entity_dimensions::DECORATION});
     if (!position || overlapsPlayer(players, player, CollisionBox{entity_dimensions::DECORATION}.at(*position)))
         return false;
     const auto id = ids.getNextId();

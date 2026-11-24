@@ -41,7 +41,6 @@ struct AnimalData{
     AnimalType type = AnimalType::BrownCow;
     AnimalState state = AnimalState::Idle;
     bool needs_interaction=false;
-    // Age ? TBD si hacemos logica de que los animales llegan bebes y crecen
 };
 
 struct FurnitureData {

@@ -5,7 +5,7 @@
 #include "combat_context.h"
 
 void enemy_defeat::reward(CombatContext& context, uint16_t playerId, const Enemy& enemy, DungeonRoom& room) {
-    context.progress.defeat(playerId, room.getNumber(), enemy);
+    context.progress.defeat(playerId, room.getVisitDepth(), enemy);
     if (context.generator.roll(context.config.goldChance)) {
         room.getGroundItems().dropGold(enemy.getPosition(), context.generator.gold(), context.entityIds);
     }

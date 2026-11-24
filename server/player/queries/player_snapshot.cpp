@@ -19,7 +19,6 @@ PlayerSnapshot::PlayerSnapshot(const Player& player, const PlayerConfig& config,
         attackable(player.canBeAttacked()),
         resting(player.isResting()),
         sleeping(player.isSleeping()),
-        bedAvailable(player.canUseBed()),
         selectedTool(player.getSelectedItem() &&config.tools.contains(player.getSelectedItem()->item_id)),
         swordDamage(player.getSwordDamage()),
         swordRange(player.getSwordRange()),
@@ -41,7 +40,6 @@ bool PlayerSnapshot::canAct() const { return active; }
 bool PlayerSnapshot::canBeAttacked() const { return attackable; }
 bool PlayerSnapshot::isResting() const { return resting; }
 bool PlayerSnapshot::isSleeping() const { return sleeping; }
-bool PlayerSnapshot::canUseBed() const { return bedAvailable; }
 bool PlayerSnapshot::canPerformAction(std::chrono::steady_clock::time_point now) const {
     return active && now >= readyAt;
 }

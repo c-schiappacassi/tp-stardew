@@ -21,7 +21,7 @@ bool RoomGeometry::arePassagesValid(uint8_t number, const ZoneMap& map,const Dun
     if (!map.isWalkableBase(data.entry) || !map.isWalkableBase(data.exit)) {
         return false;
     }
-    if ((number < DUNGEON_ROOM_COUNT && !data.nextRoom) || (number == DUNGEON_ROOM_COUNT && data.nextRoom)) {
+    if (number < 1 || number > DUNGEON_ROOM_COUNT || !data.nextRoom) {
         return false;
     }
     if (data.nextRoom && (!map.isWalkableBase(*data.nextRoom) || map.sameBaseCell(data.entry, *data.nextRoom) || map.sameBaseCell(data.exit, *data.nextRoom))) {

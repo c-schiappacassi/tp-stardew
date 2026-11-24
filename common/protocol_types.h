@@ -335,6 +335,7 @@ enum class DecorId : uint8_t{
     CornerSpiderWeb,
     PottedPlants,
     SmallBlueFlower,
+    SignPost,
 };
 
 

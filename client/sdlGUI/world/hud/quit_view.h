@@ -3,13 +3,14 @@
 
 class QuitView {
 private:
+    inline static const std::string QUIT    = "Quit the game?";
     DialogView dialog;
 
 public:
     using Layout = DialogView::Layout;
 
     static DialogView::Spec spec() {
-        return {{"Quit the game?"}, {UiSpriteId::OkButton, UiSpriteId::CancelButton}, 14};
+        return {{QUIT}, {UiSpriteId::OkButton, UiSpriteId::CancelButton}, 14};
     }
 
     static Layout layout(const RenderInfo& ctx) { return DialogView::layout(ctx, spec()); }

@@ -19,6 +19,7 @@
 #include "layers/quit_layer.h"
 #include "layers/ready_to_sleep_layer.h"
 #include "layers/night_sky_layer.h"
+#include "layers/game_completed_layer.h"
 
 class UiManager {
 public:
@@ -75,6 +76,8 @@ public:
         
         ReadyToSleepLayer& sleep = emplace<ReadyToSleepLayer>(player_name);
         sky.watch(sleep);
+
+        emplace<GameCompletedLayer>(player_name);
     }
 
     UiManager(const UiManager&) = delete;

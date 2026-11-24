@@ -169,21 +169,19 @@ if(TALLER_CLIENT)
     target_link_libraries(taller_client PRIVATE taller_common SDL2pp::SDL2pp)
 endif()
 
-if(TALLER_SERVER)
-    # HEY!! TODO XXX: Change the name of the executable to the one you like!
-    add_executable(taller_server)
+if(TALLER_SERVER OR TALLER_TESTS)
+    if(TALLER_SERVER)
+        add_executable(taller_server)
+        add_dependencies(taller_server taller_common)
+    endif()
 
-    # Make them depend on taller_common lib
-    add_dependencies(taller_server taller_common)
-
-    # Add source files and enable warnings
-    # HEY!! TODO XXX: add more subfolders here
+    # The server domain is also used by the integration tests.
     add_subdirectory(server)
 
-    set_project_warnings(taller_server ${TALLER_MAKE_WARNINGS_AS_ERRORS} FALSE)
-
-    # Link the taller_common lib target
-    target_link_libraries(taller_server taller_common taller_map tomlplusplus::tomlplusplus)
+    if(TALLER_SERVER)
+        set_project_warnings(taller_server ${TALLER_MAKE_WARNINGS_AS_ERRORS} FALSE)
+        target_link_libraries(taller_server taller_common taller_map tomlplusplus::tomlplusplus)
+    endif()
 endif()
 
 if(TALLER_EDITOR)
