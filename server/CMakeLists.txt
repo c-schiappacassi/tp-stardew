@@ -41,8 +41,10 @@ target_sources(taller_server_core
         commerce/trading/merchant_trade.cpp
         commerce/shop_products.cpp
         game/game.cpp
-        game/game_setup.cpp
         game/game_manager.cpp
+        game/loading/game_loader.cpp
+        game/sessions/game_registry.cpp
+        game/sessions/game_sessions.cpp
         inventory/inventory.cpp
         chests/chest.cpp
         chests/chest_manager.cpp
@@ -87,8 +89,6 @@ target_sources(taller_server_core
         player/updates/player_updates.cpp
         player/status/player_status.cpp
         player/commands/command_router.cpp
-        game/game_session.cpp
-        game/game_loop.cpp
         dungeon/mining/mineral_generator.cpp
         dungeon/rooms/room_minerals.cpp
         dungeon/rooms/dungeon_travel.cpp
@@ -198,6 +198,10 @@ target_sources(taller_server_core
         game/game.h
         game/game_manager.h
         game/game_types.h
+        game/commands/game_command_queue.h
+        game/loading/game_loader.h
+        game/sessions/game_registry.h
+        game/sessions/game_sessions.h
         player/sessions/player_record.h
         player/sessions/player_roster.h
         inventory/inventory.h
@@ -263,7 +267,6 @@ target_sources(taller_server_core
         dungeon/loading/dungeon_loader.h
         dungeon/contracts/dungeon_layout.h
         dungeon/mining/mineral_placement.h
-        game/game_setup.h
         farm/spatial/farm_terrain.h
         farm/persistence/farm_persistence.h
         farm/persistence/farm_save_data.h
