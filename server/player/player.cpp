@@ -21,6 +21,8 @@ Player::Player(const PlayerData& initialData, uint8_t inventoryCapacity, uint16_
     config.validate();
 }
 
+const std::string& Player::getCharacterName() const { return characterName; }
+
 void Player::setMovement(Direction direction) { activity.setMovement(direction); }
 
 void Player::advance(int step) {

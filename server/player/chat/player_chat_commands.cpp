@@ -41,7 +41,7 @@ void PlayerChat::command(PlayerRoster& players, PlayerRecord& sender, const std:
         reply(sender, "Connected players:");
         for (const auto& [id, record]: players) {
             if (record.isConnected())
-                reply(sender, record.getName());
+                reply(sender, record.getPlayer().getCharacterName());
         }
         return;
     }

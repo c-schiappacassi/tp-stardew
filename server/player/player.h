@@ -40,6 +40,7 @@ private:
 public:
     Player(const PlayerData& initialData, uint8_t inventoryCapacity, uint16_t maxHealth,uint16_t maxEnergy, uint32_t initialGold, const PlayerConfig& config = {});
 
+    const std::string& getCharacterName() const;
     void setMovement(Direction direction);
     void advance(int step);
     Position getNextPosition(int step) const;

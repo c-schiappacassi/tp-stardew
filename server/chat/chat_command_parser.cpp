@@ -35,15 +35,13 @@ ParsedChatCommand trade(const std::vector<std::string>& tokens, TradeAction acti
 }
 
 ParsedChatCommand gift(const std::string& text, GiftAction action) {
-    const std::string usage = action == GiftAction::Offer ? "Usage: /gift @username [amount] (1 to 65535)" :
-        action == GiftAction::Accept ? "Usage: /accept @username" : "Usage: /reject @username";
+    const std::string usage = action == GiftAction::Offer ? "Usage: /gift @character_name [amount] (1 to 65535)" :
+        action == GiftAction::Accept ? "Usage: /accept @character_name" : "Usage: /reject @character_name";
     std::istringstream input(text);
     std::string command;
     std::string player;
     input >> command >> std::ws;
-    if (input.peek() == '@')
-        input.get();
-    if (!(input >> std::quoted(player)) || player.empty())
+    if (input.get() != '@' || !(input >> std::quoted(player)) || player.empty())
         return ChatCommandError{usage};
 
     uint32_t quantity = 1;
