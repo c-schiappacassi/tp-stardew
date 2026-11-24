@@ -72,7 +72,9 @@ private:
     static bool is_flat(PortalId id) {
         return id == PortalId::ToNextLevel;
     }
-
+    static bool is_flat(FurnitureId id) {
+        return id == FurnitureId::Bed || id == FurnitureId::BeigeRug || id == FurnitureId::BlueRug;
+    }
 public:
     explicit Background(const BackgroundData& data, AssetManager& assets) {
         if (data.interior) {
@@ -94,11 +96,16 @@ public:
         for (const FramePieceData& f : data.frame)
             props.emplace_back(f.pos, assets.get_sprite(f.id));
         for (const BuildingData& b : data.buildings)
-            props.emplace_back(b.pos, assets.get_sprite(b.id), false,
-                               map_rules::doorRowSortY(b.id, b.pos.getY(), TILE_TO_PIXEL));
+            props.emplace_back(b.pos, assets.get_sprite(b.id), false, map_rules::doorRowSortY(b.id, b.pos.getY(), TILE_TO_PIXEL));
         for (const StaticFurnitureData& f : data.furniture) {
             const FlippableSprite& fs = assets.get_sprite(f.id, f.dir);
-            props.emplace_back(f.pos, fs.sprite, fs.flip);
+            if (is_flat(f.id)) {
+                flat_props.emplace_back(f.pos, fs.sprite, fs.flip);
+            } else if (f.id == FurnitureId::BedSheet) {
+                props.emplace_back(f.pos, fs.sprite, fs.flip, static_cast<int>(f.pos.getY()) + 1);
+            } else {
+                props.emplace_back(f.pos, fs.sprite, fs.flip);
+            }
         }
         if (data.interior && data.interior->npc) {
             const NpcData& npc = *data.interior->npc;

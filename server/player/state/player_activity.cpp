@@ -97,6 +97,7 @@ bool PlayerActivity::passOut() {
     if (isResting())
         return false;
     state = PlayerState::Unconscious;
+    direction = Direction::Down;   
     movementDirection = Direction::None;
     return true;
 }
@@ -104,6 +105,7 @@ bool PlayerActivity::passOut() {
 void PlayerActivity::sleep() {
     closeChest();
     state = PlayerState::Sleeping;
+    direction = Direction::Down;
     movementDirection = Direction::None;
 }
 

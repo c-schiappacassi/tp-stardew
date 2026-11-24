@@ -322,6 +322,7 @@ namespace SpriteDefs {
         {DecorId::CornerSpiderWeb,   {SpriteId::GrassDecor, 31, 140, 16, 20}},
         {DecorId::PottedPlants,      {SpriteId::TownSpring, 368, 476, 47, 36}},
         {DecorId::SmallBlueFlower,   {SpriteId::TownSpring, 353, 432, 16, 16}},
+        {DecorId::SignPost,          {SpriteId::OutdoorsSpring, 160, 256, 16, 32}},
     };
 
     inline constexpr FurnitureDef FURNITURE[] = {
