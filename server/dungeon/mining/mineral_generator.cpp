@@ -4,11 +4,11 @@ MineralGenerator::MineralGenerator(const DungeonConfig& config, uint32_t seed): 
 
 const MineralDefinition* MineralGenerator::choose(uint8_t roomNumber) {
     std::vector<double> weights;
-    weights.reserve(definitions.size()); //es para que el push back no este re dimensionando
+    weights.reserve(definitions.size());  // es para que el push back no este re dimensionando
     double totalWeight = 0.0;
 
-    for (const auto& definition : definitions) {
-        const double weight = roomNumber >= definition.firstRoom? definition.spawnWeight : 0.0;
+    for (const auto& definition: definitions) {
+        const double weight = roomNumber >= definition.firstRoom ? definition.spawnWeight : 0.0;
         weights.push_back(weight);
         totalWeight += weight;
     }
@@ -35,7 +35,7 @@ std::optional<Mineral> MineralGenerator::create(EntityId id, uint8_t roomNumber,
 }
 
 std::optional<Stack> MineralGenerator::rollReward(ResourceType type) {
-    for (const auto& definition : definitions) {
+    for (const auto& definition: definitions) {
         if (definition.type != type) {
             continue;
         }

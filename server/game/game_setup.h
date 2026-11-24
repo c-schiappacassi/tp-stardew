@@ -3,8 +3,8 @@
 #include <cstdint>
 #include <map>
 #include <optional>
-#include "dungeon/dungeon_entrance.h"
-#include "dungeon/loading/dungeon_layout.h"
+#include "dungeon/contracts/dungeon_entrance.h"
+#include "dungeon/contracts/dungeon_layout.h"
 #include "farm/loading/farm_layout.h"
 #include "town/town_config.h"
 

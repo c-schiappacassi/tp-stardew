@@ -22,6 +22,7 @@ enum class MessageType : uint8_t {
     ItemTransfer = 0x18, // inventario a cofre
     SelectSlot = 0x19,
     DayCancel = 0x1A,
+    CloseChest = 0x1B,
 
     Status = 0x80,
     GameList = 0x81,
@@ -87,7 +88,8 @@ enum class PlayerState : uint8_t {
     Walking = 1,
     UsingTool = 2,
     Unconscious = 3,
-    Sleeping = 4
+    Sleeping = 4,
+    LookingChest = 5
 };
 
 // ENEMIES
@@ -368,6 +370,7 @@ enum class FurnitureId : uint8_t{
     GreenStool,
     BrownSofa,
     BrownArmCouch,
+    Chest,
 };
 
 enum class BuildingId : uint8_t{

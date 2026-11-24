@@ -9,9 +9,12 @@ target_sources(taller_client
     sdlGUI/asset_handling/asset_loader.cpp
 
     sdlGUI/world/background/furniture_view.cpp
+    sdlGUI/world/background/chest_view.cpp
     sdlGUI/world/background/item_view.cpp
 
+    sdlGUI/world/hud/slot_view.cpp
     sdlGUI/world/hud/hotbar_view.cpp
+    sdlGUI/world/hud/chest_inventory_view.cpp
     sdlGUI/world/hud/bar_view.cpp
     sdlGUI/world/hud/minimap_view.cpp
 
@@ -59,6 +62,7 @@ target_sources(taller_client
     sdlGUI/ui/world_input.h
     sdlGUI/ui/layers/modal_layer.h
     sdlGUI/ui/layers/chat_layer.h
+    sdlGUI/ui/layers/chest_layer.h
     sdlGUI/ui/layers/ready_to_sleep_layer.h
     sdlGUI/ui/layers/hud_layer.h
     sdlGUI/ui/layers/quit_layer.h
@@ -76,6 +80,8 @@ target_sources(taller_client
 
     sdlGUI/world/background/item_view.h
     sdlGUI/world/background/furniture_view.h
+    sdlGUI/world/background/furniture_views.h
+    sdlGUI/world/background/chest_view.h
     sdlGUI/world/background/background.h
     sdlGUI/world/background/background_zone_view.h
 
@@ -88,7 +94,9 @@ target_sources(taller_client
     sdlGUI/world/hud/dialog_view.h
     sdlGUI/world/hud/minimap_view.h
     sdlGUI/world/hud/chat_view.h
+    sdlGUI/world/hud/slot_view.h
     sdlGUI/world/hud/hotbar_view.h
+    sdlGUI/world/hud/chest_inventory_view.h
     sdlGUI/world/hud/bar_view.h
     sdlGUI/world/hud/ready_to_sleep_view.h
     sdlGUI/world/hud/night_sky_view.h

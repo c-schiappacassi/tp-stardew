@@ -20,6 +20,7 @@ private:
     Direction receiveDirection();
 
     void writeStack(MessageBuffer& out, const Stack& stack);
+    void writeOpenChest(MessageBuffer& out, const std::optional<OpenChestData>& chest);
     void writeCommunityStacks(MessageBuffer& out, const std::vector<Stack>& items);
     void writeCommunityState(MessageBuffer& out, const CommunityStateData& state);
     void writeMineralData(MessageBuffer& out, const MineralData& mineral);
@@ -49,6 +50,9 @@ public:
 
     MessageType receiveType();
     SelectSlotDTO receiveSelectSlot();
+    ItemTransferDTO receiveItemTransfer();
+    SelectItemDTO receiveSelectItem();
+    CloseChestDTO receiveCloseChest();
     CreateGameDTO receiveCreateGame();
     JoinGameDTO receiveJoinGame();
     ResumeGameDTO receiveResumeGame();

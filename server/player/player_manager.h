@@ -6,46 +6,52 @@
 #include <memory>
 #include <optional>
 #include <string>
+#include <vector>
 
-#include "player/player_record.h"
 #include "chat/chat_services.h"
-#include "chat/player_chat.h"
-#include "game/time/day_cycle.h"
-#include "ports/combatant.h"
+#include "commands/command_router.h"
+#include "player/chat/player_chat.h"
+#include "player/time/day_cycle.h"
 #include "ports/player_spawn_source.h"
-#include "player_actions.h"
-#include "player_factory.h"
-#include "player_status.h"
-#include "player_updates.h"
+#include "sessions/player_roster.h"
+#include "status/player_status.h"
+#include "updates/player_updates.h"
 
 class PlayerManager {
 private:
-    std::map<uint16_t, PlayerRecord> players;
-    uint16_t nextPlayerId = 1;
-    uint8_t maxPlayers;
-    PlayerFactory factory;
+    PlayerRoster roster;
+    DayCycle day;
+    PlayerChat chat;
+    CommandRouter commands;
     PlayerUpdates updates;
     PlayerStatus playerStatus;
-    PlayerActions actions;
-    PlayerChat chat;
     const PlayerSpawnSource& spawns;
-    const ZoneDataSource& zones;
-    const MovementRules& movement;
-    DayCycle day;
+
+    ServerStatus completeEntry(const PlayerRoster::Admission& admission);
 
 public:
-    PlayerManager(const PlayerConfig& config, const MovementRules& movement, const ZoneDataSource& zones,
-                  PlayerInteractions& interactions, const PlayerSpawnSource& spawns,
-                  uint8_t maxPlayers = 4, ChatServices chatServices = {});
+    PlayerManager(const PlayerConfig& config, const MovementRules& movement,
+                  const ZoneDataSource& zones, PlayerInteractions& interactions,
+                  const PlayerSpawnSource& spawns, uint8_t maxPlayers = 4,
+                  ChatServices chatServices = {});
 
-    ServerStatus addPlayer(const std::string& name,const PlayerData& appearance,const std::shared_ptr<OutQueue>& output);
+    PlayerManager(const PlayerManager&) = delete;
+    PlayerManager& operator=(const PlayerManager&) = delete;
+    PlayerManager(PlayerManager&&) = delete;
+    PlayerManager& operator=(PlayerManager&&) = delete;
+
+    ServerStatus addPlayer(const std::string& name, const PlayerData& appearance,const std::shared_ptr<OutQueue>& output);
     ServerStatus resumePlayer(const std::string& name, const std::shared_ptr<OutQueue>& output);
     std::optional<PlayerData> dataFor(const std::string& name) const;
     std::map<std::string, PlayerDataLocal> getPersistencePlayers() const;
     void restorePlayers(const std::map<std::string, PlayerDataLocal>& saved);
     bool isMultiplayer() const;
     std::vector<CollisionBounds> getCollisionBounds(Zone zone) const;
-    std::vector<Combatant> getCombatants();
+    std::vector<uint16_t> connectedPlayerIds() const;
+    std::vector<Combatant> combatants() const;
+    PlayerSnapshot snapshot(uint16_t playerId) const;
+    std::map<uint8_t, Stack> inventory(uint16_t playerId) const;
+    PlayerActionResult apply(uint16_t playerId, const PlayerAction& action);
     bool advanceDay(std::chrono::milliseconds elapsed);
     bool isDayEnded() const;
     std::chrono::milliseconds remainingDayTime() const;

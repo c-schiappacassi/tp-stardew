@@ -4,7 +4,7 @@
 #include <limits>
 #include <utility>
 
-#include "player/player.h"
+#include "player/player_manager.h"
 
 namespace {
 int64_t squaredDistance(const Position& from, const Position& to) {
@@ -12,19 +12,16 @@ int64_t squaredDistance(const Position& from, const Position& to) {
     const int64_t dy = static_cast<int64_t>(from.getY()) - to.getY();
     return dx * dx + dy * dy;
 }
-}
+}  // namespace
 
 bool GroundItems::add(LootData data, EntityIdGenerator& ids) {
-    if (data.quantity == 0 || data.pos.getX() < 0 || data.pos.getY() < 0 ||
-        data.pos.getX() > std::numeric_limits<uint16_t>::max() ||
+    if (data.quantity == 0 || data.pos.getX() < 0 || data.pos.getY() < 0 || data.pos.getX() > std::numeric_limits<uint16_t>::max() ||
         data.pos.getY() > std::numeric_limits<uint16_t>::max()) {
         return false;
     }
     for (auto& [id, current]: items) {
-        if (current.pos.getX() == data.pos.getX() && current.pos.getY() == data.pos.getY() &&
-            current.kind == data.kind && current.item == data.item &&
-            current.quality == data.quality &&
-            data.quantity <= std::numeric_limits<uint32_t>::max() - current.quantity) {
+        if (current.pos.getX() == data.pos.getX() && current.pos.getY() == data.pos.getY() && current.kind == data.kind && current.item == data.item &&
+            current.quality == data.quality && data.quantity <= std::numeric_limits<uint32_t>::max() - current.quantity) {
             current.quantity += data.quantity;
             return true;
         }
@@ -45,7 +42,8 @@ bool GroundItems::dropGold(const Position& position, uint32_t quantity, EntityId
     return add({0, position, ItemId::Gold, quantity, Quality::None, LootKind::Gold}, ids);
 }
 
-bool GroundItems::collect(Player& player, const std::function<bool(const Position&)>& hasClearPath) {
+bool GroundItems::collect(PlayerManager& players, uint16_t playerId, const std::function<bool(const Position&)>& hasClearPath) {
+    const auto player = players.snapshot(playerId);
     if (player.isResting()) {
         return false;
     }
@@ -60,9 +58,11 @@ bool GroundItems::collect(Player& player, const std::function<bool(const Positio
     for (const auto& [distance, id]: candidates) {
         auto& item = items.at(id);
         const uint32_t received = item.kind == LootKind::Gold ?
-            player.addGold(item.quantity) :
-            player.addItemUpTo(Stack{item.item, static_cast<uint16_t>(std::min<uint32_t>(
-                item.quantity, std::numeric_limits<uint16_t>::max())), item.quality});
+            players.apply(playerId, player_action::AddGold{item.quantity}).amount :
+            players
+                .apply(playerId,
+                    player_action::AddItemUpTo{Stack{item.item, static_cast<uint16_t>(std::min<uint32_t>(item.quantity, std::numeric_limits<uint16_t>::max())), item.quality}})
+                .amount;
         if (received == 0) {
             continue;
         }
@@ -86,7 +86,7 @@ std::vector<LootData> GroundItems::getPublicData() const {
 
 void GroundItems::restoreItems(const std::vector<LootData>& saved) {
     std::map<EntityId, LootData> restored;
-    for (const LootData& item : saved) {
+    for (const LootData& item: saved) {
         if (item.id == 0 || item.quantity == 0 || !restored.emplace(item.id, item).second) {
             throw std::invalid_argument("Invalid saved ground item");
         }

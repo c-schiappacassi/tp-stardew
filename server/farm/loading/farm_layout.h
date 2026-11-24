@@ -1,10 +1,15 @@
 #pragma once
 
+#include <map>
 #include <optional>
 #include <vector>
-#include "protocol_types.h"
-#include "world/zone_map.h"
+
+#include "chests/loading/chest_spawn.h"
 #include "world/interiors/interior_layout.h"
+#include "world/zone_map.h"
+
+#include "dtos.h"
+#include "protocol_types.h"
 
 struct FarmBackgroundTile {
     Position tile{0, 0};
@@ -27,6 +32,8 @@ struct FarmDecorationSpawn {
     ItemId item;
 };
 
+using FarmChestSpawn = ChestSpawn;
+
 struct FarmLayout {
     ZoneMap terrain;
     Position spawn{0, 0};
@@ -35,6 +42,7 @@ struct FarmLayout {
     std::vector<FarmAnimalSpawn> animals;
     std::vector<FarmCropSpawn> crops;
     std::vector<FarmDecorationSpawn> decorations;
+    std::vector<FarmChestSpawn> chests;
     std::vector<FarmBackgroundTile> background;
     std::optional<Position> mineDoor;
     std::optional<Position> mineReturn;

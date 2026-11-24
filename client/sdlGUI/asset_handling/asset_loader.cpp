@@ -194,6 +194,10 @@ namespace {
             out.frame_sprites.insert_or_assign(d.id, make_tile_anchored_sprite(d.rect));
     }
 
+    void load_chest_clips(AssetTables& out) {
+        register_rect_clips(out.clips, SpriteId::Craftables, SpriteDefs::CHEST_CLIPS, false);
+    }
+
     void load_furniture_sprites(AssetTables& out) {
         constexpr Direction ALL[] = {Direction::None, Direction::Up, Direction::Down, Direction::Left, Direction::Right};
         for (const auto& d : SpriteDefs::FURNITURE) {
@@ -302,6 +306,7 @@ AssetTables load_assets(SDL2pp::Renderer& renderer, const std::filesystem::path&
     load_building_sprites(out);
     load_frame_sprites(out);
     load_furniture_sprites(out);
+    load_chest_clips(out);
     load_skeleton_clips(out);
     load_golem_clips(out);
     load_bat_clips(out);

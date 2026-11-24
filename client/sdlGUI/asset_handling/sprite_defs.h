@@ -59,6 +59,9 @@ namespace Dimentions {
     constexpr uint16_t FLAME_CELL_H = 8;
 
     constexpr uint16_t QUALITY_SIZE = 8;
+
+    constexpr uint16_t CHEST_CELL_W = 16;
+    constexpr uint16_t CHEST_CELL_H = 32;
 }
 
 namespace SpriteDefs {
@@ -206,6 +209,7 @@ namespace SpriteDefs {
     struct FurnitureDef { FurnitureId id; Direction dir; SpriteRect rect; };
     struct PortalDef { PortalId id; SpriteRect rect; };
     struct FramePieceDef { FramePieceId id; SpriteRect rect; };
+
 
     struct InteriorDef  { InteriorId id;    SpriteRect rect; };
     inline constexpr InteriorDef INTERIORS[] = {
@@ -413,7 +417,7 @@ namespace SpriteDefs {
         {ItemId::Scallion,           SpriteId::Harvest,    240,  256, 16, 16},
         {ItemId::Potato,             SpriteId::Harvest,     0,  128, 16, 16},
         {ItemId::Pumpkin,            SpriteId::Harvest,    192,  176, 16, 16},
-        {ItemId::Chest,              SpriteId::Craftables,  32,  520, 16, 24},
+        {ItemId::Chest,              SpriteId::Craftables,  32,  512, 16, 32},
         {ItemId::Chair,              SpriteId::Furniture,   0,    0, 16, 32},
         {ItemId::Table,              SpriteId::Furniture,   0,  569, 32, 39},
         {ItemId::Bed,                SpriteId::Furniture,   0, 1032, 32, 55},
@@ -921,6 +925,25 @@ namespace SpriteDefs {
 
     inline constexpr int WALL_FLAME_STATE_MS   = 400;
     inline constexpr int WALL_FLAME_WARNING_MS = 150;
+
+
+    inline constexpr int CHEST_FRAME_MS = 60;
+
+    inline constexpr RectClipDef<ChestState> CHEST_CLIPS[] = {
+        rect_clip(ChestState::Closed,  Direction::None, true,  {{ 32, 512, Dimentions::CHEST_CELL_W, Dimentions::CHEST_CELL_H, CHEST_FRAME_MS}}),
+        rect_clip(ChestState::Opening, Direction::None, false, {{ 32, 512, Dimentions::CHEST_CELL_W, Dimentions::CHEST_CELL_H, CHEST_FRAME_MS},
+                                                                { 48, 512, Dimentions::CHEST_CELL_W, Dimentions::CHEST_CELL_H, CHEST_FRAME_MS},
+                                                                { 64, 512, Dimentions::CHEST_CELL_W, Dimentions::CHEST_CELL_H, CHEST_FRAME_MS},
+                                                                { 80, 512, Dimentions::CHEST_CELL_W, Dimentions::CHEST_CELL_H, CHEST_FRAME_MS},
+                                                                { 96, 512, Dimentions::CHEST_CELL_W, Dimentions::CHEST_CELL_H, CHEST_FRAME_MS},
+                                                                {112, 512, Dimentions::CHEST_CELL_W, Dimentions::CHEST_CELL_H, CHEST_FRAME_MS}}),
+        rect_clip(ChestState::Closing, Direction::None, false, {{112, 512, Dimentions::CHEST_CELL_W, Dimentions::CHEST_CELL_H, CHEST_FRAME_MS},
+                                                                { 96, 512, Dimentions::CHEST_CELL_W, Dimentions::CHEST_CELL_H, CHEST_FRAME_MS},
+                                                                { 80, 512, Dimentions::CHEST_CELL_W, Dimentions::CHEST_CELL_H, CHEST_FRAME_MS},
+                                                                { 64, 512, Dimentions::CHEST_CELL_W, Dimentions::CHEST_CELL_H, CHEST_FRAME_MS},
+                                                                { 48, 512, Dimentions::CHEST_CELL_W, Dimentions::CHEST_CELL_H, CHEST_FRAME_MS},
+                                                                { 32, 512, Dimentions::CHEST_CELL_W, Dimentions::CHEST_CELL_H, CHEST_FRAME_MS}}),
+    };
 
     inline constexpr RectClipDef<TrapState> WALL_FLAME_CLIPS[] = {
         rect_clip(TrapState::Inactive, Direction::Down, true,  {{ 0, 22, 11, 15, WALL_FLAME_STATE_MS}}),

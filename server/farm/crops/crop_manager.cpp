@@ -4,7 +4,8 @@
 #include <stdexcept>
 #include <utility>
 
-#include "farm/spatial/farm_reservation.h"
+#include "entities/placement/placement_reservation.h"
+#include "farm/spatial/farm_terrain.h"
 
 CropManager::CropManager(const FarmConfig& config):
     definitions(config.crops), dayLength(config.dayLength) {
@@ -21,7 +22,7 @@ const std::map<ZoneMap::Cell, std::chrono::milliseconds>& CropManager::getEmptyS
 }
 
 bool CropManager::restoreEmptySoilElapsed(const Position& position,
-    std::chrono::milliseconds elapsed, const FarmPlacement& placement) {
+    std::chrono::milliseconds elapsed, const Placement& placement) {
     const auto cell = placement.cellAt(position);
     if (!cell || elapsed.count() < 0 || elapsed >= 2 * dayLength) return false;
     const auto it = emptySoilElapsed.find(*cell);
@@ -39,9 +40,10 @@ const CropDefinition* CropManager::findDefinition(CropType type) const {
     return nullptr;
 }
 
-bool CropManager::tillSoil(const Position& position, const FarmPlacement& placement) {
+bool CropManager::tillSoil(const Position& position, const FarmTerrain& terrain) {
+    const auto& placement = terrain.getSpace();
     const auto cell = placement.cellAt(position);
-    if (!cell || !placement.isAvailable(CollisionBox{entity_dimensions::CROP}.at(position))) {
+    if (!cell || !terrain.isCultivable(position) || !placement.isAvailable(CollisionBox{entity_dimensions::CROP}.at(position))) {
         return false;
     }
     if (!tilledSoil.insert(*cell).second) return false;
@@ -49,13 +51,13 @@ bool CropManager::tillSoil(const Position& position, const FarmPlacement& placem
     return true;
 }
 
-bool CropManager::isTilled(const Position& position, const FarmPlacement& placement) const {
+bool CropManager::isTilled(const Position& position, const Placement& placement) const {
     const auto cell = placement.cellAt(position);
     return cell && tilledSoil.count(*cell) > 0;
 }
 
 bool CropManager::plant(EntityId id, const Position& position, CropType type,
-    FarmPlacement& placement) {
+    Placement& placement) {
     const auto* definition = findDefinition(type);
     const auto cell = placement.cellAt(position);
     if (!definition || id == 0 || placement.contains(id) || !cell || !tilledSoil.contains(*cell) ||
@@ -63,7 +65,7 @@ bool CropManager::plant(EntityId id, const Position& position, CropType type,
         return false;
     }
     Crop crop{id, position, *definition, dayLength};
-    FarmReservation reservation{placement, id, position, CollisionBox{entity_dimensions::CROP}};
+    PlacementReservation reservation{placement, id, position, CollisionBox{entity_dimensions::CROP}};
     if (!reservation.isReserved() || !crops.emplace(id, std::move(crop)).second) {
         return false;
     }
@@ -80,7 +82,7 @@ bool CropManager::water(EntityId id) {
     return it->second.water();
 }
 
-std::optional<FarmProduct> CropManager::harvest(EntityId id, FarmPlacement& placement,
+std::optional<FarmProduct> CropManager::harvest(EntityId id, Placement& placement,
     double luck) {
     const auto it = crops.find(id);
     if (it == crops.end()) {
@@ -128,4 +130,38 @@ const Crop* CropManager::find(EntityId id) const {
 Crop* CropManager::findMutable(EntityId id) {
     const auto it = crops.find(id);
     return it == crops.end() ? nullptr : &it->second;
+}
+
+std::size_t CropManager::care() {
+    std::size_t count = 0;
+    for (auto& [id, crop]: crops) {
+        if (crop.isHarvested())
+            continue;
+        crop.growFully();
+        ++count;
+    }
+    return count;
+}
+
+std::vector<Position> CropManager::tilledPositions(const ZoneMap& map) const {
+    std::vector<Position> result;
+    for (const auto& cell: tilledSoil) {
+        if (const auto base = map.baseAt(cell))
+            result.push_back(*base);
+    }
+    return result;
+}
+
+std::vector<std::pair<Position, uint64_t>> CropManager::emptySoilElapsedData(const ZoneMap& map) const {
+    std::vector<std::pair<Position, uint64_t>> result;
+    for (const auto& [cell, elapsed]: emptySoilElapsed) {
+        if (const auto base = map.baseAt(cell))
+            result.emplace_back(*base, static_cast<uint64_t>(elapsed.count()));
+    }
+    return result;
+}
+
+std::optional<CropData> CropManager::dataFor(EntityId id) const {
+    const auto* entity = find(id);
+    return entity ? std::optional<CropData>{entity->getPublicData()} : std::nullopt;
 }

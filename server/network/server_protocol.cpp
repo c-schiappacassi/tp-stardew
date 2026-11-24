@@ -2,10 +2,12 @@
 
 #include <algorithm>
 #include <cstdint>
-#include <set>
 #include <limits>
+#include <set>
 #include <utility>
 
+#include "constants.h"
+#include "furniture_data.h"
 #include "protocol_errors.h"
 
 namespace {
@@ -92,12 +94,24 @@ void validateFarmCounts(const FarmData& farm) {
     validateCount(farm.crops.size(), MAX_U16, "crops");
     validateCount(farm.animals.size(), MAX_U16, "animals");
     validateCount(farm.tilledSoil.size(), MAX_U16, "tilled soil");
+    validateCount(farm.furniture.size(), MAX_U16, "furniture");
 }
 
 void validatePosition(const Position& pos) {
     if (pos.getX() < 0 || pos.getY() < 0 || pos.getX() > static_cast<int>(MAX_U16) ||
         pos.getY() > static_cast<int>(MAX_U16)) {
         throw ProtocolError("Position outside protocol range");
+    }
+}
+
+void validateOpenChest(const OpenChestData& chest, const ZoneData& zone) {
+    if (!hasChest(zone, chest.id) || chest.capacity != CHEST_INVENTORY_CAPACITY || chest.items.size() > chest.capacity) {
+        throw ProtocolError("Invalid open chest");
+    }
+    for (const auto& [slot, stack]: chest.items) {
+        if (slot >= chest.capacity || stack.quantity == 0 || stack.quantity > INVENTORY_STACK_LIMIT || stack.qual > Quality::Perfect) {
+            throw ProtocolError("Invalid chest slot");
+        }
     }
 }
 
@@ -170,6 +184,8 @@ void validateStatus(const ServerStatus& status) {
     validateCount(local.items.size(), MAX_U8, "items");
     validateCount(local.newMessages.size(), MAX_U16, "chat messages");
     const auto* farm = std::get_if<FarmData>(&local.zoneData);
+    if (local.openChest)
+        validateOpenChest(*local.openChest, local.zoneData);
     if (farm) {
         validateFarmCounts(*farm);
         validateLoot(farm->loot);
@@ -179,6 +195,17 @@ void validateStatus(const ServerStatus& status) {
         validateCount(mine->current_level_data.minerals.size(), MAX_U16, "minerals");
         validateCombat(mine->current_level_data.combat);
     }
+    const auto* furniture = zoneFurniture(local.zoneData);
+    if (furniture) {
+        validateCount(furniture->size(), MAX_U16, "furniture");
+        std::set<uint32_t> ids;
+        for (const auto& item: *furniture) {
+            if (!ids.insert(item.id).second)
+                throw ProtocolError("Duplicate furniture identifier");
+        }
+    }
+    if (const auto* inside = std::get_if<InteriorData>(&local.zoneData))
+        validateLoot(inside->loot);
 }
 }  // namespace
 
@@ -270,6 +297,7 @@ void ServerProtocol::writeMineralData(MessageBuffer& out, const MineralData& min
 }
 
 void ServerProtocol::writeLevelData(MessageBuffer& out, const LevelData& level) {
+    validateCount(level.furniture.size(), MAX_U16, "level furniture");
     writePosition(out, level.entry);
     writePosition(out, level.exit);
 
@@ -278,6 +306,8 @@ void ServerProtocol::writeLevelData(MessageBuffer& out, const LevelData& level) 
         writeMineralData(out, mineral);
     }
     writeCombatData(out, level.combat);
+    out.putUint16(static_cast<uint16_t>(level.furniture.size()));
+    for (const auto& furniture: level.furniture) writeFurnitureData(out, furniture);
 }
 
 void ServerProtocol::writeCombatData(MessageBuffer& out, const DungeonCombatData& combat) {
@@ -348,6 +378,9 @@ void ServerProtocol::writeAnimalData(MessageBuffer& out, const AnimalData& anima
 }
 
 void ServerProtocol::writeFurnitureData(MessageBuffer& out, const FurnitureData& f) {
+    validatePosition(f.pos);
+    if (f.id == 0 || f.type > FurnitureId::Chest || f.dir > Direction::Right)
+        throw ProtocolError("Invalid furniture");
     out.putUint32(f.id);
     writePosition(out, f.pos);
     out.putUint8(static_cast<uint8_t>(f.type));
@@ -479,6 +512,7 @@ void ServerProtocol::writeZoneData(MessageBuffer& out, Zone currentZone,const Zo
             out.putUint8(inside->house_index);
             out.putUint16(static_cast<uint16_t>(inside->furniture.size()));
             for (const auto& furniture: inside->furniture) writeFurnitureData(out, furniture);
+            writeLootData(out, inside->loot);
             return;
         }
     }
@@ -508,9 +542,41 @@ void ServerProtocol::writePlayerDataLocal(MessageBuffer& out, const PlayerDataLo
         out.putString(message.sender);
         out.putString(message.text);
     }
+    writeOpenChest(out, localData.openChest);
+}
+
+void ServerProtocol::writeOpenChest(MessageBuffer& out, const std::optional<OpenChestData>& chest) {
+    out.putUint8(chest ? 1 : 0);
+    if (!chest)
+        return;
+    out.putUint32(chest->id);
+    out.putUint8(chest->capacity);
+    out.putUint8(static_cast<uint8_t>(chest->items.size()));
+    for (const auto& [slot, stack]: chest->items) {
+        out.putUint8(slot);
+        writeStack(out, stack);
+    }
 }
 
 // RECEIVERS (the type byte --> consumed by receiveType())
+
+ItemTransferDTO ServerProtocol::receiveItemTransfer() {
+    ItemTransferDTO dto(base.receiveString());
+    dto.chestId = base.receiveUint32();
+    dto.slot = base.receiveUint8();
+    dto.quantity = base.receiveUint16();
+    return dto;
+}
+
+SelectItemDTO ServerProtocol::receiveSelectItem() {
+    SelectItemDTO dto(base.receiveString());
+    dto.chestId = base.receiveUint32();
+    dto.slot = base.receiveUint8();
+    dto.quantity = base.receiveUint16();
+    return dto;
+}
+
+CloseChestDTO ServerProtocol::receiveCloseChest() { return CloseChestDTO(base.receiveString()); }
 
 SelectSlotDTO ServerProtocol::receiveSelectSlot() {
     SelectSlotDTO dto(base.receiveString());

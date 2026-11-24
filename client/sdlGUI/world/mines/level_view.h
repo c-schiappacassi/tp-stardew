@@ -5,6 +5,7 @@
 #include <unordered_map>
 
 #include "../background/background_zone_view.h"
+#include "../background/furniture_views.h"
 #include "../../camera.h"
 #include "../../sync_views.h"
 #include "../../render_info.h"
@@ -23,7 +24,7 @@ class LevelView : public BackgroundZoneView {
     std::unordered_map<uint32_t, EnemyView> enemies;
     std::unordered_map<uint32_t, TrapView> traps;
     std::unordered_map<uint32_t, ProjectileView> projectiles;
-    // std::unordered_map<uint32_t, ChestView> chest; // para animar que se abre, pero ver lo de adentro va a ser cosa de hud
+    FurnitureViews furniture;
 protected:
     void collect_entities(const RenderInfo& ctx, std::vector<Drawable>& out,  uint64_t& tie) override;
 

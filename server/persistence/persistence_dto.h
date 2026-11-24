@@ -19,6 +19,10 @@ struct PersistenceDTO {
     std::map<std::string, PlayerDataLocal> players;
 
     FarmData farm;
+    std::vector<InteriorData> interiors;
+    std::map<uint8_t, std::vector<FurnitureData>> dungeonFurniture;
+    std::map<uint8_t, std::vector<LootData>> dungeonStorageLoot;
+    std::map<uint32_t, std::map<uint8_t, Stack>> chestInventories;
     std::vector<std::pair<Position, uint64_t>> emptySoilElapsed;
 
     std::map<uint32_t, uint64_t> cropGrowthProgress;

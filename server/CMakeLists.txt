@@ -9,7 +9,6 @@ target_sources(taller_server_core
         dungeon/combat/combat_progress.cpp
         dungeon/combat/dungeon_combat.cpp
         dungeon/combat/combat_damage.cpp
-        dungeon/combat/combat_cheats.cpp
         dungeon/combat/enemy_defeat.cpp
         dungeon/combat/sword_combat.cpp
         dungeon/combat/enemy_behavior.cpp
@@ -20,7 +19,8 @@ target_sources(taller_server_core
         network/client_handler.cpp
         network/client_sender.cpp
         network/server_protocol.cpp
-        chat/player_chat.cpp
+        player/chat/player_chat.cpp
+        player/chat/player_gifts.cpp
         chat/chat_command_parser.cpp
         chat/cheat_chat.cpp
         community/domain/community_bundle.cpp
@@ -32,44 +32,58 @@ target_sources(taller_server_core
         community/chat/community_chat.cpp
         community/chat/community_messages.cpp
         persistence/community_persistence.cpp
-        chat/player_chat_commands.cpp
-        player/player_inventory.cpp
-        player/player_cheats.cpp
+        player/chat/player_chat_commands.cpp
         config/community_toml_reader.cpp
         commerce/merchant_chat.cpp
         commerce/market_prices.cpp
         commerce/merchant_catalog.cpp
         commerce/merchant_trade.cpp
         commerce/shop_products.cpp
-        player/player_trade.cpp
         world/world_commerce.cpp
         world/world_cheats.cpp
         game/game.cpp
         game/game_setup.cpp
         game/game_manager.cpp
         inventory/inventory.cpp
+        chests/chest.cpp
+        chests/chest_manager.cpp
+        chests/rooms/chest_room.cpp
+        world/interaction_targeting.cpp
+        world/world_chests.cpp
+        chests/queries/chest_snapshot.cpp
+        chests/commands/chest_commands.cpp
+        chests/interactions/chest_interactions.cpp
         items/ground_items.cpp
+        player/queries/player_snapshot.cpp
         player/player.cpp
+        player/state/player_activity.cpp
+        player/state/player_location.cpp
+        player/state/player_vitals.cpp
         dungeon/mining/mineral.cpp
-        dungeon/rooms/dungeon_room.cpp
+        dungeon/dungeon_room.cpp
+        dungeon/contracts/enemy_definition.cpp
+        dungeon/rooms/dungeon_rooms.cpp
+        dungeon/interactions/dungeon_interactions.cpp
+        dungeon/persistence/dungeon_persistence.cpp
         dungeon/dungeon_manager.cpp
         entities/entity_id_generator.cpp
         entities/collision_box.cpp
         entities/collision_bounds.cpp
         world/loading/map_converter.cpp
         world/zone_map.cpp
-        player/player_factory.cpp
+        player/sessions/player_factory.cpp
         player/player_manager.cpp
-        player/player_sessions.cpp
+        player/sessions/player_record.cpp
+        player/sessions/player_roster.cpp
+        player/player_config.cpp
         world/world_manager.cpp
         world/world_travel.cpp
         world/interiors/interior_manager.cpp
-        game/time/day_cycle.cpp
+        player/time/day_cycle.cpp
         town/town_map.cpp
-        player/player_updates.cpp
-        player/player_status.cpp
-        game/command_router.cpp
-        player/player_actions.cpp
+        player/updates/player_updates.cpp
+        player/status/player_status.cpp
+        player/commands/command_router.cpp
         game/game_session.cpp
         game/game_loop.cpp
         dungeon/mining/mineral_generator.cpp
@@ -80,6 +94,11 @@ target_sources(taller_server_core
         dungeon/loading/dungeon_loader.cpp
         world/zone_map_positions.cpp
         dungeon/mining/mineral_placement.cpp
+        farm/farm_product.cpp
+        farm/spatial/farm_terrain.cpp
+        farm/persistence/farm_save_data.cpp
+        farm/persistence/farm_persistence.cpp
+        farm/decorations/decoration_items.cpp
         farm/farm_config.cpp
         farm/animals/animal.cpp
         farm/animals/cow.cpp
@@ -89,12 +108,11 @@ target_sources(taller_server_core
         farm/animals/animal_movement.cpp
         farm/animals/animal_movement_config.cpp
         farm/animals/animal_species.cpp
-        farm/ports/farm_placement.cpp
-        farm/spatial/farm_space.cpp
-        farm/spatial/farm_reservation.cpp
+        entities/placement/placement.cpp
+        entities/placement/placement_space.cpp
+        entities/placement/placement_reservation.cpp
         farm/farm_manager.cpp
-        farm/farm_cheats.cpp
-        farm/farm_status.cpp
+        farm/queries/farm_status.cpp
         farm/interactions/farm_interactions.cpp
         farm/interactions/farm_targeting.cpp
         farm/loading/farm_loader.cpp
@@ -106,6 +124,9 @@ target_sources(taller_server_core
         game/time/game_clock.cpp
         world/world_farm.cpp
         player/ports/player_spawn_source.cpp
+        player/ports/movement_rules.cpp
+        player/ports/player_interactions.cpp
+        player/ports/zone_data_source.cpp
         config/game_toml_reader.cpp
         config/toml_helpers.cpp
         config/death_toml_reader.cpp
@@ -121,7 +142,7 @@ target_sources(taller_server_core
     PUBLIC
     # .h files
         dungeon/enemies/enemy.h
-        dungeon/enemies/enemy_definition.h
+        dungeon/contracts/enemy_definition.h
         dungeon/enemies/enemy_generator.h
         dungeon/enemies/enemy_navigation.h
         dungeon/combat/dungeon_combat.h
@@ -138,11 +159,13 @@ target_sources(taller_server_core
         network/client_handler.h
         network/client_sender.h
         network/server_protocol.h
-        chat/player_chat.h
+        player/chat/player_chat.h
+        player/chat/player_gifts.h
         chat/chat_command_context.h
         chat/chat_services.h
         chat/parsed_chat_command.h
         chat/commands/trade_command.h
+        chat/commands/gift_command.h
         chat/commands/cheat_command.h
         chat/commands/community_command.h
         chat/services/merchant_chat_service.h
@@ -171,46 +194,69 @@ target_sources(taller_server_core
         game/game.h
         game/game_manager.h
         game/game_types.h
-        player/player_record.h
+        player/sessions/player_record.h
+        player/sessions/player_roster.h
         inventory/inventory.h
+        chests/chest.h
+        chests/chest_manager.h
+        chests/rooms/chest_room.h
+        chests/loading/chest_spawn.h
+        world/interaction_targeting.h
+        chests/queries/chest_snapshot.h
+        chests/commands/chest_commands.h
+        chests/commands/chest_action.h
+        chests/interactions/chest_interactions.h
         items/ground_items.h
+        player/queries/player_snapshot.h
+        player/commands/player_action.h
         player/player.h
+        player/state/player_activity.h
+        player/state/player_location.h
+        player/state/player_vitals.h
         entities/entity_id.h
         entities/collision_box.h
         entities/collision_bounds.h
         entities/entity_dimensions.h
-        dungeon/rooms/dungeon_room.h
+        dungeon/dungeon_room.h
         dungeon/mining/mineral.h
+        dungeon/rooms/dungeon_rooms.h
+        dungeon/interactions/dungeon_interactions.h
+        dungeon/persistence/dungeon_persistence.h
+        dungeon/contracts/dungeon_entrance.h
         dungeon/dungeon_manager.h
         entities/entity_id_generator.h
         dungeon/dungeon_config.h
         player/player_config.h
         world/loading/map_converter.h
         world/zone_map.h
-        player/player_factory.h
+        player/sessions/player_factory.h
         player/player_manager.h
         world/world_manager.h
         world/world_travel.h
-        game/time/day_cycle.h
+        player/time/day_cycle.h
         town/town_map.h
+        player/ports/combatant.h
         player/ports/movement_rules.h
         player/ports/zone_data_source.h
         player/ports/player_interactions.h
-        player/ports/combatant.h
-        player/player_updates.h
-        player/player_status.h
-        game/command_router.h
-        player/player_actions.h
+        player/updates/player_updates.h
+        player/status/player_status.h
+        player/commands/command_router.h
         dungeon/mining/mineral_generator.h
         dungeon/rooms/room_minerals.h
         dungeon/rooms/dungeon_travel.h
         dungeon/rooms/room_geometry.h
-        dungeon/rooms/dungeon_room_passages.h
+        dungeon/contracts/dungeon_room_passages.h
         dungeon/mining/dungeon_mining.h
         dungeon/loading/dungeon_loader.h
-        dungeon/loading/dungeon_layout.h
+        dungeon/contracts/dungeon_layout.h
         dungeon/mining/mineral_placement.h
         game/game_setup.h
+        farm/spatial/farm_terrain.h
+        farm/persistence/farm_persistence.h
+        farm/persistence/farm_save_data.h
+        farm/queries/farm_prices.h
+        farm/decorations/decoration_items.h
         farm/farm_config.h
         farm/farm_constants.h
         farm/crops/crop_definition.h
@@ -222,13 +268,13 @@ target_sources(taller_server_core
         farm/animals/chicken.h
         farm/animals/animal_factory.h
         farm/animals/animal_manager.h
-        farm/ports/farm_placement.h
-        farm/spatial/farm_reservation.h
+        entities/placement/placement.h
+        entities/placement/placement_reservation.h
         farm/animals/animal_movement_config.h
         farm/animals/animal_movement.h
-        farm/spatial/farm_space.h
+        entities/placement/placement_space.h
         farm/farm_manager.h
-        farm/farm_status.h
+        farm/queries/farm_status.h
         farm/interactions/farm_interactions.h
         farm/interactions/farm_targeting.h
         farm/loading/farm_loader.h

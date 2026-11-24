@@ -1,5 +1,5 @@
-#include <chrono>
 #include <algorithm>
+#include <chrono>
 #include <iostream>
 #include <thread>
 
@@ -15,7 +15,8 @@ void Game::updateToolStates() {
 
 void Game::advancePlayers() {
     std::lock_guard<std::mutex> lock(mtx);
-    if (community.finished()) return;
+    if (community.finished())
+        return;
     playerManager.advancePlayers(PLAYER_STEP);
 }
 
@@ -35,16 +36,16 @@ bool Game::advanceWorld(std::chrono::milliseconds elapsed) {
         elapsed = std::max(elapsed, playerManager.remainingDayTime());
         endDayRequested = false;
     }
-    const auto activeTime = playerManager.isDayEnded() ? std::chrono::milliseconds{0} :
-        std::min(elapsed, playerManager.remainingDayTime());
+    const auto activeTime = playerManager.isDayEnded() ? std::chrono::milliseconds{0} : std::min(elapsed, playerManager.remainingDayTime());
     const auto remainingTime = playerManager.remainingDayTime() - activeTime;
     if (!playerManager.isDayEnded() && playerManager.hasConnectedPlayers()) {
-        world.update(activeTime, playerManager.getCollisionBounds(Zone::Farm),playerManager.getCombatants());
+        world.update(activeTime, playerManager);
     }
     updateCommunity();
-    if (community.finished()) return false;
+    if (community.finished())
+        return false;
     if (playerManager.advanceDay(elapsed)) {
-        world.finishDay(remainingTime);
+        world.finishDay(playerManager, remainingTime);
         marketPrices.finishDay();
         merchants->finishDay();
         ++currentDay;
@@ -60,7 +61,8 @@ void Game::processCommands() {
     while (should_keep_running() && input->try_pop(command)) {
         std::lock_guard<std::mutex> lock(mtx);
         playerManager.handleCommand(command, community.finished());
-        if (command.command && command.command->type() == MessageType::ExitGame) ++saveRequests;
+        if (command.command && command.command->type() == MessageType::ExitGame)
+            ++saveRequests;
         updateCommunity();
     }
 }
@@ -83,9 +85,11 @@ void Game::saveIfNeeded(bool force) {
         SaveRevision revision{};
         {
             std::lock_guard<std::mutex> lock(mtx);
-            if (!configured || !saveCallback) return;
+            if (!configured || !saveCallback)
+                return;
             revision = {saveRequests, community.getRevision(), communityRewards.getRevision()};
-            if (!force && savedRevision && *savedRevision == revision) return;
+            if (!force && savedRevision && *savedRevision == revision)
+                return;
             snapshot = buildPersistenceData();
             callback = saveCallback;
         }
@@ -98,8 +102,7 @@ void Game::saveIfNeeded(bool force) {
 }
 
 void Game::run() {
-    const auto rate = std::chrono::duration_cast<std::chrono::milliseconds>(
-            std::chrono::duration<float, std::milli>{TICK_MS});
+    const auto rate = std::chrono::duration_cast<std::chrono::milliseconds>(std::chrono::duration<float, std::milli>{TICK_MS});
     GameClock clock;
     try {
         auto nextTick = std::chrono::steady_clock::now();

@@ -3,7 +3,7 @@
 #include <set>
 #include <stdexcept>
 
-#include "farm/decorations/decoration.h"
+#include "farm/decorations/decoration_items.h"
 #include "shop_products.h"
 #include "world/world_manager.h"
 
@@ -13,7 +13,7 @@ MerchantChat::MerchantChat(WorldManager& world, const MarketPrices& prices, cons
     std::size_t rotating = 0;
     for (const auto& product : config.robin.products) {
         if (!registered.insert(product.item).second ||
-            (product.item != ItemId::Chest && !Decoration::isDecoration(product.item)) ||
+            (product.item != ItemId::Chest && !decoration_items::isDecoration(product.item)) ||
             product.rotates != (product.item != ItemId::Chest)) {
             throw std::invalid_argument("Invalid Robin catalog");
         }
@@ -46,22 +46,17 @@ std::vector<ChatMessageData> MerchantChat::catalog(NpcId merchant) const {
         messages.push_back({name, std::string(buys ? "Buying " : "Selling ") + std::string(product) +
                                   ": " + std::to_string(buys ? prices.sellingPrice(price) : prices.buyingPrice(price))});
     };
-    const auto& farmConfig = world.getFarm().getConfig();
+    const auto farmPrices = world.getFarm().prices();
     if (merchant == NpcId::Robin) {
         for (const auto& entry : robinCatalog) add(shop_products::name(entry.item), entry.price, false);
     } else if (merchant == NpcId::Clint) {
         for (const auto& entry : config.minerals) add(shop_products::name(entry.item), entry.price, true);
     } else if (merchant == NpcId::Pierre) {
         for (const auto& entry : config.seeds) add(shop_products::name(entry.item), entry.price, false);
-        for (const auto& crop : farmConfig.crops) {
-            const auto item = shop_products::cropItem(crop.type);
-            if (item) add(shop_products::name(*item), crop.basePrice, true);
-        }
-        for (const auto& animal : farmConfig.animals) {
-            add(animal.species == AnimalSpecies::Cow ? "milk" : "egg", animal.productPrice, true);
-        }
+        for (const auto& product: farmPrices.products)
+            add(shop_products::name(product.item), product.basePrice, true);
     } else if (merchant == NpcId::Marnie) {
-        for (const auto& animal : farmConfig.animals) {
+        for (const auto& animal: farmPrices.animals) {
             const auto product = animal.species == AnimalSpecies::Cow ? "cow" : "chicken";
             add(product, animal.basePrice, false);
             add(product, animal.basePrice, true);

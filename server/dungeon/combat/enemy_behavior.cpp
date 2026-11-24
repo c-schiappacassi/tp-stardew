@@ -3,41 +3,41 @@
 #include <algorithm>
 #include <limits>
 
+#include "dungeon/dungeon_room.h"
 #include "dungeon/enemies/enemy_navigation.h"
-#include "dungeon/rooms/dungeon_room.h"
-#include "player/player.h"
+#include "player/player_manager.h"
 
 #include "combat_context.h"
 #include "combat_damage.h"
 #include "projectile_combat.h"
 
 namespace {
-bool canReviveAt(const Enemy& enemy, const Position& position, const DungeonRoom& room,const std::vector<Combatant>& players) {
+bool canReviveAt(const Enemy& enemy, const Position& position, const DungeonRoom& room, const std::vector<Combatant>& players) {
     const auto bounds = enemy.bounds(position);
     if (!room.canWalk(bounds)) {
         return false;
     }
     for (const auto& actor: players) {
-        if (bounds.intersects(actor.player->getCollisionBounds(actor.player->getPosition()))) {
+        if (bounds.intersects(actor.player.getCollisionBounds(actor.player.getPosition()))) {
             return false;
         }
     }
     for (const auto& [id, other]: room.getCombat().enemies) {
-        if (other.alive() && bounds.intersects(other.bounds(other.data.pos))) {
+        if (other.alive() && bounds.intersects(other.bounds(other.getPosition()))) {
             return false;
         }
     }
     return true;
 }
 
-std::optional<Position> findRevivePosition(const Enemy& enemy, const DungeonRoom& room,const std::vector<Combatant>& players) {
-    if (canReviveAt(enemy, enemy.data.pos, room, players)) {
-        return enemy.data.pos;
+std::optional<Position> findRevivePosition(const Enemy& enemy, const DungeonRoom& room, const std::vector<Combatant>& players) {
+    if (canReviveAt(enemy, enemy.getPosition(), room, players)) {
+        return enemy.getPosition();
     }
     std::optional<Position> nearest;
     double nearestDistance = std::numeric_limits<double>::max();
     for (const auto& position: room.getMap().walkableBasePositions()) {
-        const double distance = enemy_navigation::squaredDistance(position, enemy.data.pos);
+        const double distance = enemy_navigation::squaredDistance(position, enemy.getPosition());
         if (distance < nearestDistance && canReviveAt(enemy, position, room, players)) {
             nearest = position;
             nearestDistance = distance;
@@ -46,30 +46,26 @@ std::optional<Position> findRevivePosition(const Enemy& enemy, const DungeonRoom
     return nearest;
 }
 
-void tryRevive(Enemy& enemy, const DungeonRoom& room, const std::vector<Combatant>& players,CombatTime time) {
-    if (!enemy.reviveAt || time < *enemy.reviveAt) {
+void tryRevive(Enemy& enemy, const DungeonRoom& room, const std::vector<Combatant>& players, CombatTime time) {
+    if (!enemy.readyToRevive(time)) {
         return;
     }
     const auto position = findRevivePosition(enemy, room, players);
     if (!position) {
         return;
     }
-    enemy.data.pos = *position;
-    enemy.revive();
-    enemy.nextAttack = time + CombatTime{enemy.definition.attackMs};
+    enemy.revive(*position, time);
 }
 
-const Combatant* findTarget(const Enemy& enemy, const std::vector<Combatant>& players) {
+const Combatant* findTarget(const Enemy& enemy, const std::vector<Combatant>& players, const PlayerManager& manager) {
     const Combatant* target = nullptr;
     double nearestDistance = std::numeric_limits<double>::max();
     for (const auto& actor: players) {
-        if (!actor.player->canBeAttacked()) {
+        if (!manager.snapshot(actor.id).canBeAttacked()) {
             continue;
         }
-        const auto distance =
-                enemy_navigation::squaredDistance(enemy.data.pos, actor.player->getPosition());
-        if (distance < nearestDistance ||
-            (distance == nearestDistance && target && actor.id < target->id)) {
+        const auto distance = enemy_navigation::squaredDistance(enemy.getPosition(), actor.player.getPosition());
+        if (distance < nearestDistance || (distance == nearestDistance && target && actor.id < target->id)) {
             nearestDistance = distance;
             target = &actor;
         }
@@ -77,113 +73,86 @@ const Combatant* findTarget(const Enemy& enemy, const std::vector<Combatant>& pl
     return target;
 }
 
-bool canReachTarget(const Enemy& enemy, const Player& player, const DungeonRoom& room) {
-    const auto range = enemy.definition.range;
-    const auto origin = enemy.bounds(enemy.data.pos).center();
+bool canReachTarget(const Enemy& enemy, const PlayerSnapshot& player, const DungeonRoom& room) {
+    const auto range = enemy.getRange();
+    const auto origin = enemy.bounds(enemy.getPosition()).center();
     const auto hitbox = player.getHitboxBounds();
-    const Position target{
-        static_cast<int>(std::clamp<int64_t>(origin.getX(), hitbox.getLeft(), hitbox.getRight())),
+    const Position target{static_cast<int>(std::clamp<int64_t>(origin.getX(), hitbox.getLeft(), hitbox.getRight())),
         static_cast<int>(std::clamp<int64_t>(origin.getY(), hitbox.getTop(), hitbox.getBottom()))};
     const auto distance = enemy_navigation::squaredDistance(origin, target);
-    return distance <= static_cast<double>(range) * range &&
-           room.hasClearLine(origin, target);
+    return distance <= static_cast<double>(range) * range && room.hasClearLine(origin, target);
 }
 
 void attack(CombatContext& context, Enemy& enemy, const Combatant& target, DungeonRoom& room) {
-    if (context.time < enemy.nextAttack) {
+    if (!enemy.startAttack(context.time))
         return;
-    }
-    enemy.nextAttack = context.time + CombatTime{enemy.definition.attackMs};
-    enemy.setState(EnemyState::Attacking);
-    enemy.attackingUntil =
-            context.time + CombatTime{std::min<uint32_t>(360, enemy.definition.attackMs)};
-    ++enemy.data.action;
 
-    if (enemy.data.type == EnemyType::Skull) {
-        projectile_combat::launch(context, enemy, *target.player, room);
+    if (enemy.getType() == EnemyType::Skull) {
+        projectile_combat::launch(context, enemy, target.player, room);
     } else {
-        combat_damage::apply(context, *target.player, target.id, enemy.damage(), room);
+        combat_damage::apply(context, target.id, enemy.damage(), room);
     }
 }
 
-void moveTowardTarget(Enemy& enemy, const Combatant& target, const DungeonRoom& room,CombatTime elapsed) {
-    if (enemy.data.type == EnemyType::Skull) {
+void moveTowardTarget(Enemy& enemy, const Combatant& target, const DungeonRoom& room, CombatTime elapsed) {
+    if (enemy.getType() == EnemyType::Skull) {
         return;
     }
-    const auto& targetPosition = target.player->getPosition();
-    if (enemy.targetId != target.id || !enemy.targetPosition ||
-        !room.getMap().sameBaseCell(*enemy.targetPosition, targetPosition)) {
-        enemy.targetId = target.id;
-        enemy.waypoint.reset();
-    }
-    enemy.targetPosition = targetPosition;
-    enemy.movementRemainder += enemy.speed() * static_cast<double>(elapsed.count()) / 1000.0;
-    const int steps = static_cast<int>(enemy.movementRemainder);
-    enemy.movementRemainder -= steps;
+    const auto& targetPosition = target.player.getPosition();
+    enemy.pursue(target.id, targetPosition, room.getMap());
+    const int steps = enemy.movementSteps(elapsed);
 
     for (int step = 0; step < steps; ++step) {
-        if (!enemy.waypoint ||
-            enemy_navigation::squaredDistance(enemy.data.pos, *enemy.waypoint) < 1 ||
-            room.getMap().sameBaseCell(enemy.data.pos, targetPosition)) {
-            enemy.waypoint = enemy_navigation::nextWaypoint(room, enemy.data.pos, targetPosition);
+        if (enemy.needsWaypoint(room.getMap(), targetPosition)) {
+            enemy.setWaypoint(enemy_navigation::nextWaypoint(room, enemy.getPosition(), targetPosition));
         }
-        if (!enemy.waypoint || canReachTarget(enemy, *target.player, room)) {
+        if (!enemy.getWaypoint() || canReachTarget(enemy, target.player, room)) {
             return;
         }
-        const auto direction = enemy_navigation::facing(enemy.data.pos, *enemy.waypoint);
-        const auto next = enemy_navigation::offsetPosition(enemy.data.pos, direction, 1);
+        const auto direction = enemy_navigation::facing(enemy.getPosition(), *enemy.getWaypoint());
+        const auto next = enemy_navigation::offsetPosition(enemy.getPosition(), direction, 1);
         if (!room.canWalk(enemy.bounds(next))) {
-            enemy.waypoint.reset();
+            enemy.clearWaypoint();
             return;
         }
-        enemy.data.pos = next;
-        enemy.data.dir = direction;
-        enemy.setState(EnemyState::Moving);
+        enemy.moveTo(next, direction);
     }
 }
 
-void updateEnemy(CombatContext& context, Enemy& enemy, DungeonRoom& room,const std::vector<Combatant>& players, CombatTime elapsed) {
+void updateEnemy(CombatContext& context, Enemy& enemy, DungeonRoom& room, const std::vector<Combatant>& players, CombatTime elapsed) {
     if (!enemy.alive()) {
         return;
     }
-    const auto* target = findTarget(enemy, players);
-    if (context.time < enemy.attackingUntil) {
+    const auto* target = findTarget(enemy, players, context.players);
+    if (enemy.isAttacking(context.time)) {
         enemy.setState(EnemyState::Attacking);
         return;
     }
     enemy.setState(EnemyState::Idle);
     if (!target) {
-        enemy.waypoint.reset();
-        enemy.targetPosition.reset();
-        enemy.movementRemainder = 0;
+        enemy.stopPursuit();
         return;
     }
-    enemy.data.dir = enemy_navigation::facing(enemy.data.pos, target->player->getPosition());
-    if (canReachTarget(enemy, *target->player, room)) {
+    enemy.face(enemy_navigation::facing(enemy.getPosition(), target->player.getPosition()));
+    if (canReachTarget(enemy, target->player, room)) {
         attack(context, enemy, *target, room);
     } else {
         moveTowardTarget(enemy, *target, room, elapsed);
     }
 }
-}
+}  // namespace
 
 void enemy_behavior::refreshVampirePairs(DungeonRoom& room) {
     auto& enemies = room.getCombat().enemies;
     for (auto& [id, enemy]: enemies) {
-        enemy.data.frenzied = false;
-        if (!enemy.alive() || enemy.pairId == 0) {
-            continue;
-        }
-        for (const auto& [otherId, other]: enemies) {
-            if (otherId != id && enemy.pairId == other.pairId && !other.alive()) {
-                enemy.data.frenzied = true;
-                break;
-            }
-        }
+        const bool partnerDead = enemy.alive() && enemy.getPairId() != 0 && std::any_of(enemies.begin(), enemies.end(), [&](const auto& entry) {
+            return entry.first != id && enemy.getPairId() == entry.second.getPairId() && !entry.second.alive();
+        });
+        enemy.setPairSurvivor(partnerDead);
     }
 }
 
-void enemy_behavior::update(CombatContext& context, DungeonRoom& room,const std::vector<Combatant>& players, CombatTime elapsed) {
+void enemy_behavior::update(CombatContext& context, DungeonRoom& room, const std::vector<Combatant>& players, CombatTime elapsed) {
     auto& enemies = room.getCombat().enemies;
     for (auto& [id, enemy]: enemies) {
         if (!enemy.alive()) {
@@ -196,7 +165,7 @@ void enemy_behavior::update(CombatContext& context, DungeonRoom& room,const std:
     }
     for (auto it = enemies.begin(); it != enemies.end();) {
         const auto& enemy = it->second;
-        if (enemy.removeAt && context.time >= *enemy.removeAt) {
+        if (enemy.readyToRemove(context.time)) {
             it = enemies.erase(it);
         } else {
             ++it;

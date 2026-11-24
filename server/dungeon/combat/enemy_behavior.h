@@ -10,5 +10,5 @@ struct CombatContext;
 
 namespace enemy_behavior {
 void refreshVampirePairs(DungeonRoom& room);
-void update(CombatContext& context, DungeonRoom& room, const std::vector<Combatant>& players,CombatTime elapsed);
-}
+void update(CombatContext& context, DungeonRoom& room, const std::vector<Combatant>& players, CombatTime elapsed);
+} 

@@ -5,7 +5,7 @@
 #include "community_rewards.h"
 #include "dtos.h"
 
-class Player;
+class PlayerSnapshot;
 
 class CommunityState {
     const CommunityCenter& center;
@@ -15,5 +15,5 @@ class CommunityState {
 
 public:
     CommunityState(const CommunityCenter& center, const CommunityRewards& rewards);
-    CommunityStateData forPlayer(const Player& player, const std::string& name, bool actionsBlocked) const;
+    CommunityStateData forPlayer(const PlayerSnapshot& player, const std::string& name, bool actionsBlocked) const;
 };

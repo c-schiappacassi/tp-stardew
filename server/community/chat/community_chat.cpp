@@ -1,24 +1,19 @@
 #include "community_chat.h"
 
 #include "commerce/shop_products.h"
-#include "player/player.h"
+#include "player/player_manager.h"
+
 #include "community_messages.h"
 
-CommunityChat::CommunityChat(CommunityCenter& center, CommunityRewards& rewards) :
-    center(center), donations(center), rewards(rewards), snapshot(center, rewards) {}
+CommunityChat::CommunityChat(CommunityCenter& center, CommunityRewards& rewards): center(center), donations(center), rewards(rewards), snapshot(center, rewards) {}
 
-std::vector<ChatMessageData> CommunityChat::execute(
-    const ChatCommandContext& context, const CommunityCommand& command) {
+std::vector<ChatMessageData> CommunityChat::execute(const ChatCommandContext& context, const CommunityCommand& command) {
     return std::visit([&](const auto& request) { return execute(context, request); }, command);
 }
 
-std::vector<ChatMessageData> CommunityChat::execute(
-    const ChatCommandContext&, const CommunityStatusCommand& command) {
-    return CommunityMessages::status(center, command.bundle);
-}
+std::vector<ChatMessageData> CommunityChat::execute(const ChatCommandContext&, const CommunityStatusCommand& command) { return CommunityMessages::status(center, command.bundle); }
 
-std::vector<ChatMessageData> CommunityChat::execute(
-    const ChatCommandContext& context, const CommunityRewardsCommand&) {
+std::vector<ChatMessageData> CommunityChat::execute(const ChatCommandContext& context, const CommunityRewardsCommand&) {
     auto messages = collectRewards(context);
     const auto pending = CommunityMessages::pending(rewards.pendingFor(context.playerName));
     messages.insert(messages.end(), pending.begin(), pending.end());
@@ -28,28 +23,27 @@ std::vector<ChatMessageData> CommunityChat::execute(
     return messages;
 }
 
-std::vector<ChatMessageData> CommunityChat::execute(
-    const ChatCommandContext& context, const DonateCoinsCommand& command) {
-    const auto result = donations.donateCoins(context.player, command.quantity, context.actionsBlocked);
+std::vector<ChatMessageData> CommunityChat::execute(const ChatCommandContext& context, const DonateCoinsCommand& command) {
+    const auto result = donations.donateCoins(context.players, context.playerId, command.quantity, context.actionsBlocked);
     return {CommunityMessages::donation(center, result)};
 }
 
-std::vector<ChatMessageData> CommunityChat::execute(
-    const ChatCommandContext& context, const DonateItemCommand& command) {
+std::vector<ChatMessageData> CommunityChat::execute(const ChatCommandContext& context, const DonateItemCommand& command) {
     const auto item = shop_products::item(command.product);
     if (!item) {
         return {CommunityMessages::donation(center, {CommunityDonationError::UnsupportedItem, 0})};
     }
-    const auto result = donations.donateItem(context.player, *item, command.quantity, context.actionsBlocked);
+    const auto result = donations.donateItem(context.players, context.playerId, *item, command.quantity, context.actionsBlocked);
     return {CommunityMessages::donation(center, result, item)};
 }
 
 std::vector<ChatMessageData> CommunityChat::completeCheat(const CheatCommand& command) {
     if (command.action == CheatAction::CompleteAllBundles) {
-        for (const auto bundle : community_bundle::all) center.complete(bundle);
+        for (const auto bundle: community_bundle::all) center.complete(bundle);
     } else if (command.action == CheatAction::CompleteBundle) {
         const auto bundle = community_bundle::fromName(command.target);
-        if (!bundle) return {CommunityMessages::message("Unknown bundle. Use crops, metals, animals, combat or money.")};
+        if (!bundle)
+            return {CommunityMessages::message("Unknown bundle. Use crops, metals, animals, combat or money.")};
         center.complete(*bundle);
     } else {
         return {CommunityMessages::message("Unknown community center cheat.")};
@@ -58,22 +52,21 @@ std::vector<ChatMessageData> CommunityChat::completeCheat(const CheatCommand& co
 }
 
 std::vector<ChatMessageData> CommunityChat::locationMessages(const ChatCommandContext& context) {
-    if (!CommunityDonations::isInsideCenter(context.player)) {
+    if (!CommunityDonations::isInsideCenter(context.players.snapshot(context.playerId))) {
         visitors.erase(context.playerId);
         return {};
     }
-    if (!visitors.insert(context.playerId).second) return {};
-    return {
-        CommunityMessages::message("Welcome! /center lists the bundles; /center metals shows the details."),
-        CommunityMessages::message("/donate product amount | /donate_coins amount | /rewards")
-    };
+    if (!visitors.insert(context.playerId).second)
+        return {};
+    return {CommunityMessages::message("Welcome! /center lists the bundles; /center metals shows the details."),
+        CommunityMessages::message("/donate product amount | /donate_coins amount | /rewards")};
 }
 
 std::vector<ChatMessageData> CommunityChat::collectRewards(const ChatCommandContext& context) {
-    auto messages = CommunityMessages::delivery(rewards.collect(context.player, context.playerName));
+    auto messages = CommunityMessages::delivery(rewards.collect(context.players, context.playerId, context.playerName));
     if (center.finished() && victoryRecipients.insert(context.playerName).second) {
-        messages.push_back(CommunityMessages::message(
-            "Congratulations! All community center bundles are complete. You finished the game."));
+        messages.push_back(CommunityMessages::message("Congratulations! All community center bundles are "
+                                                      "complete. You finished the game."));
     }
     return messages;
 }
@@ -82,20 +75,21 @@ CommunityDonationReply CommunityChat::donate(const ChatCommandContext& context, 
     CommunityDonationResult result;
     std::optional<ItemId> item;
     if (command.kind == DonationKind::Coins) {
-        result = donations.donateCoins(context.player, command.quantity, context.actionsBlocked);
+        result = donations.donateCoins(context.players, context.playerId, command.quantity, context.actionsBlocked);
     } else if (command.kind == DonationKind::Item) {
-        const auto selected = context.player.getInventoryItems().find(command.slot);
-        if (selected != context.player.getInventoryItems().end()) item = selected->second.item_id;
-        result = donations.donateSlot(context.player, command.slot, command.quantity, context.actionsBlocked);
+        const auto items = context.players.inventory(context.playerId);
+        const auto selected = items.find(command.slot);
+        if (selected != items.end())
+            item = selected->second.item_id;
+        result = donations.donateSlot(context.players, context.playerId, command.slot, command.quantity, context.actionsBlocked);
     } else {
         result.error = CommunityDonationError::UnsupportedItem;
     }
-    return {{command.requestId, command.kind, command.slot, result.error, result.amount},
-            {CommunityMessages::donation(center, result, item)}};
+    return {{command.requestId, command.kind, command.slot, result.error, result.amount}, {CommunityMessages::donation(center, result, item)}};
 }
 
 CommunityStateData CommunityChat::state(const ChatCommandContext& context) const {
-    return snapshot.forPlayer(context.player, context.playerName, context.actionsBlocked);
+    return snapshot.forPlayer(context.players.snapshot(context.playerId), context.playerName, context.actionsBlocked);
 }
 
 void CommunityChat::onDisconnect(uint16_t playerId) noexcept { visitors.erase(playerId); }

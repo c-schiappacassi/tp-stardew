@@ -155,7 +155,10 @@ struct Clip {
 };
 
 
-using Action = std::variant<PlayerState, AnimalState, EnemyState, TrapState, FlameType>;
+// Estados de animación del cofre (solo cliente): la tapa se abre, se cierra, o está cerrado.
+enum class ChestState : uint8_t { Closed, Opening, Closing };
+
+using Action = std::variant<PlayerState, AnimalState, EnemyState, TrapState, FlameType, ChestState>;
 
 struct ClipId {
     SpriteId sprite_id;

@@ -3,34 +3,26 @@
 #include <algorithm>
 #include <limits>
 
+#include "dungeon/dungeon_room.h"
 #include "dungeon/enemies/enemy_navigation.h"
-#include "dungeon/rooms/dungeon_room.h"
-#include "player/player.h"
+#include "player/player_manager.h"
 
 #include "combat_context.h"
 #include "combat_damage.h"
 #include "projectile_combat.h"
 
 namespace {
-CollisionBounds trapBounds(const TrapData& trap) {
-    return CollisionBox{16, trap.type == TrapType::Spikes ? 16 : 8}.at(trap.pos);
-}
+CollisionBounds trapBounds(const TrapData& trap) { return CollisionBox{16, trap.type == TrapType::Spikes ? 16 : 8}.at(trap.pos); }
 
 bool isValid(const TrapData& trap, const DungeonRoom& room, const DungeonRoomPassages& passages) {
     const auto& map = room.getMap();
-    if (!room.canWalk(trapBounds(trap)) ||
-        map.sameBaseCell(trap.pos, passages.entry) || map.sameBaseCell(trap.pos, passages.exit) ||
-        std::any_of(passages.extraExits.begin(), passages.extraExits.end(),
-                    [&](const Position& door) { return map.sameBaseCell(trap.pos, door); }) ||
-        (passages.nextRoom && map.sameBaseCell(trap.pos, *passages.nextRoom)) ||
-        static_cast<uint8_t>(trap.type) > static_cast<uint8_t>(TrapType::WallFlame) ||
-        trap.dir == Direction::None ||
-        static_cast<uint8_t>(trap.dir) > static_cast<uint8_t>(Direction::Right)) {
+    if (!room.canWalk(trapBounds(trap)) || map.sameBaseCell(trap.pos, passages.entry) || map.sameBaseCell(trap.pos, passages.exit) ||
+        (passages.nextRoom && map.sameBaseCell(trap.pos, *passages.nextRoom)) || static_cast<uint8_t>(trap.type) > static_cast<uint8_t>(TrapType::WallFlame) ||
+        trap.dir == Direction::None || static_cast<uint8_t>(trap.dir) > static_cast<uint8_t>(Direction::Right)) {
         return false;
     }
     if (trap.type == TrapType::WallFlame) {
-        const auto support =
-                enemy_navigation::offsetPosition(trap.pos, trap.dir, -map.getCellSize());
+        const auto support = enemy_navigation::offsetPosition(trap.pos, trap.dir, -map.getCellSize());
         if (map.isWalkableBase(support)) {
             return false;
         }
@@ -38,8 +30,7 @@ bool isValid(const TrapData& trap, const DungeonRoom& room, const DungeonRoomPas
     return true;
 }
 
-bool isOccupied(const TrapData& trap, const DungeonRoom& room,
-                const std::vector<Position>& reserved, const std::vector<TrapData>& chosen) {
+bool isOccupied(const TrapData& trap, const DungeonRoom& room, const std::vector<Position>& reserved, const std::vector<TrapData>& chosen) {
     const auto bounds = trapBounds(trap);
     for (const auto& position: reserved) {
         if (bounds.intersects(CollisionBox{16, 16}.at(position))) {
@@ -52,15 +43,14 @@ bool isOccupied(const TrapData& trap, const DungeonRoom& room,
         }
     }
     for (const auto& [id, enemy]: room.getCombat().enemies) {
-        if (enemy.alive() && bounds.intersects(enemy.bounds(enemy.data.pos))) {
+        if (enemy.alive() && bounds.intersects(enemy.bounds(enemy.getPosition()))) {
             return true;
         }
     }
     return false;
 }
 
-std::vector<TrapData> chooseTraps(const DungeonRoom& room, const DungeonRoomLayout& layout,
-                                const EnemyConfig& config, std::mt19937& random) {
+std::vector<TrapData> chooseTraps(const DungeonRoom& room, const DungeonRoomLayout& layout, const EnemyConfig& config, std::mt19937& random) {
     std::vector<TrapData> chosen;
     const auto positions = room.getMap().walkableBasePositions();
     // Place wall traps first so spikes cannot take the few available wall cells.
@@ -71,19 +61,16 @@ std::vector<TrapData> chooseTraps(const DungeonRoom& room, const DungeonRoomLayo
         }
         std::vector<TrapData> candidates;
         for (const auto& position: positions) {
-            if (position.getX() > std::numeric_limits<uint16_t>::max() ||
-                position.getY() > std::numeric_limits<uint16_t>::max()) {
+            if (position.getX() > std::numeric_limits<uint16_t>::max() || position.getY() > std::numeric_limits<uint16_t>::max()) {
                 continue;
             }
             for (const auto direction: {Direction::Up, Direction::Down, Direction::Left, Direction::Right}) {
                 const TrapData candidate{0, position, direction, type, TrapState::Inactive, 0};
-                if (!isValid(candidate, room, layout.passages) ||
-                    isOccupied(candidate, room, layout.reservedPositions, chosen)) {
+                if (!isValid(candidate, room, layout.passages) || isOccupied(candidate, room, layout.reservedPositions, chosen)) {
                     continue;
                 }
                 if (type == TrapType::WallFlame) {
-                    const auto front = enemy_navigation::offsetPosition(position, direction,
-                                                                        room.getMap().getCellSize());
+                    const auto front = enemy_navigation::offsetPosition(position, direction, room.getMap().getCellSize());
                     if (!room.canWalk(CollisionBox{16, 8}.at(front))) {
                         continue;
                     }
@@ -134,10 +121,9 @@ void updateFlameRange(Trap& trap, const DungeonRoom& room, const EnemyConfig& co
     }
 }
 
-}
+}  // namespace
 
-bool trap_combat::populate(DungeonRoom& room, const DungeonRoomLayout& layout, const EnemyConfig& config,
-                           EntityIdGenerator& ids, std::mt19937& random) {
+bool trap_combat::populate(DungeonRoom& room, const DungeonRoomLayout& layout, const EnemyConfig& config, EntityIdGenerator& ids, std::mt19937& random) {
     std::map<uint32_t, Trap> prepared;
     auto preparedIds = ids;
     auto preparedRandom = random;
@@ -167,7 +153,7 @@ bool trap_combat::populate(DungeonRoom& room, const DungeonRoomLayout& layout, c
     return true;
 }
 
-void trap_combat::update(CombatContext& context, DungeonRoom& room,const std::vector<Combatant>& players) {
+void trap_combat::update(CombatContext& context, DungeonRoom& room, const std::vector<Combatant>& players) {
     for (auto& [id, trap]: room.getCombat().traps) {
         if (trap.data.type == TrapType::WallFlame) {
             updateFlameRange(trap, room, context.config);
@@ -184,14 +170,12 @@ void trap_combat::update(CombatContext& context, DungeonRoom& room,const std::ve
             continue;
         }
         for (const auto& actor: players) {
-            if (!actor.player->canBeAttacked() || context.time < trap.nextHits[actor.id]) {
+            if (!context.players.snapshot(actor.id).canBeAttacked() || context.time < trap.nextHits[actor.id]) {
                 continue;
             }
-            if (trapBounds(trap.data).intersects(
-                        actor.player->getHitboxBounds())) {
+            if (trapBounds(trap.data).intersects(actor.player.getHitboxBounds())) {
                 trap.nextHits[actor.id] = context.time + CombatTime{context.config.trapHitMs};
-                combat_damage::apply(context, *actor.player, actor.id, context.config.trapDamage,
-                                     room);
+                combat_damage::apply(context, actor.id, context.config.trapDamage, room);
             }
         }
     }
