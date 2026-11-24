@@ -8,6 +8,7 @@
 #include "entities/entity_id_generator.h"
 #include "farm/farm_manager.h"
 #include "farm/loading/farm_layout.h"
+#include "farm/queries/farm_prices.h"
 #include "interiors/interior_manager.h"
 #include "persistence/persistence_dto.h"
 #include "player/ports/movement_rules.h"
@@ -45,6 +46,9 @@ public:
     void restoreFarm(const PersistenceDTO& saved);
     void saveFarmAndStorage(PersistenceDTO& saved) const;
     std::optional<NpcData> nearbyMerchant(const PlayerSnapshot& player, Direction direction = Direction::None) const;
+    FarmPrices farmPrices() const;
+    std::optional<uint32_t> animalBasePrice(AnimalSpecies species) const;
+    std::optional<uint32_t> productBasePrice(ItemId item) const;
     bool buyAnimals(AnimalSpecies species, uint16_t quantity, std::optional<AnimalType> variant = std::nullopt);
     bool sellAnimals(AnimalSpecies species, uint16_t quantity);
     void update(std::chrono::milliseconds elapsed, PlayerManager& players, std::chrono::steady_clock::time_point now = std::chrono::steady_clock::now());

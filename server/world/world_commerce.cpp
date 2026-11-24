@@ -34,6 +34,12 @@ std::optional<NpcData> WorldManager::nearbyMerchant(const PlayerSnapshot& player
     return npc;
 }
 
+FarmPrices WorldManager::farmPrices() const { return farm.prices(); }
+
+std::optional<uint32_t> WorldManager::animalBasePrice(AnimalSpecies species) const { return farm.animalBasePrice(species); }
+
+std::optional<uint32_t> WorldManager::productBasePrice(ItemId item) const { return farm.productBasePrice(item); }
+
 bool WorldManager::buyAnimals(AnimalSpecies species, uint16_t quantity, std::optional<AnimalType> variant) {
     return farm.buyAnimals(species, quantity, variant, entityIds, animalRandom);
 }

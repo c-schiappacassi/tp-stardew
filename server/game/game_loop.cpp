@@ -46,8 +46,7 @@ bool Game::advanceWorld(std::chrono::milliseconds elapsed) {
         return false;
     if (playerManager.advanceDay(elapsed)) {
         world.finishDay(playerManager, remainingTime);
-        marketPrices.finishDay();
-        merchants->finishDay();
+        commerce->finishDay();
         ++currentDay;
         ++saveRequests;
         updateCommunity();

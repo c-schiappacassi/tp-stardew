@@ -3,11 +3,12 @@
 #include <map>
 #include <string>
 
-#include "commerce/market_prices.h"
 #include "community/domain/community_center.h"
+#include "protocol_types.h"
 
 #include "community_reward_data.h"
 
+class CommerceManager;
 class PlayerManager;
 class PlayerSnapshot;
 class WorldManager;
@@ -16,7 +17,7 @@ enum class AnimalSpecies;
 class CommunityRewards {
     const CommunityCenter& center;
     WorldManager& world;
-    MarketPrices& market;
+    CommerceManager& commerce;
     std::map<std::string, CommunityPlayerRewards> players;
     bool marketRewardScheduled = false;
     uint64_t revision = 0;
@@ -25,7 +26,7 @@ class CommunityRewards {
     void unlock(PlayerManager& playerManager, uint16_t playerId, CommunityBundle bundle, CommunityPlayerRewards& rewards);
 
 public:
-    CommunityRewards(const CommunityCenter& center, WorldManager& world, MarketPrices& market);
+    CommunityRewards(const CommunityCenter& center, WorldManager& world, CommerceManager& commerce);
     void updateMarket();
     CommunityRewardDelivery collect(PlayerManager& playerManager, uint16_t playerId, const std::string& name);
     CommunityPlayerRewards pendingFor(const std::string& name) const;

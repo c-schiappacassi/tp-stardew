@@ -34,10 +34,11 @@ target_sources(taller_server_core
         persistence/community_persistence.cpp
         player/chat/player_chat_commands.cpp
         config/community_toml_reader.cpp
-        commerce/merchant_chat.cpp
+        commerce/commerce_manager.cpp
+        commerce/chat/merchant_chat.cpp
         commerce/market_prices.cpp
-        commerce/merchant_catalog.cpp
-        commerce/merchant_trade.cpp
+        commerce/catalog/merchant_catalog.cpp
+        commerce/trading/merchant_trade.cpp
         commerce/shop_products.cpp
         world/world_commerce.cpp
         world/world_cheats.cpp
@@ -187,7 +188,10 @@ target_sources(taller_server_core
         persistence/community_persistence.h
         persistence/community_save_data.h
         config/community_toml_reader.h
-        commerce/merchant_chat.h
+        commerce/commerce_manager.h
+        commerce/chat/merchant_chat.h
+        commerce/catalog/merchant_catalog.h
+        commerce/trading/merchant_trade.h
         commerce/market_prices.h
         commerce/shop_config.h
         commerce/shop_products.h

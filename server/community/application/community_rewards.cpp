@@ -5,14 +5,15 @@
 #include <stdexcept>
 #include <utility>
 
+#include "commerce/commerce_manager.h"
 #include "player/player_manager.h"
 #include "world/world_manager.h"
 
-CommunityRewards::CommunityRewards(const CommunityCenter& center, WorldManager& world, MarketPrices& market): center(center), world(world), market(market) {}
+CommunityRewards::CommunityRewards(const CommunityCenter& center, WorldManager& world, CommerceManager& commerce): center(center), world(world), commerce(commerce) {}
 
 void CommunityRewards::updateMarket() {
     if (center.isComplete(CommunityBundle::Money) && !marketRewardScheduled) {
-        market.scheduleDiscount();
+        commerce.scheduleDiscount();
         marketRewardScheduled = true;
         ++revision;
     }
@@ -84,7 +85,7 @@ CommunityPlayerRewards CommunityRewards::pendingFor(const std::string& name) con
 }
 
 const std::map<std::string, CommunityPlayerRewards>& CommunityRewards::getPlayers() const { return players; }
-MarketDiscount CommunityRewards::discountState() const { return market.discountState(); }
+MarketDiscount CommunityRewards::discountState() const { return commerce.discountState(); }
 uint64_t CommunityRewards::getRevision() const { return revision; }
 
 void CommunityRewards::validate(const std::map<std::string, CommunityPlayerRewards>& saved, const CommunityProgress& progress, MarketDiscount discount) const {
@@ -117,6 +118,6 @@ void CommunityRewards::restore(std::map<std::string, CommunityPlayerRewards> sav
     validate(saved, center.getProgress(), discount);
     players = std::move(saved);
     marketRewardScheduled = center.isComplete(CommunityBundle::Money);
-    market.restoreDiscount(discount);
+    commerce.restoreDiscount(discount);
     ++revision;
 }
