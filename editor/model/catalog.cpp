@@ -180,6 +180,7 @@ const std::vector<ElementInfo>& elements() {
         decor(DecorId::CornerSpiderWeb, "Corner spider web", "enviroment/grass.png", 31, 140, 16, 20),
         decor(DecorId::PottedPlants, "Potted plants", TOWN, 368, 476, 47, 36),
         decor(DecorId::SmallBlueFlower, "Small blue flower", TOWN, 353, 432, 16, 16),
+        decor(DecorId::SignPost, "Sign post", OUTDOORS, 160, 256, 16, 32),
 
         portal(PortalId::FarmToMine, "Mine entrance", OUTDOORS, 608,160,48,48),
         portal(PortalId::ToNextLevel, "Ladder to next level",  "caverns/level_portals.png", 0,0,16,16),

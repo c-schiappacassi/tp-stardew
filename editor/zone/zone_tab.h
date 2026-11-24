@@ -17,7 +17,7 @@ class ZoneTab : public QWidget {
     Q_OBJECT
 
 public:
-    ZoneTab(ZoneMap& zone, const Sprites& sprites, const std::vector<TileTextureId>& floors, const std::vector<ElementId>& elements, QWidget* parent = nullptr);
+    ZoneTab(ZoneMap& zone, const Sprites& sprites, const std::vector<TileTextureId>& floors, const std::vector<ElementId>& elements, bool farming, QWidget* parent = nullptr);
 
 private:
     void selectTool(const Tool& tool);

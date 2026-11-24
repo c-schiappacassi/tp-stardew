@@ -7,6 +7,8 @@
 #include <QLabel>
 #include <QPushButton>
 #include <QVBoxLayout>
+#include <fstream>
+#include <string>
 
 #include "menu_helpers.h"
 #include "qt_constants.h"
@@ -82,7 +84,13 @@ void MapSelector::chooseCustomMap() {
         return;
     }
     customMap = chosen;
-    customLabel->setText(QFileInfo(chosen).completeBaseName());
+    std::ifstream file((CUSTOM_MAPS_PATH + chosen).toStdString());
+    std::string word;
+    while (file >> word && word != "player_houses") {}
+    int players = 0;
+    file >> word >> players; //saltea el =
+    customLabel->setText(QString("%1\n%2 player map").arg(QFileInfo(chosen).completeBaseName()).arg(players));
+
 
     defaults->setExclusive(false);
     if (QAbstractButton* checked = defaults->checkedButton()) {
