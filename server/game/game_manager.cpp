@@ -40,10 +40,37 @@ GameSession GameManager::createGame(const CreateGameDTO& dto, const std::shared_
     }
 }
 
+std::shared_ptr<Game> GameManager::loadSavedGame(const std::string& code) {
+    PersistenceDTO saved;
+    std::string mapPath;
+    {
+        std::lock_guard<std::mutex> saveLock(persistenceMtx);
+        if (!persistence.gameExists(code))
+            return nullptr;
+        saved = persistence.loadGame(code);
+        mapPath = persistence.mapPathFor(code);
+    }
+    auto prepared = GameLoader::prepare(mapPath, saved.mapId);
+    auto game = std::make_shared<Game>(saved.id, saved.farmName, saved.mapId, std::move(prepared), config);
+    game->restorePersistenceData(saved);
+    return game;
+}
+
 GameSession GameManager::joinGame(const JoinGameDTO& dto, const std::shared_ptr<OutQueue>& output) {
     std::lock_guard<std::mutex> lock(lifecycleMtx);
-    const auto game = games.find(dto.code);
-    return game ? game->joinGame(dto, output) : GameSessions::failure("No game exists with that code");
+    if (const auto game = games.find(dto.code))
+        return game->joinGame(dto, output);
+    try {
+        auto game = loadSavedGame(dto.code);
+        if (!game)
+            return GameSessions::failure("No game exists with that code");
+        auto session = game->joinGame(dto, output);
+        if (session.status.status == StatusCode::Ok)
+            startGame(dto.code, game);
+        return session;
+    } catch (const std::exception& error) {
+        return GameSessions::failure(std::string("Error restoring the game: ") + error.what());
+    }
 }
 
 GameSession GameManager::resumeGame(const ResumeGameDTO& dto, const std::shared_ptr<OutQueue>& output) {
@@ -51,20 +78,9 @@ GameSession GameManager::resumeGame(const ResumeGameDTO& dto, const std::shared_
     if (const auto game = games.find(dto.gameId))
         return game->resumeGame(dto, output);
     try {
-        PersistenceDTO saved;
-        std::string mapPath;
-        {
-            std::lock_guard<std::mutex> saveLock(persistenceMtx);
-            if (!persistence.gameExists(dto.gameId))
-                return GameSessions::failure("Could not restore the game");
-            saved = persistence.loadGame(dto.gameId);
-            mapPath = persistence.mapPathFor(dto.gameId);
-        }
-        if (!saved.players.contains(dto.userName))
-            return GameSessions::failure("You do not have a player in this game");
-        auto prepared = GameLoader::prepare(mapPath, saved.mapId);
-        auto game = std::make_shared<Game>(saved.id, saved.farmName, saved.mapId, std::move(prepared), config);
-        game->restorePersistenceData(saved);
+        auto game = loadSavedGame(dto.gameId);
+        if (!game)
+            return GameSessions::failure("Could not restore the game");
         auto session = game->resumeGame(dto, output);
         if (session.status.status != StatusCode::Ok)
             return session;
@@ -94,13 +110,20 @@ CommandSubmission GameManager::enqueueCommand(const std::string& gameId, uint16_
 
 qtStatus GameManager::checkJoin(const CheckCodeDTO& dto) {
     std::lock_guard<std::mutex> lock(lifecycleMtx);
-    const auto game = games.find(dto.code);
     qtStatus reply{};
-    if (game) {
-        reply = game->checkJoin(dto);
-    } else {
+    try {
+        auto game = games.find(dto.code);
+        if (!game)
+            game = loadSavedGame(dto.code);
+        if (game) {
+            reply = game->checkJoin(dto);
+        } else {
+            reply.status = StatusCode::Error;
+            reply.errorMsg = "No game exists with that code";
+        }
+    } catch (const std::exception& error) {
         reply.status = StatusCode::Error;
-        reply.errorMsg = "No game exists with that code";
+        reply.errorMsg = std::string("Error restoring the game: ") + error.what();
     }
     return reply;
 }

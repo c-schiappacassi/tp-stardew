@@ -21,6 +21,7 @@ private:
     std::mutex persistenceMtx;
     GameRegistry games;
 
+    std::shared_ptr<Game> loadSavedGame(const std::string& code);
     void startGame(const std::string& id, const std::shared_ptr<Game>& game);
 
 public:
