@@ -86,7 +86,9 @@ enum class SpriteId : uint16_t {
     
     Harvest,
     Craftables,
-    NightSky
+    NightSky,
+    DaySky,
+    Junimo
 };
 
 enum class UiSpriteId : uint8_t {
@@ -158,7 +160,10 @@ struct Clip {
 // Estados de animación del cofre (solo cliente): la tapa se abre, se cierra, o está cerrado.
 enum class ChestState : uint8_t { Closed, Opening, Closing };
 
-using Action = std::variant<PlayerState, AnimalState, EnemyState, TrapState, FlameType, ChestState>;
+// Pantalla de fin de juego: el mismo baile a tres velocidades distintas (para que no bailen todos al unisono).
+enum class JunimoState : uint8_t { DanceSlow, Dance, DanceFast };
+
+using Action = std::variant<PlayerState, AnimalState, EnemyState, TrapState, FlameType, ChestState, JunimoState>;
 
 struct ClipId {
     SpriteId sprite_id;

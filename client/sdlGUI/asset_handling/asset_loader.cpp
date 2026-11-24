@@ -117,6 +117,10 @@ namespace {
         register_clips(out.clips, SpriteDefs::SKULL_SET, SpriteDefs::SKULL_CLIPS, false);
     }
 
+    void load_junimo_clips(AssetTables& out) {
+        register_clips(out.clips, SpriteDefs::JUNIMO_SET, SpriteDefs::JUNIMO_CLIPS, false);
+    }
+
     void load_ore_sprites(AssetTables& out) {
         for (const auto& d : SpriteDefs::ORES)
             out.ore_sprites.insert_or_assign(
@@ -311,6 +315,7 @@ AssetTables load_assets(SDL2pp::Renderer& renderer, const std::filesystem::path&
     load_golem_clips(out);
     load_bat_clips(out);
     load_skull_clips(out);
+    load_junimo_clips(out);
     load_trap_clips(out);
     load_projectile_clips(out);
     load_portals(out);

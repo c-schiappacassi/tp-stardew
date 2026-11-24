@@ -237,8 +237,21 @@ inline void draw_sprite_at(const RenderInfo& ctx, const Sprite& s, const Positio
     draw_sprite(ctx, s, ctx.cam.world_to_screen(pos.getX(), pos.getY() + dy), flip, tint);
 }
 
-inline int bob_offset(const RenderInfo& ctx, int amplitude = 2, double speed = 0.15) {
-    return static_cast<int>(std::lround(std::sin(static_cast<double>(ctx.it) * speed) * amplitude));
+inline constexpr int BOB_AMPLITUDE = 2;
+inline constexpr double BOB_SPEED = 0.15;
+
+inline int bob_offset(const RenderInfo& ctx, int amplitude = BOB_AMPLITUDE, double speed = BOB_SPEED, double phase = 0.0) {
+    return static_cast<int>(std::lround(std::sin(static_cast<double>(ctx.it) * speed + phase) * amplitude));
+}
+
+template <class Font = PixelFont>
+void draw_text_bobbing(const RenderInfo& ctx, const std::string& text, int x, int y, int px, const SDL_Color& color, const SDL_Color& shadow, int shadow_offset,
+                       int amplitude, double phase_step, double speed = BOB_SPEED) {
+    for (std::size_t i = 0; i < text.size(); ++i) {
+        const std::string glyph(1, text[i]);
+        const int glyph_x = x + Font::width(text.substr(0, i + 1), px) - Font::width(glyph, px);
+        draw_text_shadowed<Font>(ctx, glyph, glyph_x, y + bob_offset(ctx, amplitude, speed, static_cast<double>(i) * phase_step), px, color, shadow, shadow_offset);
+    }
 }
 
 template <class Player, class ClipIdT>

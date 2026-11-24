@@ -62,6 +62,10 @@ namespace Dimentions {
 
     constexpr uint16_t CHEST_CELL_W = 16;
     constexpr uint16_t CHEST_CELL_H = 32;
+
+    constexpr uint16_t JUNIMO_COLS   = 8;
+    constexpr uint16_t JUNIMO_CELL_W = 16;
+    constexpr uint16_t JUNIMO_CELL_H = 16;
 }
 
 namespace SpriteDefs {
@@ -81,6 +85,8 @@ namespace SpriteDefs {
         {SpriteId::Minimap, "minimaps/placeholder_minimap.jpg"},
         {SpriteId::InfoSing, "menus/clock.png"},
         {SpriteId::NightSky, "menus/night_sky.png"},
+        {SpriteId::DaySky,   "menus/day_sky.png"},
+        {SpriteId::Junimo,   "misc/junimo.png"},
 
         // farmer
         {SpriteId::FarmerBase,   "characters/farmer_base.png"},
@@ -472,7 +478,7 @@ namespace SpriteDefs {
     // Clips
     struct FrameDef { int index; int ms; };
 
-    constexpr int MAX_FRAMES = 7;
+    constexpr int MAX_FRAMES = 8;
 
     template <class State>
     struct ClipDef {
@@ -752,6 +758,20 @@ namespace SpriteDefs {
         clip_run(AnimalState::Walking, Direction::Left,  true, CHICKEN_RIGHT_ROW, 4, CHICKEN_WALK_MS),
     };
 
+
+    inline constexpr ClipSetInfo JUNIMO_SET{SpriteId::Junimo, Dimentions::JUNIMO_COLS, Dimentions::JUNIMO_CELL_W, Dimentions::JUNIMO_CELL_H,
+                                            -Dimentions::JUNIMO_CELL_W / 2, -Dimentions::JUNIMO_CELL_H};
+
+    constexpr ClipDef<JunimoState> junimo_dance(JunimoState s, int ms) {
+        return clip(s, Direction::None, true,
+                    {{44, ms}, {8, ms}, {45, ms}, {9, ms}, {46, ms}, {10, ms}, {47, ms}, {11, ms}});
+    }
+
+    inline constexpr ClipDef<JunimoState> JUNIMO_CLIPS[] = {
+        junimo_dance(JunimoState::DanceSlow, 210),
+        junimo_dance(JunimoState::Dance,     180),
+        junimo_dance(JunimoState::DanceFast, 150),
+    };
 
     inline constexpr ClipSetInfo SKELETON_SET{
     SpriteId::Skeleton, Dimentions::SKELETON_COLS,

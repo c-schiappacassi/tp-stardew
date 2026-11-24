@@ -20,6 +20,7 @@ private:
     uint16_t local_time = game_time::START_MINUTES;
     std::unordered_map<CropType, ItemId> crop_to_item;
     bool day_confirmation = false;
+    bool completed = false;
 
     void refresh_alerts() {
         ready_harvest.clear();
@@ -50,6 +51,7 @@ public:
         players = s.players;
         local = s.localPlayer;
         day_confirmation = s.dayConfirmationRequired;
+        completed = completed || s.gameCompleted;  // una vez completado, queda completado
         local_time = s.timeOfDayMinutes;
         chat_session_history.insert(
             chat_session_history.end(),
@@ -68,6 +70,7 @@ public:
         return it == players.end() ? nullptr : &it->second;
     }
     bool day_confirmation_required() const { return day_confirmation; }
+    bool game_completed() const { return completed; }
     const std::vector<ChatMessageData>& get_chat_history() const { return chat_session_history; }
     const std::set<ItemId>& get_alerts() const { return ready_harvest; }
 };
