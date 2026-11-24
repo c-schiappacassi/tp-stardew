@@ -31,7 +31,6 @@ class PlayerSnapshot {
     bool attackable;
     bool resting;
     bool sleeping;
-    bool bedAvailable;
     bool selectedTool;
     uint16_t swordDamage;
     uint16_t swordRange;
@@ -56,7 +55,6 @@ public:
     bool canBeAttacked() const;
     bool isResting() const;
     bool isSleeping() const;
-    bool canUseBed() const;
     bool canPerformAction(std::chrono::steady_clock::time_point now) const;
     bool canUseTool(std::chrono::steady_clock::time_point now) const;
     bool canUsePickaxe(std::chrono::steady_clock::time_point now) const;

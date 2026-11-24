@@ -1,5 +1,7 @@
 #include "dungeon_manager.h"
 
+#include "player/player_manager.h"
+
 DungeonManager::DungeonManager(const DungeonConfig& config, uint32_t seed):
     generator(config, seed), mining(config.miningRange), loader(config, seed), combat(config.enemies, seed), interactions(rooms, mining, generator, combat) {}
 
@@ -12,7 +14,7 @@ bool DungeonManager::canWalk(uint8_t number, const CollisionBounds& bounds) cons
 
 std::optional<MineData> DungeonManager::getMineData(uint8_t number, bool includeBroken) const { return rooms.getMineData(number, combat.getVisit(), includeBroken); }
 
-std::vector<PortalData> DungeonManager::getPortals(uint8_t number) const { return rooms.getPortals(number); }
+std::vector<PortalData> DungeonManager::getPortals(uint8_t number, bool activeOnly) const { return rooms.getPortals(number, activeOnly); }
 
 std::optional<DungeonCombatData> DungeonManager::getCombatData(uint8_t number) const { return rooms.getCombatData(number, combat.getVisit()); }
 
@@ -35,10 +37,19 @@ void DungeonManager::update(
 void DungeonManager::onTravel(uint16_t playerId, uint8_t room, bool survived) { combat.onTravel(playerId, room, survived, rooms); }
 CombatProgressData DungeonManager::getCombatProgress() const { return combat.getProgress(); }
 bool DungeonManager::combatCompleted() const { return combat.completed(); }
-bool DungeonManager::enter(PlayerManager& players, uint16_t playerId) { return travel.enter(players, playerId, rooms); }
+bool DungeonManager::enter(PlayerManager& players, uint16_t playerId, EntityIdGenerator& ids) {
+    const auto player = players.snapshot(playerId);
+    return player.canAct() && player.getZone() != Zone::Dungeon && combat.prepareEntry(players, rooms, ids) && travel.enter(players, playerId, rooms);
+}
 bool DungeonManager::advanceRoom(PlayerManager& players, uint16_t playerId) { return travel.advanceRoom(players, playerId, rooms); }
 
-bool DungeonManager::teleportToRoom(PlayerManager& players, uint16_t playerId, uint8_t number) const { return travel.teleportToRoom(players, playerId, number, rooms); }
+bool DungeonManager::teleportToRoom(PlayerManager& players, uint16_t playerId, uint8_t number, EntityIdGenerator& ids) {
+    const auto player = players.snapshot(playerId);
+    const auto* room = rooms.find(number);
+    if (!player.canAct() || !room || !room->getPassages() || !combat.prepareEntry(players, rooms, ids))
+        return false;
+    return travel.teleportToRoom(players, playerId, number, rooms);
+}
 
 bool DungeonManager::canExit(const PlayerSnapshot& player) const { return travel.canExit(player, rooms); }
 

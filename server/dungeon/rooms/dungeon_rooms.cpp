@@ -1,10 +1,27 @@
 #include "dungeon_rooms.h"
 
+#include <algorithm>
 #include "dungeon/dungeon_config.h"
 #include "player/queries/player_snapshot.h"
 
 DungeonRooms::DungeonRooms() {
-    for (uint8_t number = 1; number <= DUNGEON_ROOM_COUNT; ++number) rooms.try_emplace(number, number);
+    for (uint8_t number = 1; number <= DUNGEON_ROOM_COUNT; ++number) {
+        rooms.try_emplace(number, number);
+        visitOrder.push_back(number);
+    }
+}
+
+void DungeonRooms::shuffle(std::mt19937& random) {
+    std::shuffle(visitOrder.begin(), visitOrder.end(), random);
+    for (std::size_t i = 0; i < visitOrder.size(); ++i)
+        at(visitOrder[i]).setVisitDepth(static_cast<uint8_t>(i + 1));
+}
+
+uint8_t DungeonRooms::firstNumber() const { return visitOrder.front(); }
+
+std::optional<uint8_t> DungeonRooms::nextNumber(uint8_t number) const {
+    const auto current = std::find(visitOrder.begin(), visitOrder.end(), number);
+    return current == visitOrder.end() || std::next(current) == visitOrder.end() ? std::nullopt : std::optional<uint8_t>{*std::next(current)};
 }
 
 DungeonRoom* DungeonRooms::find(uint8_t number) {
@@ -47,13 +64,13 @@ std::optional<DungeonCombatData> DungeonRooms::getCombatData(uint8_t number, uin
     return data;
 }
 
-std::vector<PortalData> DungeonRooms::getPortals(uint8_t number) const {
+std::vector<PortalData> DungeonRooms::getPortals(uint8_t number, bool activeOnly) const {
     const auto* room = find(number);
     if (!room || !room->getPassages())
         return {};
     const auto& passages = *room->getPassages();
     std::vector<PortalData> portals{{passages.exit, PortalId::MineToFarm}};
-    if (passages.nextRoom)
+    if (passages.nextRoom && (!activeOnly || nextNumber(number)))
         portals.push_back({*passages.nextRoom, PortalId::ToNextLevel});
     return portals;
 }

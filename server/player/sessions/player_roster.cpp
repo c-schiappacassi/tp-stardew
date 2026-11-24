@@ -1,6 +1,7 @@
 #include "player_roster.h"
 
 #include <algorithm>
+#include <set>
 #include <stdexcept>
 #include <utility>
 
@@ -12,9 +13,12 @@ PlayerRoster::Admission PlayerRoster::addPlayer(const std::string& name,const Pl
         return {nullptr, "Could not register the player"};
     if (findByName(name))
         return {nullptr, "A player with that name already exists"};
-    if (players.size() >= maxPlayers)
+    if (std::any_of(players.begin(), players.end(), [&](const auto& entry) {
+            return entry.second.getPlayer().getCharacterName() == appearance.characterName;
+        }))
+        return {nullptr, "A character with that name already exists in this game"};
+    if (!hasAvailableSlot())
         return {nullptr, "The game is full"};
-
     auto player = factory.create(appearance);
     const auto spawn = spawns.spawnFor(player.snapshot());
     if (!spawn ||
@@ -50,10 +54,13 @@ void PlayerRoster::restorePlayers(const std::map<std::string, PlayerDataLocal>& 
         throw std::runtime_error("Cannot restore player roster");
 
     std::map<uint16_t, PlayerRecord> restored;
+    std::set<std::string> characterNames;
     uint16_t id = 1;
     for (const auto& [username, data]: saved) {
         if (username.empty())
             throw std::runtime_error("Empty username in save");
+        if (!characterNames.insert(data.characterName).second)
+            throw std::runtime_error("Duplicate character name in save");
         restored.emplace(id, PlayerRecord{id, username, factory.restore(data)});
         ++id;
     }
@@ -130,6 +137,10 @@ std::vector<Combatant> PlayerRoster::combatants() const {
             result.push_back({id, record.getPlayer().snapshot()});
     }
     return result;
+}
+
+bool PlayerRoster::hasAvailableSlot() const {
+    return players.size() < maxPlayers;
 }
 
 const PlayerRecord& PlayerRoster::require(uint16_t id) const {

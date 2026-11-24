@@ -37,6 +37,7 @@ private:
     static constexpr int ALERT_BANG_PX = 4;
     static constexpr int ALERT_GAP = 6;
     static constexpr int ALERT_TOP_GAP = 12;
+    static constexpr double ALERT_BOB_PHASE = 0.8;
 
     static constexpr SDL_Color TEXT_COLOR{107, 33, 0, 255};
     static constexpr SDL_Color ALERT_RED{220, 40, 30, 255};
@@ -83,12 +84,12 @@ private:
     void draw_alerts(const RenderInfo& ctx, const SDL2pp::Point& screen, int u, int below_y) const {
         const int box_size = ALERT_ICON_BOX * u;
         const int step = box_size + ALERT_GAP * u;
-        const int bob = bob_offset(ctx) * u;
-
         int x = screen.x - RIGHT_MARGIN * u - box_size;
-        const int y = below_y + ALERT_TOP_GAP * u + bob;
+        const int top = below_y + ALERT_TOP_GAP * u;
+        int index = 0;
 
         for (const ItemId item : items_to_alert) {
+            const int y = top + bob_offset(ctx, BOB_AMPLITUDE, BOB_SPEED, index * ALERT_BOB_PHASE) * u;
             draw_item_icon(ctx, item, SDL2pp::Rect(x, y, box_size, box_size), box_size);
 
             const int bpx = ALERT_BANG_PX * u;
@@ -97,6 +98,7 @@ private:
             draw_text_shadowed(ctx, "!", bx, by, bpx, ALERT_RED, pixel_font::SHADOW_COLOR, u);
 
             x -= step;
+            ++index;
         }
     }
 

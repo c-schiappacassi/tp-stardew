@@ -53,8 +53,9 @@ struct PerformAction {
     std::chrono::milliseconds interval;
     std::chrono::steady_clock::time_point now;
 };
-struct Sleep {};
-struct LeaveBedArea {};
+struct Sleep {
+    std::optional<Position> bed = std::nullopt;
+};
 struct SetVitals {
     uint16_t health;
     uint16_t energy;
@@ -98,7 +99,7 @@ using PlayerAction =
         std::variant<player_action::FaceDirection, player_action::FaceTarget,
                      player_action::ChangeLocation, player_action::RestoreLocation,
                      player_action::UseTool, player_action::PerformAction, player_action::Sleep,
-                     player_action::LeaveBedArea, player_action::SetVitals,
+                     player_action::SetVitals,
                      player_action::RestoreVitals, player_action::ApplyCombatBonus,
                      player_action::ReceiveDamage, player_action::AddGold, player_action::SpendGold,
                      player_action::AddItem, player_action::AddItemUpTo, player_action::RemoveItem,

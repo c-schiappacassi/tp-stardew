@@ -5,7 +5,7 @@
 
 #include "chests/interactions/chest_interactions.h"
 #include "player/player_manager.h"
-#include "world/interaction_targeting.h"
+#include "world/zone_map.h"
 
 bool ChestRoom::initialize(
     const ZoneMap& terrain, const std::vector<Position>& reserved, const std::vector<CollisionBounds>& obstacles, const std::vector<ChestSpawn>& initial, EntityIdGenerator& ids) {
@@ -60,7 +60,7 @@ const GroundItems& ChestRoom::getGroundItems() const { return groundItems; }
 
 bool ChestRoom::collectNearbyItems(PlayerManager& players, uint16_t playerId) {
     const auto player = players.snapshot(playerId);
-    return groundItems.collect(players, playerId, [&](const auto& position) { return InteractionTargeting{}.hasClearPath(player.getPosition(), position, space.getMap()); });
+    return groundItems.collect(players, playerId, [&](const auto& position) { return space.getMap().hasClearPath(player.getPosition(), position); });
 }
 
 void ChestRoom::restore(const std::vector<FurnitureData>& furniture, const std::map<uint32_t, std::map<uint8_t, Stack>>& inventories, const std::vector<LootData>& loot) {

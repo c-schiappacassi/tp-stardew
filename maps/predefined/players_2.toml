@@ -764,7 +764,7 @@ background = [
   [52, 11, 1, "walkable"],
   [53, 11, 1, "walkable"],
   [54, 11, 1, "walkable"],
-  [55, 11, 1, "walkable"],
+  [55, 11, 1, "unwalkable"],
   [56, 11, 1, "walkable"],
   [57, 11, 1, "walkable"],
   [58, 11, 1, "walkable"],
@@ -3083,6 +3083,7 @@ buildings = [
   [19, 12, 1, 21, 18],
 ]
 decor = [
+  [55, 10, 40],
   [55, 0, 14],
   [57, 2, 14],
   [61, 0, 14],
@@ -4998,7 +4999,7 @@ background = [
   [8, 11, 13, "walkable"],
   [9, 11, 13, "walkable"],
   [10, 11, 13, "walkable"],
-  [11, 11, 13, "walkable"],
+  [11, 11, 13, "unwalkable"],
   [12, 11, 0, "walkable"],
   [13, 11, 0, "walkable"],
   [14, 11, 0, "walkable"],
@@ -7364,6 +7365,7 @@ buildings = [
   [36, 23, 6, 41, 35],
 ]
 decor = [
+  [11, 10, 40],
   [17, 0, 13],
   [56, 0, 18],
   [26, 0, 15],

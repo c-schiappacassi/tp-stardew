@@ -2,7 +2,6 @@
 
 #include "protocol_types.h"
 
-// Shared by trading and community rewards; a discount lasts one full game day.
 class MarketPrices {
     MarketDiscount discount = MarketDiscount::None;
 

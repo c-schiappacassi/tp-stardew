@@ -39,7 +39,7 @@ public:
     std::optional<WorldLocation> spawnFor(const PlayerSnapshot& player) const;
     bool canWalk(uint8_t number, const CollisionBounds& bounds) const;
     std::optional<MineData> getMineData(uint8_t number, bool includeBroken = false) const;
-    std::vector<PortalData> getPortals(uint8_t number) const;
+    std::vector<PortalData> getPortals(uint8_t number, bool activeOnly = true) const;
     bool mineMineral(PlayerManager& players, uint16_t playerId, EntityId id, EntityIdGenerator& ids, std::chrono::steady_clock::time_point now = std::chrono::steady_clock::now());
     std::vector<LootData> getGroundItems(uint8_t number) const;
     bool collectNearbyItems(PlayerManager& players, uint16_t playerId);
@@ -50,9 +50,9 @@ public:
     CombatProgressData getCombatProgress() const;
     bool combatCompleted() const;
     std::optional<DungeonCombatData> getCombatData(uint8_t room) const;
-    bool enter(PlayerManager& players, uint16_t playerId);
+    bool enter(PlayerManager& players, uint16_t playerId, EntityIdGenerator& ids);
     bool advanceRoom(PlayerManager& players, uint16_t playerId);
-    bool teleportToRoom(PlayerManager& players, uint16_t playerId, uint8_t number) const;
+    bool teleportToRoom(PlayerManager& players, uint16_t playerId, uint8_t number, EntityIdGenerator& ids);
     bool spawnEnemies(
         const PlayerManager& players, uint16_t playerId, EnemyType type, uint16_t quantity, bool pairs, EntityIdGenerator& ids, const std::vector<Position>& occupied);
     uint16_t killEnemies(PlayerManager& players, uint16_t playerId, bool nearestOnly, EntityIdGenerator& ids);

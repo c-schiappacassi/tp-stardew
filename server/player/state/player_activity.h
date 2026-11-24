@@ -12,7 +12,6 @@ private:
     Direction direction;
     Direction movementDirection = Direction::None;
     std::chrono::steady_clock::time_point nextActionTime{};
-    bool bedReady = true;
     std::optional<uint32_t> openChestId;
 
 public:
@@ -24,7 +23,6 @@ public:
     bool canAct() const;
     bool isResting() const;
     bool isSleeping() const;
-    bool isBedReady() const;
     bool cooldownEnded(std::chrono::steady_clock::time_point now) const;
     std::optional<uint32_t> getOpenChestId() const;
 
@@ -39,7 +37,6 @@ public:
     void sleep();
     bool cancelSleep();
     void wakeUp();
-    void leaveBedArea();
     void reset();
     void restoreData(const PlayerData& saved);
     void openChest(uint32_t id);

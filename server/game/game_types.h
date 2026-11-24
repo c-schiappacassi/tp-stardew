@@ -1,23 +1,24 @@
-#ifndef GAME_TYPES_H
-#define GAME_TYPES_H
+#pragma once
 
 #include <cstdint>
 #include <memory>
-#include <variant>
 #include <string>
 
 #include "dtos.h"
 #include "queue.h"
-
 
 struct PlayerCommand {
     uint16_t playerId = 0;
     std::shared_ptr<CommandDTO> command;
 };
 
-// lo de abajo es como establecer un "sinonimo" y uso ese nombre en todo el codigo
-using CommandQueue = Queue<PlayerCommand>;
 using OutQueue = Queue<ServerStatus>;
+
+enum class CommandSubmission {
+    Enqueued,
+    GameNotFound,
+    GameClosed
+};
 
 struct GameSession {
     ServerStatus status;
@@ -26,7 +27,4 @@ struct GameSession {
     uint16_t playerId = 0;
     uint8_t worldId = 0;
     std::shared_ptr<const ConstMapData> map;
-    std::shared_ptr<CommandQueue> input;   // nullptr si status != OK
 };
-
-#endif
