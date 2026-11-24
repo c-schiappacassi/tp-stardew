@@ -129,8 +129,7 @@ bool InteriorManager::canWalk(const InteriorLocation& location, const CollisionB
 
 bool InteriorManager::useBed(PlayerManager& players, uint16_t playerId) const {
     const auto player = players.snapshot(playerId);
-    if (player.getZone() != Zone::InsideHouse || !player.getInterior()) {
-        players.apply(playerId, player_action::LeaveBedArea{});
+    if (!player.canAct() || player.getZone() != Zone::InsideHouse || !player.getInterior()) {
         return false;
     }
     const auto* room = find(*player.getInterior());
@@ -139,9 +138,8 @@ bool InteriorManager::useBed(PlayerManager& players, uint16_t playerId) const {
     const auto& pos = player.getPosition();
     for (const auto& bed: room->beds) {
         if (canApproachBed(*room, pos, bed))
-            return player.canUseBed() && players.apply(playerId, player_action::Sleep{bed}).applied;
+            return players.apply(playerId, player_action::Sleep{bed}).applied;
     }
-    players.apply(playerId, player_action::LeaveBedArea{});
     return false;
 }
 

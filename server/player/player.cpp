@@ -95,10 +95,6 @@ bool Player::isResting() const { return activity.isResting(); }
 
 bool Player::isSleeping() const { return activity.isSleeping(); }
 
-bool Player::canUseBed() const { return activity.isBedReady() && canAct(); }
-
-void Player::leaveBedArea() { activity.leaveBedArea(); }
-
 void Player::passOut() {
     if (activity.passOut())
         gold -= static_cast<uint32_t>(static_cast<uint64_t>(gold) * config.passoutGoldPercent /

@@ -65,8 +65,6 @@ public:
     bool canBeAttacked() const;
     bool isResting() const;
     bool isSleeping() const;
-    bool canUseBed() const;
-    void leaveBedArea();
     void passOut();
     bool sleep(std::optional<Position> bed = std::nullopt);
     bool cancelSleep();

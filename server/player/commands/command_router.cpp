@@ -136,10 +136,6 @@ PlayerActionResult applyAction(Player& player, const player_action::PerformActio
 PlayerActionResult applyAction(Player& player, const player_action::Sleep& action) {
     return {player.sleep(action.bed), 0};
 }
-PlayerActionResult applyAction(Player& player, const player_action::LeaveBedArea&) {
-    player.leaveBedArea();
-    return {true, 0};
-}
 PlayerActionResult applyAction(Player& player, const player_action::SetVitals& action) {
     player.setVitals(action.health, action.energy);
     return {true, 0};

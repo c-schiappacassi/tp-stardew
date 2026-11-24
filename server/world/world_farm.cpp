@@ -36,7 +36,6 @@ void WorldManager::update(std::chrono::milliseconds elapsed, PlayerManager& play
         farm.update(elapsed, entityIds);
     }
     const auto playerIds = players.connectedPlayerIds();
-    for (const auto id: playerIds) interiors.useBed(players, id);
     dungeon.update(elapsed, players.combatants(), players, entityIds, now);
     for (const auto id: playerIds) {
         const auto zone = players.snapshot(id).getZone();
