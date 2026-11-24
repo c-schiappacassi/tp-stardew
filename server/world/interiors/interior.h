@@ -7,6 +7,7 @@
 
 #include "chests/chest_manager.h"
 #include "entities/placement/placement_space.h"
+#include "farm/decorations/decoration_manager.h"
 #include "items/ground_items.h"
 
 #include "interior_layout.h"
@@ -26,11 +27,13 @@ private:
     BackgroundData background;
     PlacementSpace space;
     ChestManager chests;
+    DecorationManager decorations;
     GroundItems groundItems;
 
     bool canApproachBed(const Position& position, const Position& bed) const;
     ZoneMap walkingMap() const;
     std::vector<CollisionBounds> bedObstacles() const;
+    std::optional<bool> interactWithDecoration(PlayerManager& players, uint16_t playerId, Direction direction, EntityIdGenerator& ids, std::chrono::steady_clock::time_point now);
 
 public:
     explicit Interior(const InteriorLayout& layout);
@@ -51,7 +54,7 @@ public:
     std::optional<NpcData> nearbyMerchant(const PlayerSnapshot& player, Direction direction) const;
     BackgroundData backgroundData() const;
     InteriorData data() const;
-    bool interactWithChest(PlayerManager& players, uint16_t playerId, Direction direction, EntityIdGenerator& ids, std::chrono::steady_clock::time_point now);
+    bool useSelectedItem(PlayerManager& players, uint16_t playerId, Direction direction, EntityIdGenerator& ids, std::chrono::steady_clock::time_point now);
     std::optional<OpenChestData> openChestFor(const PlayerSnapshot& player) const;
     void depositInChest(PlayerManager& players, uint16_t playerId, const ItemTransferDTO& command);
     void withdrawFromChest(PlayerManager& players, uint16_t playerId, const SelectItemDTO& command);

@@ -26,7 +26,7 @@ public:
     std::optional<NpcData> nearbyMerchant(const PlayerSnapshot& player, Direction direction) const;
     InteriorData dataFor(const InteriorLocation& location) const;
     void completeMap(ConstMapData& map) const;
-    bool interactWithChest(PlayerManager& players, uint16_t playerId, Direction direction, EntityIdGenerator& ids, std::chrono::steady_clock::time_point now);
+    bool useSelectedItem(PlayerManager& players, uint16_t playerId, Direction direction, EntityIdGenerator& ids, std::chrono::steady_clock::time_point now);
     std::optional<OpenChestData> openChestFor(const PlayerSnapshot& player) const;
     void depositInChest(PlayerManager& players, uint16_t playerId, const ItemTransferDTO& command);
     void withdrawFromChest(PlayerManager& players, uint16_t playerId, const SelectItemDTO& command);

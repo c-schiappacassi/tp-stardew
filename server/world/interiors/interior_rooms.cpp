@@ -123,9 +123,9 @@ void InteriorRooms::completeMap(ConstMapData& map) const {
     }
 }
 
-bool InteriorRooms::interactWithChest(PlayerManager& players, uint16_t playerId, Direction direction, EntityIdGenerator& ids, std::chrono::steady_clock::time_point now) {
+bool InteriorRooms::useSelectedItem(PlayerManager& players, uint16_t playerId, Direction direction, EntityIdGenerator& ids, std::chrono::steady_clock::time_point now) {
     auto* room = roomFor(players.snapshot(playerId));
-    return room && room->interactWithChest(players, playerId, direction, ids, now);
+    return room && room->useSelectedItem(players, playerId, direction, ids, now);
 }
 
 std::optional<OpenChestData> InteriorRooms::openChestFor(const PlayerSnapshot& player) const {

@@ -8,6 +8,8 @@
 
 #include "commerce/shop_products.h"
 #include "entities/entity_id_generator.h"
+#include "farm/decorations/decoration_items.h"
+#include "farm/farm_constants.h"
 #include "player/player_manager.h"
 
 namespace {
@@ -64,7 +66,7 @@ bool Interior::canApproachBed(const Position& position, const Position& bed) con
     const CollisionBox playerBox{entity_dimensions::PLAYER};
     for (int step = 0; step <= steps; ++step) {
         const Position point{position.getX() + dx * step / std::max(1, steps), position.getY() + dy * step / std::max(1, steps)};
-        if (!space.getMap().isWalkable(playerBox.at(point)))
+        if (!space.getMap().isWalkable(playerBox.at(point)) || !space.canWalk(playerBox.at(point)))
             return false;
     }
     return true;
@@ -84,7 +86,7 @@ ZoneMap Interior::walkingMap() const {
     std::vector<std::vector<bool>> floor(rows, std::vector<bool>(columns, false));
     for (const auto& position: positions) {
         const auto cell = terrain.baseCellAt(position).value();
-        floor[cell.first][cell.second] = terrain.isWalkable(playerBox.at(position)) &&
+        floor[cell.first][cell.second] = terrain.isWalkable(playerBox.at(position)) && space.canWalk(playerBox.at(position)) &&
             (!background.interior || !background.interior->npc || !playerBox.at(background.interior->npc->pos).intersects(playerBox.at(position))) &&
             std::none_of(beds.begin(), beds.end(), [&](const auto& bed) { return BED_BOX.at(bed).intersects(playerBox.at(position)); });
     }
@@ -214,15 +216,69 @@ BackgroundData Interior::backgroundData() const {
 }
 
 InteriorData Interior::data() const {
-    return InteriorData{location.interior_id, location.house_index, chests.furnitureData(), groundItems.getPublicData()};
+    InteriorData result{location.interior_id, location.house_index, chests.furnitureData(), groundItems.getPublicData()};
+    for (const auto& [id, decoration]: decorations.getDecorations())
+        result.furniture.push_back(decoration.getPublicData());
+    return result;
 }
 
-bool Interior::interactWithChest(PlayerManager& players, uint16_t playerId, Direction direction, EntityIdGenerator& ids, std::chrono::steady_clock::time_point now) {
-    if (location.interior_id != InteriorId::PlayerHouse)
+bool Interior::useSelectedItem(PlayerManager& players, uint16_t playerId, Direction direction, EntityIdGenerator& ids, std::chrono::steady_clock::time_point now) {
+    const auto player = players.snapshot(playerId);
+    if (!player.canAct() || player.getZone() != Zone::InsideHouse || player.getInterior() != location)
         return false;
-    space.setObstacles(bedObstacles());
-    // A recognized but rejected chest action still takes priority over sleeping.
-    return chests.interact(players, playerId, space, space.getMap(), groundItems, direction, ids, now).has_value();
+    if (location.interior_id == InteriorId::PlayerHouse) {
+        auto obstacles = bedObstacles();
+        for (const auto id: players.connectedPlayerIds()) {
+            const auto other = players.snapshot(id);
+            if (other.getZone() == Zone::InsideHouse && other.getInterior() == location)
+                obstacles.push_back(other.getCollisionBounds(other.getPosition()));
+        }
+        space.setObstacles(obstacles);
+        // Recognized actions, including rejected placements, take priority over sleeping.
+        if (const auto handled = chests.interact(players, playerId, space, space.getMap(), groundItems, direction, ids, now))
+            return *handled;
+        if (const auto handled = interactWithDecoration(players, playerId, direction, ids, now))
+            return *handled;
+    }
+    return useBed(players, playerId);
+}
+
+std::optional<bool> Interior::interactWithDecoration(PlayerManager& players, uint16_t playerId, Direction direction, EntityIdGenerator& ids, std::chrono::steady_clock::time_point now) {
+    const auto player = players.snapshot(playerId);
+    const auto* selected = player.getSelectedItem();
+    if (!selected || (selected->item_id != ItemId::Shovel && !Decoration::isDecoration(selected->item_id)))
+        return std::nullopt;
+    const auto& terrain = space.getMap();
+    const auto position = terrain.findAdjacentPosition(player.getPosition(), direction,
+        player.getCollisionBounds(player.getPosition()), CollisionBox{entity_dimensions::DECORATION});
+    const bool shovel = selected->item_id == ItemId::Shovel;
+    if (shovel) {
+        const auto& items = decorations.getDecorations();
+        const auto target = std::find_if(items.begin(), items.end(), [&](const auto& entry) {
+            return position && terrain.sameBaseCell(entry.second.getPosition(), *position);
+        });
+        if (target == items.end())
+            return std::nullopt;
+        if (!player.canUseTool(now) || !groundItems.drop(target->second.getPosition(), target->second.getItem(), 1, Quality::None, ids))
+            return false;
+        decorations.remove(target->first, space);
+    } else {
+        if (!position || !player.canPerformAction(now) || ids.getNextId() == 0)
+            return false;
+        const auto id = ids.getNextId();
+        if (!decorations.place(id, *position, selected->item_id, space, direction))
+            return false;
+        if (!players.apply(playerId, player_action::RemoveItem{player.getSelectedSlot(), 1}).applied) {
+            decorations.remove(id, space);
+            return false;
+        }
+        ids.generate();
+    }
+    players.apply(playerId, player_action::CloseChest{});
+    players.apply(playerId, player_action::FaceDirection{direction});
+    if (shovel)
+        return players.apply(playerId, player_action::UseTool{now}).applied;
+    return players.apply(playerId, player_action::PerformAction{farm_constants::ACTION_ENERGY, farm_constants::ACTION_INTERVAL, now}).applied;
 }
 
 std::optional<OpenChestData> Interior::openChestFor(const PlayerSnapshot& player) const {
@@ -252,11 +308,15 @@ void Interior::saveInventories(std::map<uint32_t, std::map<uint8_t, Stack>>& inv
 
 void Interior::restoreStorage(const InteriorData& saved, const std::map<uint32_t, std::map<uint8_t, Stack>>& inventories) {
     chests = ChestManager{};
+    decorations = DecorationManager{};
     space.clearOccupants();
     space.setObstacles(bedObstacles());
     for (const auto& item: saved.furniture) {
-        if (item.type != FurnitureId::Chest)
+        if (item.type != FurnitureId::Chest) {
+            if (item.type > FurnitureId::Chest || !decorations.place(item.id, item.pos, decoration_items::itemFor(item.type), space, item.dir))
+                throw std::runtime_error("Invalid saved house decoration");
             continue;
+        }
         const auto contents = inventories.find(item.id);
         if (contents == inventories.end() || !chests.place(item.id, item.pos, space, contents->second))
             throw std::runtime_error("Invalid saved chest furniture or contents");

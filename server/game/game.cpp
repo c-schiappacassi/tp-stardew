@@ -172,7 +172,7 @@ void Game::advanceWorld(std::chrono::milliseconds elapsed) {
         return;
     }
     if (endDayRequested) {
-        elapsed = std::max(elapsed, playerManager.remainingDayTime());
+        elapsed = playerManager.remainingDayTime();
         endDayRequested = false;
     }
     const auto activeTime = playerManager.isDayEnded() ? std::chrono::milliseconds{0} : std::min(elapsed, playerManager.remainingDayTime());

@@ -17,8 +17,7 @@ void WorldInteractions::useSelectedItem(PlayerManager& players, uint16_t playerI
     } else if (player.getZone() == Zone::Farm && farm.isInitialized()) {
         farm.useSelectedItem(players, playerId, direction, entityIds, now);
     } else if (player.getZone() == Zone::InsideHouse) {
-        if (!interiors.interactWithChest(players, playerId, direction, entityIds, now))
-            interiors.useBed(players, playerId);
+        interiors.useSelectedItem(players, playerId, direction, entityIds, now);
     }
 }
 
