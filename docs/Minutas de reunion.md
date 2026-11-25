@@ -230,7 +230,7 @@
 - Client:
     - sound manager
 
-# 6ra Reunión 10-11-2026
+# 6ra Reunión 17-11-2026
 
 ### Preguntas
 - en la ultima semana de tp, no se pueden implementar nuevas features?
@@ -290,3 +290,35 @@ PARA LA SEMANA QUE VIENE:
 
     - todo ja
     - si ya esta todo listo, podemos agregar cosas nuevas (la nota maxima con o sin cosas nuevas es 10 asi que depende de nosotros y el tiempo entra que le queramos dedicar al tp, pero nos puede ayudar a subir un poquito si hay algo que esta mas o menos)
+
+
+# 7ma Reunión 24-11-2026
+-   todo terminado y refinado:
+    -   script
+    -   musica y sonido (volumen ajustable)
+    -   codigo de unirse al juego
+    -   interiores casas pueblo (shops + cc)
+    -   ver mi character_name
+    -   cambio de usar username a character_name en mensaje privado
+    -   tipo de mensaje en el cliente
+    -   color por tipo de mensaje? -> al cliente le tiene que llegar la info de que tipo de mensaje fue
+    -   algo especial para el cc?
+    -   extra verificacion de valgrid
+
+### entrega: si o si el martes a la noche no se hacen mas commits. Docu + Test + Vid hasta el viernes 4
+### semana que viene: 
+Oral TBD el horario. uno a uno 10 min por cada uno.
+Puede ser que tambien pida el vid, "abril me dio hasta el viernes, te hago una demo en vivo".
+fijo quien comparte, y backup en caso de que no pueda. Compilen de antemano.
+
+- test sobre protocolo
+
+## Docu:
+-   manual de usuario (como se juega) - editor incluido
+-   analisis técnico (diseño de cod y arqui - client editor y server)
+-   vitacora - nuestra experiencia con el tp
+
+### Creen al docente en el juego. interactivo!!!
+### mapita piola
+
+notas a una semana de la entrega.
