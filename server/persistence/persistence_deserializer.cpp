@@ -274,6 +274,8 @@ MineralData PersistenceDeserializer::mineral(const toml::table& table) {
     result.pos = position(requiredTable(table, "pos"));
     result.type = static_cast<ResourceType>(integer(table, "type", 0, UINT8_MAX));
     result.state = static_cast<MineralState>(integer(table, "state", 0, UINT8_MAX));
+    result.health = table.contains("health") ? static_cast<uint16_t>(integer(table, "health", 0, UINT16_MAX))
+                                             : static_cast<uint16_t>(result.state == MineralState::Broken ? 0 : 1);
     return result;
 }
 

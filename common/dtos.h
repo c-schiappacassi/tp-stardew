@@ -119,6 +119,7 @@ struct MineralData {
     Position pos{0, 0};
     ResourceType type = ResourceType::CoalRock;
     MineralState state = MineralState::Intact;
+    uint16_t health = 0;
 };
 
 struct LevelData {

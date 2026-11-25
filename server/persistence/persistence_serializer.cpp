@@ -160,7 +160,8 @@ toml::table PersistenceSerializer::combat(const DungeonCombatData& value) {
 
 toml::table PersistenceSerializer::mineral(const MineralData& value) {
     return toml::table{{"id", static_cast<int64_t>(value.id)}, {"pos", position(value.pos)},
-            {"type", static_cast<int64_t>(value.type)}, {"state", static_cast<int64_t>(value.state)}};
+            {"type", static_cast<int64_t>(value.type)}, {"state", static_cast<int64_t>(value.state)},
+            {"health", static_cast<int64_t>(value.health)}};
 }
 
 toml::table PersistenceSerializer::level(const LevelData& value) {

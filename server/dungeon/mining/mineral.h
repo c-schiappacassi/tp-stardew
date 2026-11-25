@@ -26,5 +26,6 @@ public:
     bool isDepleted() const;
     bool hit(uint16_t power = 2);
     MineralState getState() const;
+    uint16_t getHealth() const;
     MineralData getPublicData() const;
 };
