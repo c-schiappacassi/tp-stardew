@@ -137,6 +137,7 @@ MineralData ClientProtocol::receiveMineralData() {
     mineral.pos = receivePosition();
     mineral.type = static_cast<ResourceType>(base.receiveUint8());
     mineral.state = static_cast<MineralState>(base.receiveUint8());
+    mineral.health = base.receiveUint16();
     return mineral;
 }
 

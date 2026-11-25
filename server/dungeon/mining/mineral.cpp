@@ -41,7 +41,9 @@ MineralState Mineral::getState() const {
     return MineralState::Intact;
 }
 
-MineralData Mineral::getPublicData() const { return MineralData{id, pos, type, getState()}; }
+uint16_t Mineral::getHealth() const { return static_cast<uint16_t>(std::min<uint32_t>(remainingDurability, UINT16_MAX)); }
+
+MineralData Mineral::getPublicData() const { return MineralData{id, pos, type, getState(), getHealth()}; }
 CollisionBounds Mineral::getCollisionBounds() const { return CollisionBox{entity_dimensions::MINERAL}.at(pos); }
 
 Position Mineral::getCollisionCenter() const { return getCollisionBounds().center(); }

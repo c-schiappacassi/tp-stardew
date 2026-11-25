@@ -294,6 +294,7 @@ void ServerProtocol::writeMineralData(MessageBuffer& out, const MineralData& min
     writePosition(out, mineral.pos);
     out.putUint8(static_cast<uint8_t>(mineral.type));
     out.putUint8(static_cast<uint8_t>(mineral.state));
+    out.putUint16(mineral.health);
 }
 
 void ServerProtocol::writeLevelData(MessageBuffer& out, const LevelData& level) {
