@@ -1,12 +1,14 @@
 #include "chicken.h"
 
+#include "server_constants.h"
+
 #include <stdexcept>
 
 Chicken::Chicken(EntityId id, const Position& position, AnimalType type,
     std::chrono::milliseconds productionInterval, const AnimalMovementConfig& movementConfig):
     Animal(id, position, type, productionInterval, movementConfig) {
     if (animalSpeciesForType(type) != AnimalSpecies::Chicken) {
-        throw std::invalid_argument("The variant does not belong to a chicken");
+        throw std::invalid_argument(server_constants::THE_VARIANT_DOES_NOT_BELONG_TO_A_CHICKEN);
     }
 }
 

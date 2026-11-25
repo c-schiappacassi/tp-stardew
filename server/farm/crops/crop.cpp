@@ -1,5 +1,7 @@
 #include "crop.h"
 
+#include "server_constants.h"
+
 #include <algorithm>
 #include <limits>
 #include <stdexcept>
@@ -13,7 +15,7 @@ Crop::Crop(EntityId id, const Position& position, const CropDefinition& definiti
         definition.wateringInterval.count() > std::numeric_limits<int64_t>::max() / definition.toleratedMissedWaterings;
     if (id == 0 || position.getX() < 0 || position.getY() <= 0 ||
         definition.growthTime.count() <= 0 || definition.regrowthTime.count() < 0 ||invalidTolerance) {
-        throw std::invalid_argument("Invalid crop identifier, position or times");
+        throw std::invalid_argument(server_constants::INVALID_CROP_IDENTIFIER_POSITION_OR_TIMES);
     }
     remainingDryTolerance = definition.wateringInterval * definition.toleratedMissedWaterings;
     getProduct();
@@ -53,13 +55,13 @@ CropData Crop::getPublicData() const {
 ItemId Crop::getProduct() const {
     const auto item = farm_products::cropItem(definition.type);
     if (!item)
-        throw std::invalid_argument("Unknown crop type");
+        throw std::invalid_argument(server_constants::UNKNOWN_CROP_TYPE);
     return *item;
 }
 
 void Crop::update(std::chrono::milliseconds elapsed) {
     if (elapsed.count() < 0) {
-        throw std::invalid_argument("Negative time");
+        throw std::invalid_argument(server_constants::NEGATIVE_TIME);
     }
     if (harvested) {
         return;
@@ -145,7 +147,7 @@ void Crop::restoreProgress(std::chrono::milliseconds growth, std::chrono::millis
     if (restoredDuration.count() <= 0 || growth.count() < 0 || water.count() < 0 ||
         growth > restoredDuration ||
         water > definition.wateringInterval) {
-        throw std::invalid_argument("Invalid saved crop progress");
+        throw std::invalid_argument(server_constants::INVALID_SAVED_CROP_PROGRESS);
     }
     regrowing = wasRegrowing;
     growthDuration = restoredDuration;

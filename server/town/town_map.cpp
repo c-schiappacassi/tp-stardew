@@ -1,5 +1,7 @@
 #include "town_map.h"
 
+#include "server_constants.h"
+
 #include <algorithm>
 #include <cstdint>
 #include <limits>
@@ -76,9 +78,9 @@ bool TownMap::initialize(const TownConfig& config) {
         if (!base || !prepared.isWalkable(playerBox.at(*base)) || !cells.insert(cell).second) {
             return false;
         }
-        if (connection.destination == "farm" && !toFarm) {
+        if (connection.destination == server_constants::FARM && !toFarm) {
             toFarm = base;
-        } else if (connection.destination == "dungeon" && !toMine) {
+        } else if (connection.destination == server_constants::DUNGEON && !toMine) {
             toMine = base;
         } else {
             return false;

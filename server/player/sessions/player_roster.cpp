@@ -1,5 +1,7 @@
 #include "player_roster.h"
 
+#include "server_constants.h"
+
 #include <algorithm>
 #include <set>
 #include <stdexcept>
@@ -10,20 +12,19 @@ PlayerRoster::PlayerRoster(const PlayerConfig& config, const MovementRules& move
 
 PlayerRoster::Admission PlayerRoster::addPlayer(const std::string& name,const PlayerData& appearance,const std::shared_ptr<OutQueue>& output) {
     if (name.empty() || !output)
-        return {nullptr, "Could not register the player"};
+        return {nullptr, server_constants::COULD_NOT_REGISTER_THE_PLAYER};
     if (findByName(name))
-        return {nullptr, "A player with that name already exists"};
+        return {nullptr, server_constants::A_PLAYER_WITH_THAT_NAME_ALREADY_EXISTS};
     if (std::any_of(players.begin(), players.end(), [&](const auto& entry) {
             return entry.second.getPlayer().getCharacterName() == appearance.characterName;
         }))
-        return {nullptr, "A character with that name already exists in this game"};
+        return {nullptr, server_constants::A_CHARACTER_WITH_THAT_NAME_ALREADY_EXISTS_IN_THIS_GAME};
     if (!hasAvailableSlot())
-        return {nullptr, "The game is full"};
+        return {nullptr, server_constants::THE_GAME_IS_FULL};
     auto player = factory.create(appearance);
     const auto spawn = spawns.spawnFor(player.snapshot());
-    if (!spawn ||
-        !player.restoreLocation(spawn->zone, spawn->level, spawn->position, spawn->interior))
-        return {nullptr, "No position is available for the player"};
+    if (!spawn ||!player.restoreLocation(spawn->zone, spawn->level, spawn->position, spawn->interior))
+        return {nullptr, server_constants::NO_POSITION_IS_AVAILABLE_FOR_THE_PLAYER};
 
     const auto it = players.emplace(nextPlayerId,PlayerRecord{nextPlayerId, name, std::move(player), output}).first;
     ++nextPlayerId;
@@ -33,16 +34,15 @@ PlayerRoster::Admission PlayerRoster::addPlayer(const std::string& name,const Pl
 PlayerRoster::Admission PlayerRoster::resumePlayer(const std::string& name,const std::shared_ptr<OutQueue>& output) {
     auto* record = findByName(name);
     if (!record)
-        return {nullptr, "You do not have a player in this game"};
+        return {nullptr, server_constants::YOU_DO_NOT_HAVE_A_PLAYER_IN_THIS_GAME};
     if (record->isConnected() || !output)
-        return {nullptr, "You are already connected to this game"};
+        return {nullptr, server_constants::YOU_ARE_ALREADY_CONNECTED_TO_THIS_GAME};
 
     auto& player = record->getPlayer();
     if (!movement.canMove(player.snapshot(), player.getPosition())) {
         const auto spawn = spawns.spawnFor(player.snapshot());
-        if (!spawn ||
-            !player.restoreLocation(spawn->zone, spawn->level, spawn->position, spawn->interior))
-            return {nullptr, "No position is available to resume the game"};
+        if (!spawn ||!player.restoreLocation(spawn->zone, spawn->level, spawn->position, spawn->interior))
+            return {nullptr, server_constants::NO_POSITION_IS_AVAILABLE_TO_RESUME_THE_GAME};
     }
 
     record->connect(output);
@@ -51,16 +51,16 @@ PlayerRoster::Admission PlayerRoster::resumePlayer(const std::string& name,const
 
 void PlayerRoster::restorePlayers(const std::map<std::string, PlayerDataLocal>& saved) {
     if (!players.empty() || saved.size() > maxPlayers || saved.size() > UINT16_MAX)
-        throw std::runtime_error("Cannot restore player roster");
+        throw std::runtime_error(server_constants::CANNOT_RESTORE_PLAYER_ROSTER);
 
     std::map<uint16_t, PlayerRecord> restored;
     std::set<std::string> characterNames;
     uint16_t id = 1;
     for (const auto& [username, data]: saved) {
         if (username.empty())
-            throw std::runtime_error("Empty username in save");
+            throw std::runtime_error(server_constants::EMPTY_USERNAME_IN_SAVE);
         if (!characterNames.insert(data.characterName).second)
-            throw std::runtime_error("Duplicate character name in save");
+            throw std::runtime_error(server_constants::DUPLICATE_CHARACTER_NAME_IN_SAVE);
         restored.emplace(id, PlayerRecord{id, username, factory.restore(data)});
         ++id;
     }
@@ -146,6 +146,6 @@ bool PlayerRoster::hasAvailableSlot() const {
 const PlayerRecord& PlayerRoster::require(uint16_t id) const {
     const auto* record = find(id);
     if (!record)
-        throw std::out_of_range("Unknown player ID");
+        throw std::out_of_range(server_constants::UNKNOWN_PLAYER_ID);
     return *record;
 }

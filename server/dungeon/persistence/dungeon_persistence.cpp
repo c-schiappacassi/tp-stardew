@@ -1,5 +1,7 @@
 #include "dungeon_persistence.h"
 
+#include "server_constants.h"
+
 #include <stdexcept>
 #include <utility>
 
@@ -36,7 +38,7 @@ void DungeonPersistence::restoreStorage(DungeonRooms& rooms, const std::map<uint
     for (const auto& [number, furniture]: saved) {
         auto* room = prepared.find(number);
         if (!room || !room->getPassages())
-            throw std::runtime_error("Invalid saved dungeon storage");
+            throw std::runtime_error(server_constants::INVALID_SAVED_DUNGEON_STORAGE);
         const auto dropped = loot.find(number);
         room->restoreChests(furniture, inventories, dropped == loot.end() ? std::vector<LootData>{} : dropped->second);
     }

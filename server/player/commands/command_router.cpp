@@ -169,6 +169,9 @@ PlayerActionResult applyAction(Player& player, const player_action::AddItemUpTo&
 PlayerActionResult applyAction(Player& player, const player_action::RemoveItem& action) {
     return {player.removeItem(action.slot, action.quantity), 0};
 }
+PlayerActionResult applyAction(Player& player, const player_action::ClearSlot& action) {
+    return {player.clearSlot(action.slot), 0};
+}
 PlayerActionResult applyAction(Player& player, const player_action::RemoveItems& action) {
     return {player.removeItems(action.quantities), 0};
 }

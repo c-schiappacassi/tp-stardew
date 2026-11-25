@@ -1,5 +1,7 @@
 #include "player_gifts.h"
 
+#include "server_constants.h"
+
 #include <iomanip>
 #include <sstream>
 #include <string>
@@ -9,7 +11,7 @@
 #include "player/sessions/player_roster.h"
 
 namespace {
-void reply(PlayerRecord& player, const std::string& text) { player.enqueueMessage({"Server", text}); }
+void reply(PlayerRecord& player, const std::string& text) { player.enqueueMessage({server_constants::SERVER, text}); }
 
 bool giftable(ItemId item) {
     return item != ItemId::Pickaxe && item != ItemId::WateringCan && item != ItemId::Shovel && item != ItemId::Sword && item != ItemId::Bed && item != ItemId::BedSheet;
@@ -21,21 +23,21 @@ bool nearby(const Player& sender, const Player& recipient) {
 }
 
 std::string description(const Stack& stack) {
-    std::string result = std::to_string(stack.quantity) + " " + std::string{shop_products::name(stack.item_id)};
+    std::string result = std::to_string(stack.quantity) + server_constants::SPACE + std::string{shop_products::name(stack.item_id)};
     switch (stack.qual) {
         case Quality::None: break;
-        case Quality::Base: result += " (base)"; break;
-        case Quality::Good: result += " (good)"; break;
-        case Quality::Excellent: result += " (excellent)"; break;
-        case Quality::Incredible: result += " (incredible)"; break;
-        case Quality::Perfect: result += " (perfect)"; break;
+        case Quality::Base: result += server_constants::BASE_SUFFIX; break;
+        case Quality::Good: result += server_constants::GOOD_SUFFIX; break;
+        case Quality::Excellent: result += server_constants::EXCELLENT_SUFFIX; break;
+        case Quality::Incredible: result += server_constants::INCREDIBLE_SUFFIX; break;
+        case Quality::Perfect: result += server_constants::PERFECT_SUFFIX; break;
     }
     return result;
 }
 
 std::string mention(const std::string& name) {
-    if (name.find_first_of(" \"\\") == std::string::npos)
-        return "@" + name;
+    if (name.find_first_of(server_constants::QUOTING_CHARACTERS) == std::string::npos)
+        return server_constants::AT_SIGN + name;
     std::ostringstream result;
     result << '@' << std::quoted(name);
     return result.str();
@@ -55,11 +57,11 @@ void PlayerGifts::execute(PlayerRoster& players, PlayerRecord& sender, const Gif
         }
     }
     if (!target) {
-        reply(sender, "The player does not exist or is offline.");
+        reply(sender, server_constants::THE_PLAYER_DOES_NOT_EXIST_OR_IS_OFFLINE_2);
         return;
     }
     if (target->getId() == sender.getId()) {
-        reply(sender, "You cannot give yourself a gift.");
+        reply(sender, server_constants::YOU_CANNOT_GIVE_YOURSELF_A_GIFT);
         return;
     }
     if (command.action == GiftAction::Offer)
@@ -71,56 +73,56 @@ void PlayerGifts::execute(PlayerRoster& players, PlayerRecord& sender, const Gif
 void PlayerGifts::offer(PlayerRecord& sender, PlayerRecord& recipient, uint16_t quantity, bool actionsBlocked) {
     const auto& player = sender.getPlayer();
     if (actionsBlocked || !player.canAct() || !recipient.getPlayer().canAct()) {
-        reply(sender, "Both players must be able to act to exchange gifts.");
+        reply(sender, server_constants::BOTH_PLAYERS_MUST_BE_ABLE_TO_ACT_TO_EXCHANGE_GIFTS);
         return;
     }
     if (!nearby(player, recipient.getPlayer())) {
-        reply(sender, "Approach the player to offer a gift.");
+        reply(sender, server_constants::APPROACH_THE_PLAYER_TO_OFFER_A_GIFT);
         return;
     }
     const auto* selected = player.getSelectedItem();
     if (!selected) {
-        reply(sender, "Select an item in your inventory before offering a gift.");
+        reply(sender, server_constants::SELECT_AN_ITEM_IN_YOUR_INVENTORY_BEFORE_OFFERING_A_GIFT);
         return;
     }
     if (!giftable(selected->item_id)) {
-        reply(sender, "Tools and beds cannot be given as gifts.");
+        reply(sender, server_constants::TOOLS_AND_BEDS_CANNOT_BE_GIVEN_AS_GIFTS);
         return;
     }
     if (quantity == 0 || quantity > selected->quantity) {
-        reply(sender, "You do not have that amount in the selected slot.");
+        reply(sender, server_constants::YOU_DO_NOT_HAVE_THAT_AMOUNT_IN_THE_SELECTED_SLOT);
         return;
     }
     if (offers.contains(sender.getId())) {
-        reply(sender, "You already have a pending gift. Wait for a response or use /cancel_gift.");
+        reply(sender, server_constants::YOU_ALREADY_HAVE_A_PENDING_GIFT_WAIT_FOR_A_RESPONSE_OR_USE);
         return;
     }
     const Stack stack{selected->item_id, quantity, selected->qual};
     offers.emplace(sender.getId(), Offer{recipient.getId(), player.getSelectedSlot(), stack});
-    reply(sender, "Gift offered to " + recipient.getPlayer().getCharacterName() + ": " + description(stack) + ". Waiting for a response.");
-    reply(recipient, player.getCharacterName() + " offers you " + description(stack) + ". Use /accept " + mention(player.getCharacterName()) + " or /reject " + mention(player.getCharacterName()) + ".");
+    reply(sender, server_constants::GIFT_OFFERED_TO_PREFIX + recipient.getPlayer().getCharacterName() + server_constants::COLON_SPACE + description(stack) + server_constants::FIELD_WAITING_FOR_A_RESPONSE);
+    reply(recipient, player.getCharacterName() + server_constants::OFFERS_YOU_SEPARATOR + description(stack) + server_constants::FIELD_USE_ACCEPT_PREFIX + mention(player.getCharacterName()) + server_constants::OR_REJECT_SEPARATOR + mention(player.getCharacterName()) + server_constants::DOT);
 }
 
 void PlayerGifts::respond(PlayerRecord& recipient, PlayerRecord& sender, bool accepted, bool actionsBlocked) {
     const auto found = offers.find(sender.getId());
     if (found == offers.end() || found->second.recipientId != recipient.getId()) {
-        reply(recipient, "You have no pending gift from that player.");
+        reply(recipient, server_constants::YOU_HAVE_NO_PENDING_GIFT_FROM_THAT_PLAYER);
         return;
     }
     if (!accepted) {
         offers.erase(found);
-        reply(sender, recipient.getPlayer().getCharacterName() + " rejected your gift.");
-        reply(recipient, "You rejected the gift from " + sender.getPlayer().getCharacterName() + ".");
+        reply(sender, recipient.getPlayer().getCharacterName() + server_constants::REJECTED_YOUR_GIFT_SUFFIX);
+        reply(recipient, server_constants::YOU_REJECTED_THE_GIFT_FROM_PREFIX + sender.getPlayer().getCharacterName() + server_constants::DOT);
         return;
     }
     auto& source = sender.getPlayer();
     auto& destination = recipient.getPlayer();
     if (actionsBlocked || !source.canAct() || !destination.canAct()) {
-        reply(recipient, "Both players must be able to act to exchange gifts.");
+        reply(recipient, server_constants::BOTH_PLAYERS_MUST_BE_ABLE_TO_ACT_TO_EXCHANGE_GIFTS);
         return;
     }
     if (!nearby(source, destination)) {
-        reply(recipient, "Approach the player to accept the gift.");
+        reply(recipient, server_constants::APPROACH_THE_PLAYER_TO_ACCEPT_THE_GIFT);
         return;
     }
     const auto offer = found->second;
@@ -128,30 +130,30 @@ void PlayerGifts::respond(PlayerRecord& recipient, PlayerRecord& sender, bool ac
     const auto item = items.find(offer.slot);
     if (item == items.end() || item->second.item_id != offer.stack.item_id || item->second.qual != offer.stack.qual || item->second.quantity < offer.stack.quantity) {
         offers.erase(found);
-        reply(sender, "Your gift was cancelled because the offered item changed.");
-        reply(recipient, "The gift was cancelled because the offered item is no longer available.");
+        reply(sender, server_constants::YOUR_GIFT_WAS_CANCELLED_BECAUSE_THE_OFFERED_ITEM_CHANGED);
+        reply(recipient, server_constants::THE_GIFT_WAS_CANCELLED_BECAUSE_THE_OFFERED_ITEM_IS_NO_LONGER_AVAILABLE);
         return;
     }
     if (!source.transferItemsTo(destination, offer.slot, offer.stack.quantity)) {
-        reply(recipient, "Your inventory has no room for the gift. Make space and accept again, or reject it.");
+        reply(recipient, server_constants::YOUR_INVENTORY_HAS_NO_ROOM_FOR_THE_GIFT_MAKE_SPACE_AND_ACCEPT);
         return;
     }
     offers.erase(found);
-    reply(sender, destination.getCharacterName() + " accepted your gift: " + description(offer.stack) + ".");
-    reply(recipient, "You received " + description(offer.stack) + " from " + source.getCharacterName() + ".");
+    reply(sender, destination.getCharacterName() + server_constants::ACCEPTED_YOUR_GIFT_SEPARATOR + description(offer.stack) + server_constants::DOT);
+    reply(recipient, server_constants::YOU_RECEIVED_PREFIX + description(offer.stack) + server_constants::FROM_SEPARATOR + source.getCharacterName() + server_constants::DOT);
 }
 
 void PlayerGifts::cancel(PlayerRoster& players, PlayerRecord& sender) {
     const auto found = offers.find(sender.getId());
     if (found == offers.end()) {
-        reply(sender, "You have no outgoing gift to cancel.");
+        reply(sender, server_constants::YOU_HAVE_NO_OUTGOING_GIFT_TO_CANCEL);
         return;
     }
     auto* recipient = players.find(found->second.recipientId);
     offers.erase(found);
-    reply(sender, "You cancelled your gift.");
+    reply(sender, server_constants::YOU_CANCELLED_YOUR_GIFT);
     if (recipient && recipient->isConnected())
-        reply(*recipient, sender.getPlayer().getCharacterName() + " cancelled the gift offer.");
+        reply(*recipient, sender.getPlayer().getCharacterName() + server_constants::CANCELLED_THE_GIFT_OFFER_SUFFIX);
 }
 
 void PlayerGifts::onDisconnect(uint16_t playerId) noexcept {

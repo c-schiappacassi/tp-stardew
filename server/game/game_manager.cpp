@@ -1,5 +1,7 @@
 #include "game_manager.h"
 
+#include "server_constants.h"
+
 #include <exception>
 #include <utility>
 
@@ -8,7 +10,7 @@
 #include "sessions/game_sessions.h"
 
 GameManager::GameManager(const GameConfig& config, const std::optional<FarmLayout>&):
-    config(config), persistence("saves"), games(persistence.getGames()) {}
+    config(config), persistence(server_constants::SAVES), games(persistence.getGames()) {}
 
 GameManager::~GameManager() { stopAll(); }
 
@@ -24,7 +26,7 @@ GameSession GameManager::createGame(const CreateGameDTO& dto, const std::shared_
     std::lock_guard<std::mutex> lock(lifecycleMtx);
     try {
         const auto id = games.nextGameId();
-        auto prepared = GameLoader::prepare(dto.mapPath, dto.worldId);
+        auto prepared = GameLoader::prepare(dto.mapPath, dto.worldId, config.interiors);
         auto game = std::make_shared<Game>(id, dto.gameName, dto.worldId, std::move(prepared), config);
         auto session = game->createGame(dto, output);
         if (session.status.status != StatusCode::Ok)
@@ -36,7 +38,7 @@ GameSession GameManager::createGame(const CreateGameDTO& dto, const std::shared_
         startGame(id, game);
         return session;
     } catch (const std::exception& error) {
-        return GameSessions::failure(std::string("Could not create game: ") + error.what());
+        return GameSessions::failure(std::string(server_constants::COULD_NOT_CREATE_GAME_PREFIX) + error.what());
     }
 }
 
@@ -50,7 +52,7 @@ std::shared_ptr<Game> GameManager::loadSavedGame(const std::string& code) {
         saved = persistence.loadGame(code);
         mapPath = persistence.mapPathFor(code);
     }
-    auto prepared = GameLoader::prepare(mapPath, saved.mapId);
+    auto prepared = GameLoader::prepare(mapPath, saved.mapId, config.interiors);
     auto game = std::make_shared<Game>(saved.id, saved.farmName, saved.mapId, std::move(prepared), config);
     game->restorePersistenceData(saved);
     return game;
@@ -63,13 +65,13 @@ GameSession GameManager::joinGame(const JoinGameDTO& dto, const std::shared_ptr<
     try {
         auto game = loadSavedGame(dto.code);
         if (!game)
-            return GameSessions::failure("No game exists with that code");
+            return GameSessions::failure(server_constants::NO_GAME_EXISTS_WITH_THAT_CODE);
         auto session = game->joinGame(dto, output);
         if (session.status.status == StatusCode::Ok)
             startGame(dto.code, game);
         return session;
     } catch (const std::exception& error) {
-        return GameSessions::failure(std::string("Error restoring the game: ") + error.what());
+        return GameSessions::failure(std::string(server_constants::ERROR_RESTORING_THE_GAME_PREFIX) + error.what());
     }
 }
 
@@ -80,14 +82,14 @@ GameSession GameManager::resumeGame(const ResumeGameDTO& dto, const std::shared_
     try {
         auto game = loadSavedGame(dto.gameId);
         if (!game)
-            return GameSessions::failure("Could not restore the game");
+            return GameSessions::failure(server_constants::COULD_NOT_RESTORE_THE_GAME);
         auto session = game->resumeGame(dto, output);
         if (session.status.status != StatusCode::Ok)
             return session;
         startGame(dto.gameId, game);
         return session;
     } catch (const std::exception& error) {
-        return GameSessions::failure(std::string("Error restoring the game: ") + error.what());
+        return GameSessions::failure(std::string(server_constants::ERROR_RESTORING_THE_GAME_PREFIX) + error.what());
     }
 }
 
@@ -119,11 +121,11 @@ qtStatus GameManager::checkJoin(const CheckCodeDTO& dto) {
             reply = game->checkJoin(dto);
         } else {
             reply.status = StatusCode::Error;
-            reply.errorMsg = "No game exists with that code";
+            reply.errorMsg = server_constants::NO_GAME_EXISTS_WITH_THAT_CODE;
         }
     } catch (const std::exception& error) {
         reply.status = StatusCode::Error;
-        reply.errorMsg = std::string("Error restoring the game: ") + error.what();
+        reply.errorMsg = std::string(server_constants::ERROR_RESTORING_THE_GAME_PREFIX) + error.what();
     }
     return reply;
 }

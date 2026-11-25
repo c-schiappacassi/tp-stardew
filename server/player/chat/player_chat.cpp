@@ -1,5 +1,7 @@
 #include "player_chat.h"
 
+#include "server_constants.h"
+
 #include <algorithm>
 #include <exception>
 #include <utility>
@@ -24,7 +26,7 @@ bool PlayerChat::interact(PlayerRecord& sender, Direction direction) const {
             return false;
         sender.enqueueMessages(*responses);
     } catch (const std::exception&) {
-        reply(sender, "Could not start the conversation. Try again.");
+        reply(sender, server_constants::COULD_NOT_START_THE_CONVERSATION_TRY_AGAIN);
     }
     return true;
 }
@@ -42,7 +44,7 @@ void PlayerChat::onDisconnect(uint16_t playerId) noexcept {
 void PlayerChat::clearGifts() noexcept { gifts.clear(); }
 
 void PlayerChat::reply(PlayerRecord& sender, const std::string& text) {
-    sender.enqueueMessage({"Server", text});
+    sender.enqueueMessage({server_constants::SERVER, text});
 }
 
 void PlayerChat::collectCommunityRewards(PlayerRecord& record, bool actionsBlocked) const {
@@ -61,7 +63,7 @@ void PlayerChat::collectCommunityRewards(PlayerRecord& record, bool actionsBlock
 void PlayerChat::donate(PlayerRecord& record, const DonateDTO& command, bool actionsBlocked) const {
     if (!services.community) {
         record.setDonationReceipt({command.requestId, command.kind, command.slot,CommunityDonationError::CannotAct, 0});
-        reply(record, "The community center is not available.");
+        reply(record, server_constants::THE_COMMUNITY_CENTER_IS_NOT_AVAILABLE);
         return;
     }
     const ChatCommandContext context{record.getId(), record.getName(), manager, actionsBlocked};
@@ -75,29 +77,31 @@ void PlayerChat::privateMessage(PlayerRoster& players, PlayerRecord& sender,cons
     std::size_t body = std::string::npos;
     const auto separator = text.find(' ');
     if (separator == std::string::npos || separator == 1) {
-        reply(sender, "Usage: @username message");
+        reply(sender, server_constants::USAGE_CHARACTER_NAME_MESSAGE);
         return;
     }
     for (auto& [id, record]: players) {
-        const auto end = 1 + record.getName().size();
-        if (text.compare(1, record.getName().size(), record.getName()) == 0 &&
+        const auto& characterName = record.getPlayer().getCharacterName();
+        const auto end = 1 + characterName.size();
+        if (text.compare(1, characterName.size(), characterName) == 0 &&
             (end == text.size() || (end < text.size() && text[end] == ' ')) &&
-            (!recipient || record.getName().size() > recipient->getName().size())) {
+            (!recipient || characterName.size() > recipient->getPlayer().getCharacterName().size())) {
             recipient = &record;
             body = text.find_first_not_of(' ', end);
         }
     }
     if (recipient && body == std::string::npos) {
-        reply(sender, "Usage: @username message");
+        reply(sender, server_constants::USAGE_CHARACTER_NAME_MESSAGE);
         return;
     }
     if (!recipient || !recipient->isConnected()) {
-        reply(sender, "The player does not exist or is offline");
+        reply(sender, server_constants::THE_PLAYER_DOES_NOT_EXIST_OR_IS_OFFLINE);
         return;
     }
-    recipient->enqueueMessage({sender.getName(), text});
+    const auto& senderName = sender.getPlayer().getCharacterName();
+    recipient->enqueueMessage({senderName, text});
     if (recipient->getId() != sender.getId())
-        sender.enqueueMessage({sender.getName(), text});
+        sender.enqueueMessage({senderName, text});
 }
 
 void PlayerChat::handle(PlayerRoster& players, uint16_t senderId, const std::string& text,bool actionsBlocked) {
@@ -106,12 +110,12 @@ void PlayerChat::handle(PlayerRoster& players, uint16_t senderId, const std::str
         return;
     auto& sender = *senderRecord;
     if (text.size() > MAX_LENGTH) {
-        reply(sender, "The message cannot exceed 100 characters");
+        reply(sender, server_constants::THE_MESSAGE_CANNOT_EXCEED_100_CHARACTERS);
         return;
     }
     if (std::any_of(text.begin(), text.end(),
                     [](unsigned char ch) { return ch < 32 || ch == 127; })) {
-        reply(sender, "The message contains control characters");
+        reply(sender, server_constants::THE_MESSAGE_CONTAINS_CONTROL_CHARACTERS);
         return;
     }
     const auto first = text.find_first_not_of(' ');

@@ -1,5 +1,7 @@
 #include "persistence_manager.h"
 
+#include "server_constants.h"
+
 #include <algorithm>
 #include <stdexcept>
 
@@ -8,7 +10,7 @@ PersistenceManager::PersistenceManager(const std::filesystem::path& directory)
     for (size_t i = 0; i < games.size(); ++i) {
         for (size_t j = i + 1; j < games.size(); ++j) {
             if (games[i].id == games[j].id) {
-                throw std::runtime_error("Duplicate game ID in persistence index: " + games[i].id);
+                throw std::runtime_error(server_constants::DUPLICATE_GAME_ID_IN_PERSISTENCE_INDEX_PREFIX + games[i].id);
             }
         }
     }
@@ -31,7 +33,7 @@ std::string PersistenceManager::mapPathFor(const std::string& gameId) const {
     for (const GameIndexDTO& entry : games) {
         if (entry.id == gameId) return entry.mapPath;
     }
-    throw std::runtime_error("Game is not registered: " + gameId);
+    throw std::runtime_error(server_constants::GAME_IS_NOT_REGISTERED_PREFIX + gameId);
 }
 
 void PersistenceManager::saveIndex() const {
@@ -66,7 +68,7 @@ std::vector<GameInfoDTO> PersistenceManager::listGamesFor(const std::string& use
         }
         auto it = game.playerPreviews.find(userName);
         if (it == game.playerPreviews.end()) {
-            throw std::runtime_error("Missing player preview for: " + userName);
+            throw std::runtime_error(server_constants::MISSING_PLAYER_PREVIEW_FOR_PREFIX + userName);
         }
         PlayerData player{};
         player.characterName = it->second.characterName;
@@ -82,7 +84,7 @@ std::vector<GameInfoDTO> PersistenceManager::listGamesFor(const std::string& use
 
 void PersistenceManager::registerGame(const GameIndexDTO& game) {
     if (gameExists(game.id)) {
-        throw std::runtime_error("Game already exists: " + game.id);
+        throw std::runtime_error(server_constants::GAME_ALREADY_EXISTS_PREFIX + game.id);
     }
     games.push_back(game);
     try {
@@ -107,16 +109,16 @@ void PersistenceManager::updateGameIndex(const GameIndexDTO& game) {
             return;
         }
     }
-    throw std::runtime_error("Game is not registered: " + game.id);
+    throw std::runtime_error(server_constants::GAME_IS_NOT_REGISTERED_PREFIX + game.id);
 }
 
 void PersistenceManager::createGame(const PersistenceDTO& game, const std::string& mapPath) {
     if (gameExists(game.id)) {
-        throw std::runtime_error("Game already exists: " + game.id);
+        throw std::runtime_error(server_constants::GAME_ALREADY_EXISTS_PREFIX + game.id);
     }
 
     if (mapPath.empty()) {
-        throw std::invalid_argument("Game map path is required");
+        throw std::invalid_argument(server_constants::GAME_MAP_PATH_IS_REQUIRED);
     }
     GameIndexDTO entry = indexFromGame(game);
     entry.mapPath = mapPath;
@@ -134,7 +136,7 @@ void PersistenceManager::createGame(const PersistenceDTO& game, const std::strin
 
 PersistenceDTO PersistenceManager::loadGame(const std::string& gameId) const {
     if (!gameExists(gameId)) {
-        throw std::runtime_error("Game is not registered: " + gameId);
+        throw std::runtime_error(server_constants::GAME_IS_NOT_REGISTERED_PREFIX + gameId);
     }
 
     return reader.readGame(gameId);
@@ -150,5 +152,5 @@ void PersistenceManager::saveGame(const PersistenceDTO& game) {
             return;
         }
     }
-    throw std::runtime_error("Cannot save unregistered game: " + game.id);
+    throw std::runtime_error(server_constants::CANNOT_SAVE_UNREGISTERED_GAME_PREFIX + game.id);
 }

@@ -1,5 +1,7 @@
 #include "server_protocol.h"
 
+#include "server_constants.h"
+
 #include <algorithm>
 #include <cstdint>
 #include <limits>
@@ -32,53 +34,53 @@ void validateCommunityQuality(Quality quality) {
         case Quality::Perfect:
             return;
     }
-    throw ProtocolError("Invalid community item quality");
+    throw ProtocolError(server_constants::INVALID_COMMUNITY_ITEM_QUALITY);
 }
 
 void validateCommunityStacks(const std::vector<Stack>& items) {
-    requireCommunity(items.size() <= SEED_COUNT, "Too many community reward items");
+    requireCommunity(items.size() <= SEED_COUNT, server_constants::TOO_MANY_COMMUNITY_REWARD_ITEMS);
     for (const auto& stack : items) {
-        requireCommunity(stack.quantity != 0, "Empty community reward stack");
+        requireCommunity(stack.quantity != 0, server_constants::EMPTY_COMMUNITY_REWARD_STACK);
         validateCommunityQuality(stack.qual);
     }
 }
 
 void validateDonationKind(DonationKind kind) {
-    requireCommunity(kind <= DonationKind::Coins, "Invalid donation kind");
+    requireCommunity(kind <= DonationKind::Coins, server_constants::INVALID_DONATION_KIND);
 }
 
 void validateCommunityState(const CommunityStateData& state) {
-    requireCommunity(state.bundles.size() <= BUNDLE_COUNT, "Too many community bundles");
-    requireCommunity(state.discount <= MarketDiscount::Active, "Invalid community discount");
-    requireCommunity(!state.canDonate || (state.insideCenter && !state.completed), "Invalid donation availability");
-    requireCommunity(state.coinsDonated <= state.coinsRequired, "Invalid community coins");
+    requireCommunity(state.bundles.size() <= BUNDLE_COUNT, server_constants::TOO_MANY_COMMUNITY_BUNDLES);
+    requireCommunity(state.discount <= MarketDiscount::Active, server_constants::INVALID_COMMUNITY_DISCOUNT);
+    requireCommunity(!state.canDonate || (state.insideCenter && !state.completed), server_constants::INVALID_DONATION_AVAILABILITY);
+    requireCommunity(state.coinsDonated <= state.coinsRequired, server_constants::INVALID_COMMUNITY_COINS);
     if (state.available) {
         requireCommunity(state.bundles.size() == BUNDLE_COUNT && state.coinsRequired != 0,
-                "Incomplete community state");
+                server_constants::INCOMPLETE_COMMUNITY_STATE);
     }
     std::set<CommunityBundle> seen;
     for (const auto& bundle : state.bundles) {
         requireCommunity(bundle.id <= CommunityBundle::Money && seen.insert(bundle.id).second,
-                "Invalid community bundle");
-        requireCommunity(!bundle.rewardGranted || bundle.completed, "Reward granted for an incomplete bundle");
-        requireCommunity(bundle.items.size() <= REQUIREMENT_LIMIT, "Too many community requirements");
+                server_constants::INVALID_COMMUNITY_BUNDLE);
+        requireCommunity(!bundle.rewardGranted || bundle.completed, server_constants::REWARD_GRANTED_FOR_AN_INCOMPLETE_BUNDLE);
+        requireCommunity(bundle.items.size() <= REQUIREMENT_LIMIT, server_constants::TOO_MANY_COMMUNITY_REQUIREMENTS);
         for (const auto& item : bundle.items) {
-            requireCommunity(item.required != 0 && item.donated <= item.required, "Invalid community requirement");
+            requireCommunity(item.required != 0 && item.donated <= item.required, server_constants::INVALID_COMMUNITY_REQUIREMENT);
             validateCommunityQuality(item.minimumQuality);
         }
         validateCommunityStacks(bundle.reward.items);
     }
     if (state.completed) {
         requireCommunity(state.available && std::all_of(state.bundles.begin(), state.bundles.end(),
-            [](const auto& bundle) { return bundle.completed; }), "Invalid completed community state");
+            [](const auto& bundle) { return bundle.completed; }), server_constants::INVALID_COMPLETED_COMMUNITY_STATE);
     }
     validateCommunityStacks(state.pendingItems);
     if (state.lastDonation) {
         const auto& receipt = *state.lastDonation;
         validateDonationKind(receipt.kind);
-        requireCommunity(receipt.error <= CommunityDonationError::InvalidSlot, "Invalid donation result");
+        requireCommunity(receipt.error <= CommunityDonationError::InvalidSlot, server_constants::INVALID_DONATION_RESULT);
         requireCommunity(receipt.error == CommunityDonationError::None ? receipt.accepted != 0 : receipt.accepted == 0,
-                "Invalid accepted donation amount");
+                server_constants::INVALID_ACCEPTED_DONATION_AMOUNT);
     }
 }
 
@@ -86,68 +88,68 @@ void validateCommunityState(const CommunityStateData& state) {
 // ANTES de armarlo (si no, el contador se truncaba y el cliente se desincronizaba).
 void validateCount(size_t count, size_t limit, const char* what) {
     if (count > limit) {
-        throw ProtocolError(std::string("Too many protocol entries: ") + what);
+        throw ProtocolError(std::string(server_constants::TOO_MANY_PROTOCOL_ENTRIES_PREFIX) + what);
     }
 }
 
 void validateFarmCounts(const FarmData& farm) {
-    validateCount(farm.crops.size(), MAX_U16, "crops");
-    validateCount(farm.animals.size(), MAX_U16, "animals");
-    validateCount(farm.tilledSoil.size(), MAX_U16, "tilled soil");
-    validateCount(farm.furniture.size(), MAX_U16, "furniture");
+    validateCount(farm.crops.size(), MAX_U16, server_constants::CROPS);
+    validateCount(farm.animals.size(), MAX_U16, server_constants::ANIMALS);
+    validateCount(farm.tilledSoil.size(), MAX_U16, server_constants::TILLED_SOIL);
+    validateCount(farm.furniture.size(), MAX_U16, server_constants::FURNITURE);
 }
 
 void validatePosition(const Position& pos) {
     if (pos.getX() < 0 || pos.getY() < 0 || pos.getX() > static_cast<int>(MAX_U16) ||
         pos.getY() > static_cast<int>(MAX_U16)) {
-        throw ProtocolError("Position outside protocol range");
+        throw ProtocolError(server_constants::POSITION_OUTSIDE_PROTOCOL_RANGE);
     }
 }
 
 void validateOpenChest(const OpenChestData& chest, const ZoneData& zone) {
     if (!hasChest(zone, chest.id) || chest.capacity != CHEST_INVENTORY_CAPACITY || chest.items.size() > chest.capacity) {
-        throw ProtocolError("Invalid open chest");
+        throw ProtocolError(server_constants::INVALID_OPEN_CHEST);
     }
     for (const auto& [slot, stack]: chest.items) {
         if (slot >= chest.capacity || stack.quantity == 0 || stack.quantity > INVENTORY_STACK_LIMIT || stack.qual > Quality::Perfect) {
-            throw ProtocolError("Invalid chest slot");
+            throw ProtocolError(server_constants::INVALID_CHEST_SLOT);
         }
     }
 }
 
 void validateLoot(const std::vector<LootData>& loot) {
-    validateCount(loot.size(), MAX_U16, "ground items");
+    validateCount(loot.size(), MAX_U16, server_constants::GROUND_ITEMS);
     for (const auto& item: loot) {
         validatePosition(item.pos);
         if (item.id == 0 || item.quantity == 0 || item.kind > LootKind::Gold) {
-            throw ProtocolError("Invalid ground item");
+            throw ProtocolError(server_constants::INVALID_GROUND_ITEM);
         }
     }
 }
 
 void validateCombat(const DungeonCombatData& combat) {
-    validateCount(combat.enemies.size(), MAX_U16, "enemies");
-    validateCount(combat.projectiles.size(), MAX_U16, "projectiles");
-    validateCount(combat.traps.size(), MAX_U16, "traps");
+    validateCount(combat.enemies.size(), MAX_U16, server_constants::ENEMIES);
+    validateCount(combat.projectiles.size(), MAX_U16, server_constants::PROJECTILES);
+    validateCount(combat.traps.size(), MAX_U16, server_constants::TRAPS);
     validateLoot(combat.loot);
     for (const auto& enemy: combat.enemies) {
         validatePosition(enemy.pos);
         if (enemy.dir > Direction::Right || enemy.type > EnemyType::Skull ||
             enemy.state > EnemyState::Dead) {
-            throw ProtocolError("Unknown enemy state");
+            throw ProtocolError(server_constants::UNKNOWN_ENEMY_STATE);
         }
     }
     for (const auto& projectile: combat.projectiles) {
         validatePosition(projectile.pos);
         if (projectile.type > FlameType::Common) {
-            throw ProtocolError("Unknown flame type");
+            throw ProtocolError(server_constants::UNKNOWN_FLAME_TYPE);
         }
     }
     for (const auto& trap: combat.traps) {
         validatePosition(trap.pos);
         if (trap.dir == Direction::None || trap.dir > Direction::Right ||
             trap.type > TrapType::WallFlame || trap.state > TrapState::Active) {
-            throw ProtocolError("Unknown trap state");
+            throw ProtocolError(server_constants::UNKNOWN_TRAP_STATE);
         }
     }
 }
@@ -177,12 +179,12 @@ void validateStatus(const ServerStatus& status) {
             std::holds_alternative<std::monostate>(local.zoneData) &&
             (local.currentZone == Zone::Farm || local.currentZone == Zone::Dungeon);
     if (!hasMatchingZoneData(local) && !emptyEntryError) {
-        throw ProtocolError("Local data does not match the player zone");
+        throw ProtocolError(server_constants::LOCAL_DATA_DOES_NOT_MATCH_THE_PLAYER_ZONE);
     }
 
-    validateCount(status.players.size(), MAX_U16, "players");
-    validateCount(local.items.size(), MAX_U8, "items");
-    validateCount(local.newMessages.size(), MAX_U16, "chat messages");
+    validateCount(status.players.size(), MAX_U16, server_constants::PLAYERS);
+    validateCount(local.items.size(), MAX_U8, server_constants::ITEMS);
+    validateCount(local.newMessages.size(), MAX_U16, server_constants::CHAT_MESSAGES);
     const auto* farm = std::get_if<FarmData>(&local.zoneData);
     if (local.openChest)
         validateOpenChest(*local.openChest, local.zoneData);
@@ -192,16 +194,16 @@ void validateStatus(const ServerStatus& status) {
     }
     const auto* mine = std::get_if<MineData>(&local.zoneData);
     if (mine) {
-        validateCount(mine->current_level_data.minerals.size(), MAX_U16, "minerals");
+        validateCount(mine->current_level_data.minerals.size(), MAX_U16, server_constants::MINERALS);
         validateCombat(mine->current_level_data.combat);
     }
     const auto* furniture = zoneFurniture(local.zoneData);
     if (furniture) {
-        validateCount(furniture->size(), MAX_U16, "furniture");
+        validateCount(furniture->size(), MAX_U16, server_constants::FURNITURE);
         std::set<uint32_t> ids;
         for (const auto& item: *furniture) {
             if (!ids.insert(item.id).second)
-                throw ProtocolError("Duplicate furniture identifier");
+                throw ProtocolError(server_constants::DUPLICATE_FURNITURE_IDENTIFIER);
         }
     }
     if (const auto* inside = std::get_if<InteriorData>(&local.zoneData))
@@ -245,7 +247,7 @@ void ServerProtocol::writeColor(MessageBuffer& out, const Color& color) {
 Direction ServerProtocol::receiveDirection() {
     const uint8_t raw = base.receiveUint8();
     if (raw > static_cast<uint8_t>(Direction::Right)) {
-        throw ProtocolError("invalid direction"); // dir fuera de rango corta conexion?
+        throw ProtocolError(server_constants::INVALID_DIRECTION); // dir fuera de rango corta conexion?
     }
     return static_cast<Direction>(raw);
 }
@@ -272,7 +274,7 @@ void ServerProtocol::writePlayerData(MessageBuffer& out, const PlayerData& data)
     }
     if (data.currentZone == Zone::InsideHouse) {
         if (!data.interior || data.interior->interior_id > InteriorId::ComunityCenter) {
-            throw ProtocolError("Unknown interior location");
+            throw ProtocolError(server_constants::UNKNOWN_INTERIOR_LOCATION);
         }
         out.putUint8(static_cast<uint8_t>(data.interior->interior_id));
         out.putUint8(data.interior->house_index);
@@ -298,7 +300,7 @@ void ServerProtocol::writeMineralData(MessageBuffer& out, const MineralData& min
 }
 
 void ServerProtocol::writeLevelData(MessageBuffer& out, const LevelData& level) {
-    validateCount(level.furniture.size(), MAX_U16, "level furniture");
+    validateCount(level.furniture.size(), MAX_U16, server_constants::LEVEL_FURNITURE);
     writePosition(out, level.entry);
     writePosition(out, level.exit);
 
@@ -381,7 +383,7 @@ void ServerProtocol::writeAnimalData(MessageBuffer& out, const AnimalData& anima
 void ServerProtocol::writeFurnitureData(MessageBuffer& out, const FurnitureData& f) {
     validatePosition(f.pos);
     if (f.id == 0 || f.type > FurnitureId::Chest || f.dir > Direction::Right)
-        throw ProtocolError("Invalid furniture");
+        throw ProtocolError(server_constants::INVALID_FURNITURE);
     out.putUint32(f.id);
     writePosition(out, f.pos);
     out.putUint8(static_cast<uint8_t>(f.type));
@@ -409,15 +411,15 @@ void ServerProtocol::writeFarmData(MessageBuffer& out, const FarmData& farm) {
 }
 
 void ServerProtocol::writeBackgroundData(MessageBuffer& out, const BackgroundData& bg) {
-    validateCount(bg.decor.size(),     MAX_U16, "decor");
-    validateCount(bg.frame.size(),     MAX_U16, "frame pieces");
-    validateCount(bg.buildings.size(), MAX_U16, "buildings");
-    validateCount(bg.furniture.size(), MAX_U16, "static furniture");
-    validateCount(bg.portals.size(), MAX_U16, "portals");
+    validateCount(bg.decor.size(),     MAX_U16, server_constants::DECOR);
+    validateCount(bg.frame.size(),     MAX_U16, server_constants::FRAME_PIECES);
+    validateCount(bg.buildings.size(), MAX_U16, server_constants::BUILDINGS);
+    validateCount(bg.furniture.size(), MAX_U16, server_constants::STATIC_FURNITURE);
+    validateCount(bg.portals.size(), MAX_U16, server_constants::PORTALS);
     for (const auto& portal: bg.portals) {
         validatePosition(portal.pos);
         if (portal.id > PortalId::MineToFarm) {
-            throw ProtocolError("Unknown portal type");
+            throw ProtocolError(server_constants::UNKNOWN_PORTAL_TYPE);
         }
     }
 
@@ -435,7 +437,7 @@ void ServerProtocol::writeBackgroundData(MessageBuffer& out, const BackgroundDat
     for (const auto& piece : bg.frame) {
         validatePosition(piece.pos);
         if (piece.id > FramePieceId::DungeonTopWallEndLeft) {
-            throw ProtocolError("Unknown frame piece");
+            throw ProtocolError(server_constants::UNKNOWN_FRAME_PIECE);
         }
         writePosition(out, piece.pos);
         out.putUint8(static_cast<uint8_t>(piece.id));
@@ -460,7 +462,7 @@ void ServerProtocol::writeBackgroundData(MessageBuffer& out, const BackgroundDat
     if (bg.interior) {
         validatePosition(bg.interior->pos);
         if (bg.interior->interior_id > InteriorId::ComunityCenter) {
-            throw ProtocolError("Unknown interior");
+            throw ProtocolError(server_constants::UNKNOWN_INTERIOR);
         }
         writePosition(out, bg.interior->pos);
         out.putUint8(static_cast<uint8_t>(bg.interior->interior_id));
@@ -473,8 +475,8 @@ void ServerProtocol::writeBackgroundData(MessageBuffer& out, const BackgroundDat
 }
 
 void ServerProtocol::sendConstMap(const ConstMapData& map) {
-    validateCount(map.levels.size(),      MAX_U8, "levels");
-    validateCount(map.farm_houses.size(), MAX_U8, "houses");
+    validateCount(map.levels.size(),      MAX_U8, server_constants::LEVELS);
+    validateCount(map.farm_houses.size(), MAX_U8, server_constants::HOUSES);
 
     MessageBuffer out(1 << 20);
     writeBackgroundData(out, map.farm);
@@ -507,8 +509,8 @@ void ServerProtocol::writeZoneData(MessageBuffer& out, Zone currentZone,const Zo
             return;
         case Zone::InsideHouse: {
             const auto* inside = std::get_if<InteriorData>(&zoneData);
-            if (!inside) throw ProtocolError("Missing interior data");
-            validateCount(inside->furniture.size(), MAX_U16, "interior furniture");
+            if (!inside) throw ProtocolError(server_constants::MISSING_INTERIOR_DATA);
+            validateCount(inside->furniture.size(), MAX_U16, server_constants::INTERIOR_FURNITURE);
             out.putUint8(static_cast<uint8_t>(inside->interior_id));
             out.putUint8(inside->house_index);
             out.putUint16(static_cast<uint16_t>(inside->furniture.size()));
@@ -702,7 +704,7 @@ void ServerProtocol::sendStatus(const ServerStatus& status) {
 }
 
 void ServerProtocol::sendQtStatus(const qtStatus& status) {
-    validateCount(status.games.size(), MAX_U16, "games");
+    validateCount(status.games.size(), MAX_U16, server_constants::GAMES);
 
     MessageBuffer out(1024);
     out.putUint8(static_cast<uint8_t>(status.status));

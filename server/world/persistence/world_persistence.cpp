@@ -1,5 +1,7 @@
 #include "world_persistence.h"
 
+#include "server_constants.h"
+
 #include <algorithm>
 #include <stdexcept>
 #include <utility>
@@ -33,7 +35,7 @@ void WorldPersistence::restoreFarm(const PersistenceDTO& saved) {
         for (const auto& item: loot) maximum = std::max(maximum, item.id);
     }
     if (maximum == UINT32_MAX)
-        throw std::runtime_error("Saved entity ID exhausted");
+        throw std::runtime_error(server_constants::SAVED_ENTITY_ID_EXHAUSTED);
     entityIds.ensureNextId(maximum + 1);
 }
 

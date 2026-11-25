@@ -1,5 +1,7 @@
 #include "market_prices.h"
 
+#include "server_constants.h"
+
 #include <stdexcept>
 
 uint64_t MarketPrices::buyingPrice(uint64_t basePrice) const {
@@ -28,5 +30,5 @@ void MarketPrices::restoreDiscount(MarketDiscount saved) {
             discount = saved;
             return;
     }
-    throw std::invalid_argument("Invalid saved market discount");
+    throw std::invalid_argument(server_constants::INVALID_SAVED_MARKET_DISCOUNT);
 }

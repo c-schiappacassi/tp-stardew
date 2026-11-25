@@ -1,5 +1,7 @@
 #include "crop_quality.h"
 
+#include "server_constants.h"
+
 #include <algorithm>
 #include <cmath>
 #include <limits>
@@ -8,7 +10,7 @@
 namespace {
 void accumulate(std::chrono::milliseconds& total, std::chrono::milliseconds elapsed) {
     if (elapsed.count() < 0) {
-        throw std::invalid_argument("Negative time");
+        throw std::invalid_argument(server_constants::NEGATIVE_TIME);
     }
     total += std::min(elapsed, std::chrono::milliseconds::max() - total);
 }
@@ -18,7 +20,7 @@ CropQuality::CropQuality(std::chrono::milliseconds dayLength,
     std::chrono::milliseconds wateringInterval):
     dayLength(dayLength), wateringInterval(wateringInterval) {
     if (dayLength.count() <= 0 || wateringInterval.count() <= 0) {
-        throw std::invalid_argument("Crop times must be positive");
+        throw std::invalid_argument(server_constants::CROP_TIMES_MUST_BE_POSITIVE);
     }
 }
 
@@ -43,7 +45,7 @@ void CropQuality::reset() {
 
 Quality CropQuality::evaluate(double luck) const {
     if (!std::isfinite(luck) || luck < 0.0) {
-        throw std::invalid_argument("Luck must be finite and nonnegative");
+        throw std::invalid_argument(server_constants::LUCK_MUST_BE_FINITE_AND_NONNEGATIVE);
     }
     const double waterPenalty = static_cast<double>(wateringDelay.count()) /
         (static_cast<double>(waterRequests) * wateringInterval.count());

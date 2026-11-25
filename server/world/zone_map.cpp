@@ -1,5 +1,7 @@
 #include "zone_map.h"
 
+#include "server_constants.h"
+
 #include <algorithm>
 #include <cmath>
 #include <cstddef>
@@ -13,17 +15,17 @@ int ZoneMap::getCellSize() const { return cellSize; }
 
 ZoneMap::ZoneMap(const std::vector<std::vector<bool>>& walkableTiles, int cellSize): walkableTiles(walkableTiles), cellSize(cellSize) {
     if (cellSize <= 0) {
-        throw std::invalid_argument("Cell size must be positive");
+        throw std::invalid_argument(server_constants::CELL_SIZE_MUST_BE_POSITIVE);
     }
     if (walkableTiles.empty() || walkableTiles.front().empty()) {
-        throw std::invalid_argument("The map cannot be empty");
+        throw std::invalid_argument(server_constants::THE_MAP_CANNOT_BE_EMPTY);
     }
 
     const std::size_t columns = walkableTiles.front().size();
 
     for (const auto& row: walkableTiles) {
         if (row.size() != columns) {
-            throw std::invalid_argument("The map must be rectangular");
+            throw std::invalid_argument(server_constants::THE_MAP_MUST_BE_RECTANGULAR);
         }
     }
 }
@@ -177,11 +179,11 @@ std::vector<Position> ZoneMap::walkableBasePositions() const {
             if (!walkableTiles[row][col])
                 continue;
             if (row > static_cast<std::size_t>(std::numeric_limits<int>::max()) || col > static_cast<std::size_t>(std::numeric_limits<int>::max())) {
-                throw std::overflow_error("Cell outside Position range");
+                throw std::overflow_error(server_constants::CELL_OUTSIDE_POSITION_RANGE);
             }
             const auto base = baseAt({static_cast<int>(row), static_cast<int>(col)});
             if (!base)
-                throw std::overflow_error("Base outside Position range");
+                throw std::overflow_error(server_constants::BASE_OUTSIDE_POSITION_RANGE);
             result.push_back(*base);
         }
     }

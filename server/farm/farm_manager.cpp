@@ -1,5 +1,7 @@
 #include "farm_manager.h"
 
+#include "server_constants.h"
+
 #include <stdexcept>
 #include <utility>
 
@@ -84,7 +86,7 @@ bool FarmManager::withdrawFromChest(PlayerManager& players, uint16_t playerId, c
 
 void FarmManager::update(std::chrono::milliseconds elapsed, EntityIdGenerator& entityIds) {
     if (elapsed.count() < 0)
-        throw std::invalid_argument("Negative time");
+        throw std::invalid_argument(server_constants::NEGATIVE_TIME);
     if (elapsed.count() == 0)
         return;
     crops.update(elapsed);

@@ -1,5 +1,7 @@
 #include "community_chat.h"
 
+#include "server_constants.h"
+
 #include "commerce/shop_products.h"
 #include "player/player_manager.h"
 
@@ -18,7 +20,7 @@ std::vector<ChatMessageData> CommunityChat::execute(const ChatCommandContext& co
     const auto pending = CommunityMessages::pending(rewards.pendingFor(context.playerName));
     messages.insert(messages.end(), pending.begin(), pending.end());
     if (messages.empty()) {
-        messages.push_back(CommunityMessages::message("All your unlocked rewards have been delivered."));
+        messages.push_back(CommunityMessages::message(server_constants::ALL_YOUR_UNLOCKED_REWARDS_HAVE_BEEN_DELIVERED));
     }
     return messages;
 }
@@ -43,12 +45,12 @@ std::vector<ChatMessageData> CommunityChat::completeCheat(const CheatCommand& co
     } else if (command.action == CheatAction::CompleteBundle) {
         const auto bundle = community_bundle::fromName(command.target);
         if (!bundle)
-            return {CommunityMessages::message("Unknown bundle. Use crops, metals, animals, combat or money.")};
+            return {CommunityMessages::message(server_constants::UNKNOWN_BUNDLE_USE_CROPS_METALS_ANIMALS_COMBAT_OR_MONEY)};
         center.complete(*bundle);
     } else {
-        return {CommunityMessages::message("Unknown community center cheat.")};
+        return {CommunityMessages::message(server_constants::UNKNOWN_COMMUNITY_CENTER_CHEAT)};
     }
-    return {CommunityMessages::message("Bundles updated. Rewards are granted only once per player.")};
+    return {CommunityMessages::message(server_constants::BUNDLES_UPDATED_REWARDS_ARE_GRANTED_ONLY_ONCE_PER_PLAYER)};
 }
 
 std::vector<ChatMessageData> CommunityChat::locationMessages(const ChatCommandContext& context) {
@@ -58,15 +60,14 @@ std::vector<ChatMessageData> CommunityChat::locationMessages(const ChatCommandCo
     }
     if (!visitors.insert(context.playerId).second)
         return {};
-    return {CommunityMessages::message("Welcome! /center lists the bundles; /center metals shows the details."),
-        CommunityMessages::message("/donate product amount | /donate_coins amount | /rewards")};
+    return {CommunityMessages::message(server_constants::WELCOME_CENTER_LISTS_THE_BUNDLES_CENTER_METALS_SHOWS_THE_DETAILS),
+        CommunityMessages::message(server_constants::COMMAND_DONATE_PRODUCT_AMOUNT_DONATE_COINS_AMOUNT_REWARDS)};
 }
 
 std::vector<ChatMessageData> CommunityChat::collectRewards(const ChatCommandContext& context) {
     auto messages = CommunityMessages::delivery(rewards.collect(context.players, context.playerId, context.playerName));
     if (center.finished() && victoryRecipients.insert(context.playerName).second) {
-        messages.push_back(CommunityMessages::message("Congratulations! All community center bundles are "
-                                                      "complete. You finished the game."));
+        messages.push_back(CommunityMessages::message(server_constants::CONGRATULATIONS_ALL_COMMUNITY_CENTER_BUNDLES_ARE_COMPLETE_YOU_FINISHED_THE_GAME));
     }
     return messages;
 }

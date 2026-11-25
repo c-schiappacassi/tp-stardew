@@ -1,5 +1,7 @@
 #include "farm_terrain.h"
 
+#include "server_constants.h"
+
 #include <limits>
 #include <stdexcept>
 
@@ -85,7 +87,7 @@ std::vector<TileData> FarmTerrain::backgroundData() const {
     result.reserve(background.size());
     for (const auto& tile: background) {
         if (tile.textureId > static_cast<uint16_t>(TileTextureId::Dirt))
-            throw std::runtime_error("unknown farm texture_id");
+            throw std::runtime_error(server_constants::UNKNOWN_FARM_TEXTURE_ID);
         result.push_back({Position{tile.tile.getX() * 16, tile.tile.getY() * 16}, static_cast<TileTextureId>(tile.textureId)});
     }
     return result;

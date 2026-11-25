@@ -1,5 +1,7 @@
 #include "farm_config.h"
 
+#include "server_constants.h"
+
 #include <limits>
 #include <set>
 #include <stdexcept>
@@ -9,7 +11,7 @@
 namespace {
 void validateDayLength(std::chrono::milliseconds dayLength) {
     if (dayLength.count() < 6 || dayLength.count() > std::numeric_limits<int64_t>::max() / 7) {
-        throw std::invalid_argument("Day duration does not allow defining farm cycles");
+        throw std::invalid_argument(server_constants::DAY_DURATION_DOES_NOT_ALLOW_DEFINING_FARM_CYCLES);
     }
 }
 }
@@ -40,7 +42,7 @@ void FarmConfig::validate() const {
     for (const auto& crop : crops) {
         if (crop.type != CropType::Strawberry && crop.type != CropType::Scallion &&
             crop.type != CropType::Potato && crop.type != CropType::Pumpkin) {
-            throw std::invalid_argument("Unknown crop type");
+            throw std::invalid_argument(server_constants::UNKNOWN_CROP_TYPE);
         }
 
         const bool invalidTolerance = crop.toleratedMissedWaterings != 0 &&
@@ -49,7 +51,7 @@ void FarmConfig::validate() const {
         if (!cropTypes.insert(crop.type).second || crop.growthTime.count() <= 0 ||
             crop.wateringInterval.count() <= 0 || crop.regrowthTime.count() < 0 ||
             invalidTolerance) {
-            throw std::invalid_argument("Duplicate crop definition or zero duration");
+            throw std::invalid_argument(server_constants::DUPLICATE_CROP_DEFINITION_OR_ZERO_DURATION);
         }
     }
 
@@ -58,12 +60,12 @@ void FarmConfig::validate() const {
     for (const auto& animal : animals) {
         animal.movement.validate();
         if (animal.species != AnimalSpecies::Cow && animal.species != AnimalSpecies::Chicken) {
-            throw std::invalid_argument("Unknown animal type");
+            throw std::invalid_argument(server_constants::UNKNOWN_ANIMAL_TYPE);
         }
 
         if (!animalTypes.insert(animal.species).second || animal.productionInterval.count() <= 0 ||
             animal.maxCount == 0 || !animal.collision.isValid()) {
-            throw std::invalid_argument("Duplicate animal definition or zero duration or limit");
+            throw std::invalid_argument(server_constants::DUPLICATE_ANIMAL_DEFINITION_OR_ZERO_DURATION_OR_LIMIT);
         }
     }
 }

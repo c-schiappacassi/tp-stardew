@@ -1,5 +1,7 @@
 #include "cow.h"
 
+#include "server_constants.h"
+
 #include <stdexcept>
 
 Cow::Cow(EntityId id, const Position& position, AnimalType type,
@@ -7,7 +9,7 @@ Cow::Cow(EntityId id, const Position& position, AnimalType type,
     Animal(id, position, type, productionInterval, movementConfig) {
     if (animalSpeciesForType(type) != AnimalSpecies::Cow) {
         throw std::invalid_argument(
-            "The variant does not belong to a cow");
+            server_constants::THE_VARIANT_DOES_NOT_BELONG_TO_A_COW);
     }
 }
 

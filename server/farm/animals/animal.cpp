@@ -1,5 +1,7 @@
 #include "animal.h"
 
+#include "server_constants.h"
+
 #include <limits>
 #include <algorithm>
 #include <stdexcept>
@@ -7,7 +9,7 @@
 Animal::Animal(EntityId id, const Position& position, AnimalType type,std::chrono::milliseconds productionInterval, const AnimalMovementConfig& movementConfig):
     id(id), type(type), movement(position, movementConfig), productionInterval(productionInterval) {
     if (id == 0 || productionInterval.count() <= 0) {
-        throw std::invalid_argument("Invalid animal identifier or time");
+        throw std::invalid_argument(server_constants::INVALID_ANIMAL_IDENTIFIER_OR_TIME);
     }
 }
 
@@ -46,7 +48,7 @@ void Animal::advanceMovement(Placement& placement, std::mt19937& random) {
 
 void Animal::advanceProduction(std::chrono::milliseconds elapsed, ProductionMode mode) {
     if (elapsed.count() < 0) {
-        throw std::invalid_argument("Negative time");
+        throw std::invalid_argument(server_constants::NEGATIVE_TIME);
     }
     uint64_t produced = static_cast<uint64_t>(elapsed / productionInterval);
     const auto remainder = elapsed % productionInterval;
@@ -88,7 +90,7 @@ std::optional<FarmProduct> Animal::collect() {
 
 void Animal::restoreProgress(std::chrono::milliseconds elapsed, uint32_t products) {
     if (elapsed.count() < 0 || elapsed >= productionInterval) {
-        throw std::invalid_argument("Invalid saved animal progress");
+        throw std::invalid_argument(server_constants::INVALID_SAVED_ANIMAL_PROGRESS);
     }
     productionElapsed = elapsed;
     availableProducts = products;

@@ -10,7 +10,8 @@
 
 class MapConverter {
 public:
-    WorldSetup convert(const MapData& data, uint8_t worldId) const;
+    WorldSetup convert(const MapData& data, uint8_t worldId,
+                       const InteriorTemplates& interiors = {}) const;
     ConstMapData convertVisuals(const MapData& data) const;
 
 private:

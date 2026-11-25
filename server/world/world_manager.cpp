@@ -8,9 +8,10 @@ WorldManager::WorldManager(const DungeonConfig& config, uint32_t seed, const Far
     travel(dungeon, farm, town, interiors, entityIds), loading(dungeon, farm, town, interiors, entityIds, travel, seed),
     queries(dungeon, farm, town, interiors, travel), interactions(dungeon, farm, interiors, entityIds), persistence(dungeon, farm, interiors, entityIds) {}
 
-PreparedWorld WorldManager::prepareMap(const MapData& data, uint8_t worldId) {
+PreparedWorld WorldManager::prepareMap(const MapData& data, uint8_t worldId,
+                                      const InteriorTemplates& interiors) {
     const MapConverter converter;
-    return {converter.convert(data, worldId), converter.convertVisuals(data)};
+    return {converter.convert(data, worldId, interiors), converter.convertVisuals(data)};
 }
 
 bool WorldManager::loadFarm(uint8_t worldId, const FarmLayout& layout) { return loading.loadFarm(worldId, layout); }

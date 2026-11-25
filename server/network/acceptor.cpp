@@ -1,5 +1,7 @@
 #include "acceptor.h"
 
+#include "server_constants.h"
+
 #include <iostream>
 #include <memory>
 #include <utility>
@@ -21,14 +23,14 @@ void Acceptor::run() {
 
         } catch (const LibError& e) {
             if (should_keep_running()) {
-                std::cerr << "Accept error: " << e.what() << "\n";
+                std::cerr << server_constants::ACCEPT_ERROR_PREFIX << e.what() << server_constants::NEWLINE;
             }
             break;
         } catch (const std::exception& e) {
-            std::cerr << "Unexpected error in Acceptor: " << e.what() << "\n";
+            std::cerr << server_constants::UNEXPECTED_ERROR_IN_ACCEPTOR_PREFIX << e.what() << server_constants::NEWLINE;
             break;
         } catch (...) {
-            std::cerr << "Unknown error in Acceptor.\n";
+            std::cerr << server_constants::UNKNOWN_ERROR_IN_ACCEPTOR_PREFIX;
             break;
         }
     }
@@ -45,9 +47,9 @@ void Acceptor::reap() {
         try {
             client->join();
         } catch (const std::exception& e) {
-            std::cerr << "Error joining client during reap: " << e.what() << "\n";
+            std::cerr << server_constants::ERROR_JOINING_CLIENT_DURING_REAP_PREFIX << e.what() << server_constants::NEWLINE;
         } catch (...) {
-            std::cerr << "Unknown error joining client during reap.\n";
+            std::cerr << server_constants::UNKNOWN_ERROR_JOINING_CLIENT_DURING_REAP_PREFIX;
         }
 
         return true;
@@ -59,9 +61,9 @@ void Acceptor::clear() {
         try {
             client->stop();
         } catch (const std::exception& e) {
-            std::cerr << "Error stopping ClientHandler: " << e.what() << "\n";
+            std::cerr << server_constants::ERROR_STOPPING_CLIENTHANDLER_PREFIX << e.what() << server_constants::NEWLINE;
         } catch (...) {
-            std::cerr << "Unknown error stopping ClientHandler.\n";
+            std::cerr << server_constants::UNKNOWN_ERROR_STOPPING_CLIENTHANDLER_PREFIX;
         }
     }
 
@@ -69,9 +71,9 @@ void Acceptor::clear() {
         try {
             client->join();
         } catch (const std::exception& e) {
-            std::cerr << "Error joining ClientHandler: " << e.what() << "\n";
+            std::cerr << server_constants::ERROR_JOINING_CLIENTHANDLER_PREFIX << e.what() << server_constants::NEWLINE;
         } catch (...) {
-            std::cerr << "Unknown error joining ClientHandler.\n";
+            std::cerr << server_constants::UNKNOWN_ERROR_JOINING_CLIENTHANDLER_PREFIX;
         }
     }
 

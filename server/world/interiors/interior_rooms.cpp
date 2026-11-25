@@ -1,5 +1,7 @@
 #include "interior_rooms.h"
 
+#include "server_constants.h"
+
 #include <algorithm>
 #include <set>
 #include <stdexcept>
@@ -157,7 +159,6 @@ std::vector<InteriorData> InteriorRooms::storageData() const {
         if (room.getLocation().interior_id == InteriorId::PlayerHouse)
             result.push_back(room.data());
     }
-    // The former storage map serialized houses by index, regardless of layout order.
     std::sort(result.begin(), result.end(), [](const auto& first, const auto& second) { return first.house_index < second.house_index; });
     return result;
 }
@@ -172,7 +173,7 @@ void InteriorRooms::restoreStorage(const std::vector<InteriorData>& saved, const
     for (const auto& data: saved) {
         auto* room = prepared.find({data.interior_id, data.house_index});
         if (data.interior_id != InteriorId::PlayerHouse || !room)
-            throw std::runtime_error("Invalid saved house storage");
+            throw std::runtime_error(server_constants::INVALID_SAVED_HOUSE_STORAGE);
         room->restoreStorage(data, inventories);
     }
     *this = std::move(prepared);

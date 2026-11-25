@@ -1,5 +1,7 @@
 #include "game.h"
 
+#include "server_constants.h"
+
 #include <algorithm>
 #include <iostream>
 #include <random>
@@ -31,11 +33,11 @@ Game::Game(const std::string& id, const std::string& name, uint8_t worldId, Prep
 GameSession Game::createGame(const CreateGameDTO& dto, const std::shared_ptr<OutQueue>& output) {
     std::lock_guard<std::mutex> lock(mtx);
     if (configured)
-        return GameSessions::failure("The game has already been created");
+        return GameSessions::failure(server_constants::THE_GAME_HAS_ALREADY_BEEN_CREATED);
     if (dto.gameName.empty())
-        return GameSessions::failure("The game name is required");
+        return GameSessions::failure(server_constants::THE_GAME_NAME_IS_REQUIRED);
     if (!world.acceptsWorld(dto.worldId))
-        return GameSessions::failure("The loaded dungeon belongs to another world");
+        return GameSessions::failure(server_constants::THE_LOADED_DUNGEON_BELONGS_TO_ANOTHER_WORLD);
 
     name = dto.gameName;
     worldId = dto.worldId;
@@ -47,14 +49,14 @@ GameSession Game::createGame(const CreateGameDTO& dto, const std::shared_ptr<Out
 GameSession Game::joinGame(const JoinGameDTO& dto, const std::shared_ptr<OutQueue>& output) {
     std::lock_guard<std::mutex> lock(mtx);
     if (!configured || dto.code != id || community.finished())
-        return GameSessions::failure(community.finished() ? "The game has already ended" : "No game exists with that code");
+        return GameSessions::failure(community.finished() ? server_constants::THE_GAME_HAS_ALREADY_ENDED : server_constants::NO_GAME_EXISTS_WITH_THAT_CODE);
     return completeEntry(sessions.joinPlayer(dto, output));
 }
 
 GameSession Game::resumeGame(const ResumeGameDTO& dto, const std::shared_ptr<OutQueue>& output) {
     std::lock_guard<std::mutex> lock(mtx);
     if (!configured || dto.gameId != id) {
-        auto failure = GameSessions::failure("That game does not exist");
+        auto failure = GameSessions::failure(server_constants::THAT_GAME_DOES_NOT_EXIST);
         failure.userName = dto.userName;
         return failure;
     }
@@ -106,7 +108,7 @@ PersistenceDTO Game::buildPersistenceData() const {
 void Game::restorePersistenceData(const PersistenceDTO& saved) {
     std::lock_guard<std::mutex> lock(mtx);
     if (configured || saved.id != id || saved.mapId != worldId || saved.currentDay == 0)
-        throw std::runtime_error("Cannot restore game with mismatched identity or state");
+        throw std::runtime_error(server_constants::CANNOT_RESTORE_GAME_WITH_MISMATCHED_IDENTITY_OR_STATE);
     world.restoreFarm(saved);
     CommunityPersistence::restore(community, communityRewards, saved.communityCenterActionProgress);
     playerManager.restorePlayers(saved.players);
@@ -135,7 +137,7 @@ void Game::saveIfNeeded(bool force) {
         std::lock_guard<std::mutex> lock(mtx);
         savedRevision = revision;
     } catch (const std::exception& error) {
-        std::cerr << "Error saving game " << id << ": " << error.what() << '\n';
+        std::cerr << server_constants::ERROR_SAVING_GAME_PREFIX << id << server_constants::COLON_SPACE << error.what() << '\n';
     }
 }
 
@@ -220,16 +222,16 @@ qtStatus Game::checkJoin(const CheckCodeDTO& dto) const {
 
     if (!configured || dto.code != id) {
         reply.status = StatusCode::Error;
-        reply.errorMsg = "No game exists with that code";
+        reply.errorMsg = server_constants::NO_GAME_EXISTS_WITH_THAT_CODE;
     } else if (community.finished()) {
         reply.status = StatusCode::Error;
-        reply.errorMsg = "The game has already ended";
+        reply.errorMsg = server_constants::THE_GAME_HAS_ALREADY_ENDED;
     } else if (playerManager.dataFor(dto.userName).has_value()) {
         reply.status = StatusCode::Error;
-        reply.errorMsg = "A player with that name already exists";
+        reply.errorMsg = server_constants::A_PLAYER_WITH_THAT_NAME_ALREADY_EXISTS;
     } else if (!playerManager.hasAvailableSlot()) {
         reply.status = StatusCode::Error;
-        reply.errorMsg = "The game is full";
+        reply.errorMsg = server_constants::THE_GAME_IS_FULL;
     } else {
         reply.status = StatusCode::Ok;
     }
@@ -261,9 +263,9 @@ void Game::run() {
     } catch (const ClosedQueue&) {
         // La entrada se cerro durante la detencion de la partida.
     } catch (const std::exception& error) {
-        std::cerr << "Error in Game: " << error.what() << '\n';
+        std::cerr << server_constants::ERROR_IN_GAME_PREFIX << error.what() << '\n';
     } catch (...) {
-        std::cerr << "Unknown error in Game\n";
+        std::cerr << server_constants::UNKNOWN_ERROR_IN_GAME_PREFIX;
     }
     saveIfNeeded(true);
     closeAll();

@@ -1,5 +1,7 @@
 #include "chest_room.h"
 
+#include "server_constants.h"
+
 #include <stdexcept>
 #include <utility>
 
@@ -73,7 +75,7 @@ void ChestRoom::restore(const std::vector<FurnitureData>& furniture, const std::
             continue;
         const auto contents = inventories.find(item.id);
         if (contents == inventories.end() || !prepared.chests.place(item.id, item.pos, prepared.space, contents->second))
-            throw std::runtime_error("Invalid saved chest furniture or contents");
+            throw std::runtime_error(server_constants::INVALID_SAVED_CHEST_FURNITURE_OR_CONTENTS);
     }
     prepared.groundItems.restoreItems(loot);
     *this = std::move(prepared);

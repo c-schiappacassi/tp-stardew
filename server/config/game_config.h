@@ -26,6 +26,7 @@ struct GameConfig {
     DeathConfig death;
     RobinShopConfig robin;
     MarketConfig market;
+    InteriorTemplates interiors;
     CommunityConfig community;
 };
 

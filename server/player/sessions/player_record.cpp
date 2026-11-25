@@ -1,5 +1,7 @@
 #include "player_record.h"
 
+#include "server_constants.h"
+
 #include <algorithm>
 #include <cstddef>
 #include <limits>
@@ -21,7 +23,7 @@ const Player& PlayerRecord::getPlayer() const { return player; }
 
 void PlayerRecord::connect(const std::shared_ptr<OutQueue>& newOutput) {
     if (!newOutput)
-        throw std::invalid_argument("A connected player needs an output");
+        throw std::invalid_argument(server_constants::A_CONNECTED_PLAYER_NEEDS_AN_OUTPUT);
     output = newOutput;
     player.setMovement(Direction::None);
     player.closeChest();

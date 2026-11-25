@@ -1,5 +1,7 @@
 #include "shop_products.h"
 
+#include "server_constants.h"
+
 #include <algorithm>
 #include <cctype>
 
@@ -12,36 +14,36 @@ struct ProductName {
 };
 
 constexpr ProductName names[]{
-    {ItemId::StrawberrySeed, "strawberry_seed"},
-    {ItemId::ScallionSeed, "scallion_seed"},
-    {ItemId::PotatoSeed, "potato_seed"},
-    {ItemId::PumpkinSeed, "pumpkin_seed"},
-    {ItemId::Strawberry, "strawberry"},
-    {ItemId::Scallion, "scallion"},
-    {ItemId::Potato, "potato"}, {ItemId::Pumpkin, "pumpkin"},
-    {ItemId::Coal, "coal"}, {ItemId::Lapis, "lapis"},
-    {ItemId::Silver, "silver"}, {ItemId::Gold, "gold"},
-    {ItemId::Milk, "milk"}, {ItemId::Egg, "egg"},
-    {ItemId::Chest, "chest"}, {ItemId::Chair, "chair"},
-    {ItemId::Table, "table"}, {ItemId::Bonsai, "bonsai"},
-    {ItemId::PottedTree, "potted_tree"},
-    {ItemId::BlueArmCouch, "blue_arm_couch"},
-    {ItemId::Tv, "tv"}, {ItemId::BeigeRug, "beige_rug"},
-    {ItemId::ClockFirePlace, "clock_fire_place"},
-    {ItemId::BlueRug, "blue_rug"},
-    {ItemId::CatFirePlace, "cat_fire_place"},
-    {ItemId::SimpleFirePlace, "simple_fire_place"},
-    {ItemId::BlueJunimoPushee, "blue_junimo_pushee"},
-    {ItemId::GreenJunimoPushee, "green_junimo_pushee"},
-    {ItemId::YellowJunimoPushee, "yellow_junimo_pushee"},
-    {ItemId::PinkJunimoPushee, "pink_junimo_pushee"},
-    {ItemId::SimpleLamp, "simple_lamp"},
-    {ItemId::BookShelf, "book_shelf"},
-    {ItemId::SquareLamp, "square_lamp"},
-    {ItemId::RoundTable, "round_table"},
-    {ItemId::GreenStool, "green_stool"},
-    {ItemId::BrownSofa, "brown_sofa"},
-    {ItemId::BrownArmCouch, "brown_arm_couch"}
+    {ItemId::StrawberrySeed, server_constants::STRAWBERRY_SEED},
+    {ItemId::ScallionSeed, server_constants::SCALLION_SEED},
+    {ItemId::PotatoSeed, server_constants::POTATO_SEED},
+    {ItemId::PumpkinSeed, server_constants::PUMPKIN_SEED},
+    {ItemId::Strawberry, server_constants::STRAWBERRY},
+    {ItemId::Scallion, server_constants::SCALLION},
+    {ItemId::Potato, server_constants::POTATO}, {ItemId::Pumpkin, server_constants::PUMPKIN},
+    {ItemId::Coal, server_constants::COAL_2}, {ItemId::Lapis, server_constants::LAPIS_2},
+    {ItemId::Silver, server_constants::SILVER_2}, {ItemId::Gold, server_constants::GOLD_2},
+    {ItemId::Milk, server_constants::MILK}, {ItemId::Egg, server_constants::EGG},
+    {ItemId::Chest, server_constants::CHEST}, {ItemId::Chair, server_constants::CHAIR},
+    {ItemId::Table, server_constants::TABLE}, {ItemId::Bonsai, server_constants::BONSAI},
+    {ItemId::PottedTree, server_constants::POTTED_TREE},
+    {ItemId::BlueArmCouch, server_constants::BLUE_ARM_COUCH},
+    {ItemId::Tv, server_constants::TV}, {ItemId::BeigeRug, server_constants::BEIGE_RUG},
+    {ItemId::ClockFirePlace, server_constants::CLOCK_FIRE_PLACE},
+    {ItemId::BlueRug, server_constants::BLUE_RUG},
+    {ItemId::CatFirePlace, server_constants::CAT_FIRE_PLACE},
+    {ItemId::SimpleFirePlace, server_constants::SIMPLE_FIRE_PLACE},
+    {ItemId::BlueJunimoPushee, server_constants::BLUE_JUNIMO_PUSHEE},
+    {ItemId::GreenJunimoPushee, server_constants::GREEN_JUNIMO_PUSHEE},
+    {ItemId::YellowJunimoPushee, server_constants::YELLOW_JUNIMO_PUSHEE},
+    {ItemId::PinkJunimoPushee, server_constants::PINK_JUNIMO_PUSHEE},
+    {ItemId::SimpleLamp, server_constants::SIMPLE_LAMP},
+    {ItemId::BookShelf, server_constants::BOOK_SHELF},
+    {ItemId::SquareLamp, server_constants::SQUARE_LAMP},
+    {ItemId::RoundTable, server_constants::ROUND_TABLE},
+    {ItemId::GreenStool, server_constants::GREEN_STOOL},
+    {ItemId::BrownSofa, server_constants::BROWN_SOFA},
+    {ItemId::BrownArmCouch, server_constants::BROWN_ARM_COUCH}
 };
 
 std::string normalized(std::string name) {
@@ -56,7 +58,7 @@ std::string_view shop_products::name(ItemId item) {
     for (const auto& entry : names) {
         if (entry.item == item) return entry.name;
     }
-    return "unknown";
+    return server_constants::UNKNOWN;
 }
 
 std::optional<ItemId> shop_products::item(const std::string& name) {
@@ -69,30 +71,30 @@ std::optional<ItemId> shop_products::item(const std::string& name) {
 
 std::optional<AnimalSpecies> shop_products::animal(const std::string& name) {
     const auto key = normalized(name);
-    if (key == "cow") return AnimalSpecies::Cow;
-    if (key == "chicken") return AnimalSpecies::Chicken;
+    if (key == server_constants::COW) return AnimalSpecies::Cow;
+    if (key == server_constants::CHICKEN) return AnimalSpecies::Chicken;
     return std::nullopt;
 }
 
 std::optional<AnimalType> shop_products::animalVariant(const std::string& name) {
     const auto key = normalized(name);
-    if (key == "brown_cow") return AnimalType::BrownCow;
-    if (key == "white_cow") return AnimalType::WhiteCow;
-    if (key == "brown_chicken") return AnimalType::BrownChicken;
-    if (key == "white_chicken") return AnimalType::WhiteChicken;
-    if (key == "blue_chicken") return AnimalType::BlueChicken;
-    if (key == "void_chicken") return AnimalType::VoidChicken;
+    if (key == server_constants::BROWN_COW) return AnimalType::BrownCow;
+    if (key == server_constants::WHITE_COW) return AnimalType::WhiteCow;
+    if (key == server_constants::BROWN_CHICKEN) return AnimalType::BrownChicken;
+    if (key == server_constants::WHITE_CHICKEN) return AnimalType::WhiteChicken;
+    if (key == server_constants::BLUE_CHICKEN) return AnimalType::BlueChicken;
+    if (key == server_constants::VOID_CHICKEN) return AnimalType::VoidChicken;
     return std::nullopt;
 }
 
 std::string_view shop_products::merchantName(NpcId merchant) {
     switch (merchant) {
-        case NpcId::Marnie: return "Marnie";
-        case NpcId::Pierre: return "Pierre";
-        case NpcId::Robin: return "Robin";
-        case NpcId::Clint: return "Clint";
+        case NpcId::Marnie: return server_constants::MARNIE;
+        case NpcId::Pierre: return server_constants::PIERRE;
+        case NpcId::Robin: return server_constants::ROBIN;
+        case NpcId::Clint: return server_constants::CLINT;
     }
-    return "Merchant";
+    return server_constants::MERCHANT;
 }
 
 std::optional<NpcId> shop_products::merchantForInterior(InteriorId interior) {

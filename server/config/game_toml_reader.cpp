@@ -1,5 +1,7 @@
 #include "config/game_toml_reader.h"
 
+#include "server_constants.h"
+
 #include <sstream>
 #include <stdexcept>
 
@@ -26,11 +28,11 @@ WorldData GameTomlReader::read(const std::string& path) const {
         CombatTomlReader{}.read(root, world.config.dungeon, world.config.player);
         world.config.farm = FarmConfig{std::chrono::milliseconds{world.config.player.dayDurationMs}};
 
-        if (root.contains("town")) {
+        if (root.contains(server_constants::TOWN)) {
             world.config.town = TownTomlReader{}.read(root);
         }
 
-        if (root.contains("farm")) {
+        if (root.contains(server_constants::FARM)) {
             world.farm = FarmTomlReader{world.config.farm}.read(root);
         }
 
@@ -38,10 +40,10 @@ WorldData GameTomlReader::read(const std::string& path) const {
 
     } catch (const toml::parse_error& error) {
         std::ostringstream message;
-        message << path << ": " << error;
+        message << path << server_constants::COLON_SPACE << error;
         throw std::invalid_argument(message.str());
 
     } catch (const std::invalid_argument& error) {
-        throw std::invalid_argument(path + ": " + error.what());
+        throw std::invalid_argument(path + server_constants::COLON_SPACE + error.what());
     }
 }

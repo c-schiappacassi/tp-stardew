@@ -1,5 +1,7 @@
 #include "inventory.h"
 
+#include "server_constants.h"
+
 #include <algorithm>
 #include <stdexcept>
 #include <utility>
@@ -14,20 +16,19 @@ bool validStack(const Stack& stack) {
 }
 }  // namespace
 
-uint16_t Inventory::getStackLimit(ItemId item) const {
-    const bool isTool =
-        item == ItemId::Pickaxe ||
-        item == ItemId::WateringCan ||
-        item == ItemId::Shovel ||
-        item == ItemId::Sword;
+bool Inventory::isTool(ItemId item) {
+    return item == ItemId::Pickaxe || item == ItemId::WateringCan ||
+        item == ItemId::Shovel || item == ItemId::Sword;
+}
 
-    return isTool ? 1 : stackLimit;
+uint16_t Inventory::getStackLimit(ItemId item) const {
+    return isTool(item) ? 1 : stackLimit;
 }
 
 Inventory::Inventory(uint8_t capacity, uint16_t stackLimit):capacity(capacity), stackLimit(stackLimit) {
     if (capacity == 0 || stackLimit == 0) {
         throw std::invalid_argument(
-            "Capacity and limit must be greater than zero");
+            server_constants::CAPACITY_AND_LIMIT_MUST_BE_GREATER_THAN_ZERO);
     }
 }
 
@@ -118,6 +119,14 @@ bool Inventory::remove(uint8_t slot, uint16_t quantity) {
     return true;
 }
 
+bool Inventory::clearSlot(uint8_t slot) {
+    const auto it = slots.find(slot);
+    if (it == slots.end() || isTool(it->second.item_id))
+        return false;
+    slots.erase(it);
+    return true;
+}
+
 bool Inventory::transferTo(Inventory& destination, uint8_t slot, uint16_t quantity) {
     const auto* source = getSlot(slot);
     if (&destination == this || !source || quantity == 0 || source->quantity < quantity) {
@@ -149,7 +158,7 @@ const std::map<uint8_t, Stack>& Inventory::getItems() const {
 void Inventory::restoreSlots(const std::map<uint8_t, Stack>& saved) {
     for (const auto& [slot, stack] : saved) {
         if (slot >= capacity || !validStack(stack) || stack.quantity > getStackLimit(stack.item_id)) {
-            throw std::invalid_argument("Invalid saved inventory slot");
+            throw std::invalid_argument(server_constants::INVALID_SAVED_INVENTORY_SLOT);
         }
     }
     slots = saved;

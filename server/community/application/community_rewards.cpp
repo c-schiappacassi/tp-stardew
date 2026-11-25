@@ -1,5 +1,7 @@
 #include "community_rewards.h"
 
+#include "server_constants.h"
+
 #include <algorithm>
 #include <limits>
 #include <stdexcept>
@@ -90,18 +92,18 @@ uint64_t CommunityRewards::getRevision() const { return revision; }
 
 void CommunityRewards::validate(const std::map<std::string, CommunityPlayerRewards>& saved, const CommunityProgress& progress, MarketDiscount discount) const {
     if (discount > MarketDiscount::Active || (discount != MarketDiscount::None && !progress.completed.contains(CommunityBundle::Money))) {
-        throw std::invalid_argument("Invalid saved market discount");
+        throw std::invalid_argument(server_constants::INVALID_SAVED_MARKET_DISCOUNT);
     }
     for (const auto& [name, rewards]: saved) {
         for (const auto bundle: rewards.granted) {
             if (!progress.completed.contains(bundle))
-                throw std::invalid_argument("Invalid granted reward");
+                throw std::invalid_argument(server_constants::INVALID_GRANTED_REWARD);
         }
         for (const auto& [seed, pending]: rewards.pendingSeeds) {
             const auto& seeds = community_bundle::cropRewardSeeds;
             if (std::find(seeds.begin(), seeds.end(), seed) == seeds.end() || pending > center.getConfig().seedReward ||
                 (pending != 0 && !rewards.granted.contains(CommunityBundle::Crops))) {
-                throw std::invalid_argument("Invalid pending seeds");
+                throw std::invalid_argument(server_constants::INVALID_PENDING_SEEDS);
             }
         }
         uint64_t maximumCoins = rewards.granted.contains(CommunityBundle::Metals) ? center.getConfig().metalGoldReward : 0;
@@ -110,7 +112,7 @@ void CommunityRewards::validate(const std::map<std::string, CommunityPlayerRewar
             maximumCoins += 2 * static_cast<uint64_t>(world.animalBasePrice(AnimalSpecies::Chicken).value_or(0));
         }
         if (rewards.pendingCoins > maximumCoins)
-            throw std::invalid_argument("Invalid pending coins");
+            throw std::invalid_argument(server_constants::INVALID_PENDING_COINS);
     }
 }
 

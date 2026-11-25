@@ -89,6 +89,7 @@ public:
     bool addItem(const Stack& stack);
     uint16_t addItemUpTo(const Stack& stack);
     bool removeItem(uint8_t slot, uint16_t quantity);
+    bool clearSlot(uint8_t slot);
     bool removeItems(const std::vector<std::pair<uint8_t, uint16_t>>& quantities);
     const std::map<uint8_t, Stack>& getInventoryItems() const;
     const Stack* getSelectedItem() const;

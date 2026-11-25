@@ -3,6 +3,14 @@
 #include "commerce/shop_products.h"
 #include "entities/entity_dimensions.h"
 
+void InteriorTemplate::applyTo(InteriorLayout& room) const {
+    room.terrain = terrain;
+    room.entry = entry;
+    room.exit = exit;
+    room.beds = beds;
+    room.background = background;
+}
+
 InteriorLayout makePlayerHouseInterior(uint8_t houseIndex) {
     InteriorLayout house;
     house.location = {InteriorId::PlayerHouse, houseIndex};

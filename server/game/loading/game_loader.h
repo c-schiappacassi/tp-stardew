@@ -13,6 +13,7 @@ private:
     static std::filesystem::path resolveMapPath(const std::string& mapPath);
 
 public:
-    static PreparedWorld prepare(const std::string& mapPath, uint8_t worldId);
+    static PreparedWorld prepare(const std::string& mapPath, uint8_t worldId,
+                                 const InteriorTemplates& interiors = {});
     static void initialize(WorldManager& world, const WorldSetup& setup);
 };

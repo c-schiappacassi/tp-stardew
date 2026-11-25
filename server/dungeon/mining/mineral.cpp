@@ -1,5 +1,7 @@
 #include "mineral.h"
 
+#include "server_constants.h"
+
 #include <algorithm>
 #include <stdexcept>
 
@@ -8,11 +10,11 @@
 Mineral::Mineral(EntityId id, const Position& pos, ResourceType type, uint16_t hitsToBreak):
     id(id), pos(pos), type(type), remainingDurability(static_cast<uint32_t>(hitsToBreak) * 2) {
     if (id == 0) {
-        throw std::invalid_argument("EntityId must be nonzero");
+        throw std::invalid_argument(server_constants::ENTITYID_MUST_BE_NONZERO);
     }
 
     if (hitsToBreak == 0) {
-        throw std::invalid_argument("The mineral must require at least one hit");
+        throw std::invalid_argument(server_constants::THE_MINERAL_MUST_REQUIRE_AT_LEAST_ONE_HIT);
     }
 }
 

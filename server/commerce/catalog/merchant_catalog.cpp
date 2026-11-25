@@ -1,5 +1,7 @@
 #include "merchant_catalog.h"
 
+#include "server_constants.h"
+
 #include <algorithm>
 #include <set>
 #include <stdexcept>
@@ -26,13 +28,13 @@ MerchantCatalog::MerchantCatalog(const MarketConfig& config, const MarketPrices&
         if (!registered.insert(product.item).second ||
             (product.item != ItemId::Chest && !decoration_items::isDecoration(product.item)) ||
             product.rotates != (product.item != ItemId::Chest)) {
-            throw std::invalid_argument("Invalid Robin catalog");
+            throw std::invalid_argument(server_constants::INVALID_ROBIN_CATALOG);
         }
         if (product.rotates)
             ++rotating;
     }
     if (config.robin.dailyRotationCount > rotating) {
-        throw std::invalid_argument("Robin rotation exceeds the catalog size");
+        throw std::invalid_argument(server_constants::ROBIN_ROTATION_EXCEEDS_THE_CATALOG_SIZE);
     }
     advanceDay();
 }
@@ -66,12 +68,12 @@ std::optional<uint32_t> MerchantCatalog::mineralBasePrice(ItemId item) const { r
 
 std::vector<ChatMessageData> MerchantCatalog::messages(NpcId merchant, const FarmPrices& farmPrices) const {
     const std::string name{shop_products::merchantName(merchant)};
-    std::vector<ChatMessageData> messages{{name, "Catalog (unit prices in gold):"}};
+    std::vector<ChatMessageData> messages{{name, server_constants::CATALOG_UNIT_PRICES_IN_GOLD}};
     if (prices.hasDiscount())
-        messages.push_back({name, "Community reward active today: buy at half price and sell for double."});
+        messages.push_back({name, server_constants::COMMUNITY_REWARD_ACTIVE_TODAY_BUY_AT_HALF_PRICE_AND_SELL_FOR_DOUBLE});
     const auto add = [&](std::string_view product, uint32_t price, bool buys) {
-        messages.push_back({name, std::string(buys ? "Buying " : "Selling ") + std::string(product) +
-            ": " + std::to_string(buys ? prices.sellingPrice(price) : prices.buyingPrice(price))});
+        messages.push_back({name, std::string(buys ? server_constants::BUYING_PREFIX : server_constants::SELLING_PREFIX) + std::string(product) +
+            server_constants::COLON_SPACE + std::to_string(buys ? prices.sellingPrice(price) : prices.buyingPrice(price))});
     };
     if (merchant == NpcId::Robin) {
         for (const auto& entry: robinCatalog) add(shop_products::name(entry.item), entry.price, false);
@@ -83,13 +85,13 @@ std::vector<ChatMessageData> MerchantCatalog::messages(NpcId merchant, const Far
             add(shop_products::name(product.item), product.basePrice, true);
     } else if (merchant == NpcId::Marnie) {
         for (const auto& animal: farmPrices.animals) {
-            const auto product = animal.species == AnimalSpecies::Cow ? "cow" : "chicken";
+            const auto product = animal.species == AnimalSpecies::Cow ? server_constants::COW : server_constants::CHICKEN;
             add(product, animal.basePrice, false);
             add(product, animal.basePrice, true);
         }
     }
     if (merchant == NpcId::Pierre || merchant == NpcId::Clint) {
-        messages.push_back({name, "Buying prices are for base quality. Item quality: good x1.25, excellent x2, incredible x4, perfect x8."});
+        messages.push_back({name, server_constants::BUYING_PRICES_ARE_FOR_BASE_QUALITY_ITEM_QUALITY_GOOD_X1_25_EXCELLENT});
     }
     return messages;
 }

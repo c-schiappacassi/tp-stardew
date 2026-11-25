@@ -1,12 +1,14 @@
 #include "game_registry.h"
 
+#include "server_constants.h"
+
 #include <exception>
 #include <stdexcept>
 
 #include "game/game.h"
 
 GameRegistry::GameRegistry(const std::vector<GameIndexDTO>& saved) {
-    const std::string prefix = "game-";
+    const std::string prefix = server_constants::GAME;
     for (const auto& game: saved) {
         if (game.id.compare(0, prefix.size(), prefix) != 0)
             continue;
@@ -21,7 +23,7 @@ GameRegistry::GameRegistry(const std::vector<GameIndexDTO>& saved) {
 
 std::string GameRegistry::nextGameId() const {
     std::lock_guard<std::mutex> lock(mtx);
-    return "game-" + std::to_string(nextId);
+    return server_constants::GAME + std::to_string(nextId);
 }
 
 std::shared_ptr<Game> GameRegistry::find(const std::string& id) const {
@@ -32,10 +34,10 @@ std::shared_ptr<Game> GameRegistry::find(const std::string& id) const {
 
 void GameRegistry::start(const std::string& id, const std::shared_ptr<Game>& game) {
     std::lock_guard<std::mutex> lock(mtx);
-    const bool created = id == "game-" + std::to_string(nextId);
+    const bool created = id == server_constants::GAME + std::to_string(nextId);
     const auto [it, inserted] = games.emplace(id, game);
     if (!inserted)
-        throw std::logic_error("The game is already active");
+        throw std::logic_error(server_constants::THE_GAME_IS_ALREADY_ACTIVE);
     try {
 
         game->start();

@@ -1,5 +1,7 @@
 #include "config/dungeon_toml_reader.h"
 
+#include "server_constants.h"
+
 #include <cstddef>
 #include <set>
 #include <string>
@@ -9,29 +11,29 @@
 
 ResourceType DungeonTomlReader::resourceTypeFromName(
     const std::string& name, const std::string& field) {
-    if (name == "CoalRock") return ResourceType::CoalRock;
-    if (name == "LapisRock") return ResourceType::LapisRock;
-    if (name == "SilverRock") return ResourceType::SilverRock;
-    if (name == "GoldRock") return ResourceType::GoldRock;
+    if (name == server_constants::COALROCK) return ResourceType::CoalRock;
+    if (name == server_constants::LAPISROCK) return ResourceType::LapisRock;
+    if (name == server_constants::SILVERROCK) return ResourceType::SilverRock;
+    if (name == server_constants::GOLDROCK) return ResourceType::GoldRock;
 
-    toml_helpers::invalid(field, "unknown mineral type");
+    toml_helpers::invalid(field, server_constants::UNKNOWN_MINERAL_TYPE);
 }
 
 ItemId DungeonTomlReader::rewardItemFromName(
     const std::string& name, const std::string& field) {
-    if (name == "Coal") return ItemId::Coal;
-    if (name == "Lapis") return ItemId::Lapis;
-    if (name == "Silver") return ItemId::Silver;
-    if (name == "Gold") return ItemId::Gold;
+    if (name == server_constants::COAL) return ItemId::Coal;
+    if (name == server_constants::LAPIS) return ItemId::Lapis;
+    if (name == server_constants::SILVER) return ItemId::Silver;
+    if (name == server_constants::GOLD) return ItemId::Gold;
 
-    toml_helpers::invalid(field, "unknown reward item");
+    toml_helpers::invalid(field, server_constants::UNKNOWN_REWARD_ITEM);
 }
 
 Quality DungeonTomlReader::qualityFromName(
     const std::string& name, const std::string& field) {
-    if (name == "None") return Quality::None;
+    if (name == server_constants::NONE) return Quality::None;
 
-    toml_helpers::invalid(field, "unknown quality");
+    toml_helpers::invalid(field, server_constants::UNKNOWN_QUALITY_2);
 }
 
 DungeonConfig DungeonTomlReader::read(const toml::table& root) const {
@@ -40,102 +42,102 @@ DungeonConfig DungeonTomlReader::read(const toml::table& root) const {
     using toml_helpers::string;
     using toml_helpers::tableAt;
 
-    const auto& dungeon = tableAt(root.get("dungeon"), "dungeon");
+    const auto& dungeon = tableAt(root.get(server_constants::DUNGEON), server_constants::DUNGEON);
 
     DungeonConfig config;
     config.miningRange = static_cast<uint16_t>(integer(
-        dungeon, "mining_range", 65535, "dungeon.mining_range"));
+        dungeon, server_constants::MINING_RANGE, 65535, server_constants::DUNGEON_MINING_RANGE));
 
     if (config.miningRange == 0) {
-        invalid("dungeon.mining_range", "must be greater than zero");
+        invalid(server_constants::DUNGEON_MINING_RANGE, server_constants::MUST_BE_GREATER_THAN_ZERO);
     }
 
     config.mineralDensityPercent = static_cast<uint8_t>(integer(
-        dungeon, "mineral_density_percent", 100,
-        "dungeon.mineral_density_percent"));
+        dungeon, server_constants::MINERAL_DENSITY_PERCENT, 100,
+        server_constants::DUNGEON_MINERAL_DENSITY_PERCENT));
 
     config.minerals.clear();
     config.mineralDensityByRoom.clear();
 
-    const auto* densityNode = dungeon.get("mineral_density_by_room");
+    const auto* densityNode = dungeon.get(server_constants::MINERAL_DENSITY_BY_ROOM);
     if (!densityNode || !densityNode->is_array()) {
-        invalid("dungeon.mineral_density_by_room", "expected an array");
+        invalid(server_constants::DUNGEON_MINERAL_DENSITY_BY_ROOM, server_constants::EXPECTED_AN_ARRAY);
     }
 
     const auto& densities = *densityNode->as_array();
     for (std::size_t i = 0; i < densities.size(); ++i) {
-        const auto field = "dungeon.mineral_density_by_room[" +
-                           std::to_string(i) + "]";
+        const auto field = server_constants::DUNGEON_MINERAL_DENSITY_BY_ROOM_PREFIX +
+                           std::to_string(i) + server_constants::CLOSE_BRACKET;
         const auto& density = tableAt(&densities[i], field);
 
         const auto room = static_cast<uint8_t>(integer(
-            density, "room", DUNGEON_ROOM_COUNT, field + ".room"));
+            density, server_constants::ROOM, DUNGEON_ROOM_COUNT, field + server_constants::FIELD_ROOM));
         const auto percentage = static_cast<uint8_t>(integer(
-            density, "density", 100, field + ".density"));
+            density, server_constants::DENSITY, 100, field + server_constants::FIELD_DENSITY));
 
         if (room == 0) {
-            invalid(field + ".room", "room number must be greater than zero");
+            invalid(field + server_constants::FIELD_ROOM, server_constants::ROOM_NUMBER_MUST_BE_GREATER_THAN_ZERO);
         }
 
         if (!config.mineralDensityByRoom.emplace(room, percentage).second) {
-            invalid(field, "duplicate room");
+            invalid(field, server_constants::DUPLICATE_ROOM);
         }
     }
 
-    const auto* mineralsNode = dungeon.get("minerals");
+    const auto* mineralsNode = dungeon.get(server_constants::MINERALS);
     if (!mineralsNode || !mineralsNode->is_array()) {
-        invalid("dungeon.minerals", "expected an array");
+        invalid(server_constants::DUNGEON_MINERALS, server_constants::EXPECTED_AN_ARRAY);
     }
 
     const auto& minerals = *mineralsNode->as_array();
     if (minerals.empty()) {
-        invalid("dungeon.minerals", "at least one mineral is required");
+        invalid(server_constants::DUNGEON_MINERALS, server_constants::AT_LEAST_ONE_MINERAL_IS_REQUIRED);
     }
 
     config.minerals.reserve(minerals.size());
     uint64_t totalSpawnWeight = 0;
 
     for (std::size_t i = 0; i < minerals.size(); ++i) {
-        const auto field = "dungeon.minerals[" + std::to_string(i) + "]";
+        const auto field = server_constants::DUNGEON_MINERALS_PREFIX + std::to_string(i) + server_constants::CLOSE_BRACKET;
         const auto& mineral = tableAt(&minerals[i], field);
 
-        const auto typeName = string(mineral, "type", field + ".type");
-        const auto type = resourceTypeFromName(typeName, field + ".type");
+        const auto typeName = string(mineral, server_constants::TYPE, field + server_constants::FIELD_TYPE);
+        const auto type = resourceTypeFromName(typeName, field + server_constants::FIELD_TYPE);
 
         const auto hits = integer(
-            mineral, "hits_to_break", 65535, field + ".hits_to_break");
+            mineral, server_constants::HITS_TO_BREAK, 65535, field + server_constants::FIELD_HITS_TO_BREAK);
         if (hits == 0) {
-            invalid(field + ".hits_to_break", "must be greater than zero");
+            invalid(field + server_constants::FIELD_HITS_TO_BREAK, server_constants::MUST_BE_GREATER_THAN_ZERO);
         }
 
         const auto weight = integer(
-            mineral, "spawn_weight", 65535, field + ".spawn_weight");
+            mineral, server_constants::SPAWN_WEIGHT, 65535, field + server_constants::FIELD_SPAWN_WEIGHT);
         totalSpawnWeight += static_cast<uint64_t>(weight);
 
         const auto firstRoom = integer(
-            mineral, "first_room", DUNGEON_ROOM_COUNT, field + ".first_room");
+            mineral, server_constants::FIRST_ROOM, DUNGEON_ROOM_COUNT, field + server_constants::FIELD_FIRST_ROOM);
         if (firstRoom == 0) {
-            invalid(field + ".first_room",
-                    "room number must be greater than zero");
+            invalid(field + server_constants::FIELD_FIRST_ROOM,
+                    server_constants::ROOM_NUMBER_MUST_BE_GREATER_THAN_ZERO);
         }
 
         const auto itemName = string(
-            mineral, "reward_item", field + ".reward_item");
-        const auto item = rewardItemFromName(itemName, field + ".reward_item");
+            mineral, server_constants::REWARD_ITEM, field + server_constants::FIELD_REWARD_ITEM);
+        const auto item = rewardItemFromName(itemName, field + server_constants::FIELD_REWARD_ITEM);
 
         const auto quantity = integer(
-            mineral, "reward_quantity", 65535, field + ".reward_quantity");
+            mineral, server_constants::REWARD_QUANTITY, 65535, field + server_constants::FIELD_REWARD_QUANTITY);
         if (quantity == 0) {
-            invalid(field + ".reward_quantity", "must be greater than zero");
+            invalid(field + server_constants::FIELD_REWARD_QUANTITY, server_constants::MUST_BE_GREATER_THAN_ZERO);
         }
 
         const auto qualityName = string(
-            mineral, "reward_quality", field + ".reward_quality");
+            mineral, server_constants::REWARD_QUALITY, field + server_constants::FIELD_REWARD_QUALITY);
         const auto quality = qualityFromName(
-            qualityName, field + ".reward_quality");
+            qualityName, field + server_constants::FIELD_REWARD_QUALITY);
 
         const auto chance = integer(
-            mineral, "reward_chance", 100, field + ".reward_chance");
+            mineral, server_constants::REWARD_CHANCE, 100, field + server_constants::FIELD_REWARD_CHANCE);
 
         config.minerals.push_back({
             type,
@@ -148,7 +150,7 @@ DungeonConfig DungeonTomlReader::read(const toml::table& root) const {
     }
 
     if (totalSpawnWeight == 0) {
-        invalid("dungeon.minerals", "at least one mineral must have a positive spawn_weight");
+        invalid(server_constants::DUNGEON_MINERALS, server_constants::AT_LEAST_ONE_MINERAL_MUST_HAVE_A_POSITIVE_SPAWN_WEIGHT);
     }
 
     return config;

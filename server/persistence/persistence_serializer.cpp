@@ -1,5 +1,7 @@
 #include "persistence_serializer.h"
 
+#include "server_constants.h"
+
 #include <limits>
 #include <stdexcept>
 #include <utility>
@@ -7,7 +9,7 @@
 
 int64_t PersistenceSerializer::checkedInteger(uint64_t value) {
     if (value > static_cast<uint64_t>(std::numeric_limits<int64_t>::max())) {
-        throw std::overflow_error("TOML cannot represent an unsigned integer above INT64_MAX");
+        throw std::overflow_error(server_constants::TOML_CANNOT_REPRESENT_AN_UNSIGNED_INTEGER_ABOVE_INT64_MAX);
     }
     return static_cast<int64_t>(value);
 }
@@ -37,41 +39,41 @@ toml::table PersistenceSerializer::boolMap(const std::map<uint32_t, bool>& value
 }
 
 toml::table PersistenceSerializer::position(const Position& pos) {
-    return toml::table{{"x", pos.getX()}, {"y", pos.getY()}};
+    return toml::table{{server_constants::X, pos.getX()}, {server_constants::Y, pos.getY()}};
 }
 
 toml::table PersistenceSerializer::color(const Color& value) {
-    return toml::table{{"r", static_cast<int64_t>(value.r)}, {"g", static_cast<int64_t>(value.g)}, {"b", static_cast<int64_t>(value.b)}};
+    return toml::table{{server_constants::R, static_cast<int64_t>(value.r)}, {server_constants::G, static_cast<int64_t>(value.g)}, {server_constants::B, static_cast<int64_t>(value.b)}};
 }
 
 toml::table PersistenceSerializer::stack(const Stack& value) {
-    return toml::table{{"itemId", static_cast<int64_t>(value.item_id)},
-            {"quantity", static_cast<int64_t>(value.quantity)},
-            {"quality", static_cast<int64_t>(value.qual)}};
+    return toml::table{{server_constants::ITEMID, static_cast<int64_t>(value.item_id)},
+            {server_constants::QUANTITY, static_cast<int64_t>(value.quantity)},
+            {server_constants::QUALITY, static_cast<int64_t>(value.qual)}};
 }
 
 toml::table PersistenceSerializer::furniture(const FurnitureData& value) {
-    return toml::table{{"id", static_cast<int64_t>(value.id)}, {"pos", position(value.pos)},
-            {"type", static_cast<int64_t>(value.type)}, {"dir", static_cast<int64_t>(value.dir)}};
+    return toml::table{{server_constants::ID, static_cast<int64_t>(value.id)}, {server_constants::POS, position(value.pos)},
+            {server_constants::TYPE, static_cast<int64_t>(value.type)}, {server_constants::DIR, static_cast<int64_t>(value.dir)}};
 }
 
 toml::table PersistenceSerializer::loot(const LootData& value) {
-    return toml::table{{"id", static_cast<int64_t>(value.id)}, {"pos", position(value.pos)},
-            {"item", static_cast<int64_t>(value.item)}, {"quantity", static_cast<int64_t>(value.quantity)},
-            {"quality", static_cast<int64_t>(value.quality)}, {"kind", static_cast<int64_t>(value.kind)}};
+    return toml::table{{server_constants::ID, static_cast<int64_t>(value.id)}, {server_constants::POS, position(value.pos)},
+            {server_constants::ITEM, static_cast<int64_t>(value.item)}, {server_constants::QUANTITY, static_cast<int64_t>(value.quantity)},
+            {server_constants::QUALITY, static_cast<int64_t>(value.quality)}, {server_constants::KIND, static_cast<int64_t>(value.kind)}};
 }
 
 toml::table PersistenceSerializer::crop(const CropData& value) {
-    return toml::table{{"id", static_cast<int64_t>(value.id)}, {"pos", position(value.pos)},
-            {"type", static_cast<int64_t>(value.type)}, {"state", static_cast<int64_t>(value.state)},
-            {"wattered", value.wattered}};
+    return toml::table{{server_constants::ID, static_cast<int64_t>(value.id)}, {server_constants::POS, position(value.pos)},
+            {server_constants::TYPE, static_cast<int64_t>(value.type)}, {server_constants::STATE, static_cast<int64_t>(value.state)},
+            {server_constants::WATTERED, value.wattered}};
 }
 
 toml::table PersistenceSerializer::animal(const AnimalData& value) {
-    return toml::table{{"id", static_cast<int64_t>(value.id)}, {"pos", position(value.pos)},
-            {"dir", static_cast<int64_t>(value.dir)}, {"type", static_cast<int64_t>(value.type)},
-            {"state", static_cast<int64_t>(value.state)},
-            {"needsInteraction", value.needs_interaction}};
+    return toml::table{{server_constants::ID, static_cast<int64_t>(value.id)}, {server_constants::POS, position(value.pos)},
+            {server_constants::DIR, static_cast<int64_t>(value.dir)}, {server_constants::TYPE, static_cast<int64_t>(value.type)},
+            {server_constants::STATE, static_cast<int64_t>(value.state)},
+            {server_constants::NEEDSINTERACTION, value.needs_interaction}};
 }
 
 toml::array PersistenceSerializer::strings(const std::vector<std::string>& values) {
@@ -88,174 +90,174 @@ toml::table PersistenceSerializer::farm(const FarmData& value) {
     for (const auto& item : value.crops) {
         crops.push_back(crop(item));
     }
-    result.insert("crops", std::move(crops));
+    result.insert(server_constants::CROPS, std::move(crops));
     toml::array animals;
     for (const auto& item : value.animals) {
         animals.push_back(animal(item));
     }
-    result.insert("animals", std::move(animals));
+    result.insert(server_constants::ANIMALS, std::move(animals));
     toml::array tilledSoil;
     for (const auto& item : value.tilledSoil) {
         tilledSoil.push_back(position(item));
     }
-    result.insert("tilledSoil", std::move(tilledSoil));
+    result.insert(server_constants::TILLEDSOIL, std::move(tilledSoil));
     toml::array furnitureArray;
     for (const auto& item : value.furniture) {
         furnitureArray.push_back(furniture(item));
     }
-    result.insert("furniture", std::move(furnitureArray));
+    result.insert(server_constants::FURNITURE, std::move(furnitureArray));
     toml::array lootArray;
     for (const auto& item : value.loot) {
         lootArray.push_back(loot(item));
     }
-    result.insert("loot", std::move(lootArray));
+    result.insert(server_constants::LOOT, std::move(lootArray));
     return result;
 }
 
 toml::table PersistenceSerializer::enemy(const EnemySnapshot& value) {
-    return toml::table{{"id", static_cast<int64_t>(value.id)}, {"pos", position(value.pos)},
-            {"dir", static_cast<int64_t>(value.dir)}, {"type", static_cast<int64_t>(value.type)},
-            {"state", static_cast<int64_t>(value.state)}, {"health", static_cast<int64_t>(value.health)},
-            {"maxHealth", static_cast<int64_t>(value.maxHealth)}, {"frenzied", value.frenzied},
-            {"action", static_cast<int64_t>(value.action)}};
+    return toml::table{{server_constants::ID, static_cast<int64_t>(value.id)}, {server_constants::POS, position(value.pos)},
+            {server_constants::DIR, static_cast<int64_t>(value.dir)}, {server_constants::TYPE, static_cast<int64_t>(value.type)},
+            {server_constants::STATE, static_cast<int64_t>(value.state)}, {server_constants::HEALTH_2, static_cast<int64_t>(value.health)},
+            {server_constants::MAXHEALTH, static_cast<int64_t>(value.maxHealth)}, {server_constants::FRENZIED, value.frenzied},
+            {server_constants::ACTION, static_cast<int64_t>(value.action)}};
 }
 
 toml::table PersistenceSerializer::projectile(const ProjectileData& value) {
-    return toml::table{{"id", static_cast<int64_t>(value.id)}, {"pos", position(value.pos)},
-            {"type", static_cast<int64_t>(value.type)}};
+    return toml::table{{server_constants::ID, static_cast<int64_t>(value.id)}, {server_constants::POS, position(value.pos)},
+            {server_constants::TYPE, static_cast<int64_t>(value.type)}};
 }
 
 toml::table PersistenceSerializer::trap(const TrapData& value) {
-    return toml::table{{"id", static_cast<int64_t>(value.id)}, {"pos", position(value.pos)},
-            {"dir", static_cast<int64_t>(value.dir)}, {"type", static_cast<int64_t>(value.type)},
-            {"state", static_cast<int64_t>(value.state)}, {"range", static_cast<int64_t>(value.range)}};
+    return toml::table{{server_constants::ID, static_cast<int64_t>(value.id)}, {server_constants::POS, position(value.pos)},
+            {server_constants::DIR, static_cast<int64_t>(value.dir)}, {server_constants::TYPE, static_cast<int64_t>(value.type)},
+            {server_constants::STATE, static_cast<int64_t>(value.state)}, {server_constants::RANGE, static_cast<int64_t>(value.range)}};
 }
 
 toml::table PersistenceSerializer::combat(const DungeonCombatData& value) {
     toml::table result;
-    result.insert("visitId", static_cast<int64_t>(value.visitId));
-    result.insert("room", static_cast<int64_t>(value.room));
+    result.insert(server_constants::VISITID, static_cast<int64_t>(value.visitId));
+    result.insert(server_constants::ROOM, static_cast<int64_t>(value.room));
     toml::array enemies;
     for (const auto& item : value.enemies) {
         enemies.push_back(enemy(item));
     }
-    result.insert("enemies", std::move(enemies));
+    result.insert(server_constants::ENEMIES, std::move(enemies));
     toml::array projectiles;
     for (const auto& item : value.projectiles) {
         projectiles.push_back(projectile(item));
     }
-    result.insert("projectiles", std::move(projectiles));
+    result.insert(server_constants::PROJECTILES, std::move(projectiles));
     toml::array traps;
     for (const auto& item : value.traps) {
         traps.push_back(trap(item));
     }
-    result.insert("traps", std::move(traps));
+    result.insert(server_constants::TRAPS, std::move(traps));
     toml::array lootArray;
     for (const auto& item : value.loot) {
         lootArray.push_back(loot(item));
     }
-    result.insert("loot", std::move(lootArray));
+    result.insert(server_constants::LOOT, std::move(lootArray));
     return result;
 }
 
 toml::table PersistenceSerializer::mineral(const MineralData& value) {
-    return toml::table{{"id", static_cast<int64_t>(value.id)}, {"pos", position(value.pos)},
-            {"type", static_cast<int64_t>(value.type)}, {"state", static_cast<int64_t>(value.state)},
-            {"health", static_cast<int64_t>(value.health)}};
+    return toml::table{{server_constants::ID, static_cast<int64_t>(value.id)}, {server_constants::POS, position(value.pos)},
+            {server_constants::TYPE, static_cast<int64_t>(value.type)}, {server_constants::STATE, static_cast<int64_t>(value.state)},
+            {server_constants::HEALTH_2, static_cast<int64_t>(value.health)}};
 }
 
 toml::table PersistenceSerializer::level(const LevelData& value) {
     toml::table result;
-    result.insert("entry", position(value.entry));
-    result.insert("exit", position(value.exit));
+    result.insert(server_constants::ENTRY, position(value.entry));
+    result.insert(server_constants::EXIT, position(value.exit));
     toml::array minerals;
     for (const auto& item : value.minerals) {
         minerals.push_back(mineral(item));
     }
-    result.insert("minerals", std::move(minerals));
-    result.insert("combat", combat(value.combat));
+    result.insert(server_constants::MINERALS, std::move(minerals));
+    result.insert(server_constants::COMBAT, combat(value.combat));
     return result;
 }
 
 toml::table PersistenceSerializer::mine(const MineData& value) {
-    return toml::table{{"currentLevel", static_cast<int64_t>(value.current_level)},
-            {"currentLevelData", level(value.current_level_data)}};
+    return toml::table{{server_constants::CURRENTLEVEL, static_cast<int64_t>(value.current_level)},
+            {server_constants::CURRENTLEVELDATA, level(value.current_level_data)}};
 }
 
 toml::table PersistenceSerializer::interior(const InteriorData& value) {
     toml::table result;
-    result.insert("interiorId", static_cast<int64_t>(value.interior_id));
-    result.insert("houseIndex", static_cast<int64_t>(value.house_index));
+    result.insert(server_constants::INTERIORID, static_cast<int64_t>(value.interior_id));
+    result.insert(server_constants::HOUSEINDEX, static_cast<int64_t>(value.house_index));
     toml::array furnitureArray;
     for (const auto& item : value.furniture) {
         furnitureArray.push_back(furniture(item));
     }
-    result.insert("furniture", std::move(furnitureArray));
+    result.insert(server_constants::FURNITURE, std::move(furnitureArray));
     toml::array lootArray;
     for (const auto& item: value.loot) lootArray.push_back(loot(item));
-    result.insert("loot", std::move(lootArray));
+    result.insert(server_constants::LOOT, std::move(lootArray));
     return result;
 }
 
 toml::table PersistenceSerializer::zone(const ZoneData& value) {
     if (const FarmData* data = std::get_if<FarmData>(&value)) {
-        return toml::table{{"type", "farm"}, {"data", farm(*data)}};
+        return toml::table{{server_constants::TYPE, server_constants::FARM}, {server_constants::DATA, farm(*data)}};
     }
     if (const MineData* data = std::get_if<MineData>(&value)) {
-        return toml::table{{"type", "mine"}, {"data", mine(*data)}};
+        return toml::table{{server_constants::TYPE, server_constants::MINE}, {server_constants::DATA, mine(*data)}};
     }
     if (const InteriorData* data = std::get_if<InteriorData>(&value)) {
-        return toml::table{{"type", "interior"}, {"data", interior(*data)}};
+        return toml::table{{server_constants::TYPE, server_constants::INTERIOR}, {server_constants::DATA, interior(*data)}};
     }
-    return toml::table{{"type", "none"}};
+    return toml::table{{server_constants::TYPE, server_constants::NONE_2}};
 }
 
 toml::table PersistenceSerializer::combatProgress(const CombatProgressData& value) {
-    return toml::table{{"skeletons", value.skeletons}, {"vampires", value.vampires},
-            {"orcs", value.orcs}, {"skull", value.skull}};
+    return toml::table{{server_constants::SKELETONS, value.skeletons}, {server_constants::VAMPIRES, value.vampires},
+            {server_constants::ORCS, value.orcs}, {server_constants::SKULL, value.skull}};
 }
 
 toml::table PersistenceSerializer::player(const PlayerDataLocal& value) {
     toml::table result;
-    result.insert("characterName", value.characterName);
-    result.insert("pos", position(value.pos));
-    result.insert("state", static_cast<int64_t>(value.state));
-    result.insert("dir", static_cast<int64_t>(value.dir));
-    result.insert("hairModel", static_cast<int64_t>(value.hairModel));
-    result.insert("shirtModel", static_cast<int64_t>(value.shirtModel));
-    result.insert("pantsModel", static_cast<int64_t>(value.pantsModel));
-    result.insert("hairColor", color(value.hairColor));
-    result.insert("pantsColor", color(value.pantsColor));
-    result.insert("currentZone", static_cast<int64_t>(value.currentZone));
-    result.insert("dungeonLevel", static_cast<int64_t>(value.dungeonLevel));
+    result.insert(server_constants::CHARACTERNAME, value.characterName);
+    result.insert(server_constants::POS, position(value.pos));
+    result.insert(server_constants::STATE, static_cast<int64_t>(value.state));
+    result.insert(server_constants::DIR, static_cast<int64_t>(value.dir));
+    result.insert(server_constants::HAIRMODEL, static_cast<int64_t>(value.hairModel));
+    result.insert(server_constants::SHIRTMODEL, static_cast<int64_t>(value.shirtModel));
+    result.insert(server_constants::PANTSMODEL, static_cast<int64_t>(value.pantsModel));
+    result.insert(server_constants::HAIRCOLOR, color(value.hairColor));
+    result.insert(server_constants::PANTSCOLOR, color(value.pantsColor));
+    result.insert(server_constants::CURRENTZONE, static_cast<int64_t>(value.currentZone));
+    result.insert(server_constants::DUNGEONLEVEL, static_cast<int64_t>(value.dungeonLevel));
     if (value.interior) {
-        result.insert("interior", toml::table{
-            {"interiorId", static_cast<int64_t>(value.interior->interior_id)},
-            {"houseIndex", static_cast<int64_t>(value.interior->house_index)}
+        result.insert(server_constants::INTERIOR, toml::table{
+            {server_constants::INTERIORID, static_cast<int64_t>(value.interior->interior_id)},
+            {server_constants::HOUSEINDEX, static_cast<int64_t>(value.interior->house_index)}
         });
     }
     if (value.heldItem) {
-        result.insert("heldItem", static_cast<int64_t>(*value.heldItem));
+        result.insert(server_constants::HELDITEM, static_cast<int64_t>(*value.heldItem));
     }
     toml::table items;
     for (const auto& [slot, item] : value.items) {
         items.insert(std::to_string(slot), stack(item));
     }
-    result.insert("items", std::move(items));
-    result.insert("currentSlot", static_cast<int64_t>(value.current_slot));
-    result.insert("inventoryCapacity", static_cast<int64_t>(value.cap_inventory));
-    result.insert("gold", static_cast<int64_t>(value.gold));
-    result.insert("health", static_cast<int64_t>(value.health));
-    result.insert("maxHealth", static_cast<int64_t>(value.maxHealth));
-    result.insert("energy", static_cast<int64_t>(value.energy));
-    result.insert("maxEnergy", static_cast<int64_t>(value.maxEnergy));
-    result.insert("zoneData", zone(value.zoneData));
-    result.insert("combatProgress", combatProgress(value.combatProgress));
+    result.insert(server_constants::ITEMS, std::move(items));
+    result.insert(server_constants::CURRENTSLOT, static_cast<int64_t>(value.current_slot));
+    result.insert(server_constants::INVENTORYCAPACITY, static_cast<int64_t>(value.cap_inventory));
+    result.insert(server_constants::GOLD_2, static_cast<int64_t>(value.gold));
+    result.insert(server_constants::HEALTH_2, static_cast<int64_t>(value.health));
+    result.insert(server_constants::MAXHEALTH, static_cast<int64_t>(value.maxHealth));
+    result.insert(server_constants::ENERGY_2, static_cast<int64_t>(value.energy));
+    result.insert(server_constants::MAXENERGY, static_cast<int64_t>(value.maxEnergy));
+    result.insert(server_constants::ZONEDATA, zone(value.zoneData));
+    result.insert(server_constants::COMBATPROGRESS, combatProgress(value.combatProgress));
     toml::array messages;
     for (const ChatMessageData& msg : value.newMessages) {
-        messages.push_back(toml::table{{"sender", msg.sender}, {"text", msg.text}});
+        messages.push_back(toml::table{{server_constants::SENDER, msg.sender}, {server_constants::TEXT, msg.text}});
     }
-    result.insert("newMessages", std::move(messages));
+    result.insert(server_constants::NEWMESSAGES, std::move(messages));
     return result;
 }
 
@@ -278,62 +280,62 @@ toml::table PersistenceSerializer::communityProgress(const CommunitySaveData& va
 
 toml::table PersistenceSerializer::indexPlayer(const GameIndexPlayerDTO& value) {
     toml::table result;
-    result.insert("characterName", value.characterName);
-    result.insert("hairModel", static_cast<int64_t>(value.hairModel));
-    result.insert("shirtModel", static_cast<int64_t>(value.shirtModel));
-    result.insert("pantsModel", static_cast<int64_t>(value.pantsModel));
-    result.insert("hairColor", color(value.hairColor));
-    result.insert("pantsColor", color(value.pantsColor));
+    result.insert(server_constants::CHARACTERNAME, value.characterName);
+    result.insert(server_constants::HAIRMODEL, static_cast<int64_t>(value.hairModel));
+    result.insert(server_constants::SHIRTMODEL, static_cast<int64_t>(value.shirtModel));
+    result.insert(server_constants::PANTSMODEL, static_cast<int64_t>(value.pantsModel));
+    result.insert(server_constants::HAIRCOLOR, color(value.hairColor));
+    result.insert(server_constants::PANTSCOLOR, color(value.pantsColor));
     return result;
 }
 
 toml::table PersistenceSerializer::serialize(const GameIndexDTO& dto) {
     toml::table result;
-    result.insert("id", dto.id);
-    result.insert("farmName", dto.farmName);
-    result.insert("mapPath", dto.mapPath);
-    result.insert("users", strings(dto.users));
-    result.insert("isMultiplayer", dto.isMultiplayer);
+    result.insert(server_constants::ID, dto.id);
+    result.insert(server_constants::FARMNAME, dto.farmName);
+    result.insert(server_constants::MAPPATH, dto.mapPath);
+    result.insert(server_constants::USERS, strings(dto.users));
+    result.insert(server_constants::ISMULTIPLAYER, dto.isMultiplayer);
 
     toml::table previews;
     for (const auto& [userName, player] : dto.playerPreviews) {
         previews.insert(userName, indexPlayer(player));
     }
-    result.insert("playerPreviews", std::move(previews));
+    result.insert(server_constants::PLAYERPREVIEWS, std::move(previews));
     return result;
 }
 
 toml::table PersistenceSerializer::serialize(const PersistenceDTO& dto) {
     toml::table result;
-    result.insert("id", dto.id);
-    result.insert("farmName", dto.farmName);
-    result.insert("mapId", static_cast<int64_t>(dto.mapId));
-    result.insert("currentDay", static_cast<int64_t>(dto.currentDay));
-    result.insert("users", strings(dto.users));
+    result.insert(server_constants::ID, dto.id);
+    result.insert(server_constants::FARMNAME, dto.farmName);
+    result.insert(server_constants::MAPID, static_cast<int64_t>(dto.mapId));
+    result.insert(server_constants::CURRENTDAY, static_cast<int64_t>(dto.currentDay));
+    result.insert(server_constants::USERS, strings(dto.users));
 
     toml::table players;
     for (const auto& [username, data] : dto.players) {
         players.insert(username, player(data));
     }
-    result.insert("players", std::move(players));
-    result.insert("farm", farm(dto.farm));
+    result.insert(server_constants::PLAYERS, std::move(players));
+    result.insert(server_constants::FARM, farm(dto.farm));
     toml::array interiors;
     for (const auto& room: dto.interiors) interiors.push_back(interior(room));
-    result.insert("interiors", std::move(interiors));
+    result.insert(server_constants::INTERIORS, std::move(interiors));
     toml::table dungeonFurniture;
     for (const auto& [level, items]: dto.dungeonFurniture) {
         toml::array entries;
         for (const auto& item: items) entries.push_back(furniture(item));
         dungeonFurniture.insert(std::to_string(level), std::move(entries));
     }
-    result.insert("dungeonFurniture", std::move(dungeonFurniture));
+    result.insert(server_constants::DUNGEONFURNITURE, std::move(dungeonFurniture));
     toml::table dungeonStorageLoot;
     for (const auto& [level, items]: dto.dungeonStorageLoot) {
         toml::array entries;
         for (const auto& item: items) entries.push_back(loot(item));
         dungeonStorageLoot.insert(std::to_string(level), std::move(entries));
     }
-    result.insert("dungeonStorageLoot", std::move(dungeonStorageLoot));
+    result.insert(server_constants::DUNGEONSTORAGELOOT, std::move(dungeonStorageLoot));
 
     toml::table chestInventories;
     for (const auto& [id, contents]: dto.chestInventories) {
@@ -343,19 +345,19 @@ toml::table PersistenceSerializer::serialize(const PersistenceDTO& dto) {
         }
         chestInventories.insert(std::to_string(id), std::move(slots));
     }
-    result.insert("chestInventories", std::move(chestInventories));
+    result.insert(server_constants::CHESTINVENTORIES, std::move(chestInventories));
     toml::array emptySoilElapsed;
     for (const auto& [pos, elapsed] : dto.emptySoilElapsed) {
-        emptySoilElapsed.push_back(toml::table{{"pos", position(pos)},
-            {"elapsed", checkedInteger(elapsed)}});
+        emptySoilElapsed.push_back(toml::table{{server_constants::POS, position(pos)},
+            {server_constants::ELAPSED, checkedInteger(elapsed)}});
     }
-    result.insert("emptySoilElapsed", std::move(emptySoilElapsed));
-    result.insert("cropGrowthProgress", uint64Map(dto.cropGrowthProgress));
-    result.insert("cropWaterRemainingTime", uint64Map(dto.cropWaterRemainingTime));
-    result.insert("harvestedCrops", boolMap(dto.harvestedCrops));
-    result.insert("regrowingCrops", boolMap(dto.regrowingCrops));
-    result.insert("animalProductionProgress", uint64Map(dto.animalProductionProgress));
-    result.insert("animalAvailableProducts", uint32Map(dto.animalAvailableProducts));
-    result.insert("communityCenterActionProgress", communityProgress(dto.communityCenterActionProgress));
+    result.insert(server_constants::EMPTYSOILELAPSED, std::move(emptySoilElapsed));
+    result.insert(server_constants::CROPGROWTHPROGRESS, uint64Map(dto.cropGrowthProgress));
+    result.insert(server_constants::CROPWATERREMAININGTIME, uint64Map(dto.cropWaterRemainingTime));
+    result.insert(server_constants::HARVESTEDCROPS, boolMap(dto.harvestedCrops));
+    result.insert(server_constants::REGROWINGCROPS, boolMap(dto.regrowingCrops));
+    result.insert(server_constants::ANIMALPRODUCTIONPROGRESS, uint64Map(dto.animalProductionProgress));
+    result.insert(server_constants::ANIMALAVAILABLEPRODUCTS, uint32Map(dto.animalAvailableProducts));
+    result.insert(server_constants::COMMUNITYCENTERACTIONPROGRESS, communityProgress(dto.communityCenterActionProgress));
     return result;
 }

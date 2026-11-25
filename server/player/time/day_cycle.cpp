@@ -1,5 +1,7 @@
 #include "day_cycle.h"
 
+#include "server_constants.h"
+
 #include <algorithm>
 #include <stdexcept>
 #include <utility>
@@ -12,7 +14,7 @@
 
 DayCycle::DayCycle(std::chrono::milliseconds duration): duration(duration) {
     if (duration.count() <= 0) {
-        throw std::invalid_argument("Day duration must be positive");
+        throw std::invalid_argument(server_constants::DAY_DURATION_MUST_BE_POSITIVE);
     }
 }
 
@@ -53,7 +55,7 @@ void DayCycle::forgetConfirmation(uint16_t playerId) { confirmations.erase(playe
 bool DayCycle::advance(std::chrono::milliseconds time, std::span<const Participant> players,
                        const PlayerSpawnSource& spawns) {
     if (time.count() < 0) {
-        throw std::invalid_argument("Time cannot move backwards");
+        throw std::invalid_argument(server_constants::TIME_CANNOT_MOVE_BACKWARDS);
     }
     bool connected = false;
     bool allIncapacitated = true;

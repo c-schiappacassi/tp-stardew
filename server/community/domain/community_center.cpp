@@ -1,5 +1,7 @@
 #include "community_center.h"
 
+#include "server_constants.h"
+
 #include <algorithm>
 #include <stdexcept>
 
@@ -25,14 +27,14 @@ uint32_t CommunityCenter::remainingCoins() const {
 }
 
 void CommunityCenter::donate(ItemId item, uint32_t quantity) {
-    if (quantity == 0 || quantity > remaining(item)) throw std::invalid_argument("Invalid item donation");
+    if (quantity == 0 || quantity > remaining(item)) throw std::invalid_argument(server_constants::INVALID_ITEM_DONATION);
     progress.donations.at(item) += quantity;
     checkBundles();
     ++revision;
 }
 
 void CommunityCenter::donateCoins(uint32_t quantity) {
-    if (quantity == 0 || quantity > remainingCoins()) throw std::invalid_argument("Invalid coin donation");
+    if (quantity == 0 || quantity > remainingCoins()) throw std::invalid_argument(server_constants::INVALID_COIN_DONATION);
     progress.coins += quantity;
     checkBundles();
     ++revision;
@@ -68,7 +70,7 @@ void CommunityCenter::checkBundles() {
 
 void CommunityCenter::complete(CommunityBundle bundle) {
     if (std::find(community_bundle::all.begin(), community_bundle::all.end(), bundle) == community_bundle::all.end()) {
-        throw std::invalid_argument("Unknown community bundle");
+        throw std::invalid_argument(server_constants::UNKNOWN_COMMUNITY_BUNDLE);
     }
     if (isComplete(bundle)) return;
     for (auto& [item, quantity] : progress.donations) {
@@ -82,19 +84,19 @@ void CommunityCenter::complete(CommunityBundle bundle) {
 
 void CommunityCenter::validate(const CommunityProgress& saved) const {
     if (saved.donations.size() != config.requirements.size() || saved.coins > config.moneyRequired) {
-        throw std::invalid_argument("Invalid saved community progress");
+        throw std::invalid_argument(server_constants::INVALID_SAVED_COMMUNITY_PROGRESS);
     }
     for (const auto& [item, required] : config.requirements) {
         const auto donation = saved.donations.find(item);
         if (donation == saved.donations.end() || donation->second > required) {
-            throw std::invalid_argument("Invalid saved donation");
+            throw std::invalid_argument(server_constants::INVALID_SAVED_DONATION);
         }
     }
     CommunityCenter checked(config);
     checked.progress = saved;
     checked.progress.completed.clear();
     checked.checkBundles();
-    if (checked.progress.completed != saved.completed) throw std::invalid_argument("Inconsistent saved bundles");
+    if (checked.progress.completed != saved.completed) throw std::invalid_argument(server_constants::INCONSISTENT_SAVED_BUNDLES);
 }
 
 void CommunityCenter::restore(const CommunityProgress& saved) {

@@ -1,5 +1,7 @@
 #include "dungeon_combat.h"
 
+#include "server_constants.h"
+
 #include <algorithm>
 #include <limits>
 #include <stdexcept>
@@ -162,7 +164,7 @@ void DungeonCombat::spawnPendingAmbush(DungeonRoom& room, const std::vector<Comb
 void DungeonCombat::update(
     CombatTime elapsed, DungeonRooms& rooms, const std::vector<Combatant>& combatants, PlayerManager& players, EntityIdGenerator& ids, std::chrono::steady_clock::time_point now) {
     if (elapsed.count() < 0) {
-        throw std::invalid_argument("Time cannot move backwards");
+        throw std::invalid_argument(server_constants::TIME_CANNOT_MOVE_BACKWARDS);
     }
     clock += elapsed;
     const CombatTime movementTime{std::min<int64_t>(elapsed.count(), 250)};

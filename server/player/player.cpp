@@ -1,5 +1,7 @@
 #include "player.h"
 
+#include "server_constants.h"
+
 #include <algorithm>
 #include <limits>
 #include <stdexcept>
@@ -225,6 +227,8 @@ bool Player::removeItem(uint8_t slot, uint16_t quantity) {
     return inventory.remove(slot, quantity);
 }
 
+bool Player::clearSlot(uint8_t slot) { return inventory.clearSlot(slot); }
+
 bool Player::removeItems(const std::vector<std::pair<uint8_t, uint16_t>>& quantities) {
     if (!canAct() || quantities.empty())
         return false;
@@ -338,7 +342,7 @@ PlayerDataLocal Player::getLocalData() const {
 void Player::restoreData(const PlayerDataLocal& saved) {
     const auto capacity = saved.cap_inventory == 0 ? inventory.getCapacity() : saved.cap_inventory;
     if (saved.current_slot >= capacity)
-        throw std::invalid_argument("Invalid saved player stats");
+        throw std::invalid_argument(server_constants::INVALID_SAVED_PLAYER_STATS);
 
     auto restoredVitals = vitals;
     restoredVitals.restoreData(saved);

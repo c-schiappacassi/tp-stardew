@@ -1,5 +1,7 @@
 #include "merchant_chat.h"
 
+#include "server_constants.h"
+
 #include "commerce/catalog/merchant_catalog.h"
 #include "commerce/shop_products.h"
 #include "commerce/trading/merchant_trade.h"
@@ -23,30 +25,30 @@ std::optional<std::vector<ChatMessageData>> MerchantChat::interact(const ChatCom
     const std::string name{shop_products::merchantName(npc->id)};
     context.players.apply(context.playerId, player_action::FaceTarget{npc->pos});
     return std::vector<ChatMessageData>{
-        {name, "Hello, " + context.playerName + ". Use /catalog to see my products and prices."}, {name, "Commands: /catalog | /buy product amount | /sell product amount"}};
+        {name, server_constants::HELLO_PREFIX + context.playerName + server_constants::FIELD_USE_CATALOG_TO_SEE_MY_PRODUCTS_AND_PRICES}, {name, server_constants::COMMANDS_CATALOG_BUY_PRODUCT_AMOUNT_SELL_PRODUCT_AMOUNT}};
 }
 
 std::vector<ChatMessageData> MerchantChat::execute(const ChatCommandContext& context, const TradeCommand& command) {
     const auto player = context.players.snapshot(context.playerId);
     if (context.actionsBlocked || !player.canAct()) {
         conversations.erase(context.playerId);
-        return {{"Server", "You cannot trade right now."}};
+        return {{server_constants::SERVER, server_constants::YOU_CANNOT_TRADE_RIGHT_NOW}};
     }
     const auto conversation = conversations.find(context.playerId);
     if (conversation == conversations.end()) {
-        return {{"Server", "Approach a merchant and interact before trading."}};
+        return {{server_constants::SERVER, server_constants::APPROACH_A_MERCHANT_AND_INTERACT_BEFORE_TRADING}};
     }
     const auto npc = world.nearbyMerchant(player);
     const auto& active = conversation->second;
     const bool sameMerchant = npc && npc->id == active.npc.id && npc->pos.getX() == active.npc.pos.getX() && npc->pos.getY() == active.npc.pos.getY();
     if (player.getInterior() != active.location || !sameMerchant) {
         conversations.erase(conversation);
-        return {{"Server", "You moved away from the merchant. Approach and interact again."}};
+        return {{server_constants::SERVER, server_constants::YOU_MOVED_AWAY_FROM_THE_MERCHANT_APPROACH_AND_INTERACT_AGAIN}};
     }
     if (command.action == TradeAction::Catalog)
         return catalog.messages(npc->id, world.farmPrices());
     if (command.quantity == 0)
-        return {{"Server", "The amount must be greater than zero."}};
+        return {{server_constants::SERVER, server_constants::THE_AMOUNT_MUST_BE_GREATER_THAN_ZERO}};
     const auto result = command.action == TradeAction::Buy ? trade.buy(context.players, context.playerId, npc->id, command) :
         trade.sell(context.players, context.playerId, npc->id, command);
     return {{std::string{shop_products::merchantName(npc->id)}, tradeMessage(command, result)}};
@@ -56,27 +58,27 @@ std::string MerchantChat::tradeMessage(const TradeCommand& command, const TradeR
     const bool buying = command.action == TradeAction::Buy;
     switch (result.status) {
         case TradeStatus::Completed:
-            return std::string(buying ? "You bought " : "You sold ") + std::to_string(command.quantity) + " " + command.product + " for " + std::to_string(result.gold) + " gold.";
+            return std::string(buying ? server_constants::YOU_BOUGHT_PREFIX : server_constants::YOU_SOLD_PREFIX) + std::to_string(command.quantity) + server_constants::SPACE + command.product + server_constants::FOR_SEPARATOR + std::to_string(result.gold) + server_constants::GOLD_SUFFIX;
         case TradeStatus::UnknownAnimal:
-            return buying ? "I do not sell that animal." : "I do not buy that animal.";
+            return buying ? server_constants::I_DO_NOT_SELL_THAT_ANIMAL : server_constants::I_DO_NOT_BUY_THAT_ANIMAL;
         case TradeStatus::UnavailableProduct:
-            return buying ? "I do not sell that product. Check my catalog." : "I do not buy that product.";
+            return buying ? server_constants::I_DO_NOT_SELL_THAT_PRODUCT_CHECK_MY_CATALOG : server_constants::I_DO_NOT_BUY_THAT_PRODUCT;
         case TradeStatus::InsufficientGold:
-            return "You do not have enough gold.";
+            return server_constants::YOU_DO_NOT_HAVE_ENOUGH_GOLD;
         case TradeStatus::FarmFull:
-            return "There is no room on the farm or the animal limit would be exceeded.";
+            return server_constants::THERE_IS_NO_ROOM_ON_THE_FARM_OR_THE_ANIMAL_LIMIT_WOULD;
         case TradeStatus::InventoryFull:
-            return "There is not enough inventory space.";
+            return server_constants::THERE_IS_NOT_ENOUGH_INVENTORY_SPACE;
         case TradeStatus::GoldLimit:
-            return "The sale would exceed the gold limit.";
+            return server_constants::THE_SALE_WOULD_EXCEED_THE_GOLD_LIMIT;
         case TradeStatus::MissingAnimals:
-            return "There are not enough animals on the farm.";
+            return server_constants::THERE_ARE_NOT_ENOUGH_ANIMALS_ON_THE_FARM;
         case TradeStatus::UnknownQuality:
-            return "The product has an unknown quality.";
+            return server_constants::THE_PRODUCT_HAS_AN_UNKNOWN_QUALITY;
         case TradeStatus::MissingItems:
-            return "You do not have enough of that product.";
+            return server_constants::YOU_DO_NOT_HAVE_ENOUGH_OF_THAT_PRODUCT;
         case TradeStatus::Rejected:
-            return "Could not complete the sale.";
+            return server_constants::COULD_NOT_COMPLETE_THE_SALE;
     }
-    return "Could not complete the sale.";
+    return server_constants::COULD_NOT_COMPLETE_THE_SALE;
 }

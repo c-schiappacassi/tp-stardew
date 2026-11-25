@@ -1,5 +1,7 @@
 #include "community_bundle.h"
 
+#include "server_constants.h"
+
 bool community_bundle::acceptsQuality(ItemId item, Quality quality) {
     const auto bundle = forItem(item);
     if (!bundle) return false;
@@ -9,13 +11,13 @@ bool community_bundle::acceptsQuality(ItemId item, Quality quality) {
 
 std::string_view community_bundle::name(CommunityBundle bundle) {
     switch (bundle) {
-        case CommunityBundle::Crops: return "crops";
-        case CommunityBundle::Metals: return "metals";
-        case CommunityBundle::Animals: return "animals";
-        case CommunityBundle::Combat: return "combat";
-        case CommunityBundle::Money: return "money";
+        case CommunityBundle::Crops: return server_constants::CROPS;
+        case CommunityBundle::Metals: return server_constants::METALS;
+        case CommunityBundle::Animals: return server_constants::ANIMALS;
+        case CommunityBundle::Combat: return server_constants::COMBAT;
+        case CommunityBundle::Money: return server_constants::MONEY;
     }
-    return "unknown";
+    return server_constants::UNKNOWN;
 }
 
 std::optional<CommunityBundle> community_bundle::fromName(std::string_view text) {

@@ -1,12 +1,14 @@
 #include "chest.h"
 
+#include "server_constants.h"
+
 #include <limits>
 #include <stdexcept>
 
 Chest::Chest(EntityId id, const Position& position, const std::map<uint8_t, Stack>& items): id(id), position(position) {
     if (id == 0 || position.getX() < 0 || position.getY() <= 0 || position.getX() > std::numeric_limits<uint16_t>::max() ||
         position.getY() > std::numeric_limits<uint16_t>::max()) {
-        throw std::invalid_argument("Invalid chest identifier or position");
+        throw std::invalid_argument(server_constants::INVALID_CHEST_IDENTIFIER_OR_POSITION);
     }
     inventory.restoreSlots(items);
 }

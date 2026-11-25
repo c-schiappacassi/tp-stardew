@@ -1,5 +1,7 @@
 #include "interior.h"
 
+#include "server_constants.h"
+
 #include <algorithm>
 #include <cmath>
 #include <limits>
@@ -314,12 +316,12 @@ void Interior::restoreStorage(const InteriorData& saved, const std::map<uint32_t
     for (const auto& item: saved.furniture) {
         if (item.type != FurnitureId::Chest) {
             if (item.type > FurnitureId::Chest || !decorations.place(item.id, item.pos, decoration_items::itemFor(item.type), space, item.dir))
-                throw std::runtime_error("Invalid saved house decoration");
+                throw std::runtime_error(server_constants::INVALID_SAVED_HOUSE_DECORATION);
             continue;
         }
         const auto contents = inventories.find(item.id);
         if (contents == inventories.end() || !chests.place(item.id, item.pos, space, contents->second))
-            throw std::runtime_error("Invalid saved chest furniture or contents");
+            throw std::runtime_error(server_constants::INVALID_SAVED_CHEST_FURNITURE_OR_CONTENTS);
     }
     groundItems.restoreItems(saved.loot);
 }

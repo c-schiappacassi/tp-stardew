@@ -1,5 +1,7 @@
 #include "client_handler.h"
 
+#include "server_constants.h"
+
 #include <iostream>
 #include <memory>
 #include <utility>
@@ -66,10 +68,10 @@ void ClientHandler::run() {
     } catch (const ClosedQueue&) {
     } catch (const LibError& e) {
         if (should_keep_running()) {
-            std::cerr << "Socket error: " << e.what() << "\n";
+            std::cerr << server_constants::SOCKET_ERROR_PREFIX << e.what() << server_constants::NEWLINE;
         }
     } catch (const std::exception& e) {
-        std::cerr << "Unexpected error: " << e.what() << "\n";
+        std::cerr << server_constants::UNEXPECTED_ERROR_PREFIX << e.what() << server_constants::NEWLINE;
     }
     disconnect();
 }
@@ -89,7 +91,7 @@ bool ClientHandler::runMenu() {
         }
 
         const auto it = menuActions.find(type);
-        if (it == menuActions.end()) throw ProtocolError("unexpected message");
+        if (it == menuActions.end()) throw ProtocolError(server_constants::UNEXPECTED_MESSAGE);
         it->second();
         if (answerEntry()) return true;
     }
@@ -107,7 +109,7 @@ void ClientHandler::runGame() {
             return;
         }
         const auto it = gameReceivers.find(type);
-        if (it == gameReceivers.end()) throw ProtocolError("unexpected message");
+        if (it == gameReceivers.end()) throw ProtocolError(server_constants::UNEXPECTED_MESSAGE);
         if (manager.enqueueCommand(session.gameId, session.playerId, it->second()) != CommandSubmission::Enqueued)
             return;
     }

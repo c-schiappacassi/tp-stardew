@@ -1,5 +1,7 @@
 #include "game_sessions.h"
 
+#include "server_constants.h"
+
 #include <stdexcept>
 #include <utility>
 
@@ -7,7 +9,6 @@
 #include "world/world_manager.h"
 
 namespace {
-// Ambos DTOs de ingreso contienen la misma apariencia, sin un tipo base para esos datos.
 template <typename Admission>
 PlayerData appearanceOf(const Admission& dto) {
     PlayerData data{};
@@ -44,7 +45,7 @@ std::shared_ptr<const ConstMapData> GameSessions::mapForSession() {
         applyVisuals(assembled.farm, visuals.farm);
         applyVisuals(assembled.town, visuals.town);
         if (assembled.levels.size() != visuals.levels.size())
-            throw std::runtime_error("Mine visuals do not match dungeon levels");
+            throw std::runtime_error(server_constants::MINE_VISUALS_DO_NOT_MATCH_DUNGEON_LEVELS);
         for (std::size_t i = 0; i < assembled.levels.size(); ++i)
             applyVisuals(assembled.levels[i], visuals.levels[i]);
         map = std::make_shared<const ConstMapData>(std::move(assembled));
@@ -72,11 +73,11 @@ GameSession GameSessions::addPlayer(const std::string& name, const PlayerData& a
 }
 
 GameSession GameSessions::createPlayer(const CreateGameDTO& dto, const std::shared_ptr<OutQueue>& output) {
-    return addPlayer(dto.userName, appearanceOf(dto), output, "Game created");
+    return addPlayer(dto.userName, appearanceOf(dto), output, server_constants::GAME_CREATED);
 }
 
 GameSession GameSessions::joinPlayer(const JoinGameDTO& dto, const std::shared_ptr<OutQueue>& output) {
-    return addPlayer(dto.userName, appearanceOf(dto), output, "You joined the game");
+    return addPlayer(dto.userName, appearanceOf(dto), output, server_constants::YOU_JOINED_THE_GAME);
 }
 
 GameSession GameSessions::resumePlayer(const std::string& name, const std::shared_ptr<OutQueue>& output) {
@@ -85,7 +86,7 @@ GameSession GameSessions::resumePlayer(const std::string& name, const std::share
     session.status = players.resumePlayer(name, output);
     if (session.status.status != StatusCode::Ok)
         return session;
-    complete(session, "Game resumed");
+    complete(session, server_constants::GAME_RESUMED);
     session.map = mapForSession();
     return session;
 }

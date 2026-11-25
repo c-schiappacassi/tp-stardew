@@ -1,5 +1,7 @@
 #include "enemy.h"
 
+#include "server_constants.h"
+
 #include <algorithm>
 #include <stdexcept>
 #include <utility>
@@ -11,7 +13,7 @@
 Enemy::Enemy(uint32_t id, EnemyType type, const Position& pos, const EnemyDefinition& definition, uint32_t group, uint32_t pair):
     definition(definition), groupId(group), pairId(pair) {
     if (id == 0 || type > EnemyType::Skull || definition.health == 0) {
-        throw std::invalid_argument("Invalid enemy");
+        throw std::invalid_argument(server_constants::INVALID_ENEMY);
     }
     data.id = id;
     data.type = type;

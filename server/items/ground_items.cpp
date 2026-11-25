@@ -1,5 +1,7 @@
 #include "ground_items.h"
 
+#include "server_constants.h"
+
 #include <algorithm>
 #include <limits>
 #include <utility>
@@ -88,7 +90,7 @@ void GroundItems::restoreItems(const std::vector<LootData>& saved) {
     std::map<EntityId, LootData> restored;
     for (const LootData& item: saved) {
         if (item.id == 0 || item.quantity == 0 || !restored.emplace(item.id, item).second) {
-            throw std::invalid_argument("Invalid saved ground item");
+            throw std::invalid_argument(server_constants::INVALID_SAVED_GROUND_ITEM);
         }
     }
     items = std::move(restored);

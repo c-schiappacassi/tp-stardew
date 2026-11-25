@@ -1,5 +1,7 @@
 #include "player_vitals.h"
 
+#include "server_constants.h"
+
 #include <algorithm>
 #include <limits>
 #include <stdexcept>
@@ -17,7 +19,7 @@ uint16_t improvedMaximum(uint16_t value) {
 PlayerVitals::PlayerVitals(uint16_t maxHealth, uint16_t maxEnergy):
         health(maxHealth), maxHealth(maxHealth), energy(maxEnergy), maxEnergy(maxEnergy) {
     if (maxHealth == 0 || maxEnergy == 0) {
-        throw std::invalid_argument("Maximum health and energy must be greater than zero");
+        throw std::invalid_argument(server_constants::MAXIMUM_HEALTH_AND_ENERGY_MUST_BE_GREATER_THAN_ZERO);
     }
 }
 
@@ -84,7 +86,7 @@ void PlayerVitals::set(uint16_t newHealth, uint16_t newEnergy) {
 void PlayerVitals::restoreData(const PlayerDataLocal& saved) {
     if (saved.maxHealth == 0 || saved.maxEnergy == 0 || saved.health > saved.maxHealth ||
         saved.energy > saved.maxEnergy) {
-        throw std::invalid_argument("Invalid saved player stats");
+        throw std::invalid_argument(server_constants::INVALID_SAVED_PLAYER_STATS);
     }
     health = saved.health;
     maxHealth = saved.maxHealth;

@@ -15,6 +15,7 @@ target_sources(taller_server_core
         dungeon/combat/projectile_combat.cpp
         dungeon/combat/trap_combat.cpp
         config/combat_toml_reader.cpp
+        config/interior_toml_reader.cpp
         network/acceptor.cpp
         network/client_handler.cpp
         network/client_sender.cpp
@@ -142,6 +143,7 @@ target_sources(taller_server_core
         persistence/persistence_manager.cpp
     PUBLIC
     # .h files
+        server_constants.h
         dungeon/enemies/enemy.h
         dungeon/contracts/enemy_definition.h
         dungeon/enemies/enemy_generator.h
@@ -308,6 +310,7 @@ target_sources(taller_server_core
         config/death_toml_reader.h
         config/shop_toml_reader.h
         config/dungeon_toml_reader.h
+        config/interior_toml_reader.h
         config/town_toml_reader.h
         config/farm_toml_reader.h
         persistence/persistence_serializer.h

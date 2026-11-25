@@ -1,5 +1,7 @@
 #include "dungeon_room.h"
 
+#include "server_constants.h"
+
 #include <algorithm>
 #include <stdexcept>
 #include <utility>
@@ -8,7 +10,7 @@
 
 DungeonRoom::DungeonRoom(uint8_t number): number(number), visitDepth(number) {
     if (number < 1 || number > DUNGEON_ROOM_COUNT)
-        throw std::invalid_argument("Room number must be between 1 and 10");
+        throw std::invalid_argument(server_constants::ROOM_NUMBER_MUST_BE_BETWEEN_1_AND_10);
 }
 
 bool DungeonRoom::initialize(
@@ -136,7 +138,7 @@ void DungeonRoom::restoreChests(const std::vector<FurnitureData>& furniture, con
             continue;
         const auto contents = inventories.find(item.id);
         if (contents == inventories.end() || !preparedChests.place(item.id, item.pos, preparedSpace, contents->second))
-            throw std::runtime_error("Invalid saved chest furniture or contents");
+            throw std::runtime_error(server_constants::INVALID_SAVED_CHEST_FURNITURE_OR_CONTENTS);
     }
     GroundItems preparedItems;
     preparedItems.restoreItems(loot);

@@ -1,4 +1,6 @@
 #include "crop_manager.h"
+
+#include "server_constants.h"
 #include "farm/farm_config.h"
 
 #include <stdexcept>
@@ -99,7 +101,7 @@ std::optional<FarmProduct> CropManager::harvest(EntityId id, Placement& placemen
 }
 
 void CropManager::update(std::chrono::milliseconds elapsed) {
-    if (elapsed.count() < 0) throw std::invalid_argument("Negative time");
+    if (elapsed.count() < 0) throw std::invalid_argument(server_constants::NEGATIVE_TIME);
     for (auto it = emptySoilElapsed.begin(); it != emptySoilElapsed.end();) {
         if (elapsed >= 2 * dayLength - it->second) {
             tilledSoil.erase(it->first);

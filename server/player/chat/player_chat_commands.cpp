@@ -1,3 +1,5 @@
+#include "server_constants.h"
+
 #include <exception>
 #include <variant>
 #include <vector>
@@ -11,20 +13,20 @@
 #include "player_chat.h"
 
 void PlayerChat::listCheats(PlayerRecord& sender) const {
-    reply(sender, "/cheat health N | /cheat energy N (0 to 65535)");
-    reply(sender, "/cheat add_gold N | /cheat remove_gold N (1 to 4294967295)");
-    reply(sender, "/cheat complete_bundle identifier | /cheat complete_bundles");
-    reply(sender, "/cheat next_level | /cheat care_crops | /cheat care_animals");
-    reply(sender, "/cheat heal | /cheat end_day (affects all players)");
-    reply(sender, "/cheat give product N [none|base|good|excellent|incredible|perfect]");
-    reply(sender, "/cheat clear_slot N (slots start at 1) | /cheat spawn_animal cow|chicken N");
-    reply(sender, "Animal colors: brown_cow, white_cow, brown_chicken, white_chicken, ""blue_chicken, void_chicken.");
-    reply(sender, "/cheat warp farm|town|home|center|pierre|marnie|robin|clint|mine [level]");
-    reply(sender,"/cheat spawn_enemy skeleton|orc|vampire_male|vampire_female|vampire_pair|skull [N]");
-    reply(sender, "/cheat kill_enemy (nearest) | /cheat kill_enemies (current mine floor)");
-    reply(sender,"Bundle names: crops, metals, animals, combat, money. Completing all ends the game.");
+    reply(sender, server_constants::COMMAND_CHEAT_HEALTH_N_CHEAT_ENERGY_N_0_TO_65535);
+    reply(sender, server_constants::COMMAND_CHEAT_ADD_GOLD_N_CHEAT_REMOVE_GOLD_N_1_TO_4294967295);
+    reply(sender, server_constants::COMMAND_CHEAT_COMPLETE_BUNDLE_IDENTIFIER_CHEAT_COMPLETE_BUNDLES);
+    reply(sender, server_constants::COMMAND_CHEAT_NEXT_LEVEL_CHEAT_CARE_CROPS_CHEAT_CARE_ANIMALS);
+    reply(sender, server_constants::COMMAND_CHEAT_HEAL_CHEAT_END_DAY_AFFECTS_ALL_PLAYERS);
+    reply(sender, server_constants::COMMAND_CHEAT_GIVE_PRODUCT_N_NONE_BASE_GOOD_EXCELLENT_INCREDIBLE_PERFECT);
+    reply(sender, server_constants::COMMAND_CHEAT_CLEAR_SLOT_N_SLOTS_START_AT_1_CHEAT_SPAWN_ANIMAL_COW);
+    reply(sender, server_constants::ANIMAL_COLORS_BROWN_COW_WHITE_COW_BROWN_CHICKEN_WHITE_CHICKEN_BLUE_CHICKEN);
+    reply(sender, server_constants::COMMAND_CHEAT_WARP_FARM_TOWN_HOME_CENTER_PIERRE_MARNIE_ROBIN_CLINT_MINE_LEVEL);
+    reply(sender,server_constants::COMMAND_CHEAT_SPAWN_ENEMY_SKELETON_ORC_VAMPIRE_MALE_VAMPIRE_FEMALE_VAMPIRE_PAIR_SKULL);
+    reply(sender, server_constants::COMMAND_CHEAT_KILL_ENEMY_NEAREST_CHEAT_KILL_ENEMIES_CURRENT_MINE_FLOOR);
+    reply(sender,server_constants::BUNDLE_NAMES_CROPS_METALS_ANIMALS_COMBAT_MONEY_COMPLETING_ALL_ENDS_THE_GAME);
     if (!services.cheats)
-        reply(sender, services.community ? "Only community center cheats are currently available." :"Cheats are not available yet.");
+        reply(sender, services.community ? server_constants::ONLY_COMMUNITY_CENTER_CHEATS_ARE_CURRENTLY_AVAILABLE :server_constants::CHEATS_ARE_NOT_AVAILABLE_YET);
 }
 
 void PlayerChat::command(PlayerRoster& players, PlayerRecord& sender, const std::string& text,bool actionsBlocked) {
@@ -38,7 +40,7 @@ void PlayerChat::command(PlayerRoster& players, PlayerRecord& sender, const std:
         return;
     }
     if (std::holds_alternative<ChatPlayers>(parsed)) {
-        reply(sender, "Connected players:");
+        reply(sender, server_constants::CONNECTED_PLAYERS);
         for (const auto& [id, record]: players) {
             if (record.isConnected())
                 reply(sender, record.getPlayer().getCharacterName());
@@ -54,23 +56,23 @@ void PlayerChat::command(PlayerRoster& players, PlayerRecord& sender, const std:
             return;
         } else if (const auto* request = std::get_if<TradeCommand>(&parsed)) {
             if (!services.merchants) {
-                reply(sender, "Trading is not available yet.");
+                reply(sender, server_constants::TRADING_IS_NOT_AVAILABLE_YET);
                 return;
             }
             if (actionsBlocked || !sender.getPlayer().canAct()) {
-                reply(sender, "You cannot trade right now.");
+                reply(sender, server_constants::YOU_CANNOT_TRADE_RIGHT_NOW);
                 return;
             }
             responses = services.merchants->execute(context, *request);
         } else if (const auto* request = std::get_if<CommunityCommand>(&parsed)) {
             if (!services.community) {
-                reply(sender, "The community center is not available yet.");
+                reply(sender, server_constants::THE_COMMUNITY_CENTER_IS_NOT_AVAILABLE_YET);
                 return;
             }
             responses = services.community->execute(context, *request);
         } else if (const auto* request = std::get_if<CheatCommand>(&parsed)) {
             if (actionsBlocked) {
-                reply(sender, "Cheats cannot change the game after the day or game has ended.");
+                reply(sender, server_constants::CHEATS_CANNOT_CHANGE_THE_GAME_AFTER_THE_DAY_OR_GAME_HAS_ENDED);
                 return;
             }
             if (services.community && (request->action == CheatAction::CompleteBundle ||
@@ -78,7 +80,7 @@ void PlayerChat::command(PlayerRoster& players, PlayerRecord& sender, const std:
                 responses = services.community->completeCheat(*request);
             } else {
                 if (!services.cheats) {
-                    reply(sender, "Cheats are not available yet.");
+                    reply(sender, server_constants::CHEATS_ARE_NOT_AVAILABLE_YET);
                     return;
                 }
                 auto cheatContext = context;
@@ -94,7 +96,7 @@ void PlayerChat::command(PlayerRoster& players, PlayerRecord& sender, const std:
             }
         }
     } catch (const std::exception&) {
-        reply(sender, "Could not execute the command. Try again.");
+        reply(sender, server_constants::COULD_NOT_EXECUTE_THE_COMMAND_TRY_AGAIN);
         return;
     }
     sender.enqueueMessages(responses);

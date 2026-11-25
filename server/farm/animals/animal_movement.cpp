@@ -1,5 +1,7 @@
 #include "animal_movement.h"
 
+#include "server_constants.h"
+
 #include <limits>
 #include <stdexcept>
 
@@ -7,7 +9,7 @@ AnimalMovement::AnimalMovement(const Position& position, const AnimalMovementCon
     position(position), config(config) {
     config.validate();
     if (position.getX() < 0 || position.getY() < 0) {
-        throw std::invalid_argument("Invalid animal position");
+        throw std::invalid_argument(server_constants::INVALID_ANIMAL_POSITION);
     }
 }
 

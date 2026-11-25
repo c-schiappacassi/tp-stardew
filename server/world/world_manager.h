@@ -49,13 +49,13 @@ private:
 public:
     explicit WorldManager(const DungeonConfig& config = {}, uint32_t seed = std::random_device{}(), const FarmConfig& farmConfig = FarmConfig{});
 
-    // Collaborators reference owned members, so the manager must keep a stable address.
     WorldManager(const WorldManager&) = delete;
     WorldManager& operator=(const WorldManager&) = delete;
     WorldManager(WorldManager&&) = delete;
     WorldManager& operator=(WorldManager&&) = delete;
 
-    static PreparedWorld prepareMap(const MapData& data, uint8_t worldId);
+    static PreparedWorld prepareMap(const MapData& data, uint8_t worldId,
+                                    const InteriorTemplates& interiors = {});
     bool loadFarm(uint8_t worldId, const FarmLayout& layout);
     bool loadDungeon(uint8_t worldId, const std::map<uint8_t, DungeonRoomLayout>& layout);
     bool loadTown(const TownConfig& config);
