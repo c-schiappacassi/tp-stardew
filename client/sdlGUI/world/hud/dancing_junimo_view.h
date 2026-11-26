@@ -8,8 +8,7 @@
 #include <SDL2pp/SDL2pp.hh>
 
 #include "../../clip_player.h"
-#include "../../draw_region.h"
-#include "../../render_info.h"
+#include "ui_box.h"
 #include "../../utils.h"
 
 class DancingJunimoView {
@@ -37,7 +36,7 @@ public:
 
     double depth() const { return ny; }
 
-    void draw(const RenderInfo& ctx, const UiFrame& ui, double scene_ms) {
+    void draw(const RenderInfo& ctx, const UiBox& screen, double scene_ms) {
         if (scene_ms < appear_ms) {
             return;
         }
@@ -53,17 +52,17 @@ public:
         }
         last_index = index;
 
-        const Sprite& sprite = frame->sprite;
-        const bool flip = frame->flip != mirrored;
-        const int k = std::max(1, BASE_SCALE * ui.u + tier);
+        const Sprite& sprite = frame->get_sprite();
+        const bool flip = frame->is_flipped() != mirrored;
+        const int k = std::max(1, BASE_SCALE * screen.get_unit() + tier);
 
         const bool arms_up = (index % 2) == 0;
-        const int hop = arms_up ? static_cast<int>(sprite.height * k * HOP_RATIO) : 0;
-        const int sway = static_cast<int>(SWAY[index % SWAY.size()] * sprite.height * k * SWAY_RATIO);
+        const int hop = arms_up ? static_cast<int>(sprite.get_height() * k * HOP_RATIO) : 0;
+        const int sway = static_cast<int>(SWAY[index % SWAY.size()] * sprite.get_height() * k * SWAY_RATIO);
 
-        const int feet_x = static_cast<int>(nx * ui.size.x);
-        const int feet_y = static_cast<int>(ny * ui.size.y);
+        const int feet_x = static_cast<int>(nx * screen.get_rect().w);
+        const int feet_y = static_cast<int>(ny * screen.get_rect().h);
 
-        draw_sprite_in(ctx, sprite, sprite_rect(sprite, feet_x + sprite.dx(flip) * k + sway, feet_y + sprite.offset_y * k - hop, k), flip, tint);
+        sprite.draw(ctx, SDL2pp::Point(feet_x + sway, feet_y - hop), {.flip = flip, .tint = tint, .scale = k});
     }
 };

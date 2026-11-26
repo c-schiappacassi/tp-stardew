@@ -8,6 +8,7 @@
 #include "render_info.h"
 #include "animator.h"
 #include "utils.h"
+#include "sprite.h"
 
 #include "constants.h"
 
@@ -38,6 +39,12 @@ public:
         }
         index = anim.get_current_frame_index(clip);
         return &clip.sequence[index].frame;
+    }
+
+    const AnimatedFrame* draw_at(const RenderInfo& ctx, const ClipId& id, const Position& pos, const DrawOpts& opts = {}) {
+        const AnimatedFrame* f = frame(ctx, id);
+        if (f) f->draw_at(ctx, pos, opts);
+        return f;
     }
 
     std::size_t frame_index() const { return index; }

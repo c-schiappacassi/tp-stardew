@@ -61,7 +61,7 @@ protected:
         }
 
         const int index = static_cast<int>(key) - static_cast<int>(Key::Num1);
-        if (index >= 0 && index < HotbarView::SLOTS) {
+        if (index >= 0 && index < HotbarView::COUNT) {
             deposit(static_cast<uint8_t>(index), out);
         }
         return Focus::Keep;
@@ -98,21 +98,9 @@ public:
     }
 
     void draw(const RenderInfo& ctx) override {
-        const std::vector<bool> hovered = hovered_buttons();
-        std::optional<uint8_t> hover;
-        for (std::size_t i = 0; i < chest_slots && i < hovered.size(); ++i) {
-            if (hovered[i]) {
-                hover = static_cast<uint8_t>(i);
-                break;
-            }
-        }
-        view.select(hover);
-        view.draw(ctx);
-
-        std::vector<SDL2pp::Rect> hitboxes = view.rects();
-        chest_slots = hitboxes.size();
-        const std::vector<SDL2pp::Rect> hotbar = HotbarView::slot_rects(ctx);
-        hitboxes.insert(hitboxes.end(), hotbar.begin(), hotbar.end());
-        sync_hitboxes(ctx, std::move(hitboxes));
+        hits.begin(ctx);
+        view.draw(ctx, hits);
+        chest_slots = hits.size();
+        for (const SDL2pp::Rect& slot : HotbarView::slot_rects(ctx)) hits.add(slot);
     }
 };

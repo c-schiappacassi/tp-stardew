@@ -1,8 +1,7 @@
 #include "chest_view.h"
 
-#include "../../asset_handling/sprite_defs.h"
-
 namespace {
+    const int CHEST_CELL_H = 32;
     ClipId clip_of(ChestState state) {
         return ClipId{SpriteId::Craftables, Action{state}, Direction::None};
     }
@@ -24,7 +23,7 @@ bool ChestView::is_open(const RenderInfo& ctx) const {
 }
 
 std::optional<float> ChestView::depth(const RenderInfo& ctx) const {
-    return depth_if_visible(ctx, pos, Dimentions::CHEST_CELL_H);
+    return depth_if_visible(ctx, pos, CHEST_CELL_H);
 }
 
 void ChestView::draw(const RenderInfo& ctx) {
@@ -38,5 +37,5 @@ void ChestView::draw(const RenderInfo& ctx) {
         state = ChestState::Closing;
     }
     
-    draw_clip_at(ctx, player, clip_of(state), pos);
+    player.draw_at(ctx, clip_of(state), pos);
 }

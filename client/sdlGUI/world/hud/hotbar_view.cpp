@@ -1,33 +1,21 @@
 #include "hotbar_view.h"
 
-#include <algorithm>
 #include <string>
-
-#include "../../draw_region.h"
 
 namespace {
     constexpr int BOTTOM_MARGIN = 8;
 
-    struct Layout {
-        int u;
-        SDL2pp::Rect bar;
-        int slots;
+    UiBox bar_box(const RenderInfo& ctx, int count) {
+        using namespace slot_layout;
+        return UiBox::screen(ctx).place(count * SLOT_PX + 2 * PANEL_CORNER, SLOT_PX + 2 * PANEL_CORNER, Anchor::Bottom, 0, BOTTOM_MARGIN);
+    }
 
-        SDL2pp::Rect slot(int i) const {
-            const int size = slot_layout::SLOT_PX * u;
-            return SDL2pp::Rect(bar.x + slot_layout::PANEL_CORNER * u + i * size, bar.y + slot_layout::PANEL_CORNER * u, size, size);
-        }
-    };
-
-    Layout make_layout(const UiFrame& f, int slots) {
-        const int pad = slot_layout::PANEL_CORNER * f.u;
-        const int w = slots * slot_layout::SLOT_PX * f.u + 2 * pad;
-        const int h = slot_layout::SLOT_PX * f.u + 2 * pad;
-        return Layout{f.u, aligned_rect(f.rect(), w, h, HAlign::Center, VAlign::Bottom, 0, BOTTOM_MARGIN * f.u), slots};
+    UiBox slot_box(const UiBox& bar, int i) {
+        return bar.sub(slot_layout::PANEL_CORNER + i * slot_layout::SLOT_PX, slot_layout::PANEL_CORNER, slot_layout::SLOT_PX, slot_layout::SLOT_PX);
     }
 }
 
-HotbarView::HotbarView(): slot_views(SLOTS) {
+HotbarView::HotbarView(): slot_views(COUNT) {
     for (std::size_t i = 0; i < slot_views.size(); ++i) {
         slot_views[i].set_label(std::to_string(i + 1));
     }
@@ -42,22 +30,18 @@ void HotbarView::update(const PlayerDataLocal& local) {
 }
 
 void HotbarView::draw(const RenderInfo& ctx) {
-    const Layout layout = make_layout(ui_frame(ctx), static_cast<int>(slot_views.size()));
- 
-    draw_ui_box(ctx, UiSpriteId::HotbarBar, layout.bar, slot_layout::PANEL_CORNER, layout.u);
- 
-    for (int i = 0; i < layout.slots; ++i) {
-        slot_views[static_cast<std::size_t>(i)].draw(ctx, layout.slot(i), layout.u);
+    const UiBox bar = bar_box(ctx, COUNT);
+    bar.frame(UiSpriteId::HotbarBar, slot_layout::PANEL_CORNER);
+    for (int i = 0; i < COUNT; ++i) {
+        slot_views[static_cast<std::size_t>(i)].draw(slot_box(bar, i));
     }
 }
 
 std::vector<SDL2pp::Rect> HotbarView::slot_rects(const RenderInfo& ctx) {
-    const Layout layout = make_layout(ui_frame(ctx), SLOTS);
- 
+    const UiBox bar = bar_box(ctx, COUNT);
     std::vector<SDL2pp::Rect> rects;
-    rects.reserve(SLOTS);
-    for (int i = 0; i < layout.slots; ++i) {
-        rects.push_back(layout.slot(i));
+    for (int i = 0; i < COUNT; ++i) {
+        rects.push_back(slot_box(bar, i).get_rect());
     }
     return rects;
 }

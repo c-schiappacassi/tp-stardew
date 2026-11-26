@@ -6,7 +6,7 @@
 #include "../../clip_player.h"
 #include "../entity_view.h"
 #include "../../render_info.h"
-#include "../../draw_region.h"
+#include "../../draw_helpers.h"
 #include "../effects/sounds/chest_sound.h"
 #include "../effects/triggers/chest_trigger.h"
 

@@ -8,7 +8,7 @@
 #include <SDL2pp/SDL2pp.hh>
 #include <vector>
 
-#include "asset_tables.h"
+#include "sprite_defs.h"
 #include "protocol_types.h"
 #include "../utils.h"
 
@@ -23,12 +23,13 @@ namespace placeholders {
 
 class AssetManager {
 private:
-    AssetTables tables;
+    std::map<SpriteId, SDL2pp::Texture> textures;
+    std::map<SoundId, Sound> sounds;
 
 public:
     AssetManager(SDL2pp::Renderer& renderer, const std::filesystem::path& assets_root);
 
-    bool has_clip(const ClipId& id) const { return tables.clips.count(id) > 0; }
+    bool has_clip(const ClipId& id) const { return SpriteDefs::CLIPS.count(id) > 0; }
 
     SDL2pp::Texture& get_texture(SpriteId id);
 

@@ -4,7 +4,7 @@
 #include "../../utils.h"
 #include "../entity_view.h"
 #include "../../render_info.h"
-#include "../../draw_region.h"
+#include "../../draw_helpers.h"
 #include "../../clip_player.h"
 #include "../../audio/sound_emitter.h"
 #include "../effects/triggers/animal_call_trigger.h"

@@ -1,6 +1,6 @@
 #include "projectile_view.h"
 
-#include "../../draw_region.h"
+#include "../../draw_helpers.h"
 #include "../../render_info.h"
 
 ProjectileView::ProjectileView(const ProjectileData& data) {
@@ -17,5 +17,5 @@ std::optional<float> ProjectileView::depth(const RenderInfo& ctx) const {
 }
 
 void ProjectileView::draw(const RenderInfo& ctx) {
-    draw_clip_at(ctx, clip_player, ClipId{SpriteId::Flames, Action{type}, Direction::None}, pos);
+    clip_player.draw_at(ctx, ClipId{SpriteId::Flames, Action{type}, Direction::None}, pos);
 }

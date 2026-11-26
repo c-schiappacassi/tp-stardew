@@ -10,7 +10,7 @@
 #include "../../clip_player.h"
 #include "../entity_view.h"
 #include "../lighting.h"
-#include "../../draw_region.h"
+#include "../hud/ui_box.h"
 #include "../../render_info.h"
 #include "../../utils.h"
 #include "../effects/visual/hit_flash.h"
@@ -29,6 +29,7 @@ namespace farmer {
     constexpr int NAME_OFFSET = 30;
     constexpr SDL_Color NAME_COLOR{255, 255, 255, 255};
     constexpr SDL_Color NAME_SHADOW{40, 25, 10, 255};
+    constexpr TextStyle NAME_STYLE{.size = NAME_SCALE_UP, .color = NAME_COLOR, .shadow = NAME_SHADOW, .shadow_offset = NAME_SCALE_UP};
 
     constexpr int CELL_W = 16;
     constexpr int CELL_H = 32;
@@ -48,21 +49,9 @@ namespace farmer {
     constexpr int SHIRT_BLOCK_H = 32;
     constexpr Offset SHIRT_BASE{4, 15};
 
-
     constexpr int PANTS_BLOCK_W = 192;
     constexpr int PANTS_BLOCK_H = 688;
     constexpr int PANTS_PER_ROW = 10;
-
-    struct DrawPlayerData {
-        SDL2pp::Point anchor;
-        SDL2pp::Point origin;
-        SDL2pp::Rect body_src;
-        SDL2pp::Rect arms;
-        LayerOffsets offsets;
-        size_t frame_index;
-        int cell_w;
-        bool flip;
-    };
 }
 
 
@@ -72,7 +61,6 @@ private:
     Direction facing = Direction::Down;
     PlayerState state = PlayerState::Idle;
     std::optional<ItemId> held_item;
-    std::optional<ItemId> current_tool;
     std::string name;
     SoundEmitter sfx;
     HealthTrigger health_trigger;
@@ -87,8 +75,8 @@ private:
     SDL_Color hair_color{255, 255, 255, 255};
     
     ClipPlayer clip_player;
+    ClipId clip_id(const RenderInfo& ctx) const;
 
-    void draw_layers_in_order(const RenderInfo& ctx, const farmer::DrawPlayerData& d, const std::optional<SDL_Color>& flash);
 public:
     explicit PlayerView(const PlayerData& data);
 

@@ -3,13 +3,14 @@
 #include <string>
 #include <utility>
 
-#include "../../world/hud/quit_view.h"
+#include "../../world/hud/dialog_view.h"
 #include "modal_layer.h"
 
 class QuitLayer : public ModalLayer {
 private:
+    inline static const DialogView::Spec DIALOG{{"Quit the game?"}, {UiSpriteId::OkButton, UiSpriteId::CancelButton}, 14};
+
     std::string player_name;
-    QuitView view;
     bool confirmed = false;
 
     void confirm(Out& out) {
@@ -41,8 +42,7 @@ public:
     void on_focus() override { confirmed = false; }
 
     void draw(const RenderInfo& ctx) override {
-        const auto layout = QuitView::layout(ctx);
-        sync_hitboxes(ctx, layout.buttons);
-        view.draw(ctx, layout, hovered_buttons());
+        hits.begin(ctx);
+        DialogView::draw(ctx, DIALOG, hits);
     }
 };

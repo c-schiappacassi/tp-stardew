@@ -9,9 +9,7 @@
 #include <SDL2pp/SDL2pp.hh>
 
 #include "../../../state.h"
-#include "../../draw_region.h"
-#include "../../render_info.h"
-#include "pixel_font.h"
+#include "ui_box.h"
 
 #include "protocol_types.h"
 #include "game_time.h"
@@ -25,8 +23,6 @@ private:
     static constexpr int KNOB_X = 22, KNOB_Y = 20;
     static constexpr int ARROW_PIVOT_X = 3, ARROW_PIVOT_Y = 16;
 
-    static constexpr int ICON_W = 12, ICON_H = 8;
-
     static constexpr int PANEL_X = 27, PANEL_W = 39;
     static constexpr int TIME_PANEL_Y = 27, TIME_PANEL_H = 10;
 
@@ -34,13 +30,12 @@ private:
     static constexpr int SLOTS_X = 16, SLOTS_W = 49, SLOTS_Y = 48, SLOTS_H = 8;
 
     static constexpr int ALERT_ICON_BOX = 44;
-    static constexpr int ALERT_BANG_PX = 4;
     static constexpr int ALERT_GAP = 6;
     static constexpr int ALERT_TOP_GAP = 12;
     static constexpr double ALERT_BOB_PHASE = 0.8;
 
-    static constexpr SDL_Color TEXT_COLOR{107, 33, 0, 255};
-    static constexpr SDL_Color ALERT_RED{220, 40, 30, 255};
+    static constexpr TextStyle TEXT{.size = 1, .color = {107, 33, 0, 255}};
+    static constexpr TextStyle ALERT{.size = 4, .color = {220, 40, 30, 255}, .shadow = pixel_font::SHADOW_COLOR, .shadow_offset = 1};
 
     uint32_t current_gold = 0;
     uint16_t current_time = game_time::START_MINUTES;
@@ -64,41 +59,25 @@ private:
         return 180.0 + 180.0 * (elapsed / SPAN);
     }
 
-    void draw_time(const RenderInfo& ctx, const SDL2pp::Rect& sign, int s) const {
-        const SDL2pp::Rect panel(sign.x + PANEL_X * s, sign.y + TIME_PANEL_Y * s, PANEL_W * s, TIME_PANEL_H * s);
-        draw_text_in(ctx, format_time(current_time), panel, s, HAlign::Center, VAlign::Center, TEXT_COLOR);
-    }
-
-    void draw_gold(const RenderInfo& ctx, const SDL2pp::Rect& sign, int s) const {
+    void draw_gold(const RenderInfo& ctx, const UiBox& digits) const {
+        const SDL2pp::Rect& r = digits.get_rect();
         const std::string text = std::to_string(std::min<uint32_t>(current_gold, 99999999u));
-        const int digits = static_cast<int>(text.size());
-
-        for (int i = 0; i < digits; ++i) {
-            const int slot = GOLD_SLOTS - digits + i;
-            const SDL2pp::Rect aligned_rect(sign.x + SLOTS_X * s + slot * SLOTS_W * s / GOLD_SLOTS, sign.y + SLOTS_Y * s,
-                                    SLOTS_W * s / GOLD_SLOTS, SLOTS_H * s);
-            draw_text_in(ctx, std::string(1, text[i]), aligned_rect, s, HAlign::Center, VAlign::Center, TEXT_COLOR);
+        const int first = GOLD_SLOTS - static_cast<int>(text.size());
+        for (std::size_t i = 0; i < text.size(); ++i) {
+            const int slot = first + static_cast<int>(i);
+            UiBox(ctx, SDL2pp::Rect(r.x + slot * r.w / GOLD_SLOTS, r.y, r.w / GOLD_SLOTS, r.h), digits.get_unit()).text(std::string(1, text[i]), TEXT);
         }
     }
 
-    void draw_alerts(const RenderInfo& ctx, const SDL2pp::Point& screen, int u, int below_y) const {
-        const int box_size = ALERT_ICON_BOX * u;
-        const int step = box_size + ALERT_GAP * u;
-        int x = screen.x - RIGHT_MARGIN * u - box_size;
-        const int top = below_y + ALERT_TOP_GAP * u;
-        int index = 0;
-
+    void draw_alerts(const RenderInfo& ctx, const UiBox& screen, int top) const {
+        int i = 0;
         for (const ItemId item : items_to_alert) {
-            const int y = top + bob_offset(ctx, BOB_AMPLITUDE, BOB_SPEED, index * ALERT_BOB_PHASE) * u;
-            draw_item_icon(ctx, item, SDL2pp::Rect(x, y, box_size, box_size), box_size);
-
-            const int bpx = ALERT_BANG_PX * u;
-            const int bx = x + box_size - pixel_font::width("!", bpx);
-            const int by = y - pixel_font::height(bpx) / 2;
-            draw_text_shadowed(ctx, "!", bx, by, bpx, ALERT_RED, pixel_font::SHADOW_COLOR, u);
-
-            x -= step;
-            ++index;
+            const int bob = bob_offset(ctx, BOB_AMPLITUDE, BOB_SPEED, i * ALERT_BOB_PHASE);
+            const UiBox icon = screen.place(ALERT_ICON_BOX, ALERT_ICON_BOX, Anchor::TopRight,
+                                            RIGHT_MARGIN + i * (ALERT_ICON_BOX + ALERT_GAP), top + bob);
+            icon.fit(item);
+            icon.text("!", ALERT, Anchor::TopRight, 0, -pixel_font::height(ALERT.size) / 2);
+            ++i;
         }
     }
 
@@ -112,22 +91,13 @@ public:
     }
 
     void draw(const RenderInfo& ctx) const {
-        const UiFrame f = ui_frame(ctx);
-        const int s = SPRITE_SCALE * f.u;
+        const UiBox screen = UiBox::screen(ctx);
+        const UiBox sign = screen.sprite(UiSpriteId::InfoSing, SPRITE_SCALE, Anchor::TopRight, RIGHT_MARGIN, TOP_MARGIN);
 
-        const Sprite& sign = ctx.assets.get_sprite(UiSpriteId::InfoSing);
         const Sprite& arrow = ctx.assets.get_sprite(UiSpriteId::InfoSingArrow);
-
-        const SDL2pp::Rect sign_rect = aligned_rect(f.rect(), sign.width * s, sign.height * s, HAlign::Right, VAlign::Top, RIGHT_MARGIN * f.u, TOP_MARGIN * f.u);
-        draw_sprite_in(ctx, sign, sign_rect);
-
-        const SDL2pp::Rect arrow_dst = sprite_rect(arrow, sign_rect.x + (KNOB_X - ARROW_PIVOT_X) * s,
-                                                   sign_rect.y + (KNOB_Y - ARROW_PIVOT_Y) * s, s);
-        draw_scaled_rotated(ctx, arrow.sprite_id, arrow.src(), arrow_dst, hand_angle(),  SDL2pp::Point(ARROW_PIVOT_X, ARROW_PIVOT_Y));
-
-        draw_time(ctx, sign_rect, s);
-        draw_gold(ctx, sign_rect, s);
-
-        draw_alerts(ctx, f.size, f.u, sign_rect.y + sign_rect.h);
+        sign.sub(KNOB_X - ARROW_PIVOT_X, KNOB_Y - ARROW_PIVOT_Y, arrow.get_width(), arrow.get_height()).blit(arrow, {.angle = hand_angle(), .pivot = SDL2pp::Point(ARROW_PIVOT_X, ARROW_PIVOT_Y)});
+        sign.sub(PANEL_X, TIME_PANEL_Y, PANEL_W, TIME_PANEL_H).text(format_time(current_time), TEXT);
+        draw_gold(ctx, sign.sub(SLOTS_X, SLOTS_Y, SLOTS_W, SLOTS_H));
+        draw_alerts(ctx, screen, TOP_MARGIN + sign.get_rect().h / screen.get_unit() + ALERT_TOP_GAP);
     }
 };

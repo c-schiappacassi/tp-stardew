@@ -16,6 +16,6 @@ std::optional<float> ItemView::depth(const RenderInfo& ctx) const {
 void ItemView::draw(const RenderInfo& ctx) {
     const int tile = TILE_TO_PIXEL * ctx.cam.get_zoom();
     const SDL2pp::Point top_left = ctx.cam.world_to_screen(pos.getX() - TILE_TO_PIXEL / 2, pos.getY() - TILE_TO_PIXEL);
-
-    draw_item_icon(ctx, item, SDL2pp::Rect(top_left.x, top_left.y, tile, tile), tile);
+    const Sprite& sprite = ctx.assets.get_sprite(item);
+    sprite.blit(ctx, scaled_rect(SDL2pp::Rect(top_left.x, top_left.y, tile, tile), sprite));
 }

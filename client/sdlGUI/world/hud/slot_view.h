@@ -5,7 +5,7 @@
 
 #include <SDL2pp/SDL2pp.hh>
 
-#include "../../render_info.h"
+#include "ui_box.h"
 
 #include "dtos.h"
 #include "protocol_types.h"
@@ -31,5 +31,5 @@ public:
     const std::optional<Stack>& get_stack() const { return stack; }
     bool empty() const { return !stack.has_value(); }
 
-    void draw(const RenderInfo& ctx, const SDL2pp::Rect& rect, int u) const;
+    void draw(const UiBox& slot) const;
 };

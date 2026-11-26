@@ -3,7 +3,7 @@
 #include <string>
 #include <utility>
 
-#include "../../world/hud/ready_to_sleep_view.h"
+#include "../../world/hud/dialog_view.h"
 #include "modal_layer.h"
 #include "state.h"
 
@@ -12,8 +12,10 @@ private:
     static constexpr std::size_t BTN_OK = 0;
     static constexpr std::size_t BTN_CANCEL = 1;
 
+    inline static const DialogView::Spec WAIT{{"Waiting for other players..."}, {}, 0};
+    inline static const DialogView::Spec ASK{{"The day is over.", "Ready to go to sleep?"}, {UiSpriteId::OkButton, UiSpriteId::CancelButton}};
+
     std::string player_name;
-    ReadyToSleepView view;
     bool open = false;
     bool confirmed = false;
     bool cancelled = false;
@@ -81,8 +83,7 @@ public:
     }
 
     void draw(const RenderInfo& ctx) override {
-        const auto layout = ReadyToSleepView::layout(ctx, showing_wait());
-        sync_hitboxes(ctx, layout.buttons);
-        view.draw(ctx, layout, showing_wait(), hovered_buttons());
+        hits.begin(ctx);
+        DialogView::draw(ctx, showing_wait() ? WAIT : ASK, hits);
     }
 };

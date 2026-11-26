@@ -1,6 +1,6 @@
 #include "ore_view.h"
 
-#include "../../draw_region.h"
+#include "../../draw_helpers.h"
 #include "../../render_info.h"
 
 OreView::OreView(const MineralData& data): type(data.type), state(data.state == MineralState::Broken ? ResourceState::Broken : ResourceState::Intact) {
@@ -22,7 +22,5 @@ std::optional<float> OreView::depth(const RenderInfo& ctx) const {
 
 void OreView::draw(const RenderInfo& ctx) {
     sfx.flush(ctx);
-
-    const Sprite& sprite = ctx.assets.get_sprite(type, state);
-    draw_sprite_at(ctx, sprite, pos);
+    ctx.assets.get_sprite(type, state).draw_at(ctx, pos);
 }

@@ -1,6 +1,11 @@
 #pragma once
 #include <cstdint>
 
+#include <algorithm>
+#include <cmath>
+#include <string>
+
+#include "ui_box.h"
 #include "../../render_info.h"
 
 class BarView {

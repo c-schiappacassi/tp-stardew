@@ -10,7 +10,7 @@
 #include "../background/furniture_views.h"
 #include "../background/item_view.h"
 #include "../../sync_views.h"
-#include "../../draw_region.h"
+#include "../../draw_helpers.h"
 #include "../lighting.h"   
 #include "../effects/sounds/tilled_sound.h"
 #include "../effects/triggers/soil_trigger.h"
@@ -79,8 +79,8 @@ inline void FarmView::draw_floor_overlay(const RenderInfo& ctx) {
     for (const SoilTile& t : soil) {
         if (!on_screen(ctx, t.x, t.y, TILE_TO_PIXEL)) continue;
         const SDL2pp::Point origin = ctx.cam.world_to_screen(t.x, t.y);
-        draw_sprite(ctx, dry, origin);
-        if (t.watered) draw_sprite(ctx, wet, origin);
+        dry.draw(ctx, origin);
+        if (t.watered) wet.draw(ctx, origin);
     }
 }
 

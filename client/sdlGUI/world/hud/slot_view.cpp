@@ -2,50 +2,32 @@
 
 #include <string>
 
-#include "../../draw_region.h"
-#include "pixel_font.h"
-
 namespace {
     constexpr int ICON_BOX = 48;
-
     constexpr int INDEX_MARGIN = 6;
-    constexpr int INDEX_PX = 2;
     constexpr int QUANTITY_MARGIN = 4;
-    constexpr int QUANTITY_PX = 3;
     constexpr int QUALITY_SCALE = 2;
 
-    void draw_stack(const RenderInfo& ctx, const Stack& stack, const SDL2pp::Rect& slot_rect, int u) {
-        draw_item_icon(ctx, stack.item_id, slot_rect, ICON_BOX * u);
-
-        if (stack.quantity > 1) {
-            draw_text_in(ctx, std::to_string(stack.quantity), slot_rect, QUANTITY_PX * u, HAlign::Right, VAlign::Bottom,
-                         pixel_font::TEXT_COLOR, QUANTITY_MARGIN * u, QUANTITY_MARGIN * u,
-                         pixel_font::SHADOW_COLOR, QUANTITY_PX * u);
-        }
-
-        if (stack.qual > Quality::Base) {
-            const Sprite& star = ctx.assets.get_sprite(stack.qual);
-            const int scale = QUALITY_SCALE * u;
-            const SDL2pp::Rect icon_area = centered_rect(slot_rect, ICON_BOX * u, ICON_BOX * u);
-            const SDL2pp::Rect dst = aligned_rect(icon_area, star.width * scale, star.height * scale, HAlign::Right, VAlign::Top, 0, 0);
-            draw_sprite_in(ctx, star, dst);
-        }
-    }
+    constexpr TextStyle INDEX{.size = 2, .color = pixel_font::TEXT_COLOR, .shadow = pixel_font::SHADOW_COLOR, .shadow_offset = 2};
+    constexpr TextStyle QUANTITY{.size = 3, .color = pixel_font::TEXT_COLOR, .shadow = pixel_font::SHADOW_COLOR, .shadow_offset = 3};
 }
 
-void SlotView::draw(const RenderInfo& ctx, const SDL2pp::Rect& rect, int u) const {
-    draw_ui(ctx, UiSpriteId::HotbarSlot, rect);
-    draw_ui(ctx, UiSpriteId::HotbarSlotOutline, rect);
+void SlotView::draw(const UiBox& slot) const {
+    slot.blit(UiSpriteId::HotbarSlot);
+    slot.blit(UiSpriteId::HotbarSlotOutline);
 
     if (stack) {
-        draw_stack(ctx, *stack, rect, u);
+        const UiBox icon = slot.place(ICON_BOX, ICON_BOX);
+        icon.fit(stack->item_id);
+        if (stack->quantity > 1) {
+            slot.text(std::to_string(stack->quantity), QUANTITY, Anchor::BottomRight, QUANTITY_MARGIN, QUANTITY_MARGIN);
+        }
+        if (stack->qual > Quality::Base) {
+            icon.sprite(stack->qual, QUALITY_SCALE, Anchor::TopRight);
+        }
     }
 
-    if (selected) {
-        draw_ui(ctx, UiSpriteId::HotbarSlotSelected, rect);
-    }
+    if (selected) slot.blit(UiSpriteId::HotbarSlotSelected);
 
-    draw_text_in(ctx, label, rect, INDEX_PX * u, HAlign::Left, VAlign::Top,
-                 pixel_font::TEXT_COLOR, INDEX_MARGIN * u, INDEX_MARGIN * u,
-                 pixel_font::SHADOW_COLOR, INDEX_PX * u);
+    slot.text(label, INDEX, Anchor::TopLeft, INDEX_MARGIN, INDEX_MARGIN);
 }

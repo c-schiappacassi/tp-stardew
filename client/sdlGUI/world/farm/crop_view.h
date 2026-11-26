@@ -4,7 +4,7 @@
 #include "../../utils.h"
 #include "../entity_view.h"
 #include "../../render_info.h"
-#include "../../draw_region.h"
+#include "../../draw_helpers.h"
 #include "../effects/sounds/watered_sound.h"
 #include "../effects/triggers/crop_trigger.h"
 

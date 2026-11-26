@@ -6,13 +6,14 @@ target_sources(taller_client
     game.cpp
     game_ui.cpp
     sdlGUI/asset_handling/asset_manager.cpp
-    sdlGUI/asset_handling/asset_loader.cpp
     sdlGUI/audio/audio.cpp
+    sdlGUI/sprite.cpp
 
     sdlGUI/world/background/furniture_view.cpp
     sdlGUI/world/background/chest_view.cpp
     sdlGUI/world/background/item_view.cpp
 
+    sdlGUI/world/hud/ui_box.cpp
     sdlGUI/world/hud/slot_view.cpp
     sdlGUI/world/hud/hotbar_view.cpp
     sdlGUI/world/hud/chest_inventory_view.cpp
@@ -49,12 +50,11 @@ target_sources(taller_client
     sdlGUI/clip_player.h
     sdlGUI/camera.h
     sdlGUI/sync_views.h
-    sdlGUI/draw_region.h
+    sdlGUI/draw_helpers.h
+    sdlGUI/sprite.h
 
     sdlGUI/asset_handling/sprite_defs.h
     sdlGUI/asset_handling/asset_manager.h
-    sdlGUI/asset_handling/asset_loader.h
-    sdlGUI/asset_handling/asset_tables.h
     sdlGUI/asset_handling/sound_defs.h
 
     sdlGUI/audio/audio.h
@@ -62,6 +62,7 @@ target_sources(taller_client
 
     sdlGUI/ui/input_event.h
     sdlGUI/ui/sdl_input.h
+    sdlGUI/ui/hitboxes.h
     sdlGUI/ui/ui_layer.h
     sdlGUI/ui/ui_manager.h
     sdlGUI/ui/world_input.h
@@ -136,6 +137,7 @@ target_sources(taller_client
     sdlGUI/world/interiors/interior_view.h
     sdlGUI/world/interiors/interiors_view.h
 
+    sdlGUI/world/hud/ui_box.h
     sdlGUI/world/hud/hud_view.h
     sdlGUI/world/hud/dialog_view.h
     sdlGUI/world/hud/minimap_view.h
@@ -144,11 +146,9 @@ target_sources(taller_client
     sdlGUI/world/hud/hotbar_view.h
     sdlGUI/world/hud/chest_inventory_view.h
     sdlGUI/world/hud/bar_view.h
-    sdlGUI/world/hud/ready_to_sleep_view.h
     sdlGUI/world/hud/night_sky_view.h
     sdlGUI/world/hud/game_completed_view.h
     sdlGUI/world/hud/dancing_junimo_view.h
-    sdlGUI/world/hud/quit_view.h
     sdlGUI/world/hud/volume_view.h
     sdlGUI/world/hud/pixel_font.h
     sdlGUI/world/hud/chat_pixel_font.h

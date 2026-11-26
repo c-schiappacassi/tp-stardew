@@ -5,7 +5,7 @@
 
 #include "../../utils.h"
 #include "../../asset_handling/sprite_defs.h"
-#include "../../draw_region.h"
+#include "../../draw_helpers.h"
 #include "../entity_view.h"
 #include "protocol_types.h"
 #include "dtos.h"
@@ -25,8 +25,8 @@ public:
         }
     }
     void draw(const RenderInfo& ctx){
-        if (under) draw_sprite_at(ctx, *under, pos);
-        draw_sprite_at(ctx, this->texture_sprite, pos);
+        if (under) under->draw_at(ctx, pos);
+        texture_sprite.draw_at(ctx, pos);
     };
 };
 
@@ -42,13 +42,13 @@ public:
         : pos(pos), sprite(sprite), flip(flip), sort_y(sort_y) {}
 
     void draw(const RenderInfo& ctx) override {
-        draw_sprite_at(ctx, sprite, pos, flip);
+        sprite.draw_at(ctx, pos, {.flip = flip});
     }
 
     std::optional<float> depth(const RenderInfo& ctx) const override {
-        const int bottom = sprite.offset_y + sprite.height;
-        const Position center(pos.getX() + sprite.offset_x + sprite.width / 2, pos.getY() + sprite.offset_y + sprite.height / 2);
-        if (!on_screen(ctx, center, std::max<int>(sprite.width, sprite.height))) {
+        const int bottom = sprite.get_dy() + sprite.get_height();
+        const Position center(pos.getX() + sprite.get_dx() + sprite.get_width() / 2, pos.getY() + sprite.get_dy() + sprite.get_height() / 2);
+        if (!on_screen(ctx, center, std::max(sprite.get_width(), sprite.get_height()))) {
             return std::nullopt;
         }
         return static_cast<float>(sort_y ? *sort_y : static_cast<int>(pos.getY()) + bottom);
@@ -79,8 +79,8 @@ public:
     explicit Background(const BackgroundData& data, AssetManager& assets) {
         if (data.interior) {
             interior.emplace(InteriorSprite{data.interior->pos, assets.get_sprite(data.interior->interior_id)});
-            world_size.x = interior->pos.getX() + interior->sprite.width;
-            world_size.y = interior->pos.getY() + interior->sprite.height;
+            world_size.x = interior->pos.getX() + interior->sprite.get_width();
+            world_size.y = interior->pos.getY() + interior->sprite.get_height();
         }
 
         floor.reserve(data.floor.size());
@@ -100,11 +100,11 @@ public:
         for (const StaticFurnitureData& f : data.furniture) {
             const FlippableSprite& fs = assets.get_sprite(f.id, f.dir);
             if (is_flat(f.id)) {
-                flat_props.emplace_back(f.pos, fs.sprite, fs.flip);
+                flat_props.emplace_back(f.pos, fs.get_sprite(), fs.is_flipped());
             } else if (f.id == FurnitureId::BedSheet) {
-                props.emplace_back(f.pos, fs.sprite, fs.flip, static_cast<int>(f.pos.getY()) + 1);
+                props.emplace_back(f.pos, fs.get_sprite(), fs.is_flipped(), static_cast<int>(f.pos.getY()) + 1);
             } else {
-                props.emplace_back(f.pos, fs.sprite, fs.flip);
+                props.emplace_back(f.pos, fs.get_sprite(), fs.is_flipped());
             }
         }
         if (data.interior && data.interior->npc) {
@@ -123,7 +123,7 @@ public:
 
     void draw(const RenderInfo& ctx) {
         if (interior) {
-            draw_sprite_at(ctx, interior->sprite, interior->pos);
+            interior->sprite.draw_at(ctx, interior->pos);
         }
         for (TileView& t : floor)
             t.draw(ctx);

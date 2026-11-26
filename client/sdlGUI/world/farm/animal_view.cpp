@@ -31,14 +31,14 @@ void AnimalView::draw(const RenderInfo& ctx) {
 
     const ClipId id{ctx.assets.get_sprite_id(type), Action{state}, facing};
 
-    const AnimatedFrame* frame = draw_clip_at(ctx, clip_player, id, pos);
+    const AnimatedFrame* frame = clip_player.draw_at(ctx, id, pos);
     if (!frame) {
         return;
     }
 
     if (this->needs_interaction){
-        SDL2pp::Point origin_emote = ctx.cam.world_to_screen(pos.getX() , pos.getY() - (frame->sprite.height * 0.75));
+        SDL2pp::Point origin_emote = ctx.cam.world_to_screen(pos.getX() , pos.getY() - (frame->get_sprite().get_height() * 0.75));
         const Sprite& emote = ctx.assets.get_sprite(EmoteId::Alert);
-        draw_sprite(ctx, emote, origin_emote);
+        emote.draw(ctx, origin_emote);
     }
 }

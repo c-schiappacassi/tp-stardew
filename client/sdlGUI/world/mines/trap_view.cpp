@@ -1,6 +1,6 @@
 #include "trap_view.h"
 
-#include "../../draw_region.h"
+#include "../../draw_helpers.h"
 #include "../../render_info.h"
 #include "constants.h"
 
@@ -27,6 +27,5 @@ std::optional<float> TrapView::depth(const RenderInfo& ctx) const {
 
 void TrapView::draw(const RenderInfo& ctx) {
     sfx.flush(ctx);
-
-    draw_clip_at(ctx, clip_player,ClipId{ctx.assets.get_sprite_id(type), Action{state}, ctx.assets.get_clip_dir(type, facing)}, pos);
+    clip_player.draw_at(ctx, ClipId{ctx.assets.get_sprite_id(type), Action{state}, ctx.assets.get_clip_dir(type, facing)}, pos);
 }

@@ -2,7 +2,7 @@
 
 #include <cmath>
 
-#include "../../draw_region.h"
+#include "../../draw_helpers.h"
 #include "../../render_info.h"
 
 EnemyView::EnemyView(const EnemySnapshot& data) {
@@ -34,5 +34,5 @@ std::optional<float> EnemyView::depth(const RenderInfo& ctx) const {
 void EnemyView::draw(const RenderInfo& ctx) {
     sfx.flush(ctx);
 
-    draw_clip_at(ctx, clip_player, ClipId{ctx.assets.get_sprite_id(type, frenzied), Action{state}, facing}, pos, type == EnemyType::Skull ? bob_offset(ctx) : 0, hit_flash->tint(ctx));
+    clip_player.draw_at(ctx, ClipId{ctx.assets.get_sprite_id(type, frenzied), Action{state}, facing}, pos,{.tint = hit_flash->tint(ctx), .world_dy = type == EnemyType::Skull ? bob_offset(ctx) : 0});
 }

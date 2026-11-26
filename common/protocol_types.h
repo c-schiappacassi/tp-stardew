@@ -159,7 +159,6 @@ enum class AnimalState : uint8_t {
 
 // ROCKS
 enum class ResourceType : uint8_t {
-    StoneRock,
     CoalRock,
     LapisRock,
     SilverRock,

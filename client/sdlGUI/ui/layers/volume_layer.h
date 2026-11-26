@@ -9,7 +9,6 @@
 class VolumeLayer : public ModalLayer {
 private:
     Audio& audio;
-    VolumeView view;
     std::size_t selected = 0;
     bool preview_pending = false;
 
@@ -61,14 +60,12 @@ public:
     }
 
     void draw(const RenderInfo& ctx) override {
-        const auto layout = VolumeView::layout(ctx);
-        sync_hitboxes(ctx, layout.buttons);
-
         if (preview_pending) {
             preview_pending = false;
             ctx.audio.play(ctx.assets.get_sound(SoundId::SoilTilled));
         }
 
-        view.draw(ctx, layout, {audio.music_level(), audio.sfx_level()}, audio_volumes::MAX_LEVEL, hovered_buttons());
+        hits.begin(ctx);
+        VolumeView::draw(ctx, {audio.music_level(), audio.sfx_level()}, audio_volumes::MAX_LEVEL, hits);
     }
 };

@@ -11,8 +11,7 @@
 #include <SDL2pp/SDL2pp.hh>
 
 #include "../../../state.h"
-#include "../../draw_region.h"
-#include "../../render_info.h"
+#include "ui_box.h"
 #include "../player/player_view.h"
 
 namespace {
@@ -25,7 +24,7 @@ namespace {
     static constexpr std::size_t MAX_PLAYERS = 4;
     static constexpr double HEAD_SCALE = 0.3;
     static constexpr double SCREEN_FILL = 0.8;
-    static constexpr Uint8 DIM_ALPHA = 140;
+    static constexpr SDL_Color DIM{0, 0, 0, 140};
 
     static constexpr Slot LAYOUTS[MAX_PLAYERS][MAX_PLAYERS] = {
         {{0.50, 0.50}},
@@ -52,7 +51,6 @@ private:
 
     static std::optional<Area> area_of(const PlayerData& p);
     static SDL2pp::Rect to_screen(const SDL2pp::Rect& r, const SDL2pp::Rect& map, const SDL2pp::Point& tex);
-    static SDL2pp::Rect fit(const SDL2pp::Point& screen, const SDL2pp::Point& tex);
     static void draw_head(const RenderInfo& ctx, const SDL2pp::Point& center, int size, const Marker& m, const Sprite& head);
 
 public:

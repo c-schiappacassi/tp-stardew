@@ -5,7 +5,7 @@
 #include <SDL2pp/SDL2pp.hh>
 
 #include "../../../state.h"
-#include "../../render_info.h"
+#include "ui_box.h"
 #include "slot_view.h"
 
 #include "protocol_types.h"
@@ -15,7 +15,7 @@ private:
     std::vector<SlotView> slot_views;
 
 public:
-    static constexpr uint8_t SLOTS = 9;
+    static constexpr uint8_t COUNT = 9;
 
     HotbarView();
 

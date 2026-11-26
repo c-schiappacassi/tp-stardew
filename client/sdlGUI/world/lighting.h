@@ -6,7 +6,7 @@
 
 #include <SDL2pp/SDL2pp.hh>
 
-#include "../draw_region.h"
+#include "../draw_helpers.h"
 #include "../render_info.h"
 #include "game_time.h"
 

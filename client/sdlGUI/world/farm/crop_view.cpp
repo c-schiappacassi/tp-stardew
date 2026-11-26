@@ -14,7 +14,7 @@ void CropView::draw(const RenderInfo& ctx){
     sfx.flush(ctx);
 
     const Sprite& sprite = ctx.assets.get_sprite(this->type, this->state );
-    draw_sprite_at(ctx, sprite, pos, false, -crop::CROP_Y_OFFSET);
+    sprite.draw_at(ctx, pos, {.world_dy = -crop::CROP_Y_OFFSET});
 };
 
 void CropView::update(const CropData& data){
