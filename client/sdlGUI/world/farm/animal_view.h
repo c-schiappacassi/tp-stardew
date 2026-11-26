@@ -6,6 +6,9 @@
 #include "../../render_info.h"
 #include "../../draw_region.h"
 #include "../../clip_player.h"
+#include "../../audio/sound_emitter.h"
+#include "../effects/triggers/animal_call_trigger.h"
+#include "../effects/sounds/animal_call_sound.h"
 #include "position.h"
 #include "protocol_types.h"
 #include "constants.h"
@@ -23,6 +26,8 @@ private:
     bool needs_interaction;
     Direction facing = Direction::Down;
     AnimalState state;
+    SoundEmitter sfx;
+    AnimalCallTrigger call_trigger;
     
     ClipPlayer clip_player;
 public:

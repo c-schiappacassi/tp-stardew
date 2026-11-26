@@ -16,6 +16,9 @@ inline Key key_from_sdl(SDL_Keycode sym) {
         case SDLK_LEFT: return Key::Left;
         case SDLK_RIGHT: return Key::Right;
         case SDLK_KP_ENTER: return Key::Enter;
+        case SDLK_KP_MINUS: return Key::Minus;
+        case SDLK_KP_PLUS:
+        case SDLK_EQUALS: return Key::Plus;
         default: break;
     }
     return (sym > 0 && sym < 127) ? static_cast<Key>(sym) : Key::Unknown;

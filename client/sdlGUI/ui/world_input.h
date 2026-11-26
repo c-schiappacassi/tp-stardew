@@ -16,7 +16,6 @@ public:
     using Out = std::vector<std::shared_ptr<CommandDTO>>;
 
 private:
-    // TODO: por ahora hardcodeado, hay que implementar la recompensa en el server status y que me pase el cap de hotbar
     static constexpr int HOTBAR_SLOTS = 9;
 
     std::string player_name;

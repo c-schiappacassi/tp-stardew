@@ -7,6 +7,8 @@
 #include "../entity_view.h"
 #include "../../render_info.h"
 #include "../../draw_region.h"
+#include "../effects/sounds/chest_sound.h"
+#include "../effects/triggers/chest_trigger.h"
 
 #include "position.h"
 #include "protocol_types.h"
@@ -19,6 +21,8 @@ private:
 
     ClipPlayer player;
     ChestState state = ChestState::Closed;
+    SoundEmitter sfx;
+    ChestTrigger chest_trigger;
 
     bool is_open(const RenderInfo& ctx) const;
 

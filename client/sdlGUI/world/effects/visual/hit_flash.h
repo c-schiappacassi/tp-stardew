@@ -4,8 +4,8 @@
 
 #include <SDL2/SDL.h>
 
-#include "health_trigger.h"
-#include "../../render_info.h"
+#include "../listeners/health_listener.h"
+#include "../../../render_info.h"
 
 class HitFlash : public HealthListener {
     static constexpr long long DURATION_TICKS = 12;

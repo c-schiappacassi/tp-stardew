@@ -4,6 +4,8 @@
 #include "../../utils.h"
 #include "../entity_view.h"
 #include "../../clip_player.h"
+#include "../effects/sounds/trap_sound.h"
+#include "../effects/triggers/trap_trigger.h"
 
 #include "position.h"
 #include "protocol_types.h"
@@ -17,6 +19,8 @@ private:
     Direction facing = Direction::Down;
     TrapState state;
 
+    SoundEmitter sfx;
+    TrapTrigger trap_trigger;
     ClipPlayer clip_player;
 
 public:

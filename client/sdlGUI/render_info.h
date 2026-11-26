@@ -4,6 +4,7 @@
 #include "../state.h"
 
 #include "asset_handling/asset_manager.h"
+#include "audio/audio.h"
 #include "camera.h"
 
 struct RenderInfo {
@@ -13,4 +14,5 @@ struct RenderInfo {
     const Camera& cam;
     Zone currentZone;
     long long it;
+    Audio& audio;
 };

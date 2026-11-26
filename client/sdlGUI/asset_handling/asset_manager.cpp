@@ -97,6 +97,10 @@ const Clip& AssetManager::get_clip(const ClipId& id) const {
     return lookup(tables.clips, id, "Clip", placeholders::PLACEHOLDER_CLIP);
 }
 
+const Sound& AssetManager::get_sound(SoundId id) const {
+    return lookup(tables.sounds, id, "SoundId", placeholders::PLACEHOLDER_SOUND);
+}
+
 const Sprite& AssetManager::get_sprite(ItemId id) const {
     return lookup(tables.item_sprites, id, "ItemId", placeholders::PLACEHOLDER_SPRITE);
 }

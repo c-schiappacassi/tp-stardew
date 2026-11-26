@@ -12,18 +12,23 @@ std::optional<float> AnimalView::depth(const RenderInfo& ctx) const {
 };
 
 AnimalView::AnimalView(const AnimalData& data) {
+    call_trigger.add<AnimalCallSound>(sfx);
     update(data);
 }
 
 void AnimalView::update(const AnimalData& data) {
+    sfx.clear();
     pos = data.pos;
     type = data.type;
     needs_interaction = data.needs_interaction;
     facing = data.dir;
     state = data.state;
+    call_trigger.observe(data.type, data.pos);
 }
 
 void AnimalView::draw(const RenderInfo& ctx) {
+    sfx.flush(ctx);
+
     const ClipId id{ctx.assets.get_sprite_id(type), Action{state}, facing};
 
     const AnimatedFrame* frame = draw_clip_at(ctx, clip_player, id, pos);

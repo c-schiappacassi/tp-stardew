@@ -2,13 +2,16 @@
 
 #include <algorithm>
 #include <initializer_list>
+#include <iostream>
 #include <stdexcept>
 #include <string>
 #include <utility>
 
 #include <SDL_image.h>
+#include <SDL_mixer.h>
 
 #include "dtos.h"
+#include "sound_defs.h"
 #include "sprite_defs.h"
 
 namespace {
@@ -286,6 +289,21 @@ namespace {
         e[EnemyType::VampireFemale] = {SpriteId::LavaBat,    SpriteId::LavaBatFrenzy,   Dimentions::BAT_CELL_H};
         e[EnemyType::Skull]         = {SpriteId::Skull,      SpriteId::Skull,           Dimentions::SKULL_CELL_H};
     }
+    
+    void load_sounds(AssetTables& out, const std::filesystem::path& sounds_root) {
+        if (Mix_QuerySpec(nullptr, nullptr, nullptr) == 0) return;
+
+        for (const auto& def : SoundDefs::SOUNDS) {
+            const std::string path = (sounds_root / def.file).string();
+            Mix_Chunk* raw = Mix_LoadWAV(path.c_str());
+            if (!raw) {
+                std::cerr << "[Audio] No se pudo cargar " << path << ": " << Mix_GetError() << '\n';
+                continue;
+            }
+            out.sounds.insert_or_assign(def.id, Sound{std::shared_ptr<Mix_Chunk>(raw, Mix_FreeChunk), def.gain});
+        }
+    }
+
     void load_trap_visuals(AssetTables& out) {
         auto& t = out.trap_visuals;
         t[TrapType::Spikes]    = {SpriteId::SpikeTrap,     Dimentions::SPIKE_CELL_H,     -TILE_TO_PIXEL, false};
@@ -325,5 +343,6 @@ AssetTables load_assets(SDL2pp::Renderer& renderer, const std::filesystem::path&
     load_qualitys(out);
     load_enemy_visuals(out);
     load_trap_visuals(out);
+    load_sounds(out, assets_root / "sounds");
     return out;
 }

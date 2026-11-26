@@ -5,6 +5,8 @@
 #include "../entity_view.h"
 #include "../../render_info.h"
 #include "../../draw_region.h"
+#include "../effects/sounds/watered_sound.h"
+#include "../effects/triggers/crop_trigger.h"
 
 #include "position.h"
 #include "protocol_types.h"
@@ -23,6 +25,8 @@ private:
     CropType type;
     CropState state;
     bool wattered;
+    SoundEmitter sfx;
+    CropTrigger crop_trigger;
 
 public:
     explicit CropView(const CropData& data);

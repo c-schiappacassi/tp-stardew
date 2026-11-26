@@ -17,6 +17,7 @@
 #include "layers/hud_layer.h"
 #include "layers/minimap_layer.h"
 #include "layers/quit_layer.h"
+#include "layers/volume_layer.h"
 #include "layers/ready_to_sleep_layer.h"
 #include "layers/night_sky_layer.h"
 #include "layers/game_completed_layer.h"
@@ -59,7 +60,7 @@ private:
     void bind_open(Key key, UiLayer& layer) { openers[key] = &layer; }
 
 public:
-    explicit UiManager(const std::string& player_name): world(player_name) {
+    UiManager(const std::string& player_name, Audio& audio): world(player_name) {
         emplace<HudLayer>();
         emplace<ChestLayer>(player_name);
 
@@ -74,6 +75,9 @@ public:
         QuitLayer& quit_layer = emplace<QuitLayer>(player_name);
         bind_open(Key::Escape, quit_layer);
         
+        VolumeLayer& volume = emplace<VolumeLayer>(audio);
+        bind_open(Key::V, volume);
+
         ReadyToSleepLayer& sleep = emplace<ReadyToSleepLayer>(player_name);
         sky.watch(sleep);
 
