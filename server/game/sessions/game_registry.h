@@ -28,5 +28,6 @@ public:
     std::string nextGameId() const;
     std::shared_ptr<Game> find(const std::string& id) const;
     void start(const std::string& id, const std::shared_ptr<Game>& game);
+    void stop(const std::string& id);
     void stopAll();
 };

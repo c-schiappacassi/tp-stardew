@@ -34,6 +34,7 @@ private:
     mutable std::mutex mtx;
     bool configured = false;
     bool endDayRequested = false;
+    uint32_t worldSeed;
     WorldManager world;
     std::shared_ptr<CommerceManager> commerce;
     CommunityCenter community;
@@ -44,20 +45,12 @@ private:
     std::function<void(const PersistenceDTO&)> saveCallback;
     bool completionHandled = false;
 
-    struct SaveRevision {
-        uint64_t requests;
-        uint64_t community;
-        uint64_t rewards;
-        bool operator==(const SaveRevision&) const = default;
-    };
-    uint64_t saveRequests = 0;
-    std::optional<SaveRevision> savedRevision;
+    std::shared_ptr<const PersistenceDTO> pendingSave;
 
-    GameSession completeEntry(GameSession session);
     PersistenceDTO buildPersistenceData() const;
-    void saveIfNeeded(bool force = false);
+    void savePendingDay();
     ServerStatus buildStatus() const;
-    void processCommands();
+    void processCommands(); 
     void sendStatus();
     void advancePlayers();
     void advanceWorld(std::chrono::milliseconds elapsed);
@@ -66,7 +59,7 @@ private:
     void closeAll();
 
 public:
-    Game(const std::string& id, const std::string& name, uint8_t worldId, PreparedWorld prepared, const GameConfig& config = {}, ChatServices chatServices = {});
+    Game(const std::string& id, const std::string& name, uint8_t worldId, PreparedWorld prepared, const GameConfig& config = {}, ChatServices chatServices = {}, std::optional<uint32_t> savedSeed = std::nullopt);
 
     Game(const Game&) = delete;
     Game& operator=(const Game&) = delete;
@@ -77,9 +70,10 @@ public:
     void restorePersistenceData(const PersistenceDTO& saved);
     void setSaveCallback(std::function<void(const PersistenceDTO&)> callback);
     GameSession createGame(const CreateGameDTO& dto, const std::shared_ptr<OutQueue>& output);
-    GameSession joinGame(const JoinGameDTO& dto, const std::shared_ptr<OutQueue>& output);
+    GameSession joinGame(const JoinGameDTO& dto, const std::shared_ptr<OutQueue>& output, const PlayerRegistration& registerPlayer = {});
     GameSession resumeGame(const ResumeGameDTO& dto, const std::shared_ptr<OutQueue>& output);
     CommandSubmission enqueueCommand(uint16_t playerId, std::shared_ptr<CommandDTO> command);
+    bool disconnectAndCheckEmpty(uint16_t playerId);
     qtStatus checkJoin(const CheckCodeDTO& dto) const;
 
     void run() override;

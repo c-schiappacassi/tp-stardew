@@ -16,9 +16,10 @@
 #include "persistence/community_persistence.h"
 #include "time/game_clock.h"
 
-Game::Game(const std::string& id, const std::string& name, uint8_t worldId, PreparedWorld prepared, const GameConfig& config, ChatServices chatServices):
+Game::Game(const std::string& id, const std::string& name, uint8_t worldId, PreparedWorld prepared, const GameConfig& config, ChatServices chatServices, std::optional<uint32_t> savedSeed):
     id(id), name(name), worldId(worldId),
-    world(config.dungeon, std::random_device{}(), config.farm),
+    worldSeed(savedSeed ? *savedSeed : std::random_device{}()),
+    world(config.dungeon, worldSeed, config.farm),
     commerce(std::make_shared<CommerceManager>(world, config.market)),
     community(config.community), communityRewards(community, world, *commerce),
     communityChat(std::make_shared<CommunityChat>(community, communityRewards)),
@@ -43,14 +44,14 @@ GameSession Game::createGame(const CreateGameDTO& dto, const std::shared_ptr<Out
     worldId = dto.worldId;
     auto session = sessions.createPlayer(dto, output);
     configured = session.status.status == StatusCode::Ok;
-    return completeEntry(std::move(session));
+    return session;
 }
 
-GameSession Game::joinGame(const JoinGameDTO& dto, const std::shared_ptr<OutQueue>& output) {
+GameSession Game::joinGame(const JoinGameDTO& dto, const std::shared_ptr<OutQueue>& output, const PlayerRegistration& registerPlayer) {
     std::lock_guard<std::mutex> lock(mtx);
     if (!configured || dto.code != id || community.finished())
         return GameSessions::failure(community.finished() ? server_constants::THE_GAME_HAS_ALREADY_ENDED : server_constants::NO_GAME_EXISTS_WITH_THAT_CODE);
-    return completeEntry(sessions.joinPlayer(dto, output));
+    return sessions.joinPlayer(dto, output, registerPlayer);
 }
 
 GameSession Game::resumeGame(const ResumeGameDTO& dto, const std::shared_ptr<OutQueue>& output) {
@@ -60,14 +61,9 @@ GameSession Game::resumeGame(const ResumeGameDTO& dto, const std::shared_ptr<Out
         failure.userName = dto.userName;
         return failure;
     }
-    return completeEntry(sessions.resumePlayer(dto.userName, output));
-}
-
-GameSession Game::completeEntry(GameSession session) {
-    if (session.status.status == StatusCode::Ok) {
+    auto session = sessions.resumePlayer(dto.userName, output);
+    if (session.status.status == StatusCode::Ok)
         session.status.gameCompleted = community.finished();
-        ++saveRequests;
-    }
     return session;
 }
 
@@ -83,7 +79,6 @@ CommandSubmission Game::enqueueCommand(uint16_t playerId, std::shared_ptr<Comman
 void Game::setSaveCallback(std::function<void(const PersistenceDTO&)> callback) {
     std::lock_guard<std::mutex> lock(mtx);
     saveCallback = std::move(callback);
-    ++saveRequests;
 }
 
 PersistenceDTO Game::getPersistenceData() const {
@@ -97,10 +92,10 @@ PersistenceDTO Game::buildPersistenceData() const {
     snapshot.farmName = name;
     snapshot.mapId = worldId;
     snapshot.currentDay = currentDay;
+    snapshot.worldSeed = worldSeed;
     snapshot.players = playerManager.getPersistencePlayers();
     snapshot.communityCenterActionProgress = CommunityPersistence::save(community, communityRewards);
-    for (const auto& [userName, player]: snapshot.players)
-        snapshot.users.push_back(userName);
+    snapshot.users = playerManager.playerNames();
     world.saveFarmAndStorage(snapshot);
     return snapshot;
 }
@@ -111,31 +106,29 @@ void Game::restorePersistenceData(const PersistenceDTO& saved) {
         throw std::runtime_error(server_constants::CANNOT_RESTORE_GAME_WITH_MISMATCHED_IDENTITY_OR_STATE);
     world.restoreFarm(saved);
     CommunityPersistence::restore(community, communityRewards, saved.communityCenterActionProgress);
-    playerManager.restorePlayers(saved.players);
+    playerManager.restorePlayers(saved.players, saved.users);
     name = saved.farmName;
     currentDay = saved.currentDay;
     configured = true;
+    completionHandled = community.finished();
     updateCommunity();
 }
 
-void Game::saveIfNeeded(bool force) {
+void Game::savePendingDay() {
     try {
-        PersistenceDTO snapshot;
+        std::shared_ptr<const PersistenceDTO> snapshot;
         std::function<void(const PersistenceDTO&)> callback;
-        SaveRevision revision{};
         {
             std::lock_guard<std::mutex> lock(mtx);
-            if (!configured || !saveCallback)
+            if (!pendingSave || !saveCallback)
                 return;
-            revision = {saveRequests, community.getRevision(), communityRewards.getRevision()};
-            if (!force && savedRevision && *savedRevision == revision)
-                return;
-            snapshot = buildPersistenceData();
+            snapshot = pendingSave;
             callback = saveCallback;
         }
-        callback(snapshot);
+        callback(*snapshot);
         std::lock_guard<std::mutex> lock(mtx);
-        savedRevision = revision;
+        if (pendingSave == snapshot)
+            pendingSave.reset();
     } catch (const std::exception& error) {
         std::cerr << server_constants::ERROR_SAVING_GAME_PREFIX << id << server_constants::COLON_SPACE << error.what() << '\n';
     }
@@ -156,7 +149,6 @@ void Game::updateToolStates() {
 }
 
 void Game::advancePlayers() {
-    std::lock_guard<std::mutex> lock(mtx);
     if (!community.finished())
         playerManager.advancePlayers(PLAYER_STEP);
 }
@@ -168,7 +160,6 @@ void Game::sendStatus() {
 }
 
 void Game::advanceWorld(std::chrono::milliseconds elapsed) {
-    std::lock_guard<std::mutex> lock(mtx);
     if (community.finished()) {
         updateCommunity();
         return;
@@ -188,18 +179,15 @@ void Game::advanceWorld(std::chrono::milliseconds elapsed) {
         world.finishDay(playerManager, remainingTime);
         commerce->finishDay();
         ++currentDay;
-        ++saveRequests;
         updateCommunity();
+        pendingSave = std::make_shared<PersistenceDTO>(buildPersistenceData());
     }
 }
 
 void Game::processCommands() {
     PlayerCommand command;
     while (should_keep_running() && input.try_pop(command)) {
-        std::lock_guard<std::mutex> lock(mtx);
         playerManager.handleCommand(command, community.finished());
-        if (command.command && command.command->type() == MessageType::ExitGame)
-            ++saveRequests;
         updateCommunity();
     }
 }
@@ -207,12 +195,21 @@ void Game::processCommands() {
 void Game::updateCommunity() {
     community.observeCombat(world.getCombatProgress());
     communityRewards.updateMarket();
+    playerManager.collectCommunityRewards();
     if (community.finished() && !completionHandled) {
         playerManager.finishGame();
         completionHandled = true;
-        ++saveRequests;
+        pendingSave = std::make_shared<PersistenceDTO>(buildPersistenceData());
     }
-    playerManager.collectCommunityRewards();
+}
+
+bool Game::disconnectAndCheckEmpty(uint16_t playerId) {
+    std::lock_guard<std::mutex> lock(mtx);
+    // Apply earlier commands (including the last DayOk) before handling the exit.
+    processCommands();
+    advanceWorld(std::chrono::milliseconds{0});
+    playerManager.disconnectPlayer(playerId);
+    return !playerManager.hasConnectedPlayers();
 }
 
 qtStatus Game::checkJoin(const CheckCodeDTO& dto) const {
@@ -246,10 +243,13 @@ void Game::run() {
         auto nextTick = std::chrono::steady_clock::now();
         while (should_keep_running()) {
             updateToolStates();
-            processCommands();
-            advancePlayers();
-            advanceWorld(clock.advance());
-            saveIfNeeded();
+            {
+                std::lock_guard<std::mutex> lock(mtx);
+                processCommands();
+                advancePlayers();
+                advanceWorld(clock.advance());
+            }
+            savePendingDay();
             if (should_keep_running())
                 sendStatus();
             nextTick += rate;
@@ -267,7 +267,7 @@ void Game::run() {
     } catch (...) {
         std::cerr << server_constants::UNKNOWN_ERROR_IN_GAME_PREFIX;
     }
-    saveIfNeeded(true);
+    savePendingDay();
     closeAll();
 }
 

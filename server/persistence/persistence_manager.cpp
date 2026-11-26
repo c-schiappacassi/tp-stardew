@@ -4,6 +4,20 @@
 
 #include <algorithm>
 #include <stdexcept>
+#include <utility>
+
+namespace {
+GameIndexPlayerDTO previewFor(const PlayerDataLocal& player) {
+    GameIndexPlayerDTO preview;
+    preview.characterName = player.characterName;
+    preview.hairModel = player.hairModel;
+    preview.shirtModel = player.shirtModel;
+    preview.pantsModel = player.pantsModel;
+    preview.hairColor = player.hairColor;
+    preview.pantsColor = player.pantsColor;
+    return preview;
+}
+}
 
 PersistenceManager::PersistenceManager(const std::filesystem::path& directory)
     : reader(directory), writer(directory), games(reader.readIndex()) {
@@ -48,14 +62,7 @@ GameIndexDTO PersistenceManager::indexFromGame(const PersistenceDTO& game) {
     entry.users = game.users;
     entry.isMultiplayer = game.users.size() > 1;
     for (const auto& [userName, player] : game.players) {
-        GameIndexPlayerDTO preview;
-        preview.characterName = player.characterName;
-        preview.hairModel = player.hairModel;
-        preview.shirtModel = player.shirtModel;
-        preview.pantsModel = player.pantsModel;
-        preview.hairColor = player.hairColor;
-        preview.pantsColor = player.pantsColor;
-        entry.playerPreviews.emplace(userName, preview);
+        entry.playerPreviews.emplace(userName, previewFor(player));
     }
     return entry;
 }
@@ -80,6 +87,25 @@ std::vector<GameInfoDTO> PersistenceManager::listGamesFor(const std::string& use
         result.push_back(GameInfoDTO{game.id, game.farmName, player, game.isMultiplayer});
     }
     return result;
+}
+
+void PersistenceManager::registerPlayer(const std::string& gameId, const std::string& userName,
+                                        const PlayerDataLocal& initial) {
+    for (const auto& game : games) {
+        if (game.id != gameId)
+            continue;
+        if (game.playerPreviews.contains(userName))
+            throw std::runtime_error(server_constants::A_PLAYER_WITH_THAT_NAME_ALREADY_EXISTS);
+        auto updated = game;
+        auto preview = previewFor(initial);
+        preview.initialPlayer = initial;
+        updated.playerPreviews.emplace(userName, std::move(preview));
+        updated.users.push_back(userName);
+        updated.isMultiplayer = updated.users.size() > 1;
+        updateGameIndex(updated);
+        return;
+    }
+    throw std::runtime_error(server_constants::GAME_IS_NOT_REGISTERED_PREFIX + gameId);
 }
 
 void PersistenceManager::registerGame(const GameIndexDTO& game) {
@@ -135,11 +161,18 @@ void PersistenceManager::createGame(const PersistenceDTO& game, const std::strin
 }
 
 PersistenceDTO PersistenceManager::loadGame(const std::string& gameId) const {
-    if (!gameExists(gameId)) {
-        throw std::runtime_error(server_constants::GAME_IS_NOT_REGISTERED_PREFIX + gameId);
+    for (const auto& entry : games) {
+        if (entry.id != gameId)
+            continue;
+        auto saved = reader.readGame(gameId);
+        for (const auto& name : entry.users) {
+            const auto& preview = entry.playerPreviews.at(name);
+            if (preview.initialPlayer && saved.players.try_emplace(name, *preview.initialPlayer).second)
+                saved.users.push_back(name);
+        }
+        return saved;
     }
-
-    return reader.readGame(gameId);
+    throw std::runtime_error(server_constants::GAME_IS_NOT_REGISTERED_PREFIX + gameId);
 }
 
 void PersistenceManager::saveGame(const PersistenceDTO& game) {
@@ -148,6 +181,13 @@ void PersistenceManager::saveGame(const PersistenceDTO& game) {
             writer.writeGame(game);
             GameIndexDTO updated = indexFromGame(game);
             updated.mapPath = entry.mapPath;
+            // A player can register after the end-of-day snapshot was taken.
+            for (const auto& name : entry.users) {
+                const auto& preview = entry.playerPreviews.at(name);
+                if (preview.initialPlayer && updated.playerPreviews.emplace(name, preview).second)
+                    updated.users.push_back(name);
+            }
+            updated.isMultiplayer = updated.users.size() > 1;
             updateGameIndex(updated);
             return;
         }

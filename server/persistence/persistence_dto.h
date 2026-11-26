@@ -2,6 +2,7 @@
 
 #include <cstdint>
 #include <map>
+#include <optional>
 #include <string>
 #include <utility>
 #include <vector>
@@ -14,6 +15,7 @@ struct PersistenceDTO {
     std::string farmName;
     uint8_t mapId = 0;
     uint32_t currentDay = 1;
+    std::optional<uint32_t> worldSeed;
 
     std::vector<std::string> users;
     std::map<std::string, PlayerDataLocal> players;

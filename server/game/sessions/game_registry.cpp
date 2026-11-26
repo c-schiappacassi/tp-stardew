@@ -4,6 +4,7 @@
 
 #include <exception>
 #include <stdexcept>
+#include <utility>
 
 #include "game/game.h"
 
@@ -47,6 +48,19 @@ void GameRegistry::start(const std::string& id, const std::shared_ptr<Game>& gam
     }
     if (created)
         ++nextId;
+}
+
+void GameRegistry::stop(const std::string& id) {
+    std::shared_ptr<Game> game;
+    {
+        std::lock_guard<std::mutex> lock(mtx);
+        auto entry = games.extract(id);
+        if (entry.empty())
+            return;
+        game = std::move(entry.mapped());
+    }
+    game->stop();
+    game->join();
 }
 
 void GameRegistry::stopAll() {

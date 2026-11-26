@@ -1,6 +1,7 @@
 #pragma once
 
 #include <cstdint>
+#include <functional>
 #include <memory>
 #include <string>
 
@@ -12,6 +13,7 @@ struct PlayerCommand {
     std::shared_ptr<CommandDTO> command;
 };
 
+using PlayerRegistration = std::function<void(const PlayerDataLocal&)>;
 using OutQueue = Queue<ServerStatus>;
 
 enum class CommandSubmission {

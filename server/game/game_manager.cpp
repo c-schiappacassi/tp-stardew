@@ -53,21 +53,25 @@ std::shared_ptr<Game> GameManager::loadSavedGame(const std::string& code) {
         mapPath = persistence.mapPathFor(code);
     }
     auto prepared = GameLoader::prepare(mapPath, saved.mapId, config.interiors);
-    auto game = std::make_shared<Game>(saved.id, saved.farmName, saved.mapId, std::move(prepared), config);
+    auto game = std::make_shared<Game>(saved.id, saved.farmName, saved.mapId, std::move(prepared), config, ChatServices{}, saved.worldSeed);
     game->restorePersistenceData(saved);
     return game;
 }
 
 GameSession GameManager::joinGame(const JoinGameDTO& dto, const std::shared_ptr<OutQueue>& output) {
     std::lock_guard<std::mutex> lock(lifecycleMtx);
-    if (const auto game = games.find(dto.code))
-        return game->joinGame(dto, output);
     try {
-        auto game = loadSavedGame(dto.code);
+        auto game = games.find(dto.code);
+        const bool active = game != nullptr;
+        if (!active)
+            game = loadSavedGame(dto.code);
         if (!game)
             return GameSessions::failure(server_constants::NO_GAME_EXISTS_WITH_THAT_CODE);
-        auto session = game->joinGame(dto, output);
-        if (session.status.status == StatusCode::Ok)
+        auto session = game->joinGame(dto, output, [&](const PlayerDataLocal& initial) {
+            std::lock_guard<std::mutex> saveLock(persistenceMtx);
+            persistence.registerPlayer(dto.code, dto.userName, initial);
+        });
+        if (!active && session.status.status == StatusCode::Ok)
             startGame(dto.code, game);
         return session;
     } catch (const std::exception& error) {
@@ -106,6 +110,15 @@ std::vector<GameInfoDTO> GameManager::listGames(const std::string& userName) {
 }
 
 CommandSubmission GameManager::enqueueCommand(const std::string& gameId, uint16_t playerId, std::shared_ptr<CommandDTO> command) {
+    if (command && command->type() == MessageType::ExitGame) {
+        std::lock_guard<std::mutex> lock(lifecycleMtx);
+        const auto game = games.find(gameId);
+        if (!game)
+            return CommandSubmission::GameNotFound;
+        if (game->disconnectAndCheckEmpty(playerId))
+            games.stop(gameId);
+        return CommandSubmission::Enqueued;
+    }
     const auto game = games.find(gameId);
     return game ? game->enqueueCommand(playerId, std::move(command)) : CommandSubmission::GameNotFound;
 }

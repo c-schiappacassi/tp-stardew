@@ -414,6 +414,8 @@ CommunitySaveData PersistenceDeserializer::communityProgress(const toml::table& 
 
 GameIndexPlayerDTO PersistenceDeserializer::indexPlayer(const toml::table& table) {
     GameIndexPlayerDTO result;
+    if (table.contains(server_constants::INITIAL_PLAYER))
+        result.initialPlayer = player(requiredTable(table, server_constants::INITIAL_PLAYER));
     result.characterName = string(table, server_constants::CHARACTERNAME);
     result.hairModel = static_cast<uint16_t>(integer(table, server_constants::HAIRMODEL, 0, UINT16_MAX));
     result.shirtModel = static_cast<uint16_t>(integer(table, server_constants::SHIRTMODEL, 0, UINT16_MAX));
@@ -450,6 +452,8 @@ PersistenceDTO PersistenceDeserializer::deserializeGame(const toml::table& table
     result.id = string(table, server_constants::ID);
     result.farmName = string(table, server_constants::FARMNAME);
     result.mapId = static_cast<uint8_t>(integer(table, server_constants::MAPID, 0, UINT8_MAX));
+    if (table.contains(server_constants::WORLD_SEED))
+        result.worldSeed = static_cast<uint32_t>(integer(table, server_constants::WORLD_SEED, 0, UINT32_MAX));
     result.currentDay = static_cast<uint32_t>(integer(table, server_constants::CURRENTDAY, 0, UINT32_MAX));
     result.users = strings(requiredArray(table, server_constants::USERS));
     const toml::table& players = requiredTable(table, server_constants::PLAYERS);

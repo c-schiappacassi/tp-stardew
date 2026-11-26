@@ -38,9 +38,9 @@ private:
 public:
     PlayerRoster(const PlayerConfig& config, const MovementRules& movement,const PlayerSpawnSource& spawns, uint8_t maxPlayers);
 
-    Admission addPlayer(const std::string& name, const PlayerData& appearance,const std::shared_ptr<OutQueue>& output);
+    Admission addPlayer(const std::string& name, const PlayerData& appearance,const std::shared_ptr<OutQueue>& output, const PlayerRegistration& registerPlayer = {});
     Admission resumePlayer(const std::string& name, const std::shared_ptr<OutQueue>& output);
-    void restorePlayers(const std::map<std::string, PlayerDataLocal>& saved);
+    void restorePlayers(const std::map<std::string, PlayerDataLocal>& saved, std::vector<std::string> names = {});
     PlayerRecord* find(uint16_t id);
     const PlayerRecord* find(uint16_t id) const;
     const PlayerRecord& require(uint16_t id) const;

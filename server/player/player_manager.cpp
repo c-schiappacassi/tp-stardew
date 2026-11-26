@@ -14,8 +14,8 @@ PlayerManager::PlayerManager(const PlayerConfig& config, const MovementRules& mo
         playerStatus(zones),
         spawns(spawns) {}
 
-ServerStatus PlayerManager::addPlayer(const std::string& name, const PlayerData& appearance,const std::shared_ptr<OutQueue>& output) {
-    return completeEntry(roster.addPlayer(name, appearance, output));
+ServerStatus PlayerManager::addPlayer(const std::string& name, const PlayerData& appearance,const std::shared_ptr<OutQueue>& output, const PlayerRegistration& registerPlayer) {
+    return completeEntry(roster.addPlayer(name, appearance, output, registerPlayer));
 }
 
 ServerStatus PlayerManager::resumePlayer(const std::string& name,const std::shared_ptr<OutQueue>& output) {
@@ -44,8 +44,15 @@ std::map<std::string, PlayerDataLocal> PlayerManager::getPersistencePlayers() co
     return playerStatus.getPersistencePlayers(roster);
 }
 
-void PlayerManager::restorePlayers(const std::map<std::string, PlayerDataLocal>& saved) {
-    roster.restorePlayers(saved);
+std::vector<std::string> PlayerManager::playerNames() const {
+    std::vector<std::string> names;
+    for (const auto& [id, record] : roster)
+        names.push_back(record.getName());
+    return names;
+}
+
+void PlayerManager::restorePlayers(const std::map<std::string, PlayerDataLocal>& saved, const std::vector<std::string>& names) {
+    roster.restorePlayers(saved, names);
 }
 
 bool PlayerManager::isMultiplayer() const { return roster.isMultiplayer(); }

@@ -10,7 +10,7 @@
 PlayerRoster::PlayerRoster(const PlayerConfig& config, const MovementRules& movement,const PlayerSpawnSource& spawns, uint8_t maxPlayers):
         maxPlayers(maxPlayers), factory(config), movement(movement), spawns(spawns) {}
 
-PlayerRoster::Admission PlayerRoster::addPlayer(const std::string& name,const PlayerData& appearance,const std::shared_ptr<OutQueue>& output) {
+PlayerRoster::Admission PlayerRoster::addPlayer(const std::string& name,const PlayerData& appearance,const std::shared_ptr<OutQueue>& output, const PlayerRegistration& registerPlayer) {
     if (name.empty() || !output)
         return {nullptr, server_constants::COULD_NOT_REGISTER_THE_PLAYER};
     if (findByName(name))
@@ -26,6 +26,8 @@ PlayerRoster::Admission PlayerRoster::addPlayer(const std::string& name,const Pl
     if (!spawn ||!player.restoreLocation(spawn->zone, spawn->level, spawn->position, spawn->interior))
         return {nullptr, server_constants::NO_POSITION_IS_AVAILABLE_FOR_THE_PLAYER};
 
+    if (registerPlayer)
+        registerPlayer(player.getLocalData());
     const auto it = players.emplace(nextPlayerId,PlayerRecord{nextPlayerId, name, std::move(player), output}).first;
     ++nextPlayerId;
     return {&it->second, {}};
@@ -49,14 +51,21 @@ PlayerRoster::Admission PlayerRoster::resumePlayer(const std::string& name,const
     return {record, {}};
 }
 
-void PlayerRoster::restorePlayers(const std::map<std::string, PlayerDataLocal>& saved) {
+void PlayerRoster::restorePlayers(const std::map<std::string, PlayerDataLocal>& saved, std::vector<std::string> names) {
     if (!players.empty() || saved.size() > maxPlayers || saved.size() > UINT16_MAX)
         throw std::runtime_error(server_constants::CANNOT_RESTORE_PLAYER_ROSTER);
 
     std::map<uint16_t, PlayerRecord> restored;
     std::set<std::string> characterNames;
     uint16_t id = 1;
-    for (const auto& [username, data]: saved) {
+    if (names.empty()) {
+        for (const auto& [username, data] : saved)
+            names.push_back(username);
+    }
+    if (names.size() != saved.size())
+        throw std::runtime_error(server_constants::CANNOT_RESTORE_PLAYER_ROSTER);
+    for (const auto& username : names) {
+        const auto& data = saved.at(username);
         if (username.empty())
             throw std::runtime_error(server_constants::EMPTY_USERNAME_IN_SAVE);
         if (!characterNames.insert(data.characterName).second)

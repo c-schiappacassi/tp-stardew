@@ -40,11 +40,12 @@ public:
     PlayerManager(PlayerManager&&) = delete;
     PlayerManager& operator=(PlayerManager&&) = delete;
 
-    ServerStatus addPlayer(const std::string& name, const PlayerData& appearance,const std::shared_ptr<OutQueue>& output);
+    ServerStatus addPlayer(const std::string& name, const PlayerData& appearance,const std::shared_ptr<OutQueue>& output, const PlayerRegistration& registerPlayer = {});
     ServerStatus resumePlayer(const std::string& name, const std::shared_ptr<OutQueue>& output);
     std::optional<PlayerData> dataFor(const std::string& name) const;
     std::map<std::string, PlayerDataLocal> getPersistencePlayers() const;
-    void restorePlayers(const std::map<std::string, PlayerDataLocal>& saved);
+    std::vector<std::string> playerNames() const;
+    void restorePlayers(const std::map<std::string, PlayerDataLocal>& saved, const std::vector<std::string>& names = {});
     bool isMultiplayer() const;
     std::vector<CollisionBounds> getCollisionBounds(Zone zone) const;
     std::vector<uint16_t> connectedPlayerIds() const;

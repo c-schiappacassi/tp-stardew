@@ -280,6 +280,8 @@ toml::table PersistenceSerializer::communityProgress(const CommunitySaveData& va
 
 toml::table PersistenceSerializer::indexPlayer(const GameIndexPlayerDTO& value) {
     toml::table result;
+    if (value.initialPlayer)
+        result.insert(server_constants::INITIAL_PLAYER, player(*value.initialPlayer));
     result.insert(server_constants::CHARACTERNAME, value.characterName);
     result.insert(server_constants::HAIRMODEL, static_cast<int64_t>(value.hairModel));
     result.insert(server_constants::SHIRTMODEL, static_cast<int64_t>(value.shirtModel));
@@ -310,6 +312,8 @@ toml::table PersistenceSerializer::serialize(const PersistenceDTO& dto) {
     result.insert(server_constants::ID, dto.id);
     result.insert(server_constants::FARMNAME, dto.farmName);
     result.insert(server_constants::MAPID, static_cast<int64_t>(dto.mapId));
+    if (dto.worldSeed)
+        result.insert(server_constants::WORLD_SEED, static_cast<int64_t>(*dto.worldSeed));
     result.insert(server_constants::CURRENTDAY, static_cast<int64_t>(dto.currentDay));
     result.insert(server_constants::USERS, strings(dto.users));
 

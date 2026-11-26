@@ -19,7 +19,7 @@ private:
     std::shared_ptr<const ConstMapData> map;
 
     std::shared_ptr<const ConstMapData> mapForSession();
-    GameSession addPlayer(const std::string& name, const PlayerData& appearance, const std::shared_ptr<OutQueue>& output, const std::string& message);
+    GameSession addPlayer(const std::string& name, const PlayerData& appearance, const std::shared_ptr<OutQueue>& output, const std::string& message, const PlayerRegistration& registerPlayer = {});
     void complete(GameSession& session, const std::string& message) const;
 
 public:
@@ -32,6 +32,6 @@ public:
 
     static GameSession failure(const std::string& message);
     GameSession createPlayer(const CreateGameDTO& dto, const std::shared_ptr<OutQueue>& output);
-    GameSession joinPlayer(const JoinGameDTO& dto, const std::shared_ptr<OutQueue>& output);
+    GameSession joinPlayer(const JoinGameDTO& dto, const std::shared_ptr<OutQueue>& output, const PlayerRegistration& registerPlayer = {});
     GameSession resumePlayer(const std::string& name, const std::shared_ptr<OutQueue>& output);
 };

@@ -18,6 +18,7 @@ public:
     bool gameExists(const std::string& gameId) const;
     std::string mapPathFor(const std::string& gameId) const;
     std::vector<GameInfoDTO> listGamesFor(const std::string& userName) const;
+    void registerPlayer(const std::string& gameId, const std::string& userName, const PlayerDataLocal& initial);
     void registerGame(const GameIndexDTO& game);
     void updateGameIndex(const GameIndexDTO& game);
 

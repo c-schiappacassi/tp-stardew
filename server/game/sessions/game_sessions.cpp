@@ -62,11 +62,11 @@ void GameSessions::complete(GameSession& session, const std::string& message) co
     session.worldId = worldId;
 }
 
-GameSession GameSessions::addPlayer(const std::string& name, const PlayerData& appearance, const std::shared_ptr<OutQueue>& output, const std::string& message) {
+GameSession GameSessions::addPlayer(const std::string& name, const PlayerData& appearance, const std::shared_ptr<OutQueue>& output, const std::string& message, const PlayerRegistration& registerPlayer) {
     GameSession session{};
     session.map = mapForSession();
     session.userName = name;
-    session.status = players.addPlayer(name, appearance, output);
+    session.status = players.addPlayer(name, appearance, output, registerPlayer);
     if (session.status.status == StatusCode::Ok)
         complete(session, message);
     return session;
@@ -76,8 +76,8 @@ GameSession GameSessions::createPlayer(const CreateGameDTO& dto, const std::shar
     return addPlayer(dto.userName, appearanceOf(dto), output, server_constants::GAME_CREATED);
 }
 
-GameSession GameSessions::joinPlayer(const JoinGameDTO& dto, const std::shared_ptr<OutQueue>& output) {
-    return addPlayer(dto.userName, appearanceOf(dto), output, server_constants::YOU_JOINED_THE_GAME);
+GameSession GameSessions::joinPlayer(const JoinGameDTO& dto, const std::shared_ptr<OutQueue>& output, const PlayerRegistration& registerPlayer) {
+    return addPlayer(dto.userName, appearanceOf(dto), output, server_constants::YOU_JOINED_THE_GAME, registerPlayer);
 }
 
 GameSession GameSessions::resumePlayer(const std::string& name, const std::shared_ptr<OutQueue>& output) {
