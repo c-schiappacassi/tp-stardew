@@ -69,8 +69,7 @@ std::optional<ItemId> FarmManager::removeDecoration(EntityId id) { return decora
 bool FarmManager::placeChest(EntityId id, const Position& position, const std::map<uint8_t, Stack>& items) { return chests.place(id, position, terrain.getSpace(), items); }
 bool FarmManager::removeEmptyChest(EntityId id) { return chests.removeEmpty(id, terrain.getSpace()); }
 
-std::optional<bool> FarmManager::interactWithChest(
-    PlayerManager& players, uint16_t playerId, Direction direction, EntityIdGenerator& ids, std::chrono::steady_clock::time_point now) {
+std::optional<bool> FarmManager::interactWithChest(PlayerManager& players, uint16_t playerId, Direction direction, EntityIdGenerator& ids, std::chrono::steady_clock::time_point now) {
     return chests.interact(players, playerId, terrain.getSpace(), terrain.getMap(), groundItems, direction, ids, now);
 }
 

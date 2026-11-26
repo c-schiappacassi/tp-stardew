@@ -23,7 +23,8 @@ enum class CheatAction {
     EndDay,
     SpawnEnemy,
     KillEnemy,
-    KillEnemies
+    KillEnemies,
+    ListItems
 };
 
 struct CheatCommand {

@@ -19,6 +19,7 @@ void PlayerChat::listCheats(PlayerRecord& sender) const {
     reply(sender, server_constants::COMMAND_CHEAT_NEXT_LEVEL_CHEAT_CARE_CROPS_CHEAT_CARE_ANIMALS);
     reply(sender, server_constants::COMMAND_CHEAT_HEAL_CHEAT_END_DAY_AFFECTS_ALL_PLAYERS);
     reply(sender, server_constants::COMMAND_CHEAT_GIVE_PRODUCT_N_NONE_BASE_GOOD_EXCELLENT_INCREDIBLE_PERFECT);
+    reply(sender, server_constants::COMMAND_CHEAT_ITEMS_HELP);
     reply(sender, server_constants::COMMAND_CHEAT_CLEAR_SLOT_N_SLOTS_START_AT_1_CHEAT_SPAWN_ANIMAL_COW);
     reply(sender, server_constants::ANIMAL_COLORS_BROWN_COW_WHITE_COW_BROWN_CHICKEN_WHITE_CHICKEN_BLUE_CHICKEN);
     reply(sender, server_constants::COMMAND_CHEAT_WARP_FARM_TOWN_HOME_CENTER_PIERRE_MARNIE_ROBIN_CLINT_MINE_LEVEL);
@@ -71,7 +72,7 @@ void PlayerChat::command(PlayerRoster& players, PlayerRecord& sender, const std:
             }
             responses = services.community->execute(context, *request);
         } else if (const auto* request = std::get_if<CheatCommand>(&parsed)) {
-            if (actionsBlocked) {
+            if (actionsBlocked && request->action != CheatAction::ListItems) {
                 reply(sender, server_constants::CHEATS_CANNOT_CHANGE_THE_GAME_AFTER_THE_DAY_OR_GAME_HAS_ENDED);
                 return;
             }

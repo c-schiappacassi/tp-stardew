@@ -127,6 +127,7 @@ ParsedChatCommand cheat(const std::vector<std::string>& tokens) {
         return CheatCommand{CheatAction::CompleteBundle, 0, tokens[2]};
     }
     const std::pair<std::string_view, CheatAction> actions[]{
+        {server_constants::ITEMS, CheatAction::ListItems},
         {server_constants::COMPLETE_BUNDLES, CheatAction::CompleteAllBundles},
         {server_constants::NEXT_LEVEL, CheatAction::NextLevel},
         {server_constants::CARE_CROPS, CheatAction::CareCrops},

@@ -3,6 +3,7 @@
 #include <optional>
 #include <string>
 #include <string_view>
+#include <vector>
 
 #include "farm/animals/animal_species.h"
 #include "protocol_types.h"
@@ -10,6 +11,7 @@
 namespace shop_products {
 std::string_view name(ItemId item);
 std::optional<ItemId> item(const std::string& name);
+std::vector<std::string_view> itemNames();
 std::optional<ItemId> cropItem(CropType crop);
 std::optional<AnimalSpecies> animal(const std::string& name);
 std::optional<AnimalType> animalVariant(const std::string& name);

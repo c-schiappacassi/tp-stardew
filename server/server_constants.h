@@ -1,6 +1,8 @@
 #pragma once
 
 namespace server_constants {
+inline constexpr char GIVE_ITEMS_HEADER[] = "Available items for /cheat give:";
+inline constexpr char ITEM_LIST_SEPARATOR[] = ", ";
 inline constexpr char ACCEPTED_YOUR_GIFT_SEPARATOR[] = " accepted your gift: ";
 inline constexpr char ACCEPT_ERROR_PREFIX[] = "Accept error: ";
 inline constexpr char ACTION[] = "action";
@@ -120,6 +122,7 @@ inline constexpr char COMMAND_CHEAT_ADD_GOLD_N_CHEAT_REMOVE_GOLD_N_1_TO_42949672
 inline constexpr char COMMAND_CHEAT_CLEAR_SLOT_N_SLOTS_START_AT_1_CHEAT_SPAWN_ANIMAL_COW[] = "/cheat clear_slot N (slots start at 1) | /cheat spawn_animal cow|chicken N";
 inline constexpr char COMMAND_CHEAT_COMPLETE_BUNDLE_IDENTIFIER_CHEAT_COMPLETE_BUNDLES[] = "/cheat complete_bundle identifier | /cheat complete_bundles";
 inline constexpr char COMMAND_CHEAT_GIVE_PRODUCT_N_NONE_BASE_GOOD_EXCELLENT_INCREDIBLE_PERFECT[] = "/cheat give product N [none|base|good|excellent|incredible|perfect]";
+inline constexpr char COMMAND_CHEAT_ITEMS_HELP[] = "/cheat items (list items for /cheat give)";
 inline constexpr char COMMAND_CHEAT_HEALTH_N_CHEAT_ENERGY_N_0_TO_65535[] = "/cheat health N | /cheat energy N (0 to 65535)";
 inline constexpr char COMMAND_CHEAT_HEAL_CHEAT_END_DAY_AFFECTS_ALL_PLAYERS[] = "/cheat heal | /cheat end_day (affects all players)";
 inline constexpr char COMMAND_CHEAT_KILL_ENEMY_NEAREST_CHEAT_KILL_ENEMIES_CURRENT_MINE_FLOOR[] = "/cheat kill_enemy (nearest) | /cheat kill_enemies (current mine floor)";
@@ -906,7 +909,7 @@ inline constexpr char UNKNOWN_FRAME_PIECE[] = "Unknown frame piece";
 inline constexpr char UNKNOWN_FRAME_PIECE_IN_PREFIX[] = "Unknown frame piece in ";
 inline constexpr char UNKNOWN_INTERIOR[] = "Unknown interior";
 inline constexpr char UNKNOWN_INTERIOR_LOCATION[] = "Unknown interior location";
-inline constexpr char UNKNOWN_ITEM_SEE_THE_ITEM_NAMES_IN_DOCS_CHEATS_MD[] = "Unknown item. See the item names in docs/cheats.md.";
+inline constexpr char UNKNOWN_ITEM_USE_CHEAT_ITEMS[] = "Unknown item. Use /cheat items to see the available items.";
 inline constexpr char UNKNOWN_MINERAL_TYPE[] = "unknown mineral type";
 inline constexpr char UNKNOWN_PLAYER_ID[] = "Unknown player ID";
 inline constexpr char UNKNOWN_PORTAL_TYPE[] = "Unknown portal type";
