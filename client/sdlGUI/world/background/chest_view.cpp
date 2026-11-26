@@ -9,6 +9,7 @@ namespace {
 }
 
 ChestView::ChestView(const FurnitureData& data) {
+    chest_trigger.add<ChestSound>(sfx);
     update(data);
 }
 
@@ -27,7 +28,11 @@ std::optional<float> ChestView::depth(const RenderInfo& ctx) const {
 }
 
 void ChestView::draw(const RenderInfo& ctx) {
-    if (is_open(ctx)) {
+    const bool open = is_open(ctx);
+    chest_trigger.observe(open, pos);
+    sfx.flush(ctx);
+
+    if (open) {
         state = ChestState::Opening;
     } else if (state == ChestState::Opening) {
         state = ChestState::Closing;

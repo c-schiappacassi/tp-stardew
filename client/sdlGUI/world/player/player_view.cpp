@@ -34,10 +34,14 @@ namespace {
 
 PlayerView::PlayerView(const PlayerData& data) {
     hit_flash = &health_trigger.add<HitFlash>();
+    health_trigger.add<PlayerHurtSound>(sfx);
+    step_trigger.add<FootstepSound>(sfx);
+    tool_trigger.add<SwordSwingSound>(sfx);
     update(data);
 }
 
 void PlayerView::update(const PlayerData& data) {
+    sfx.clear();
     pos = data.pos;
     state = data.state;
     name = data.characterName;
@@ -48,6 +52,8 @@ void PlayerView::update(const PlayerData& data) {
     pant_model = data.pantsModel;
     pant_color = to_sdl(data.pantsColor);
     health_trigger.observe(data.health, data.pos);
+    step_trigger.observe(data.state, data.pos, data.currentZone);
+    tool_trigger.observe(data.state, data.heldItem, facing, data.pos);
     if (data.heldItem != held_item) {
         clip_player.reset();
     }
@@ -86,6 +92,8 @@ void PlayerView::draw_layers_in_order(const RenderInfo& ctx, const farmer::DrawP
 }
 
 void PlayerView::draw(const RenderInfo& ctx) {
+    sfx.flush(ctx);
+
     ClipId clip_id{SpriteId::FarmerBase, Action{state}, facing};
     if (state == PlayerState::UsingTool && held_item) {
         ClipId with_item = clip_id;

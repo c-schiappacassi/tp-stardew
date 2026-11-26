@@ -62,7 +62,6 @@ public:
     const Sprite& get_sprite(Quality type) const;
     const FlippableSprite& get_sprite(FurnitureId id, Direction dir) const;
 
-    // TODO: Sounds
     const Sound& get_sound(SoundId id) const;
 
 

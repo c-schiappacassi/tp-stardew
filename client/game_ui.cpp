@@ -20,9 +20,9 @@ GameUI::GameUI(const std::string& local_player, const std::string& gameId, const
         asset_manager(renderer, ASSETS_ROOT),
         cam(WINDOW_W, WINDOW_H, CAMERA_ZOOM),
         local_player(local_player),
-        world(local_player, map_data, asset_manager),
-        ui(local_player) {
-    
+        world(local_player, map_data, asset_manager, audio),
+        ui(local_player, audio) {
+
     SDL_StartTextInput();
 }
 
@@ -60,7 +60,7 @@ void GameUI::update(const State& state, long long it) {
 
     ui.update(state);
 
-    RenderInfo ctx{renderer, asset_manager, state, cam, currentZone, it};
+    RenderInfo ctx{renderer, asset_manager, state, cam, currentZone, it, audio};
     world.draw(ctx);
     ui.draw(ctx);
 

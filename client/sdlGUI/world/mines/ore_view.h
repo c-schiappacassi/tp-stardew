@@ -4,6 +4,8 @@
 
 #include "../../utils.h"
 #include "../entity_view.h"
+#include "../effects/sounds/ore_hit_sound.h"
+#include "../effects/triggers/health_trigger.h"
 
 #include "dtos.h"
 #include "position.h"
@@ -14,7 +16,8 @@ private:
     Position pos{0, 0};
     ResourceType type;
     ResourceState state;
-    // TODO: De MineralState a ResourseState
+    SoundEmitter sfx;
+    HealthTrigger health_trigger;
 
 public:
     explicit OreView(const MineralData& data);

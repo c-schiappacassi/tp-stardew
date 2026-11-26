@@ -12,6 +12,8 @@
 #include "../../sync_views.h"
 #include "../../draw_region.h"
 #include "../lighting.h"   
+#include "../effects/sounds/tilled_sound.h"
+#include "../effects/triggers/soil_trigger.h"
 #include "crop_view.h"
 #include "animal_view.h"
 
@@ -23,6 +25,8 @@ private:
     std::unordered_map<uint32_t, AnimalView> animals;
     std::vector<SoilTile> soil;
     FurnitureViews furniture;
+    SoundEmitter sfx;
+    SoilTrigger soil_trigger;
 
     static std::pair<int, int> cell_of(const Position& base) {
         return {base.getX() / TILE_TO_PIXEL, (base.getY() - 1) / TILE_TO_PIXEL};
@@ -39,9 +43,14 @@ public:
 };
 
 inline FarmView::FarmView(const BackgroundData& data, AssetManager& assets)
-    : BackgroundZoneView(data, assets) {}
+    : BackgroundZoneView(data, assets) {
+    soil_trigger.add<TilledSound>(sfx);
+}
 
 inline void FarmView::update(const FarmData& farm) {
+    sfx.clear();
+    soil_trigger.observe(farm.tilledSoil);
+
     auto id_of = [](const auto& d) { return d.id; };
     sync_views(crops, farm.crops, id_of);
     sync_views(animals, farm.animals, id_of);
@@ -62,6 +71,8 @@ inline void FarmView::update(const FarmData& farm) {
 }
 
 inline void FarmView::draw_floor_overlay(const RenderInfo& ctx) {
+    sfx.flush(ctx);
+
     const Sprite& dry = ctx.assets.get_sprite(TileTextureId::TilledDirt);
     const Sprite& wet = ctx.assets.get_sprite(TileTextureId::WateredDirt);
 

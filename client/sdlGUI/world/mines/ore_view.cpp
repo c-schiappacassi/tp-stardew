@@ -4,13 +4,16 @@
 #include "../../render_info.h"
 
 OreView::OreView(const MineralData& data): type(data.type), state(data.state == MineralState::Broken ? ResourceState::Broken : ResourceState::Intact) {
+    health_trigger.add<OreHitSound>(sfx);
     update(data);
 }
 
 void OreView::update(const MineralData& data) {
+    sfx.clear();
     pos = data.pos;
     type = data.type;
     state = data.state == MineralState::Broken ? ResourceState::Broken : ResourceState::Intact;
+    health_trigger.observe(data.health, data.pos);
 }
 
 std::optional<float> OreView::depth(const RenderInfo& ctx) const {
@@ -18,6 +21,8 @@ std::optional<float> OreView::depth(const RenderInfo& ctx) const {
 }
 
 void OreView::draw(const RenderInfo& ctx) {
+    sfx.flush(ctx);
+
     const Sprite& sprite = ctx.assets.get_sprite(type, state);
     draw_sprite_at(ctx, sprite, pos);
 }

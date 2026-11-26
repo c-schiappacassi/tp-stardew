@@ -1,5 +1,6 @@
 #pragma once
 #include <cstdint>
+#include <memory>
 #include <optional>
 #include <string>
 #include <variant>
@@ -182,10 +183,34 @@ struct ClipId {
     }
 };
 
-struct Sound{
-
+struct Sound {
+    std::shared_ptr<Mix_Chunk> chunk;
+    float gain = 1.0f;
 };
-
+ 
 enum class SoundId : uint16_t {
-
+    StepGrass,
+    StepStone,
+    StepWood,
+    PlayerHurt,
+    SwordSwing,
+    PlantWatered,
+    SoilTilled,
+    EnemyHurtSkeleton,
+    EnemyHurtGolem,
+    EnemyHurtVampire,
+    EnemyHurtGeneric,
+    ChickenCall,
+    CowMoo,
+    AmbienceFarm,
+    AmbienceTown,
+    AmbienceDungeon,
+    OreHit,
+    OreBreak,
+    ChestOpen,
+    VampireFrenzy,
+    TrapSpikes,
+    TrapFlame,
+    SkullFire,
+    ChestClose,
 };

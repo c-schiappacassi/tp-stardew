@@ -10,6 +10,8 @@
 #include "game_time.h"
 #include "interiors/interiors_view.h"
 #include "lighting.h"
+#include "effects/sounds/ambience_music.h"
+#include "effects/triggers/zone_trigger.h"
 
 
 class MapView : public ZoneView {
@@ -22,6 +24,7 @@ private:
     FarmView farm;
     TownView town;
     InteriorsView interiors;
+    ZoneTrigger ambience;
 
     ZoneView* current_view() {
         if (current == Zone::Dungeon) return &mines;
@@ -31,11 +34,14 @@ private:
         return nullptr;
     }
 public:
-    MapView(const ConstMapData& data, AssetManager& assets) : mines(data.levels, assets), farm(data.farm, assets), town(data.town, assets), interiors(data, assets) {}
+    MapView(const ConstMapData& data, AssetManager& assets, Audio& audio) : mines(data.levels, assets), farm(data.farm, assets), town(data.town, assets), interiors(data, assets) {
+        ambience.add<AmbienceMusic>(audio, assets);
+    }
 
     void update(const State& data) {
         const PlayerDataLocal& local = data.get_local();
         current = local.currentZone ;
+        ambience.observe(current);
         current_time = data.get_local_time();
 
         if (const auto* mine = std::get_if<MineData>(&local.zoneData)) {

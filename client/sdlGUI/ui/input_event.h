@@ -16,7 +16,9 @@ enum class Key : int32_t {
     Num1 = '1', Num2 = '2', Num3 = '3', Num4 = '4', Num5 = '5',
     Num6 = '6', Num7 = '7', Num8 = '8', Num9 = '9',
 
-    A = 'a', D = 'd', M = 'm', S = 's', T = 't', W = 'w',
+    A = 'a', D = 'd', M = 'm', S = 's', T = 't', V = 'v', W = 'w',
+
+    Minus = '-', Plus = '+',
 
     Up = 0x100, Down, Left, Right,
 };

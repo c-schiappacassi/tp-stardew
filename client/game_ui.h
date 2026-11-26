@@ -9,6 +9,7 @@
 
 #include "dtos.h"
 #include "sdlGUI/asset_handling/asset_manager.h"
+#include "sdlGUI/audio/audio.h"
 #include "sdlGUI/camera.h"
 #include "sdlGUI/world/world_view.h"
 #include "state.h"
@@ -19,6 +20,7 @@ private:
     SDL2pp::SDL sdl;
     SDL2pp::Window window;
     SDL2pp::Renderer renderer;
+    Audio audio;
     AssetManager asset_manager;
     Camera cam;
     Zone currentZone = Zone::Farm;

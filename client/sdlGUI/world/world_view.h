@@ -30,7 +30,7 @@ private:
     }
 
 public:
-    explicit WorldView(const std::string& local_name, const ConstMapData& map_data, AssetManager& assets) : local_name(local_name), map(map_data, assets) {}
+    explicit WorldView(const std::string& local_name, const ConstMapData& map_data, AssetManager& assets, Audio& audio) : local_name(local_name), map(map_data, assets, audio) {}
     
     std::optional<SDL2pp::Point> world_size() const { return map.world_size(); }
 

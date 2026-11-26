@@ -13,8 +13,13 @@
 #include "../../draw_region.h"
 #include "../../render_info.h"
 #include "../../utils.h"
-#include "../effects/health_trigger.h"
-#include "../effects/hit_flash.h"
+#include "../effects/visual/hit_flash.h"
+#include "../effects/sounds/footstep_sound.h"
+#include "../effects/sounds/player_hurt_sound.h"
+#include "../effects/sounds/sword_swing_sound.h"
+#include "../effects/triggers/health_trigger.h"
+#include "../effects/triggers/step_trigger.h"
+#include "../effects/triggers/tool_trigger.h"
 
 #include "constants.h"
 #include "protocol_types.h"
@@ -69,8 +74,11 @@ private:
     std::optional<ItemId> held_item;
     std::optional<ItemId> current_tool;
     std::string name;
+    SoundEmitter sfx;
     HealthTrigger health_trigger;
     HitFlash* hit_flash = nullptr;
+    StepTrigger step_trigger;
+    ToolTrigger tool_trigger;
     
     uint16_t shirt_model = 0;
     uint16_t pant_model = 0;

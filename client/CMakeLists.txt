@@ -7,6 +7,7 @@ target_sources(taller_client
     game_ui.cpp
     sdlGUI/asset_handling/asset_manager.cpp
     sdlGUI/asset_handling/asset_loader.cpp
+    sdlGUI/audio/audio.cpp
 
     sdlGUI/world/background/furniture_view.cpp
     sdlGUI/world/background/chest_view.cpp
@@ -54,6 +55,10 @@ target_sources(taller_client
     sdlGUI/asset_handling/asset_manager.h
     sdlGUI/asset_handling/asset_loader.h
     sdlGUI/asset_handling/asset_tables.h
+    sdlGUI/asset_handling/sound_defs.h
+
+    sdlGUI/audio/audio.h
+    sdlGUI/audio/sound_emitter.h
 
     sdlGUI/ui/input_event.h
     sdlGUI/ui/sdl_input.h
@@ -66,6 +71,7 @@ target_sources(taller_client
     sdlGUI/ui/layers/ready_to_sleep_layer.h
     sdlGUI/ui/layers/hud_layer.h
     sdlGUI/ui/layers/quit_layer.h
+    sdlGUI/ui/layers/volume_layer.h
     sdlGUI/ui/layers/minimap_layer.h
     sdlGUI/ui/layers/night_sky_layer.h
     sdlGUI/ui/layers/game_completed_layer.h
@@ -76,8 +82,47 @@ target_sources(taller_client
     sdlGUI/world/zone_view.h
     sdlGUI/world/entity_view.h
 
-    sdlGUI/world/effects/health_trigger.h
-    sdlGUI/world/effects/hit_flash.h
+    sdlGUI/world/effects/visual/hit_flash.h
+
+    sdlGUI/world/effects/listeners/animal_call_listener.h
+    sdlGUI/world/effects/listeners/attack_listener.h
+    sdlGUI/world/effects/listeners/chest_listener.h
+    sdlGUI/world/effects/listeners/crop_listener.h
+    sdlGUI/world/effects/listeners/frenzy_listener.h
+    sdlGUI/world/effects/listeners/health_listener.h
+    sdlGUI/world/effects/listeners/soil_listener.h
+    sdlGUI/world/effects/listeners/step_listener.h
+    sdlGUI/world/effects/listeners/tool_listener.h
+    sdlGUI/world/effects/listeners/trap_listener.h
+    sdlGUI/world/effects/listeners/zone_listener.h
+
+    sdlGUI/world/effects/triggers/trigger.h
+    sdlGUI/world/effects/triggers/rising_edge.h
+    sdlGUI/world/effects/triggers/animal_call_trigger.h
+    sdlGUI/world/effects/triggers/attack_trigger.h
+    sdlGUI/world/effects/triggers/chest_trigger.h
+    sdlGUI/world/effects/triggers/crop_trigger.h
+    sdlGUI/world/effects/triggers/frenzy_trigger.h
+    sdlGUI/world/effects/triggers/health_trigger.h
+    sdlGUI/world/effects/triggers/soil_trigger.h
+    sdlGUI/world/effects/triggers/step_trigger.h
+    sdlGUI/world/effects/triggers/tool_trigger.h
+    sdlGUI/world/effects/triggers/trap_trigger.h
+    sdlGUI/world/effects/triggers/zone_trigger.h
+
+    sdlGUI/world/effects/sounds/ambience_music.h
+    sdlGUI/world/effects/sounds/animal_call_sound.h
+    sdlGUI/world/effects/sounds/chest_sound.h
+    sdlGUI/world/effects/sounds/enemy_hurt_sound.h
+    sdlGUI/world/effects/sounds/footstep_sound.h
+    sdlGUI/world/effects/sounds/ore_hit_sound.h
+    sdlGUI/world/effects/sounds/player_hurt_sound.h
+    sdlGUI/world/effects/sounds/skull_fire_sound.h
+    sdlGUI/world/effects/sounds/sword_swing_sound.h
+    sdlGUI/world/effects/sounds/tilled_sound.h
+    sdlGUI/world/effects/sounds/trap_sound.h
+    sdlGUI/world/effects/sounds/vampire_frenzy_sound.h
+    sdlGUI/world/effects/sounds/watered_sound.h
 
     sdlGUI/world/background/item_view.h
     sdlGUI/world/background/furniture_view.h
@@ -104,6 +149,7 @@ target_sources(taller_client
     sdlGUI/world/hud/game_completed_view.h
     sdlGUI/world/hud/dancing_junimo_view.h
     sdlGUI/world/hud/quit_view.h
+    sdlGUI/world/hud/volume_view.h
     sdlGUI/world/hud/pixel_font.h
     sdlGUI/world/hud/chat_pixel_font.h
 
