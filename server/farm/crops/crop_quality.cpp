@@ -16,8 +16,7 @@ void accumulate(std::chrono::milliseconds& total, std::chrono::milliseconds elap
 }
 }
 
-CropQuality::CropQuality(std::chrono::milliseconds dayLength,
-    std::chrono::milliseconds wateringInterval):
+CropQuality::CropQuality(std::chrono::milliseconds dayLength,std::chrono::milliseconds wateringInterval):
     dayLength(dayLength), wateringInterval(wateringInterval) {
     if (dayLength.count() <= 0 || wateringInterval.count() <= 0) {
         throw std::invalid_argument(server_constants::CROP_TIMES_MUST_BE_POSITIVE);

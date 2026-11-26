@@ -3,6 +3,7 @@
 #include "server_constants.h"
 
 #include <algorithm>
+#include <iterator>
 #include <limits>
 #include <string_view>
 #include <utility>
@@ -12,13 +13,44 @@
 #include "world/world_manager.h"
 
 namespace {
+constexpr std::pair<std::string_view, ItemId> tools[]{
+    {server_constants::PICKAXE, ItemId::Pickaxe},
+    {server_constants::WATERING_CAN, ItemId::WateringCan},
+    {server_constants::SHOVEL, ItemId::Shovel},
+    {server_constants::SWORD, ItemId::Sword}
+};
+
 std::optional<ItemId> itemNamed(const std::string& name) {
-    const std::pair<std::string_view, ItemId> tools[]{{server_constants::PICKAXE, ItemId::Pickaxe}, {server_constants::WATERING_CAN, ItemId::WateringCan}, {server_constants::SHOVEL, ItemId::Shovel}, {server_constants::SWORD, ItemId::Sword}};
     for (const auto& [keyword, item]: tools) {
         if (name == keyword)
             return item;
     }
     return shop_products::item(name);
+}
+
+std::vector<ChatMessageData> listGiveItems() {
+    constexpr std::size_t LINE_LENGTH = 100;
+    std::vector<ChatMessageData> messages{{server_constants::CHEATS, server_constants::GIVE_ITEMS_HEADER}};
+    std::vector<std::string_view> names;
+    for (const auto& tool: tools)
+        names.push_back(tool.first);
+    const auto products = shop_products::itemNames();
+    names.insert(names.end(), products.begin(), products.end());
+
+    std::string line;
+    for (const auto name: names) {
+        if (!line.empty() && line.size() + std::size(server_constants::ITEM_LIST_SEPARATOR) - 1 + name.size() > LINE_LENGTH) {
+            messages.push_back({server_constants::CHEATS, std::move(line)});
+            line.clear();
+        }
+        if (!line.empty())
+            line += server_constants::ITEM_LIST_SEPARATOR;
+        line += name;
+    }
+    if (!line.empty())
+        messages.push_back({server_constants::CHEATS, std::move(line)});
+    messages.push_back({server_constants::CHEATS, server_constants::COMMAND_CHEAT_GIVE_PRODUCT_N_NONE_BASE_GOOD_EXCELLENT_INCREDIBLE_PERFECT});
+    return messages;
 }
 }  // namespace
 
@@ -27,7 +59,7 @@ CheatChat::CheatChat(WorldManager& world, std::function<void()> endDay): world(w
 std::string CheatChat::giveItem(PlayerManager& players, uint16_t playerId, const CheatCommand& command) const {
     const auto item = itemNamed(command.target);
     if (!item)
-        return server_constants::UNKNOWN_ITEM_SEE_THE_ITEM_NAMES_IN_DOCS_CHEATS_MD;
+        return server_constants::UNKNOWN_ITEM_USE_CHEAT_ITEMS;
     if (command.amount == 0 || command.amount > std::numeric_limits<uint16_t>::max()) {
         return server_constants::ITEM_AMOUNT_MUST_BE_BETWEEN_1_AND_65535;
     }
@@ -73,12 +105,14 @@ std::string CheatChat::warp(const ChatCommandContext& context, const CheatComman
 
 std::vector<ChatMessageData> CheatChat::execute(const ChatCommandContext& context, const CheatCommand& command) {
     const auto reply = [](const std::string& text) { return std::vector<ChatMessageData>{{server_constants::CHEATS, text}}; };
-    if (context.actionsBlocked)
+    if (context.actionsBlocked && command.action != CheatAction::ListItems)
         return reply(server_constants::CHEATS_CANNOT_CHANGE_THE_GAME_AFTER_THE_DAY_OR_GAME_HAS_ENDED);
     auto& players = context.players;
     const auto playerId = context.playerId;
     const auto player = players.snapshot(playerId);
     switch (command.action) {
+        case CheatAction::ListItems:
+            return listGiveItems();
         case CheatAction::SetLife:
         case CheatAction::SetEnergy: {
             if (command.amount > std::numeric_limits<uint16_t>::max())

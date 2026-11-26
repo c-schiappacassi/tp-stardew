@@ -23,8 +23,7 @@ const std::map<ZoneMap::Cell, std::chrono::milliseconds>& CropManager::getEmptyS
     return emptySoilElapsed;
 }
 
-bool CropManager::restoreEmptySoilElapsed(const Position& position,
-    std::chrono::milliseconds elapsed, const Placement& placement) {
+bool CropManager::restoreEmptySoilElapsed(const Position& position,std::chrono::milliseconds elapsed, const Placement& placement) {
     const auto cell = placement.cellAt(position);
     if (!cell || elapsed.count() < 0 || elapsed >= 2 * dayLength) return false;
     const auto it = emptySoilElapsed.find(*cell);

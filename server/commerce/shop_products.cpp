@@ -4,6 +4,7 @@
 
 #include <algorithm>
 #include <cctype>
+#include <iterator>
 
 #include "farm/farm_product.h"
 
@@ -67,6 +68,14 @@ std::optional<ItemId> shop_products::item(const std::string& name) {
         if (key == entry.name) return entry.item;
     }
     return std::nullopt;
+}
+
+std::vector<std::string_view> shop_products::itemNames() {
+    std::vector<std::string_view> result;
+    result.reserve(std::size(names));
+    for (const auto& entry: names)
+        result.push_back(entry.name);
+    return result;
 }
 
 std::optional<AnimalSpecies> shop_products::animal(const std::string& name) {
