@@ -10,6 +10,7 @@
 #include "commerce/shop_products.h"
 #include "config/toml_helpers.h"
 #include "world/interiors/interior.h"
+#include "world/interiors/interior_furniture_position.h"
 
 namespace {
 using toml_helpers::invalid;
@@ -97,11 +98,14 @@ InteriorTemplate readTemplate(const toml::table& table, InteriorId id, const std
         const auto& entries = arrayAt(furniture, field + server_constants::FIELD_FURNITURE);
         if (entries.size() > std::numeric_limits<uint16_t>::max() - result.beds.size() * 2)
             invalid(field + server_constants::FIELD_FURNITURE, server_constants::TOO_MANY_FURNITURE_ENTRIES);
+        const int tileSize = result.terrain.getCellSize();
         for (const auto& node: entries) {
             const auto& item = tupleAt(&node, 4, field + server_constants::FIELD_FURNITURE);
-            const auto position = baseAt(item, result.terrain, width, height, field + server_constants::FIELD_FURNITURE);
+            const int x = numberAt(item.get(0), width - 1, field + server_constants::FIELD_FURNITURE);
+            const int y = numberAt(item.get(1), height - 1, field + server_constants::FIELD_FURNITURE);
             const auto type = static_cast<FurnitureId>(numberAt(item.get(2), static_cast<int>(FurnitureId::Chest), field + server_constants::FIELD_FURNITURE_ID));
             const auto direction = static_cast<Direction>(numberAt(item.get(3), static_cast<int>(Direction::Right), field + server_constants::FIELD_FURNITURE_DIRECTION));
+            const auto position = interiorFurnitureBaseFromTileOrigin(Position{x * tileSize, y * tileSize}, type, direction);
             result.background.furniture.push_back({position, type, direction});
         }
     }

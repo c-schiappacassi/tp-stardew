@@ -25,7 +25,7 @@ private:
     static toml::table position(const Position& pos);
     static toml::table color(const Color& value);
     static toml::table stack(const Stack& value);
-    static toml::table furniture(const FurnitureData& value);
+    static toml::table furniture(const FurnitureData& value, bool inTiles = false);
     static toml::table loot(const LootData& value);
     static toml::table crop(const CropData& value);
     static toml::table animal(const AnimalData& value);

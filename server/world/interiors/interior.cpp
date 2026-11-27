@@ -195,7 +195,6 @@ std::optional<NpcData> Interior::nearbyMerchant(const PlayerSnapshot& player, Di
         (direction == Direction::Right && dx > 0 && std::abs(dy) <= dx);
     if (!facing)
         return std::nullopt;
-    // Merchant sampling uses integer truncation; preserve it independently of tool targeting.
     const int steps = std::max(std::abs(dx), std::abs(dy));
     Position previous{origin.getX(), origin.getY() - 1};
     const auto& terrain = space.getMap();
@@ -236,7 +235,6 @@ bool Interior::useSelectedItem(PlayerManager& players, uint16_t playerId, Direct
                 obstacles.push_back(other.getCollisionBounds(other.getPosition()));
         }
         space.setObstacles(obstacles);
-        // Recognized actions, including rejected placements, take priority over sleeping.
         if (const auto handled = chests.interact(players, playerId, space, space.getMap(), groundItems, direction, ids, now))
             return *handled;
         if (const auto handled = interactWithDecoration(players, playerId, direction, ids, now))

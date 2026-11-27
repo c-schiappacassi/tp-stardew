@@ -7,6 +7,24 @@
 #include <utility>
 #include <variant>
 
+#include "entities/entity_dimensions.h"
+#include "world/interiors/interior_furniture_position.h"
+
+static toml::table furnitureTilePosition(const FurnitureData& item) {
+    const auto origin = interiorFurnitureTileOriginFromBase(item.pos, item.type, item.dir);
+    constexpr int tileSize = entity_dimensions::TILE_SIZE;
+    toml::table result;
+    const auto insertCoordinate = [&](const char* key, int pixels) {
+        if (pixels % tileSize == 0)
+            result.insert(key, pixels / tileSize);
+        else
+            result.insert(key, static_cast<double>(pixels) / tileSize);
+    };
+    insertCoordinate(server_constants::X, origin.getX());
+    insertCoordinate(server_constants::Y, origin.getY());
+    return result;
+}
+
 int64_t PersistenceSerializer::checkedInteger(uint64_t value) {
     if (value > static_cast<uint64_t>(std::numeric_limits<int64_t>::max())) {
         throw std::overflow_error(server_constants::TOML_CANNOT_REPRESENT_AN_UNSIGNED_INTEGER_ABOVE_INT64_MAX);
@@ -52,8 +70,9 @@ toml::table PersistenceSerializer::stack(const Stack& value) {
             {server_constants::QUALITY, static_cast<int64_t>(value.qual)}};
 }
 
-toml::table PersistenceSerializer::furniture(const FurnitureData& value) {
-    return toml::table{{server_constants::ID, static_cast<int64_t>(value.id)}, {server_constants::POS, position(value.pos)},
+toml::table PersistenceSerializer::furniture(const FurnitureData& value, bool inTiles) {
+    auto coordinates = inTiles ? furnitureTilePosition(value) : position(value.pos);
+    return toml::table{{server_constants::ID, static_cast<int64_t>(value.id)}, {server_constants::POS, std::move(coordinates)},
             {server_constants::TYPE, static_cast<int64_t>(value.type)}, {server_constants::DIR, static_cast<int64_t>(value.dir)}};
 }
 
@@ -189,9 +208,14 @@ toml::table PersistenceSerializer::interior(const InteriorData& value) {
     result.insert(server_constants::INTERIORID, static_cast<int64_t>(value.interior_id));
     result.insert(server_constants::HOUSEINDEX, static_cast<int64_t>(value.house_index));
     toml::array furnitureArray;
+    bool hasDecorations = false;
     for (const auto& item : value.furniture) {
-        furnitureArray.push_back(furniture(item));
+        const bool isDecoration = item.type != FurnitureId::Chest;
+        furnitureArray.push_back(furniture(item, isDecoration));
+        hasDecorations = hasDecorations || isDecoration;
     }
+    if (hasDecorations)
+        result.insert(server_constants::FURNITURE_IN_TILES, true);
     result.insert(server_constants::FURNITURE, std::move(furnitureArray));
     toml::array lootArray;
     for (const auto& item: value.loot) lootArray.push_back(loot(item));

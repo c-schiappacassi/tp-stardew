@@ -31,7 +31,7 @@ private:
     static Position position(const toml::table& table);
     static Color color(const toml::table& table);
     static Stack stack(const toml::table& table);
-    static FurnitureData furniture(const toml::table& table);
+    static FurnitureData furniture(const toml::table& table, bool decorationsInTiles = false);
     static LootData loot(const toml::table& table);
     static CropData crop(const toml::table& table);
     static AnimalData animal(const toml::table& table);

@@ -2,14 +2,35 @@
 
 #include "server_constants.h"
 
+#include <cmath>
 #include <limits>
 #include <set>
 #include <stdexcept>
 #include <utility>
 
+#include "entities/entity_dimensions.h"
 #include "inventory/inventory.h"
+#include "world/interiors/interior_furniture_position.h"
 
 #include "constants.h"
+
+static int tileCoordinateInPixels(const toml::table& coordinates, const char* key) {
+    const auto value = coordinates[key].value<double>();
+    if (!value)
+        throw std::runtime_error(server_constants::INVALID_INTERIOR_FURNITURE_POSITION);
+    const double pixels = *value * entity_dimensions::TILE_SIZE;
+    if (!std::isfinite(pixels) || pixels < -static_cast<double>(UINT16_MAX) || pixels > UINT16_MAX || std::trunc(pixels) != pixels)
+        throw std::runtime_error(server_constants::INVALID_INTERIOR_FURNITURE_POSITION);
+    return static_cast<int>(pixels);
+}
+
+static Position furnitureBase(const toml::table& coordinates, FurnitureId type, Direction direction) {
+    const Position origin{tileCoordinateInPixels(coordinates, server_constants::X), tileCoordinateInPixels(coordinates, server_constants::Y)};
+    const auto base = interiorFurnitureBaseFromTileOrigin(origin, type, direction);
+    if (base.getX() < 0 || base.getX() > UINT16_MAX || base.getY() < 0 || base.getY() > UINT16_MAX)
+        throw std::runtime_error(server_constants::INVALID_INTERIOR_FURNITURE_POSITION);
+    return base;
+}
 
 const toml::table& PersistenceDeserializer::requiredTable(const toml::table& table,
                                                           const char* key) {
@@ -128,12 +149,15 @@ Stack PersistenceDeserializer::stack(const toml::table& table) {
     return result;
 }
 
-FurnitureData PersistenceDeserializer::furniture(const toml::table& table) {
+FurnitureData PersistenceDeserializer::furniture(const toml::table& table, bool decorationsInTiles) {
     FurnitureData result;
     result.id = static_cast<uint32_t>(integer(table, server_constants::ID, 0, UINT32_MAX));
-    result.pos = position(requiredTable(table, server_constants::POS));
     result.type = static_cast<FurnitureId>(integer(table, server_constants::TYPE, 0, UINT8_MAX));
     result.dir = static_cast<Direction>(integer(table, server_constants::DIR, 0, UINT8_MAX));
+    const auto& coordinates = requiredTable(table, server_constants::POS);
+    result.pos = decorationsInTiles && result.type != FurnitureId::Chest
+        ? furnitureBase(coordinates, result.type, result.dir)
+        : position(coordinates);
     return result;
 }
 
@@ -304,9 +328,11 @@ InteriorData PersistenceDeserializer::interior(const toml::table& table) {
     InteriorData result;
     result.interior_id = static_cast<InteriorId>(integer(table, server_constants::INTERIORID, 0, UINT8_MAX));
     result.house_index = static_cast<uint8_t>(integer(table, server_constants::HOUSEINDEX, 0, UINT8_MAX));
+    // Legacy saves stored decoration bases directly in world pixels.
+    const bool decorationsInTiles = table.contains(server_constants::FURNITURE_IN_TILES) && boolean(table, server_constants::FURNITURE_IN_TILES);
     for (const auto& node : requiredArray(table, server_constants::FURNITURE)) {
         if (!node.is_table()) throw std::runtime_error(server_constants::INVALID_INTERIOR_FURNITURE_ENTRY);
-        result.furniture.push_back(furniture(*node.as_table()));
+        result.furniture.push_back(furniture(*node.as_table(), decorationsInTiles));
     }
     if (table.contains(server_constants::LOOT)) {
         for (const auto& node: requiredArray(table, server_constants::LOOT)) {

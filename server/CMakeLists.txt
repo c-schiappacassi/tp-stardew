@@ -71,6 +71,7 @@ target_sources(taller_server_core
         entities/collision_bounds.cpp
         world/interactions/world_interactions.cpp
         world/interiors/interior.cpp
+        world/interiors/interior_furniture_position.cpp
         world/interiors/interior_layout.cpp
         world/interiors/interior_rooms.cpp
         world/loading/map_converter.cpp
@@ -240,6 +241,7 @@ target_sources(taller_server_core
         world/interactions/world_interactions.h
         world/interiors/interior.h
         world/interiors/interior_layout.h
+        world/interiors/interior_furniture_position.h
         world/interiors/interior_rooms.h
         world/loading/map_converter.h
         world/loading/world_loader.h
