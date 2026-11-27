@@ -7,16 +7,13 @@
 
 #include "protocol_types.h"
 
+#include "dungeon/dungeon_types.h"
+
 class PlayerManager;
 class PlayerSnapshot;
 class DungeonRoom;
 class MineralGenerator;
 class EntityIdGenerator;
-
-struct MiningResult {
-    bool acted = false;
-    bool droppedSilver = false;
-};
 
 class DungeonMining {
 private:

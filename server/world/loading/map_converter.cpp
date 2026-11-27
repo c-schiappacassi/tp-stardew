@@ -9,6 +9,7 @@
 #include "common/map/map_rules.h"
 #include "dungeon/dungeon_config.h"
 #include "entities/entity_dimensions.h"
+#include "world/interiors/interior_layout.h"
 
 static_assert(DUNGEON_ROOM_COUNT == map_rules::MINE_LEVEL_COUNT,
     SERVER_MAP_LEVEL_COUNT_ASSERTION);

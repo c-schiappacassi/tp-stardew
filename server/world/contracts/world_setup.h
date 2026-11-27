@@ -4,10 +4,10 @@
 #include <map>
 #include <optional>
 
-#include "dungeon/contracts/dungeon_entrance.h"
-#include "dungeon/contracts/dungeon_layout.h"
-#include "farm/loading/farm_layout.h"
+#include "dungeon/dungeon_types.h"
+#include "farm/farm_types.h"
 #include "town/town_config.h"
+#include "world/world_types.h"
 
 struct WorldSetup {
     uint8_t worldId = 0;

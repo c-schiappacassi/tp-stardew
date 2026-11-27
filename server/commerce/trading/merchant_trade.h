@@ -5,29 +5,12 @@
 #include "chat/commands/trade_command.h"
 #include "protocol_types.h"
 
+#include "commerce/commerce_types.h"
+
 class MarketPrices;
 class MerchantCatalog;
 class PlayerManager;
 class WorldManager;
-
-enum class TradeStatus {
-    Completed,
-    UnknownAnimal,
-    UnavailableProduct,
-    InsufficientGold,
-    FarmFull,
-    InventoryFull,
-    GoldLimit,
-    MissingAnimals,
-    UnknownQuality,
-    MissingItems,
-    Rejected
-};
-
-struct TradeResult {
-    TradeStatus status;
-    uint32_t gold = 0;
-};
 
 class MerchantTrade {
     WorldManager& world;

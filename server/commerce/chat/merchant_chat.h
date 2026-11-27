@@ -9,10 +9,11 @@
 #include "chat/commands/trade_command.h"
 #include "dtos.h"
 
+#include "commerce/commerce_types.h"
+
 class MerchantCatalog;
 class MerchantTrade;
 class WorldManager;
-struct TradeResult;
 
 class MerchantChat {
     struct Conversation {

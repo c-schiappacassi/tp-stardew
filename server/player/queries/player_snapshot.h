@@ -6,16 +6,9 @@
 #include "entities/collision_box.h"
 
 #include "dtos.h"
+#include "player/player_types.h"
 
 class Player;
-struct PlayerConfig;
-
-struct PlayerVitalsData {
-    uint16_t health;
-    uint16_t maxHealth;
-    uint16_t energy;
-    uint16_t maxEnergy;
-};
 
 class PlayerSnapshot {
     PlayerData data;

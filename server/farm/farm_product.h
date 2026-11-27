@@ -1,15 +1,7 @@
 #pragma once
 
-#include <cstdint>
 #include <optional>
-
-#include "protocol_types.h"
-
-struct FarmProduct {
-    ItemId item;
-    uint32_t quantity;
-    Quality quality;
-};
+#include "farm/farm_types.h"
 
 namespace farm_products {
 std::optional<ItemId> cropItem(CropType type);

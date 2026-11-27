@@ -4,8 +4,7 @@
 
 #include "entities/collision_box.h"
 #include "entities/entity_id.h"
-#include "farm/farm_product.h"
-
+#include "farm/farm_types.h"
 #include "protocol_types.h"
 
 class Crop;
@@ -14,15 +13,6 @@ class CropManager;
 class AnimalManager;
 class PlayerSnapshot;
 class ZoneMap;
-
-enum class FarmProductSource { Crop, Animal };
-
-struct FarmCollectionTarget {
-    EntityId id;
-    FarmProductSource source;
-    Position position;
-    FarmProduct product;
-};
 
 class FarmTargeting {
 private:

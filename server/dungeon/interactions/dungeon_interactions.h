@@ -5,6 +5,7 @@
 
 #include "entities/entity_id.h"
 
+#include "dungeon/dungeon_types.h"
 #include "protocol_types.h"
 
 class DungeonRooms;
@@ -14,7 +15,6 @@ class MineralGenerator;
 class DungeonCombat;
 class PlayerManager;
 class EntityIdGenerator;
-struct MiningResult;
 struct ItemTransferDTO;
 struct SelectItemDTO;
 

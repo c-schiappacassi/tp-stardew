@@ -2,15 +2,8 @@
 
 #include <vector>
 
-#include "chat/chat_command_context.h"
-#include "chat/commands/cheat_command.h"
-#include "chat/commands/community_command.h"
+#include "chat/chat_types.h"
 #include "dtos.h"
-
-struct CommunityDonationReply {
-    CommunityDonationReceipt receipt;
-    std::vector<ChatMessageData> messages;
-};
 
 class CommunityChatService {
 public:
