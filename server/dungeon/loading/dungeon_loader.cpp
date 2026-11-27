@@ -8,15 +8,13 @@
 #include "dungeon/rooms/dungeon_rooms.h"
 #include "entities/entity_id_generator.h"
 
-namespace {
-std::map<uint8_t, Stack> chestLoot(std::mt19937& random) {
+std::map<uint8_t, Stack> DungeonLoader::chestLoot(std::mt19937& random) {
     const ItemId valuables[]{ItemId::Lapis, ItemId::Silver, ItemId::Gold};
     return {
         {0, {ItemId::Coal, std::uniform_int_distribution<uint16_t>{2, 5}(random), Quality::None}},
         {1, {valuables[std::uniform_int_distribution<int>{0, 2}(random)], std::uniform_int_distribution<uint16_t>{1, 3}(random), Quality::None}}
     };
 }
-}  // namespace
 
 DungeonLoader::DungeonLoader(const DungeonConfig& config, uint32_t seed):
     densityPercent(config.mineralDensityPercent), densitiesByRoom(config.mineralDensityByRoom), random(seed) {}

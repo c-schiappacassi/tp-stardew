@@ -6,15 +6,13 @@
 #include <stdexcept>
 #include <utility>
 
-namespace {
-bool validStack(const Stack& stack) {
+bool Inventory::validStack(const Stack& stack) {
     const auto item = stack.item_id;
     const bool knownItem = (item >= ItemId::Pickaxe && item <= ItemId::Sword) || (item >= ItemId::StrawberrySeed && item <= ItemId::PumpkinSeed) ||
         (item >= ItemId::Strawberry && item <= ItemId::Pumpkin) || (item >= ItemId::Coal && item <= ItemId::Gold) || (item >= ItemId::Milk && item <= ItemId::Egg) ||
         (item >= ItemId::Chest && item <= ItemId::BrownArmCouch);
     return knownItem && stack.quantity != 0 && stack.qual <= Quality::Perfect;
 }
-}  // namespace
 
 bool Inventory::isTool(ItemId item) {
     return item == ItemId::Pickaxe || item == ItemId::WateringCan ||

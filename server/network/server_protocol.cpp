@@ -12,19 +12,11 @@
 #include "furniture_data.h"
 #include "protocol_errors.h"
 
-namespace {
-constexpr size_t MAX_U8 = std::numeric_limits<uint8_t>::max();
-constexpr size_t MAX_U16 = std::numeric_limits<uint16_t>::max();
-
-constexpr uint8_t BUNDLE_COUNT = 5;
-constexpr uint8_t REQUIREMENT_LIMIT = 10;
-constexpr uint8_t SEED_COUNT = 4;
-
-void requireCommunity(bool condition, const char* message) {
+void ServerProtocol::requireCommunity(bool condition, const char* message) {
     if (!condition) throw ProtocolError(message);
 }
 
-void validateCommunityQuality(Quality quality) {
+void ServerProtocol::validateCommunityQuality(Quality quality) {
     switch (quality) {
         case Quality::None:
         case Quality::Base:
@@ -37,7 +29,7 @@ void validateCommunityQuality(Quality quality) {
     throw ProtocolError(server_constants::INVALID_COMMUNITY_ITEM_QUALITY);
 }
 
-void validateCommunityStacks(const std::vector<Stack>& items) {
+void ServerProtocol::validateCommunityStacks(const std::vector<Stack>& items) {
     requireCommunity(items.size() <= SEED_COUNT, server_constants::TOO_MANY_COMMUNITY_REWARD_ITEMS);
     for (const auto& stack : items) {
         requireCommunity(stack.quantity != 0, server_constants::EMPTY_COMMUNITY_REWARD_STACK);
@@ -45,11 +37,11 @@ void validateCommunityStacks(const std::vector<Stack>& items) {
     }
 }
 
-void validateDonationKind(DonationKind kind) {
+void ServerProtocol::validateDonationKind(DonationKind kind) {
     requireCommunity(kind <= DonationKind::Coins, server_constants::INVALID_DONATION_KIND);
 }
 
-void validateCommunityState(const CommunityStateData& state) {
+void ServerProtocol::validateCommunityState(const CommunityStateData& state) {
     requireCommunity(state.bundles.size() <= BUNDLE_COUNT, server_constants::TOO_MANY_COMMUNITY_BUNDLES);
     requireCommunity(state.discount <= MarketDiscount::Active, server_constants::INVALID_COMMUNITY_DISCOUNT);
     requireCommunity(!state.canDonate || (state.insideCenter && !state.completed), server_constants::INVALID_DONATION_AVAILABILITY);
@@ -86,27 +78,27 @@ void validateCommunityState(const CommunityStateData& state) {
 
 // Los contadores viajan en 1 o 2 bytes: si no entran, se rechaza el mensaje
 // ANTES de armarlo (si no, el contador se truncaba y el cliente se desincronizaba).
-void validateCount(size_t count, size_t limit, const char* what) {
+void ServerProtocol::validateCount(size_t count, size_t limit, const char* what) {
     if (count > limit) {
         throw ProtocolError(std::string(server_constants::TOO_MANY_PROTOCOL_ENTRIES_PREFIX) + what);
     }
 }
 
-void validateFarmCounts(const FarmData& farm) {
+void ServerProtocol::validateFarmCounts(const FarmData& farm) {
     validateCount(farm.crops.size(), MAX_U16, server_constants::CROPS);
     validateCount(farm.animals.size(), MAX_U16, server_constants::ANIMALS);
     validateCount(farm.tilledSoil.size(), MAX_U16, server_constants::TILLED_SOIL);
     validateCount(farm.furniture.size(), MAX_U16, server_constants::FURNITURE);
 }
 
-void validatePosition(const Position& pos) {
+void ServerProtocol::validatePosition(const Position& pos) {
     if (pos.getX() < 0 || pos.getY() < 0 || pos.getX() > static_cast<int>(MAX_U16) ||
         pos.getY() > static_cast<int>(MAX_U16)) {
         throw ProtocolError(server_constants::POSITION_OUTSIDE_PROTOCOL_RANGE);
     }
 }
 
-void validateOpenChest(const OpenChestData& chest, const ZoneData& zone) {
+void ServerProtocol::validateOpenChest(const OpenChestData& chest, const ZoneData& zone) {
     if (!hasChest(zone, chest.id) || chest.capacity != CHEST_INVENTORY_CAPACITY || chest.items.size() > chest.capacity) {
         throw ProtocolError(server_constants::INVALID_OPEN_CHEST);
     }
@@ -117,7 +109,7 @@ void validateOpenChest(const OpenChestData& chest, const ZoneData& zone) {
     }
 }
 
-void validateLoot(const std::vector<LootData>& loot) {
+void ServerProtocol::validateLoot(const std::vector<LootData>& loot) {
     validateCount(loot.size(), MAX_U16, server_constants::GROUND_ITEMS);
     for (const auto& item: loot) {
         validatePosition(item.pos);
@@ -127,7 +119,7 @@ void validateLoot(const std::vector<LootData>& loot) {
     }
 }
 
-void validateCombat(const DungeonCombatData& combat) {
+void ServerProtocol::validateCombat(const DungeonCombatData& combat) {
     validateCount(combat.enemies.size(), MAX_U16, server_constants::ENEMIES);
     validateCount(combat.projectiles.size(), MAX_U16, server_constants::PROJECTILES);
     validateCount(combat.traps.size(), MAX_U16, server_constants::TRAPS);
@@ -154,7 +146,7 @@ void validateCombat(const DungeonCombatData& combat) {
     }
 }
 
-bool hasMatchingZoneData(const PlayerDataLocal& data) {
+bool ServerProtocol::hasMatchingZoneData(const PlayerDataLocal& data) {
     switch (data.currentZone) {
         case Zone::Farm:
             return std::holds_alternative<FarmData>(data.zoneData);
@@ -172,7 +164,7 @@ bool hasMatchingZoneData(const PlayerDataLocal& data) {
     return false;
 }
 
-void validateStatus(const ServerStatus& status) {
+void ServerProtocol::validateStatus(const ServerStatus& status) {
     const auto& local = status.localPlayer;
     const bool emptyEntryError =
             status.status == StatusCode::Error &&
@@ -209,7 +201,6 @@ void validateStatus(const ServerStatus& status) {
     if (const auto* inside = std::get_if<InteriorData>(&local.zoneData))
         validateLoot(inside->loot);
 }
-}  // namespace
 
 ServerProtocol::ServerProtocol(Socket&& socket) : base(std::move(socket)) {}
 

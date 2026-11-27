@@ -9,8 +9,7 @@
 #include "player/sessions/player_roster.h"
 #include "player/time/day_cycle.h"
 
-namespace {
-std::optional<Direction> resolveInteractionDirection(const Player& player, Direction requested) {
+std::optional<Direction> CommandRouter::resolveInteractionDirection(const Player& player, Direction requested) {
     switch (requested) {
         case Direction::None:
             return player.getDirection();
@@ -23,7 +22,6 @@ std::optional<Direction> resolveInteractionDirection(const Player& player, Direc
             return std::nullopt;
     }
 }
-}  // namespace
 
 CommandRouter::CommandRouter(PlayerManager& manager, PlayerRoster& roster, DayCycle& day,
                              PlayerChat& chat, PlayerInteractions& interactions):
@@ -99,89 +97,87 @@ void CommandRouter::interact(PlayerRecord& record, Direction requested) const {
     interactions.interact(manager, record.getId(), *direction);
 }
 
-namespace {
-PlayerActionResult applyAction(Player& player, const player_action::OpenChest& action) {
+PlayerActionResult CommandRouter::applyAction(Player& player, const player_action::OpenChest& action) {
     return {player.openChest(action.id), 0};
 }
-PlayerActionResult applyAction(Player& player, const player_action::CloseChest&) {
+PlayerActionResult CommandRouter::applyAction(Player& player, const player_action::CloseChest&) {
     player.closeChest();
     return {true, 0};
 }
-PlayerActionResult applyAction(Player& player, const player_action::TransferItemsTo& action) {
+PlayerActionResult CommandRouter::applyAction(Player& player, const player_action::TransferItemsTo& action) {
     return {player.transferItemsTo(action.destination.get(), action.slot, action.quantity), 0};
 }
-PlayerActionResult applyAction(Player& player, const player_action::TransferItemsFrom& action) {
+PlayerActionResult CommandRouter::applyAction(Player& player, const player_action::TransferItemsFrom& action) {
     return {player.transferItemsFrom(action.source.get(), action.slot, action.quantity), 0};
 }
-PlayerActionResult applyAction(Player& player, const player_action::FaceDirection& action) {
+PlayerActionResult CommandRouter::applyAction(Player& player, const player_action::FaceDirection& action) {
     player.faceDirection(action.direction);
     return {true, 0};
 }
-PlayerActionResult applyAction(Player& player, const player_action::FaceTarget& action) {
+PlayerActionResult CommandRouter::applyAction(Player& player, const player_action::FaceTarget& action) {
     player.faceTarget(action.target);
     return {true, 0};
 }
-PlayerActionResult applyAction(Player& player, const player_action::ChangeLocation& action) {
+PlayerActionResult CommandRouter::applyAction(Player& player, const player_action::ChangeLocation& action) {
     return {player.changeLocation(action.zone, action.level, action.position, action.interior), 0};
 }
-PlayerActionResult applyAction(Player& player, const player_action::RestoreLocation& action) {
+PlayerActionResult CommandRouter::applyAction(Player& player, const player_action::RestoreLocation& action) {
     return {player.restoreLocation(action.zone, action.level, action.position, action.interior), 0};
 }
-PlayerActionResult applyAction(Player& player, const player_action::UseTool& action) {
+PlayerActionResult CommandRouter::applyAction(Player& player, const player_action::UseTool& action) {
     return {player.useTool(action.now), 0};
 }
-PlayerActionResult applyAction(Player& player, const player_action::PerformAction& action) {
+PlayerActionResult CommandRouter::applyAction(Player& player, const player_action::PerformAction& action) {
     return {player.performAction(action.energyCost, action.interval, action.now), 0};
 }
-PlayerActionResult applyAction(Player& player, const player_action::Sleep& action) {
+PlayerActionResult CommandRouter::applyAction(Player& player, const player_action::Sleep& action) {
     return {player.sleep(action.bed), 0};
 }
-PlayerActionResult applyAction(Player& player, const player_action::SetVitals& action) {
+PlayerActionResult CommandRouter::applyAction(Player& player, const player_action::SetVitals& action) {
     player.setVitals(action.health, action.energy);
     return {true, 0};
 }
-PlayerActionResult applyAction(Player& player, const player_action::RestoreVitals&) {
+PlayerActionResult CommandRouter::applyAction(Player& player, const player_action::RestoreVitals&) {
     player.restoreVitals();
     return {true, 0};
 }
-PlayerActionResult applyAction(Player& player, const player_action::ApplyCombatBonus&) {
+PlayerActionResult CommandRouter::applyAction(Player& player, const player_action::ApplyCombatBonus&) {
     player.applyCombatBonus();
     return {true, 0};
 }
-PlayerActionResult applyAction(Player& player, const player_action::ReceiveDamage& action) {
+PlayerActionResult CommandRouter::applyAction(Player& player, const player_action::ReceiveDamage& action) {
     const auto amount = player.receiveDamage(action.damage, action.now);
     return {amount != 0, amount};
 }
-PlayerActionResult applyAction(Player& player, const player_action::AddGold& action) {
+PlayerActionResult CommandRouter::applyAction(Player& player, const player_action::AddGold& action) {
     const auto amount = player.addGold(action.amount);
     return {amount != 0, amount};
 }
-PlayerActionResult applyAction(Player& player, const player_action::SpendGold& action) {
+PlayerActionResult CommandRouter::applyAction(Player& player, const player_action::SpendGold& action) {
     return {player.spendGold(action.amount), 0};
 }
-PlayerActionResult applyAction(Player& player, const player_action::AddItem& action) {
+PlayerActionResult CommandRouter::applyAction(Player& player, const player_action::AddItem& action) {
     return {player.addItem(action.stack), 0};
 }
-PlayerActionResult applyAction(Player& player, const player_action::AddItemUpTo& action) {
+PlayerActionResult CommandRouter::applyAction(Player& player, const player_action::AddItemUpTo& action) {
     const auto amount = player.addItemUpTo(action.stack);
     return {amount != 0, amount};
 }
-PlayerActionResult applyAction(Player& player, const player_action::RemoveItem& action) {
+PlayerActionResult CommandRouter::applyAction(Player& player, const player_action::RemoveItem& action) {
     return {player.removeItem(action.slot, action.quantity), 0};
 }
-PlayerActionResult applyAction(Player& player, const player_action::ClearSlot& action) {
+PlayerActionResult CommandRouter::applyAction(Player& player, const player_action::ClearSlot& action) {
     return {player.clearSlot(action.slot), 0};
 }
-PlayerActionResult applyAction(Player& player, const player_action::RemoveItems& action) {
+PlayerActionResult CommandRouter::applyAction(Player& player, const player_action::RemoveItems& action) {
     return {player.removeItems(action.quantities), 0};
 }
-PlayerActionResult applyAction(Player& player, const player_action::BuyItem& action) {
+PlayerActionResult CommandRouter::applyAction(Player& player, const player_action::BuyItem& action) {
     return {player.buyItem(action.stack, action.price), 0};
 }
-PlayerActionResult applyAction(Player& player, const player_action::SellItems& action) {
+PlayerActionResult CommandRouter::applyAction(Player& player, const player_action::SellItems& action) {
     return {player.sellItems(action.quantities, action.price), 0};
 }
-}  // namespace
 
 PlayerActionResult CommandRouter::apply(uint16_t playerId, const PlayerAction& action) const {
     auto* record = roster.find(playerId);

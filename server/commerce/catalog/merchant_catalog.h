@@ -16,6 +16,8 @@ class MerchantCatalog {
     std::vector<RobinProductConfig> robinCatalog;
     std::mt19937 random;
 
+    static std::optional<uint32_t> priceOf(const std::vector<ShopItemPrice>& prices, ItemId item);
+
 public:
     MerchantCatalog(const MarketConfig& config, const MarketPrices& prices, uint32_t seed);
 

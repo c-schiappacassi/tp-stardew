@@ -32,5 +32,6 @@ private:
     std::vector<GameIndexDTO> games;
 
     void saveIndex() const;
+    static GameIndexPlayerDTO previewFor(const PlayerDataLocal& player);
     static GameIndexDTO indexFromGame(const PersistenceDTO& game);
 };

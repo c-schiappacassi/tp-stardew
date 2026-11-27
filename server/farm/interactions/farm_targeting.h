@@ -26,6 +26,7 @@ struct FarmCollectionTarget {
 
 class FarmTargeting {
 private:
+    static int64_t squaredDistance(const Position& origin, const Position& target);
     bool canReach(const PlayerSnapshot& player, const Position& position, Direction direction, const ZoneMap& map) const;
 
 public:

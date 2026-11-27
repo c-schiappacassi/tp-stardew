@@ -20,6 +20,7 @@ private:
     std::mt19937 random;
 
     bool load(const std::map<uint8_t, DungeonRoomLayout>& layout, DungeonRooms& rooms, MineralGenerator& generator, EntityIdGenerator& ids, std::mt19937& placementRandom) const;
+    static std::map<uint8_t, Stack> chestLoot(std::mt19937& random);
 
 public:
     DungeonLoader(const DungeonConfig& config, uint32_t seed);

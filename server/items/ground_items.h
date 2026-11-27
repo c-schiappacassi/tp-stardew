@@ -16,6 +16,7 @@ private:
     std::map<EntityId, LootData> items;
 
     bool add(LootData data, EntityIdGenerator& ids);
+    static int64_t squaredDistance(const Position& from, const Position& to);
 
 public:
     static constexpr uint16_t PICKUP_RANGE = 24;

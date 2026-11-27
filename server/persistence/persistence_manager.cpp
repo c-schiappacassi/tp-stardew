@@ -6,8 +6,7 @@
 #include <stdexcept>
 #include <utility>
 
-namespace {
-GameIndexPlayerDTO previewFor(const PlayerDataLocal& player) {
+GameIndexPlayerDTO PersistenceManager::previewFor(const PlayerDataLocal& player) {
     GameIndexPlayerDTO preview;
     preview.characterName = player.characterName;
     preview.hairModel = player.hairModel;
@@ -16,7 +15,6 @@ GameIndexPlayerDTO previewFor(const PlayerDataLocal& player) {
     preview.hairColor = player.hairColor;
     preview.pantsColor = player.pantsColor;
     return preview;
-}
 }
 
 PersistenceManager::PersistenceManager(const std::filesystem::path& directory)

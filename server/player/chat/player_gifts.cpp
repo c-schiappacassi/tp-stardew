@@ -10,19 +10,18 @@
 #include "entities/entity_dimensions.h"
 #include "player/sessions/player_roster.h"
 
-namespace {
-void reply(PlayerRecord& player, const std::string& text) { player.enqueueMessage({server_constants::SERVER, text}); }
+void PlayerGifts::reply(PlayerRecord& player, const std::string& text) { player.enqueueMessage({server_constants::SERVER, text}); }
 
-bool giftable(ItemId item) {
+bool PlayerGifts::giftable(ItemId item) {
     return item != ItemId::Pickaxe && item != ItemId::WateringCan && item != ItemId::Shovel && item != ItemId::Sword && item != ItemId::Bed && item != ItemId::BedSheet;
 }
 
-bool nearby(const Player& sender, const Player& recipient) {
+bool PlayerGifts::nearby(const Player& sender, const Player& recipient) {
     return sender.getZone() == recipient.getZone() && sender.getDungeonLevel() == recipient.getDungeonLevel() && sender.getInterior() == recipient.getInterior() &&
         sender.canReach(recipient.getPosition(), 2 * entity_dimensions::TILE_SIZE);
 }
 
-std::string description(const Stack& stack) {
+std::string PlayerGifts::description(const Stack& stack) {
     std::string result = std::to_string(stack.quantity) + server_constants::SPACE + std::string{shop_products::name(stack.item_id)};
     switch (stack.qual) {
         case Quality::None: break;
@@ -35,14 +34,13 @@ std::string description(const Stack& stack) {
     return result;
 }
 
-std::string mention(const std::string& name) {
+std::string PlayerGifts::mention(const std::string& name) {
     if (name.find_first_of(server_constants::QUOTING_CHARACTERS) == std::string::npos)
         return server_constants::AT_SIGN + name;
     std::ostringstream result;
     result << '@' << std::quoted(name);
     return result.str();
 }
-}  // namespace
 
 void PlayerGifts::execute(PlayerRoster& players, PlayerRecord& sender, const GiftCommand& command, bool actionsBlocked) {
     if (command.action == GiftAction::Cancel) {

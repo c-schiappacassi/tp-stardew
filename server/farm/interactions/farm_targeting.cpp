@@ -11,13 +11,11 @@
 #include "player/queries/player_snapshot.h"
 #include "world/zone_map.h"
 
-namespace {
-int64_t squaredDistance(const Position& origin, const Position& target) {
+int64_t FarmTargeting::squaredDistance(const Position& origin, const Position& target) {
     const int64_t dx = static_cast<int64_t>(target.getX()) - origin.getX();
     const int64_t dy = static_cast<int64_t>(target.getY()) - origin.getY();
     return dx * dx + dy * dy;
 }
-}  // namespace
 
 bool FarmTargeting::hasClearPath(const Position& origin, const Position& target, const ZoneMap& map) const { return map.hasClearPath(origin, target); }
 

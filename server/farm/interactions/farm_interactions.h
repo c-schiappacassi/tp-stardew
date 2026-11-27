@@ -1,6 +1,7 @@
 #pragma once
 
 #include <chrono>
+#include <optional>
 
 #include "farm_targeting.h"
 
@@ -16,6 +17,8 @@ class PlayerSnapshot;
 
 class FarmInteractions {
 private:
+    static std::optional<CropType> cropTypeForSeed(ItemId item);
+
     FarmTerrain& terrain;
     CropManager& crops;
     AnimalManager& animals;

@@ -8,13 +8,11 @@
 
 #include "player/player_manager.h"
 
-namespace {
-int64_t squaredDistance(const Position& from, const Position& to) {
+int64_t GroundItems::squaredDistance(const Position& from, const Position& to) {
     const int64_t dx = static_cast<int64_t>(from.getX()) - to.getX();
     const int64_t dy = static_cast<int64_t>(from.getY()) - to.getY();
     return dx * dx + dy * dy;
 }
-}  // namespace
 
 bool GroundItems::add(LootData data, EntityIdGenerator& ids) {
     if (data.quantity == 0 || data.pos.getX() < 0 || data.pos.getY() < 0 || data.pos.getX() > std::numeric_limits<uint16_t>::max() ||

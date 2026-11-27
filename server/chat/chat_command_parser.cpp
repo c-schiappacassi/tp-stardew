@@ -11,8 +11,7 @@
 #include <utility>
 #include <vector>
 
-namespace {
-bool number(const std::string& text, uint32_t maximum, uint32_t& value, bool allowZero = false) {
+bool ChatCommandParser::number(const std::string& text, uint32_t maximum, uint32_t& value, bool allowZero) {
     if (text.empty() || !std::all_of(text.begin(), text.end(), [](char ch) {
             return ch >= '0' && ch <= '9';
         })) return false;
@@ -21,7 +20,7 @@ bool number(const std::string& text, uint32_t maximum, uint32_t& value, bool all
            value <= maximum && (allowZero || value > 0);
 }
 
-ParsedChatCommand trade(const std::vector<std::string>& tokens, TradeAction action) {
+ParsedChatCommand ChatCommandParser::trade(const std::vector<std::string>& tokens, TradeAction action) {
     if (action == TradeAction::Catalog) {
         if (tokens.size() != 1) return ChatCommandError{server_constants::USAGE_CATALOG};
         return TradeCommand{action, {}, 0};
@@ -36,7 +35,7 @@ ParsedChatCommand trade(const std::vector<std::string>& tokens, TradeAction acti
     return TradeCommand{action, tokens[1], static_cast<uint16_t>(quantity)};
 }
 
-ParsedChatCommand gift(const std::string& text, GiftAction action) {
+ParsedChatCommand ChatCommandParser::gift(const std::string& text, GiftAction action) {
     const std::string usage = action == GiftAction::Offer ? server_constants::USAGE_GIFT_CHARACTER_NAME_AMOUNT_1_TO_65535 :
         action == GiftAction::Accept ? server_constants::USAGE_ACCEPT_CHARACTER_NAME : server_constants::USAGE_REJECT_CHARACTER_NAME;
     std::istringstream input(text);
@@ -56,7 +55,7 @@ ParsedChatCommand gift(const std::string& text, GiftAction action) {
     return GiftCommand{action, std::move(player), static_cast<uint16_t>(quantity)};
 }
 
-ParsedChatCommand cheat(const std::vector<std::string>& tokens) {
+ParsedChatCommand ChatCommandParser::cheat(const std::vector<std::string>& tokens) {
     if (tokens.size() < 2) return ChatCommandError{server_constants::USE_CHEATS_TO_SEE_THE_COMMANDS};
     const auto& name = tokens[1];
     if (name == server_constants::SPAWN_ENEMY) {
@@ -144,7 +143,6 @@ ParsedChatCommand cheat(const std::vector<std::string>& tokens) {
         }
     }
     return ChatCommandError{server_constants::UNKNOWN_CHEAT_USE_CHEATS};
-}
 }
 
 ParsedChatCommand ChatCommandParser::parse(const std::string& text) {

@@ -1,5 +1,6 @@
 #pragma once
 
+#include <map>
 #include <random>
 #include <vector>
 
@@ -9,12 +10,15 @@
 #include "position.h"
 
 class DungeonRoom;
+class Enemy;
 
 class EnemyGenerator {
     EnemyConfig config;
     std::mt19937 random;
     bool populateRoom(DungeonRoom& room, EntityIdGenerator& ids, const std::vector<Position>& reserved);
     bool spawn(DungeonRoom& room, const std::vector<EnemyType>& types, EntityIdGenerator& ids, const std::vector<Position>& reserved, uint32_t group, uint32_t pair);
+    static bool isSpawnPositionValid(
+        const DungeonRoom& room, const Position& position, const std::vector<Position>& reserved, const std::map<uint32_t, Enemy>& enemies, uint16_t safetyRange);
 
 public:
     EnemyGenerator(const EnemyConfig& config, uint32_t seed);

@@ -14,15 +14,12 @@
 #include "farm/farm_constants.h"
 #include "player/player_manager.h"
 
-namespace {
-const CollisionBox BED_BOX{22, 32};
-constexpr int OFFSET_Y  = -22;
+const CollisionBox Interior::BED_BOX{22, 32};
 
-bool validPosition(const Position& position) {
+bool Interior::validPosition(const Position& position) {
     return position.getX() >= 0 && position.getY() >= 0 && position.getX() <= std::numeric_limits<uint16_t>::max() &&
         position.getY() <= std::numeric_limits<uint16_t>::max();
 }
-}  // namespace
 
 Interior::Interior(const InteriorLayout& layout):
     location(layout.location), outside(layout.outside), extraOutside(layout.extraOutside), returnPosition(layout.returnPosition),

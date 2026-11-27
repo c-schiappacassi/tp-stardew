@@ -12,23 +12,22 @@
 #include "world/interiors/interior.h"
 #include "world/interiors/interior_furniture_position.h"
 
-namespace {
 using toml_helpers::invalid;
 
-const toml::array& arrayAt(const toml::node* node, std::string_view field) {
+const toml::array& InteriorTomlReader::arrayAt(const toml::node* node, std::string_view field) {
     if (!node || !node->is_array())
         invalid(std::string(field), server_constants::EXPECTED_AN_ARRAY);
     return *node->as_array();
 }
 
-const toml::array& tupleAt(const toml::node* node, std::size_t size, std::string_view field) {
+const toml::array& InteriorTomlReader::tupleAt(const toml::node* node, std::size_t size, std::string_view field) {
     const auto& array = arrayAt(node, field);
     if (array.size() != size)
         invalid(std::string(field), server_constants::UNEXPECTED_TUPLE_SIZE);
     return array;
 }
 
-int numberAt(const toml::node* node, int maximum, const std::string& field) {
+int InteriorTomlReader::numberAt(const toml::node* node, int maximum, const std::string& field) {
     if (!node || !node->is_integer())
         invalid(field, server_constants::EXPECTED_AN_INTEGER);
     const auto value = *node->value<int64_t>();
@@ -37,17 +36,17 @@ int numberAt(const toml::node* node, int maximum, const std::string& field) {
     return static_cast<int>(value);
 }
 
-Position baseAt(const toml::array& tuple, const ZoneMap& terrain, int width, int height, const std::string& field) {
+Position InteriorTomlReader::baseAt(const toml::array& tuple, const ZoneMap& terrain, int width, int height, const std::string& field) {
     const int x = numberAt(tuple.get(0), width - 1, field);
     const int y = numberAt(tuple.get(1), height - 1, field);
     return *terrain.baseAt({y, x});
 }
 
-Position positionAt(const toml::node* node, const ZoneMap& terrain, int width, int height, const std::string& field) {
+Position InteriorTomlReader::positionAt(const toml::node* node, const ZoneMap& terrain, int width, int height, const std::string& field) {
     return baseAt(tupleAt(node, 2, field), terrain, width, height, field);
 }
 
-InteriorTemplate readTemplate(const toml::table& table, InteriorId id, const std::string& field) {
+InteriorTemplate InteriorTomlReader::readTemplate(const toml::table& table, InteriorId id, const std::string& field) {
     const int width = numberAt(table.get(server_constants::WIDTH), 256, field + server_constants::FIELD_WIDTH);
     const int height = numberAt(table.get(server_constants::HEIGHT), 256, field + server_constants::FIELD_HEIGHT);
     if (width == 0 || height == 0 || width * height > std::numeric_limits<uint16_t>::max())
@@ -117,7 +116,6 @@ InteriorTemplate readTemplate(const toml::table& table, InteriorId id, const std
         invalid(field, server_constants::INVALID_INTERIOR_PASSAGES_BEDS_OR_MERCHANT_POSITION);
     return result;
 }
-}  // namespace
 
 InteriorTemplates InteriorTomlReader::read(const toml::table& root) const {
     InteriorTemplates result;

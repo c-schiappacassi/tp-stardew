@@ -7,10 +7,8 @@
 
 #include "player/queries/player_snapshot.h"
 
-namespace {
-bool validBase(const Position& base) {
+bool FarmTerrain::validBase(const Position& base) {
     return base.getX() >= 0 && base.getY() > 0 && base.getX() <= std::numeric_limits<uint16_t>::max() && base.getY() <= std::numeric_limits<uint16_t>::max();
-}
 }
 
 bool FarmTerrain::initialize(const FarmLayout& layout) {

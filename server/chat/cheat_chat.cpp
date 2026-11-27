@@ -12,15 +12,14 @@
 #include "player/player_manager.h"
 #include "world/world_manager.h"
 
-namespace {
-constexpr std::pair<std::string_view, ItemId> tools[]{
+const std::pair<std::string_view, ItemId> CheatChat::tools[4]{
     {server_constants::PICKAXE, ItemId::Pickaxe},
     {server_constants::WATERING_CAN, ItemId::WateringCan},
     {server_constants::SHOVEL, ItemId::Shovel},
     {server_constants::SWORD, ItemId::Sword}
 };
 
-std::optional<ItemId> itemNamed(const std::string& name) {
+std::optional<ItemId> CheatChat::itemNamed(const std::string& name) {
     for (const auto& [keyword, item]: tools) {
         if (name == keyword)
             return item;
@@ -28,7 +27,7 @@ std::optional<ItemId> itemNamed(const std::string& name) {
     return shop_products::item(name);
 }
 
-std::vector<ChatMessageData> listGiveItems() {
+std::vector<ChatMessageData> CheatChat::listGiveItems() {
     constexpr std::size_t LINE_LENGTH = 100;
     std::vector<ChatMessageData> messages{{server_constants::CHEATS, server_constants::GIVE_ITEMS_HEADER}};
     std::vector<std::string_view> names;
@@ -52,7 +51,6 @@ std::vector<ChatMessageData> listGiveItems() {
     messages.push_back({server_constants::CHEATS, server_constants::COMMAND_CHEAT_GIVE_PRODUCT_N_NONE_BASE_GOOD_EXCELLENT_INCREDIBLE_PERFECT});
     return messages;
 }
-}  // namespace
 
 CheatChat::CheatChat(WorldManager& world, std::function<void()> endDay): world(world), endDay(std::move(endDay)) {}
 

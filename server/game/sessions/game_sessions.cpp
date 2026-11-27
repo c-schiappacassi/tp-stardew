@@ -8,9 +8,8 @@
 #include "player/player_manager.h"
 #include "world/world_manager.h"
 
-namespace {
 template <typename Admission>
-PlayerData appearanceOf(const Admission& dto) {
+PlayerData GameSessions::appearanceOf(const Admission& dto) {
     PlayerData data{};
     data.characterName = dto.characterName;
     data.hairModel = dto.hairModel;
@@ -21,12 +20,11 @@ PlayerData appearanceOf(const Admission& dto) {
     return data;
 }
 
-void applyVisuals(BackgroundData& destination, BackgroundData& source) {
+void GameSessions::applyVisuals(BackgroundData& destination, BackgroundData& source) {
     destination.floor = std::move(source.floor);
     destination.decor = std::move(source.decor);
     destination.frame = std::move(source.frame);
     destination.buildings = std::move(source.buildings);
-}
 }
 
 GameSessions::GameSessions(const std::string& gameId, const uint8_t& worldId, PlayerManager& players, const WorldManager& world, ConstMapData visuals):

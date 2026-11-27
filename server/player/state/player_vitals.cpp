@@ -8,13 +8,11 @@
 
 #include "dtos.h"
 
-namespace {
-uint16_t improvedMaximum(uint16_t value) {
+uint16_t PlayerVitals::improvedMaximum(uint16_t value) {
     const uint32_t improved = static_cast<uint32_t>(value) * 5 / 4;
     return static_cast<uint16_t>(
             std::min<uint32_t>(std::numeric_limits<uint16_t>::max(), improved));
 }
-}  // namespace
 
 PlayerVitals::PlayerVitals(uint16_t maxHealth, uint16_t maxEnergy):
         health(maxHealth), maxHealth(maxHealth), energy(maxEnergy), maxEnergy(maxEnergy) {

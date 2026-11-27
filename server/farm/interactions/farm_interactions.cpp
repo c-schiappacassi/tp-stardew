@@ -10,8 +10,7 @@
 #include "items/ground_items.h"
 #include "player/player_manager.h"
 
-namespace {
-std::optional<CropType> cropTypeForSeed(ItemId item) {
+std::optional<CropType> FarmInteractions::cropTypeForSeed(ItemId item) {
     switch (item) {
         case ItemId::StrawberrySeed:
             return CropType::Strawberry;
@@ -25,7 +24,6 @@ std::optional<CropType> cropTypeForSeed(ItemId item) {
             return std::nullopt;
     }
 }
-}  // namespace
 
 FarmInteractions::FarmInteractions(FarmTerrain& terrain, CropManager& crops, AnimalManager& animals, DecorationManager& decorations,
     ChestManager& chests, GroundItems& groundItems):

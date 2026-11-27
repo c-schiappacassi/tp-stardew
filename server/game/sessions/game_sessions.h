@@ -22,6 +22,10 @@ private:
     GameSession addPlayer(const std::string& name, const PlayerData& appearance, const std::shared_ptr<OutQueue>& output, const std::string& message, const PlayerRegistration& registerPlayer = {});
     void complete(GameSession& session, const std::string& message) const;
 
+    template <typename Admission>
+    static PlayerData appearanceOf(const Admission& dto);
+    static void applyVisuals(BackgroundData& destination, BackgroundData& source);
+
 public:
     GameSessions(const std::string& gameId, const uint8_t& worldId, PlayerManager& players, const WorldManager& world, ConstMapData visuals);
 

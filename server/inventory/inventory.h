@@ -15,6 +15,7 @@ private:
     uint32_t availableSpace(const Stack& stack) const;
     uint16_t getStackLimit(ItemId item) const;
     static bool isTool(ItemId item);
+    static bool validStack(const Stack& stack);
 
 public:
     explicit Inventory(uint8_t capacity, uint16_t stackLimit = INVENTORY_STACK_LIMIT);

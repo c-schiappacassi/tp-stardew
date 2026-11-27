@@ -10,6 +10,7 @@ class PlayerSnapshot;
 
 class FarmTerrain {
 private:
+    static bool validBase(const Position& base);
     PlacementSpace space;
     bool initialized = false;
     Position spawnPosition{0, 0};

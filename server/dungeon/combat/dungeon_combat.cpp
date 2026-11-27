@@ -18,8 +18,7 @@
 #include "sword_combat.h"
 #include "trap_combat.h"
 
-namespace {
-bool hasSkull(const DungeonRoom& room) {
+bool DungeonCombat::hasSkull(const DungeonRoom& room) {
     for (const auto& [id, enemy]: room.getCombat().enemies) {
         if (enemy.getType() == EnemyType::Skull) {
             return true;
@@ -27,7 +26,6 @@ bool hasSkull(const DungeonRoom& room) {
     }
     return false;
 }
-}  // namespace
 
 DungeonCombat::DungeonCombat(const EnemyConfig& config, uint32_t seed): config(config), generator(config, seed), trapRandom(seed), routeRandom(seed) {}
 

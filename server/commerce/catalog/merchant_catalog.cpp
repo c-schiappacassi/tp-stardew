@@ -11,14 +11,12 @@
 #include "farm/decorations/decoration_items.h"
 #include "farm/queries/farm_prices.h"
 
-namespace {
-std::optional<uint32_t> priceOf(const std::vector<ShopItemPrice>& prices, ItemId item) {
+std::optional<uint32_t> MerchantCatalog::priceOf(const std::vector<ShopItemPrice>& prices, ItemId item) {
     for (const auto& entry: prices) {
         if (entry.item == item)
             return entry.price;
     }
     return std::nullopt;
-}
 }
 
 MerchantCatalog::MerchantCatalog(const MarketConfig& config, const MarketPrices& prices, uint32_t seed): config(config), prices(prices), random(seed) {

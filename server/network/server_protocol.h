@@ -1,6 +1,9 @@
 #ifndef SERVER_PROTOCOL_H
 #define SERVER_PROTOCOL_H
 
+#include <cstddef>
+#include <limits>
+
 #include "dtos.h"
 #include "protocol_base.h"
 #include "protocol_types.h"
@@ -9,6 +12,27 @@
 
 class ServerProtocol {
 private:
+    static constexpr size_t MAX_U8 = std::numeric_limits<uint8_t>::max();
+    static constexpr size_t MAX_U16 = std::numeric_limits<uint16_t>::max();
+
+    static constexpr uint8_t BUNDLE_COUNT = 5;
+    static constexpr uint8_t REQUIREMENT_LIMIT = 10;
+    static constexpr uint8_t SEED_COUNT = 4;
+
+    static void requireCommunity(bool condition, const char* message);
+    static void validateCommunityQuality(Quality quality);
+    static void validateCommunityStacks(const std::vector<Stack>& items);
+    static void validateDonationKind(DonationKind kind);
+    static void validateCommunityState(const CommunityStateData& state);
+    static void validateCount(size_t count, size_t limit, const char* what);
+    static void validateFarmCounts(const FarmData& farm);
+    static void validatePosition(const Position& pos);
+    static void validateOpenChest(const OpenChestData& chest, const ZoneData& zone);
+    static void validateLoot(const std::vector<LootData>& loot);
+    static void validateCombat(const DungeonCombatData& combat);
+    static bool hasMatchingZoneData(const PlayerDataLocal& data);
+    static void validateStatus(const ServerStatus& status);
+
     ProtocolBase base;
 
     Position receivePosition();

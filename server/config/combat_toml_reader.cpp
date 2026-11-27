@@ -7,8 +7,7 @@
 #include <string_view>
 #include <utility>
 
-namespace {
-uint32_t readNumber(const toml::node_view<const toml::node>& section, std::string_view name,
+uint32_t CombatTomlReader::readNumber(const toml::node_view<const toml::node>& section, std::string_view name,
                     uint32_t current, uint32_t maximum) {
     const auto node = section[name];
     if (!node) {
@@ -21,22 +20,21 @@ uint32_t readNumber(const toml::node_view<const toml::node>& section, std::strin
     return static_cast<uint32_t>(*value);
 }
 
-void number(const toml::node_view<const toml::node>& section, std::string_view name,
+void CombatTomlReader::number(const toml::node_view<const toml::node>& section, std::string_view name,
             uint8_t& target) {
     target = static_cast<uint8_t>(
             readNumber(section, name, target, std::numeric_limits<uint8_t>::max()));
 }
 
-void number(const toml::node_view<const toml::node>& section, std::string_view name,
+void CombatTomlReader::number(const toml::node_view<const toml::node>& section, std::string_view name,
             uint16_t& target) {
     target = static_cast<uint16_t>(
             readNumber(section, name, target, std::numeric_limits<uint16_t>::max()));
 }
 
-void number(const toml::node_view<const toml::node>& section, std::string_view name,
+void CombatTomlReader::number(const toml::node_view<const toml::node>& section, std::string_view name,
             uint32_t& target) {
     target = readNumber(section, name, target, std::numeric_limits<uint32_t>::max());
-}
 }
 
 void CombatTomlReader::read(const toml::table& table, DungeonConfig& dungeon,

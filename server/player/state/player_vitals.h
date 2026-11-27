@@ -14,6 +14,8 @@ private:
     std::chrono::steady_clock::time_point nextDamageTime{};
     bool combatBonus = false;
 
+    static uint16_t improvedMaximum(uint16_t value);
+
 public:
     PlayerVitals(uint16_t maxHealth, uint16_t maxEnergy);
 

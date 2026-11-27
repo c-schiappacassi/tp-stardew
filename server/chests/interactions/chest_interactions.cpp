@@ -8,17 +8,12 @@
 #include "player/player_manager.h"
 #include "world/zone_map.h"
 
-namespace {
-constexpr uint16_t INTERACTION_RANGE = 32;
-constexpr uint16_t ACTION_ENERGY = 2;
-constexpr std::chrono::milliseconds ACTION_INTERVAL{500};
-
-bool supportsChests(const PlayerSnapshot& player) {
+bool ChestInteractions::supportsChests(const PlayerSnapshot& player) {
     return player.getZone() == Zone::Farm || player.getZone() == Zone::Dungeon ||
         (player.getZone() == Zone::InsideHouse && player.getInterior() && player.getInterior()->interior_id == InteriorId::PlayerHouse);
 }
 
-bool overlapsPlayer(const PlayerManager& players, const PlayerSnapshot& player, const CollisionBounds& bounds) {
+bool ChestInteractions::overlapsPlayer(const PlayerManager& players, const PlayerSnapshot& player, const CollisionBounds& bounds) {
     for (const auto id: players.connectedPlayerIds()) {
         const auto other = players.snapshot(id);
         if (other.getZone() == player.getZone() && other.getDungeonLevel() == player.getDungeonLevel() && other.getInterior() == player.getInterior() &&
@@ -27,7 +22,6 @@ bool overlapsPlayer(const PlayerManager& players, const PlayerSnapshot& player, 
     }
     return false;
 }
-}  // namespace
 
 bool ChestInteractions::canAccess(const PlayerSnapshot& player, const ChestSnapshot& chest, const ZoneMap& terrain) const {
     return supportsChests(player) && player.canAct() && player.canReach(chest.getPosition(), INTERACTION_RANGE) &&

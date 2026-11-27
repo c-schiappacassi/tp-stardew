@@ -24,4 +24,7 @@ public:
     std::optional<uint32_t> animalBasePrice(AnimalSpecies species) const;
     std::optional<uint32_t> productBasePrice(ItemId item) const;
     FarmPrices prices() const;
+
+private:
+    static void validateDayLength(std::chrono::milliseconds dayLength);
 };

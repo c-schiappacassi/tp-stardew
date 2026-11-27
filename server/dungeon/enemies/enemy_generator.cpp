@@ -12,8 +12,7 @@ bool EnemyGenerator::roll(uint8_t percent) { return std::uniform_int_distributio
 
 uint16_t EnemyGenerator::gold() { return std::uniform_int_distribution<uint16_t>{config.goldMin, config.goldMax}(random); }
 
-namespace {
-bool isSpawnPositionValid(
+bool EnemyGenerator::isSpawnPositionValid(
     const DungeonRoom& room, const Position& position, const std::vector<Position>& reserved, const std::map<uint32_t, Enemy>& enemies, uint16_t safetyRange) {
     const auto bounds = CollisionBox(12, 8).at(position);
     const auto& passages = *room.getPassages();
@@ -35,7 +34,6 @@ bool isSpawnPositionValid(
     const auto route = enemy_navigation::nextWaypoint(room, passages.entry, position);
     return route.has_value();
 }
-}  // namespace
 
 bool EnemyGenerator::spawn(DungeonRoom& room, const std::vector<EnemyType>& types, EntityIdGenerator& ids, const std::vector<Position>& reserved, uint32_t group, uint32_t pair) {
     if (!room.getPassages() || room.getCombat().enemies.size() + types.size() > config.maxEnemiesPerRoom) {

@@ -8,12 +8,10 @@
 
 #include "farm_product.h"
 
-namespace {
-void validateDayLength(std::chrono::milliseconds dayLength) {
+void FarmConfig::validateDayLength(std::chrono::milliseconds dayLength) {
     if (dayLength.count() < 6 || dayLength.count() > std::numeric_limits<int64_t>::max() / 7) {
         throw std::invalid_argument(server_constants::DAY_DURATION_DOES_NOT_ALLOW_DEFINING_FARM_CYCLES);
     }
-}
 }
 
 FarmConfig::FarmConfig(std::chrono::milliseconds dayLength): dayLength(dayLength) {

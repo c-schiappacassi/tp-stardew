@@ -9,11 +9,9 @@
 #include "entities/placement/placement_reservation.h"
 #include "items/ground_items.h"
 
-namespace {
-Quality rollProductQuality(std::mt19937& random) {
+Quality AnimalManager::rollProductQuality(std::mt19937& random) {
     return static_cast<Quality>(std::uniform_int_distribution<int>{
         static_cast<int>(Quality::Base), static_cast<int>(Quality::Perfect)}(random));
-}
 }
 
 AnimalManager::AnimalManager(const FarmConfig& config, uint32_t seed):

@@ -20,6 +20,7 @@ private:
     std::mt19937 random;
     const AnimalDefinition* findDefinition(AnimalSpecies species) const;
     std::size_t countSpecies(AnimalSpecies species) const;
+    static Quality rollProductQuality(std::mt19937& random);
 
 public:
     explicit AnimalManager(const FarmConfig& config, uint32_t seed = std::random_device{}());

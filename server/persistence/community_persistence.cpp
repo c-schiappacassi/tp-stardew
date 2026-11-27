@@ -8,8 +8,7 @@
 #include "commerce/shop_products.h"
 #include "community/application/community_rewards.h"
 
-namespace {
-uint32_t counter(const CommunitySaveData& data, const std::string& section,
+uint32_t CommunityPersistence::counter(const CommunitySaveData& data, const std::string& section,
                  const std::string& action, const std::string& key) {
     const auto part = data.find(section);
     if (part == data.end()) return 0;
@@ -19,13 +18,13 @@ uint32_t counter(const CommunitySaveData& data, const std::string& section,
     return value == values->second.end() ? 0 : value->second;
 }
 
-bool flag(const CommunitySaveData& data, const std::string& action, const std::string& key) {
+bool CommunityPersistence::flag(const CommunitySaveData& data, const std::string& action, const std::string& key) {
     const auto value = counter(data, server_constants::PROGRESS, action, key);
     if (value > 1) throw std::invalid_argument(server_constants::INVALID_SAVED_COMMUNITY_FLAG);
     return value != 0;
 }
 
-uint32_t rewardMask(const std::set<CommunityBundle>& granted) {
+uint32_t CommunityPersistence::rewardMask(const std::set<CommunityBundle>& granted) {
     uint32_t mask = 0;
     uint32_t bit = 1;
     for (const auto bundle : community_bundle::all) {
@@ -35,7 +34,7 @@ uint32_t rewardMask(const std::set<CommunityBundle>& granted) {
     return mask;
 }
 
-CommunityPlayerRewards readRewards(const CommunitySaveData& data, const std::string& name) {
+CommunityPlayerRewards CommunityPersistence::readRewards(const CommunitySaveData& data, const std::string& name) {
     CommunityPlayerRewards rewards;
     const auto mask = counter(data, server_constants::REWARDS, name, server_constants::GRANTED);
     constexpr uint32_t validMask = (1u << community_bundle::all.size()) - 1;
@@ -53,7 +52,6 @@ CommunityPlayerRewards readRewards(const CommunitySaveData& data, const std::str
         rewards.pendingSeeds.emplace(seed, static_cast<uint16_t>(quantity));
     }
     return rewards;
-}
 }
 
 CommunitySaveData CommunityPersistence::save(const CommunityCenter& center, const CommunityRewards& rewards) {

@@ -37,6 +37,7 @@ private:
     uint16_t killEnemies(PlayerManager& players, uint16_t playerId, DungeonRoom& room, bool nearestOnly, EntityIdGenerator& ids);
     PlayersByRoom updatePresence(const std::vector<Combatant>& combatants, PlayerManager& players, std::map<uint16_t, uint8_t> current, DungeonRooms& rooms);
     void spawnPendingAmbush(DungeonRoom& room, const std::vector<Combatant>& combatants, EntityIdGenerator& ids);
+    static bool hasSkull(const DungeonRoom& room);
 
 public:
     DungeonCombat(const EnemyConfig& config, uint32_t seed);

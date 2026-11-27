@@ -6,6 +6,7 @@
 #include <vector>
 
 #include "chests/chest_manager.h"
+#include "entities/collision_box.h"
 #include "entities/placement/placement_space.h"
 #include "farm/decorations/decoration_manager.h"
 #include "items/ground_items.h"
@@ -17,6 +18,11 @@ class PlayerSnapshot;
 
 class Interior {
 private:
+    static const CollisionBox BED_BOX;
+    static constexpr int OFFSET_Y = -22;
+
+    static bool validPosition(const Position& position);
+
     InteriorLocation location;
     WorldLocation outside;
     std::vector<Position> extraOutside;

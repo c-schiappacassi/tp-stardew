@@ -12,6 +12,8 @@ private:
     std::chrono::milliseconds harvestDelay{0};
     uint64_t waterRequests = 1;
 
+    static void accumulate(std::chrono::milliseconds& total, std::chrono::milliseconds elapsed);
+
 public:
     CropQuality(std::chrono::milliseconds dayLength, std::chrono::milliseconds wateringInterval);
     void addWateringDelay(std::chrono::milliseconds elapsed);

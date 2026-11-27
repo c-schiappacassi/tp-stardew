@@ -7,6 +7,7 @@
 
 class ChestManager;
 class ChestSnapshot;
+class CollisionBounds;
 class EntityIdGenerator;
 class Placement;
 class GroundItems;
@@ -16,6 +17,13 @@ class ZoneMap;
 
 class ChestInteractions {
 private:
+    static constexpr uint16_t INTERACTION_RANGE = 32;
+    static constexpr uint16_t ACTION_ENERGY = 2;
+    static constexpr std::chrono::milliseconds ACTION_INTERVAL{500};
+
+    static bool supportsChests(const PlayerSnapshot& player);
+    static bool overlapsPlayer(const PlayerManager& players, const PlayerSnapshot& player, const CollisionBounds& bounds);
+
     bool canAccess(const PlayerSnapshot& player, const ChestSnapshot& chest, const ZoneMap& terrain) const;
     std::optional<ChestSnapshot> findTarget(const PlayerSnapshot& player, const ChestManager& chests, const ZoneMap& terrain, Direction direction) const;
 

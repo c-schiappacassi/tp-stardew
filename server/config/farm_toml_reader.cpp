@@ -24,25 +24,13 @@
 #include "inventory/inventory.h"
 #include "town/town_map.h"
 
-namespace {
-
 using toml_helpers::invalid;
 using toml_helpers::integer;
 using toml_helpers::optionalBool;
 using toml_helpers::string;
 using toml_helpers::tableAt;
 
-constexpr int TILE_SIZE = entity_dimensions::TILE_SIZE;
-constexpr int MAX_FARM_DIMENSION =
-    std::numeric_limits<uint16_t>::max() / TILE_SIZE;
-constexpr std::size_t MAX_FARM_TILES = 1024 * 1024;
-
-struct BackgroundAppearance {
-    uint16_t textureId;
-    bool walkable;
-};
-
-bool readWalkableState(const toml::table& table,
+bool FarmTomlReader::readWalkableState(const toml::table& table,
                        const std::string& field) {
     const auto state = string(table, server_constants::STATE, field + server_constants::FIELD_STATE);
     if (state != server_constants::WALKABLE && state != server_constants::UNWALKABLE) {
@@ -51,7 +39,7 @@ bool readWalkableState(const toml::table& table,
     return state == server_constants::WALKABLE;
 }
 
-BackgroundAppearance readBackgroundAppearance(
+FarmTomlReader::BackgroundAppearance FarmTomlReader::readBackgroundAppearance(
     const toml::table& table, const std::string& field) {
     const auto texture = static_cast<uint16_t>(integer(
         table, server_constants::TEXTURE_ID, std::numeric_limits<uint16_t>::max(),
@@ -61,12 +49,11 @@ BackgroundAppearance readBackgroundAppearance(
 }
 
 template <class Callback>
-void farmEntries(const toml::table& table,
+void FarmTomlReader::farmEntries(const toml::table& table,
                  std::string_view key,
                  Callback callback,
-                 bool required = false,
-                 std::size_t limit =
-                     std::numeric_limits<uint16_t>::max()) {
+                 bool required,
+                 std::size_t limit) {
     const auto field = server_constants::FARM_2 + std::string(key);
     const auto* node = table.get(key);
 
@@ -88,7 +75,7 @@ void farmEntries(const toml::table& table,
     }
 }
 
-Position farmTileAt(const toml::table& table,
+Position FarmTomlReader::farmTileAt(const toml::table& table,
                     int width,
                     int height,
                     const std::string& field) {
@@ -98,7 +85,7 @@ Position farmTileAt(const toml::table& table,
     };
 }
 
-Position farmBaseAt(const toml::node* node,
+Position FarmTomlReader::farmBaseAt(const toml::node* node,
                     const ZoneMap& terrain,
                     int width,
                     int height,
@@ -114,7 +101,7 @@ Position farmBaseAt(const toml::node* node,
 }
 
 template <class Type, std::size_t N>
-Type farmNamedType(
+Type FarmTomlReader::farmNamedType(
     const toml::table& table,
     const std::pair<std::string_view, Type> (&types)[N],
     const std::string& field) {
@@ -129,7 +116,7 @@ Type farmNamedType(
     invalid(field + server_constants::FIELD_TYPE, server_constants::UNKNOWN_TYPE_PREFIX + name);
 }
 
-std::map<uint8_t, Stack> readChestItems(const toml::table& entry, const std::string& field) {
+std::map<uint8_t, Stack> FarmTomlReader::readChestItems(const toml::table& entry, const std::string& field) {
     std::map<uint8_t, Stack> contents;
     if (const auto* itemsNode = entry.get(server_constants::ITEMS)) {
         const auto* items = itemsNode->as_array();
@@ -156,7 +143,7 @@ std::map<uint8_t, Stack> readChestItems(const toml::table& entry, const std::str
     return contents;
 }
 
-void reserveFarmPosition(FarmLayout& layout, const Position& base) {
+void FarmTomlReader::reserveFarmPosition(FarmLayout& layout, const Position& base) {
     const auto alreadyReserved = std::any_of(
         layout.reservedPositions.begin(), layout.reservedPositions.end(),
         [&](const auto& other) {
@@ -168,7 +155,7 @@ void reserveFarmPosition(FarmLayout& layout, const Position& base) {
     }
 }
 
-void readBackground(const toml::table& farm,
+void FarmTomlReader::readBackground(const toml::table& farm,
                     int width,
                     int height,
                     FarmLayout& layout,
@@ -269,24 +256,24 @@ void readBackground(const toml::table& farm,
     }
 }
 
-bool validBase(const Position& base) {
+bool FarmTomlReader::validBase(const Position& base) {
     return base.getX() >= 0 && base.getY() > 0 &&
            base.getX() <= std::numeric_limits<uint16_t>::max() &&
            base.getY() <= std::numeric_limits<uint16_t>::max();
 }
 
-bool walkableBounds(const ZoneMap& terrain, const CollisionBounds& bounds) {
+bool FarmTomlReader::walkableBounds(const ZoneMap& terrain, const CollisionBounds& bounds) {
     return bounds.isValid() && bounds.getLeft() >= 0 && bounds.getTop() >= 0 &&
            terrain.isWalkable(bounds);
 }
 
-bool intersectsAny(const CollisionBounds& bounds,
+bool FarmTomlReader::intersectsAny(const CollisionBounds& bounds,
                    const std::vector<CollisionBounds>& others) {
     return std::any_of(others.begin(), others.end(),
         [&](const auto& other) { return bounds.intersects(other); });
 }
 
-const CropDefinition* findCropDefinition(const FarmConfig& config,
+const CropDefinition* FarmTomlReader::findCropDefinition(const FarmConfig& config,
                                          CropType type) {
     const auto found = std::find_if(
         config.crops.begin(), config.crops.end(),
@@ -294,7 +281,7 @@ const CropDefinition* findCropDefinition(const FarmConfig& config,
     return found == config.crops.end() ? nullptr : &*found;
 }
 
-const AnimalDefinition* findAnimalDefinition(const FarmConfig& config,
+const AnimalDefinition* FarmTomlReader::findAnimalDefinition(const FarmConfig& config,
                                              AnimalType type) {
     const auto species = animalSpeciesForType(type);
     if (!species) {
@@ -307,7 +294,7 @@ const AnimalDefinition* findAnimalDefinition(const FarmConfig& config,
     return found == config.animals.end() ? nullptr : &*found;
 }
 
-void validateInitialPlacements(const FarmLayout& layout,
+void FarmTomlReader::validateInitialPlacements(const FarmLayout& layout,
                                const FarmConfig& config) {
     config.validate();
 
@@ -438,7 +425,7 @@ void validateInitialPlacements(const FarmLayout& layout,
     }
 }
 
-FarmLayout readFarmLayout(const toml::table& root,
+FarmLayout FarmTomlReader::readFarmLayout(const toml::table& root,
                           const FarmConfig& config) {
     const auto& farm = tableAt(root.get(server_constants::FARM), server_constants::FARM);
 
@@ -678,8 +665,6 @@ FarmLayout readFarmLayout(const toml::table& root,
     validateInitialPlacements(layout, config);
     return layout;
 }
-
-}  // namespace
 
 FarmTomlReader::FarmTomlReader(const FarmConfig& config) : config(config) {}
 

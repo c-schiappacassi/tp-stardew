@@ -7,13 +7,11 @@
 #include <limits>
 #include <stdexcept>
 
-namespace {
-void accumulate(std::chrono::milliseconds& total, std::chrono::milliseconds elapsed) {
+void CropQuality::accumulate(std::chrono::milliseconds& total, std::chrono::milliseconds elapsed) {
     if (elapsed.count() < 0) {
         throw std::invalid_argument(server_constants::NEGATIVE_TIME);
     }
     total += std::min(elapsed, std::chrono::milliseconds::max() - total);
-}
 }
 
 CropQuality::CropQuality(std::chrono::milliseconds dayLength,std::chrono::milliseconds wateringInterval):
