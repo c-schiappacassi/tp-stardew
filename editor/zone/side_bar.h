@@ -13,7 +13,7 @@ class SideBar : public QListWidget {
     Q_OBJECT
 
 public:
-    SideBar(const Sprites& sprites, const std::vector<TileTextureId>& floors, const std::vector<ElementId>& elements, bool farming, QWidget* parent = nullptr);
+    SideBar(const Sprites& sprites, const std::vector<TileTextureId>& floors, const std::vector<ElementId>& elements, QWidget* parent = nullptr);
 
 signals:
     void toolSelected(const Tool& tool);
@@ -21,7 +21,6 @@ signals:
 private:
     void addHeader(const QString& text);
     void addEntry(const QString& text, const QPixmap& icon, const Tool& tool);
-    void addNote(const QString& text);
     void addElements(const Sprites& sprites, const std::vector<ElementId>& elements, ElementKind kind, const QString& header);
 
     std::vector<Tool> tools;

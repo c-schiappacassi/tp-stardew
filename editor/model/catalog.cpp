@@ -14,7 +14,7 @@ const char* const TOWN = "market/world/town_spring.png";
 const std::vector<FloorInfo>& floors() {
     static const std::vector<FloorInfo> list{
         {TileTextureId::Grass, "Grass", OUTDOORS, 0, 112},
-        {TileTextureId::Dirt, "Dirt", OUTDOORS, 16, 112},
+        {TileTextureId::Dirt, "Dirt (Plantable)", OUTDOORS, 16, 112},
         {TileTextureId::ConnctionStonePathGrassCorner, "Path (corner)", TOWN, 0, 304},
         {TileTextureId::ConnctionStonePathGrassLeftSide, "Path (left side)", TOWN, 0, 320},
         {TileTextureId::ConnctionStonePathGrassTop, "Path (top)", TOWN, 16, 304},

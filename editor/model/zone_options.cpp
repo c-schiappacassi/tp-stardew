@@ -42,7 +42,7 @@ ZoneOptions farmOptions() {
 
 ZoneOptions townOptions() {
     return {
-        {TileTextureId::Grass, TileTextureId::Dirt, TileTextureId::ConnctionStonePathGrassCorner,
+        {TileTextureId::Grass, TileTextureId::ConnctionStonePathGrassCorner,
          TileTextureId::ConnctionStonePathGrassLeftSide, TileTextureId::ConnctionStonePathGrassTop,
          TileTextureId::ConnctionStonePathGrassBottom, TileTextureId::StonePath},
         {
@@ -79,7 +79,7 @@ ZoneOptions townOptions() {
 
 ZoneOptions mineOptions() {
     return {
-        {TileTextureId::DungeonFloor, TileTextureId::Dirt},
+        {TileTextureId::DungeonFloor},
         {
             decorElement(DecorId::WeirdGreenPlant),
             decorElement(DecorId::SmallFern),

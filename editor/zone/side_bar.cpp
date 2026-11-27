@@ -7,7 +7,7 @@ const QSize ICON_SIZE(48, 48);
 const int SIDE_BAR_WIDTH = 260;
 }
 
-SideBar::SideBar(const Sprites& sprites, const std::vector<TileTextureId>& floors, const std::vector<ElementId>& elements, bool farming, QWidget* parent): QListWidget(parent) {
+SideBar::SideBar(const Sprites& sprites, const std::vector<TileTextureId>& floors, const std::vector<ElementId>& elements, QWidget* parent): QListWidget(parent) {
     setIconSize(ICON_SIZE);
     setFixedWidth(SIDE_BAR_WIDTH);
 
@@ -15,9 +15,6 @@ SideBar::SideBar(const Sprites& sprites, const std::vector<TileTextureId>& floor
         addHeader("Floors");
         for (TileTextureId floor: floors) {
             addEntry(QString::fromStdString(FloorCatalog::infoOf(floor).name), sprites.floor(floor), {Tool::Kind::PaintFloor, floor, {}});
-            if (farming && floor == TileTextureId::Dirt) {
-                addNote("You can only plant on this floor");
-            }
         }
     }
     addElements(sprites, elements, ElementKind::Building, "Buildings");
@@ -53,15 +50,6 @@ void SideBar::addEntry(const QString& text, const QPixmap& icon, const Tool& too
 
     item->setData(Qt::UserRole, static_cast<int>(tools.size()));
     tools.push_back(tool);
-}
-
-void SideBar::addNote(const QString& text) {
-    QListWidgetItem* item = new QListWidgetItem(text, this);
-    item->setFlags(Qt::NoItemFlags);
-    QFont small = font();
-    small.setPixelSize(11);
-    small.setItalic(true);
-    item->setFont(small);
 }
 
 void SideBar::addElements(const Sprites& sprites, const std::vector<ElementId>& elements, ElementKind kind, const QString& header) {

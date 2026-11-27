@@ -10,9 +10,9 @@ int leftFor(ElementId element, int x) { return x - ElementCatalog::infoOf(elemen
 int topFor(ElementId element, int y) { return y - ElementCatalog::infoOf(element).tilesHeight + 1; }
 }
 
-ZoneTab::ZoneTab(ZoneMap& zone, const Sprites& sprites, const std::vector<TileTextureId>& floors, const std::vector<ElementId>& elements, bool farming, QWidget* parent):
+ZoneTab::ZoneTab(ZoneMap& zone, const Sprites& sprites, const std::vector<TileTextureId>& floors, const std::vector<ElementId>& elements, QWidget* parent):
         QWidget(parent), zone(zone), canvas(new ZoneCanvas(zone, sprites, this)), current{Tool::Kind::Move, {}, {}} {
-    SideBar* sideBar = new SideBar(sprites, floors, elements, farming, this);
+    SideBar* sideBar = new SideBar(sprites, floors, elements, this);
 
     QHBoxLayout* layout = new QHBoxLayout(this);
     layout->addWidget(sideBar);
