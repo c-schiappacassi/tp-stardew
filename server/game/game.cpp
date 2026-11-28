@@ -18,6 +18,7 @@
 
 Game::Game(const std::string& id, const std::string& name, uint8_t worldId, PreparedWorld prepared, const GameConfig& config, ChatServices chatServices, std::optional<uint32_t> savedSeed):
     id(id), name(name), worldId(worldId),
+    input(server_constants::COMMAND_QUEUE_SIZE),
     worldSeed(savedSeed ? *savedSeed : std::random_device{}()),
     world(config.dungeon, worldSeed, config.farm),
     commerce(std::make_shared<CommerceManager>(world, config.market)),
@@ -69,7 +70,9 @@ GameSession Game::resumeGame(const ResumeGameDTO& dto, const std::shared_ptr<Out
 
 CommandSubmission Game::enqueueCommand(uint16_t playerId, std::shared_ptr<CommandDTO> command) {
     try {
-        input.push({playerId, std::move(command)});
+        PlayerCommand entry{playerId, std::move(command)};
+        while (!input.try_push(entry))
+            std::this_thread::sleep_for(std::chrono::milliseconds(1));
         return CommandSubmission::Enqueued;
     } catch (const ClosedQueue&) {
         return CommandSubmission::GameClosed;
@@ -186,9 +189,15 @@ void Game::advanceWorld(std::chrono::milliseconds elapsed) {
 
 void Game::processCommands() {
     PlayerCommand command;
-    while (should_keep_running() && input.try_pop(command)) {
-        playerManager.handleCommand(command, community.finished());
-        updateCommunity();
+    unsigned int processed = 0;
+    try {
+        while (should_keep_running() && processed++ < server_constants::COMMAND_QUEUE_SIZE &&
+               input.try_pop(command)) {
+            playerManager.handleCommand(command, community.finished());
+            updateCommunity();
+        }
+    } catch (const ClosedQueue&) {
+        // Game cerro
     }
 }
 

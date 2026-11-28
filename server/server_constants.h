@@ -1010,6 +1010,9 @@ inline constexpr char YOU_RECEIVED_PREFIX[] = "You received ";
 inline constexpr char YOU_REJECTED_THE_GIFT_FROM_PREFIX[] = "You rejected the gift from ";
 inline constexpr char YOU_SOLD_PREFIX[] = "You sold ";
 inline constexpr char ZONEDATA[] = "zoneData";
+
+inline constexpr unsigned int OUT_QUEUE_SIZE = 8;
+inline constexpr unsigned int COMMAND_QUEUE_SIZE = 256;
 }  // namespace server_constants
 
 #define SERVER_MAP_LEVEL_COUNT_ASSERTION " editor and server needs to share te quantity of levels on the mine "

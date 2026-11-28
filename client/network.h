@@ -3,6 +3,7 @@
 #include <atomic>
 #include <optional>
 
+#include "client_constants.h"
 #include "client_protocol.h"
 #include "dtos.h"
 #include "queue.h"
@@ -11,8 +12,8 @@
 
 class NetworkManager {
 private:
-    Queue<std::shared_ptr<CommandDTO>> send_queue{100};
-    Queue<ServerStatus> recv_queue{100};
+    Queue<std::shared_ptr<CommandDTO>> send_queue{client_constants::SEND_QUEUE_SIZE};
+    Queue<ServerStatus> recv_queue{client_constants::RECV_QUEUE_SIZE};
     ClientProtocol protocolo;
     std::atomic<bool> connected{true};
     SendThread sender;
@@ -44,9 +45,8 @@ public:
     bool isConnected() const { return connected; }
 
     void push_to_send(const std::shared_ptr<CommandDTO>& dto) {
-        if (!connected || !send_queue.try_push(dto)) {
-            throw std::runtime_error("No se pudo enviar el comando al servidor");
-        }
+        if (!connected) return;
+        send_queue.try_push(dto);
     }
 
     std::optional<ServerStatus> try_pop_recv() {

@@ -75,8 +75,8 @@ void PlayerRecord::publishStatus(ServerStatus& status) {
     const auto messagesEnd = chatMessages.begin() + static_cast<std::ptrdiff_t>(messageCount);
     status.localPlayer.newMessages.assign(chatMessages.begin(), messagesEnd);
     try {
-        output->push(status);
-        chatMessages.erase(chatMessages.begin(), messagesEnd);
+        if (output->try_push(status))
+            chatMessages.erase(chatMessages.begin(), messagesEnd);
     } catch (const ClosedQueue&) {
 
     }

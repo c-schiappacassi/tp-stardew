@@ -22,7 +22,7 @@ ClientHandler::Receiver ClientHandler::receiver(DTO (ServerProtocol::*recv)()) {
 ClientHandler::ClientHandler(Socket&& socket, GameManager& manager):
         protocol(std::move(socket)),
         manager(manager),
-        outQueue(std::make_shared<OutQueue>()),
+        outQueue(std::make_shared<OutQueue>(server_constants::OUT_QUEUE_SIZE)),
         session(),
         sender() {
     gameReceivers = {
@@ -135,8 +135,12 @@ void ClientHandler::stop() {
 
 void ClientHandler::disconnect() {
     stop();
-    if (session.status.status == StatusCode::Ok && session.playerId != 0)
-        manager.enqueueCommand(session.gameId, session.playerId, std::make_shared<DisconnectDTO>(session.userName));
+    try {
+        if (session.status.status == StatusCode::Ok && session.playerId != 0)
+            manager.enqueueCommand(session.gameId, session.playerId, std::make_shared<DisconnectDTO>(session.userName));
+    } catch (const std::exception& e) {
+        std::cerr << server_constants::UNEXPECTED_ERROR_PREFIX << e.what() << server_constants::NEWLINE;
+    }
     try {
         outQueue->close();
     } catch (const std::exception&) {
