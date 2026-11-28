@@ -66,6 +66,7 @@ struct ElementInfo {
     std::vector<TileOffset> occupied;
     std::vector<TileOffset> blocked;
     std::optional<TileOffset> door;
+    bool onWall = false;
 };
 
 class ElementCatalog {

@@ -25,16 +25,16 @@ MainWindow::MainWindow(QWidget* parent): QMainWindow(parent), stack(new QStacked
     connect(startScreen, &StartScreen::editMapRequested, this, &MainWindow::editExistingMap);
 }
 
-void MainWindow::openEditor(const WorldMap& map) {
+void MainWindow::openEditor(const WorldMap& map, const QString& savePath) {
     closeEditor();
-    editor = new MapEditorScreen(map, this);
+    editor = new MapEditorScreen(map, savePath, this);
     stack->addWidget(editor);
     stack->setCurrentWidget(editor);
     connect(editor, &MapEditorScreen::backRequested, this, &MainWindow::closeEditor);
 }
 
 void MainWindow::createMap() {
-    openMapFile(BASE_MAP_PATH);
+    openMapFile(BASE_MAP_PATH, "");
 }
 
 void MainWindow::editExistingMap() {
@@ -43,12 +43,12 @@ void MainWindow::editExistingMap() {
     if (path.isEmpty()) {
         return;
     }
-    openMapFile(path);
+    openMapFile(path, path);
 }
 
-void MainWindow::openMapFile(const QString& path) {
+void MainWindow::openMapFile(const QString& path, const QString& savePath) {
     try {
-        openEditor(readMap(path.toStdString()));
+        openEditor(readMap(path.toStdString()), savePath);
     } catch (const std::exception& error) {
         QMessageBox::warning(this, "Open map", QString("Could not open ") + path + ":\n" + error.what());
     }

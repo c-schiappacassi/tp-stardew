@@ -15,13 +15,20 @@ const std::vector<FloorInfo>& floors() {
     static const std::vector<FloorInfo> list{
         {TileTextureId::Grass, "Grass", OUTDOORS, 0, 112},
         {TileTextureId::Dirt, "Dirt (Plantable)", OUTDOORS, 16, 112},
-        {TileTextureId::ConnctionStonePathGrassCorner, "Path (corner)", TOWN, 0, 304},
+        {TileTextureId::ConnctionStonePathGrassCorner, "Path (top left corner)", TOWN, 0, 304},
         {TileTextureId::ConnctionStonePathGrassLeftSide, "Path (left side)", TOWN, 0, 320},
         {TileTextureId::ConnctionStonePathGrassTop, "Path (top)", TOWN, 16, 304},
         {TileTextureId::ConnctionStonePathGrassBottom, "Path (bottom)", TOWN, 16, 336},
         {TileTextureId::StonePath, "Stone path", TOWN, 0, 368, 32, 32},
+        {TileTextureId::ConnctionStonePathGrassTopRightCorner, "Path (top right corner)", TOWN, 32, 304},
+        {TileTextureId::ConnctionStonePathGrassBottomRightCorner, "Path (bottom right corner)", TOWN, 32, 336},
+        {TileTextureId::ConnctionStonePathGrassBottomLeftCorner, "Path (bottom left corner)", TOWN, 0, 336},
+        {TileTextureId::ConnctionStonePathGrassRightSide, "Path (right side)", TOWN, 32, 320},
 
         {TileTextureId::DungeonFloor, "Floor", MINE, 1216, 704},
+        {TileTextureId::DungeonDottedFloor, "Dotted floor", MINE, 1104, 736},
+        {TileTextureId::DungeonPebbledFloor, "Pebbled floor", MINE, 1168, 720},
+        {TileTextureId::DungeonBrickFloor, "Brick floor", MINE, 1024, 816, 48, 48},
         {TileTextureId::DungeonVoid, "Void (black)", MINE, 1264, 640, 16, 16, false},
         {TileTextureId::DungeonLeftWall, "Left wall", MINE, 1088, 704, 16, 64, false, true},
         {TileTextureId::DungeonRightWall, "Right wall", MINE, 1264, 736, 16, 64, false, true},
@@ -121,6 +128,14 @@ ElementInfo decor(DecorId id, const std::string& name, const std::string& sheet,
     return make(decorElement(id), name, sheet, x, y, width, height);
 }
 
+ElementInfo wallDecor(DecorId id, const std::string& name, const std::string& sheet, int x, int y, int width, int height) {
+    ElementInfo info = make(decorElement(id), name, sheet, x, y, width, height);
+    info.occupied = tilesOf({0, 0, info.tilesWidth, info.tilesHeight});
+    info.blocked.clear();
+    info.onWall = true;
+    return info;
+}
+
 ElementInfo wall(FramePieceId id, const std::string& name, const std::string& sheet, int x, int y, int width, int height) {
     ElementInfo info = make(wallElement(id), name, sheet, x, y, width, height);
     info.occupied = tilesOf({0, 0, info.tilesWidth, info.tilesHeight});
@@ -162,6 +177,8 @@ const std::vector<ElementInfo>& elements() {
         decor(DecorId::StreatLamp, "Street lamp", TOWN, 176, 448, 16, 64),
         decor(DecorId::FenceFront, "Fence (front)", TOWN, 16, 449, 16, 32),
         decor(DecorId::FenceBack, "Fence (back)", TOWN, 16, 400, 16, 32),
+        decor(DecorId::FenceSideLeft, "Fence (left side)", TOWN, 0, 432, 16, 16),
+        decor(DecorId::FenceSideRight, "Fence (right side)", TOWN, 32, 432, 16, 16),
         decor(DecorId::PinkFlower, "Pink flower", OUTDOORS, 112, 160, 16, 16),
         decor(DecorId::BlueFlower, "Blue flower", OUTDOORS, 112, 192, 16, 16),
         decor(DecorId::WeirdGreenPlant, "Green plant", "caverns/plants.png", 0, 0, 16, 24),
@@ -181,6 +198,20 @@ const std::vector<ElementInfo>& elements() {
         decor(DecorId::PottedPlants, "Potted plants", TOWN, 368, 476, 47, 36),
         decor(DecorId::SmallBlueFlower, "Small blue flower", TOWN, 353, 432, 16, 16),
         decor(DecorId::SignPost, "Sign post", OUTDOORS, 160, 256, 16, 32),
+
+        decor(DecorId::SmallBench, "Small bench", TOWN, 32, 154, 32, 22),
+        decor(DecorId::PottedFern, "Potted fern", TOWN, 16, 145, 16, 16),
+        decor(DecorId::ChairFacingRight, "Chair (right)", TOWN, 128, 9, 16, 38),
+        decor(DecorId::Mailbox, "Mailbox", TOWN, 146, 0, 12, 32),
+        decor(DecorId::TrashCan, "Trash can", TOWN, 224, 26, 16, 22),
+        decor(DecorId::ChairFacingLeft, "Chair (left)", TOWN, 352, 9, 15, 38),
+        decor(DecorId::FlowerBox, "Flower box", TOWN, 368, 9, 16, 21),
+        decor(DecorId::PottedFlower, "Potted flower", TOWN, 384, 16, 16, 32),
+        decor(DecorId::Table, "Table", TOWN, 432, 526, 48, 34),
+
+        wallDecor(DecorId::WallSpiderWeb, "Spider web (wall)", MINE, 1056, 704, 32, 32),
+        wallDecor(DecorId::WallLantern, "Lantern (wall)", MINE, 1040, 640, 32, 32),
+        wallDecor(DecorId::SmallWallLantern, "Small lantern (wall)", MINE, 1040, 672, 16, 16),
 
         portal(PortalId::FarmToMine, "Mine entrance", OUTDOORS, 608,160,48,48),
         portal(PortalId::ToNextLevel, "Ladder to next level",  "caverns/level_portals.png", 0,0,16,16),

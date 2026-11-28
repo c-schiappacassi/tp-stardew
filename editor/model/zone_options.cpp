@@ -2,7 +2,11 @@
 
 ZoneOptions farmOptions() {
     return {
-        {TileTextureId::Grass, TileTextureId::Dirt},
+        {TileTextureId::Grass, TileTextureId::Dirt, TileTextureId::StonePath, TileTextureId::ConnctionStonePathGrassCorner,
+         TileTextureId::ConnctionStonePathGrassTop, TileTextureId::ConnctionStonePathGrassTopRightCorner,
+         TileTextureId::ConnctionStonePathGrassLeftSide, TileTextureId::ConnctionStonePathGrassRightSide,
+         TileTextureId::ConnctionStonePathGrassBottomLeftCorner, TileTextureId::ConnctionStonePathGrassBottom,
+         TileTextureId::ConnctionStonePathGrassBottomRightCorner},
         {
             buildingElement(BuildingId::FarmHouse),
             buildingElement(BuildingId::StoneCabin),
@@ -34,6 +38,8 @@ ZoneOptions farmOptions() {
             decorElement(DecorId::BigRedMushroom),
             decorElement(DecorId::FenceFront),
             decorElement(DecorId::FenceBack),
+            decorElement(DecorId::FenceSideLeft),
+            decorElement(DecorId::FenceSideRight),
 
             portalElement(PortalId::FarmToMine),
         },
@@ -44,7 +50,9 @@ ZoneOptions townOptions() {
     return {
         {TileTextureId::Grass, TileTextureId::ConnctionStonePathGrassCorner,
          TileTextureId::ConnctionStonePathGrassLeftSide, TileTextureId::ConnctionStonePathGrassTop,
-         TileTextureId::ConnctionStonePathGrassBottom, TileTextureId::StonePath},
+         TileTextureId::ConnctionStonePathGrassBottom, TileTextureId::ConnctionStonePathGrassTopRightCorner,
+         TileTextureId::ConnctionStonePathGrassBottomRightCorner, TileTextureId::ConnctionStonePathGrassBottomLeftCorner,
+         TileTextureId::ConnctionStonePathGrassRightSide, TileTextureId::StonePath},
         {
             buildingElement(BuildingId::PierresShop),
             buildingElement(BuildingId::ClintsShop),
@@ -72,14 +80,26 @@ ZoneOptions townOptions() {
             decorElement(DecorId::StreatLamp),
             decorElement(DecorId::FenceFront),
             decorElement(DecorId::FenceBack),
+            decorElement(DecorId::FenceSideLeft),
+            decorElement(DecorId::FenceSideRight),
             decorElement(DecorId::PottedPlants),
+            decorElement(DecorId::SmallBench),
+            decorElement(DecorId::Table),
+            decorElement(DecorId::ChairFacingRight),
+            decorElement(DecorId::ChairFacingLeft),
+            decorElement(DecorId::PottedFern),
+            decorElement(DecorId::PottedFlower),
+            decorElement(DecorId::FlowerBox),
+            decorElement(DecorId::Mailbox),
+            decorElement(DecorId::TrashCan),
         },
     };
 }
 
 ZoneOptions mineOptions() {
     return {
-        {TileTextureId::DungeonFloor},
+        {TileTextureId::DungeonFloor, TileTextureId::DungeonDottedFloor, TileTextureId::DungeonPebbledFloor,
+         TileTextureId::DungeonBrickFloor},
         {
             decorElement(DecorId::WeirdGreenPlant),
             decorElement(DecorId::SmallFern),
@@ -88,13 +108,9 @@ ZoneOptions mineOptions() {
             decorElement(DecorId::YellowMushrom),
             decorElement(DecorId::BabyRedMushrom),
             decorElement(DecorId::BigRedMushroom),
-            decorElement(DecorId::DungeonPilar),
-            decorElement(DecorId::DungeonTorch),
-            decorElement(DecorId::DungeonChain),
-            decorElement(DecorId::DungeonWindow),
-            decorElement(DecorId::DungeonWallCrack),
-            decorElement(DecorId::SpiderWeb),
-            decorElement(DecorId::CornerSpiderWeb),
+            decorElement(DecorId::WallSpiderWeb),
+            decorElement(DecorId::WallLantern),
+            decorElement(DecorId::SmallWallLantern),
 
             portalElement(PortalId::MineToFarm),
             portalElement(PortalId::ToNextLevel),

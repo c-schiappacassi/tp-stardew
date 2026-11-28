@@ -40,6 +40,7 @@ public:
 private:
     int index(int x, int y) const;
     bool isFixed(const PlacedElement& placed) const;
+    bool isWall(int x, int y) const;
 
     int width;
     int height;

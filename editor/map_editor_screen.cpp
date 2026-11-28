@@ -8,6 +8,7 @@
 #include <QMessageBox>
 #include <QPushButton>
 #include <QDir>
+#include <QFileInfo>
 
 #include "editor_constants.h"
 #include "sprite_button.h"
@@ -22,7 +23,8 @@ const QRect backHoverRect(296, 280, 66, 26);
 const QSize backSize(160, 68);
 }
 
-MapEditorScreen::MapEditorScreen(const WorldMap& startingMap, QWidget* parent): QWidget(parent), map(startingMap) {
+MapEditorScreen::MapEditorScreen(const WorldMap& startingMap, const QString& filePath, QWidget* parent):
+        QWidget(parent), map(startingMap), filePath(filePath) {
     const QPixmap titleSheet(MENUS_PATH + "title_screen.png");
     SpriteButton* backButton = new SpriteButton(titleSheet.copy(backNormalRect), titleSheet.copy(backHoverRect), this);
     backButton->setFixedSize(backSize);
@@ -69,15 +71,20 @@ void MapEditorScreen::saveMap() {
         return;
     }
 
-    QDir().mkpath(CUSTOM_MAPS_PATH);
-    QString path = QFileDialog::getSaveFileName(this, "Save map", CUSTOM_MAPS_PATH, "TOML map (*.toml)");
-    if (path.isEmpty()) {
-        return;
+    if (filePath.isEmpty()) {
+        QDir().mkpath(CUSTOM_MAPS_PATH);
+        QString path = QFileDialog::getSaveFileName(this, "Save map", CUSTOM_MAPS_PATH, "TOML map (*.toml)");
+        if (path.isEmpty()) {
+            return;
+        }
+        if (!path.endsWith(".toml")) {
+            path += ".toml";
+        }
+        filePath = path;
     }
-    if (!path.endsWith(".toml")) {
-        path += ".toml";
-    }
-    if (!writeMap(map, path.toStdString())) {
-        QMessageBox::warning(this, "Save map", "Could not save the map in " + path);
+    if (writeMap(map, filePath.toStdString())) {
+        QMessageBox::information(this, "Save map", "Map saved in " + QFileInfo(filePath).fileName());
+    } else {
+        QMessageBox::warning(this, "Save map", "Could not save the map in " + filePath);
     }
 }

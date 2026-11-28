@@ -64,7 +64,12 @@ void ZoneCanvas::refreshElements() {
 void ZoneCanvas::redrawMap() {
     std::vector<PlacedElement> ordered = zone.getElements();
     std::stable_sort(ordered.begin(), ordered.end(), [](const PlacedElement& a, const PlacedElement& b) {
-        return a.y + ElementCatalog::infoOf(a.element).tilesHeight < b.y + ElementCatalog::infoOf(b.element).tilesHeight;
+        const ElementInfo& infoA = ElementCatalog::infoOf(a.element);
+        const ElementInfo& infoB = ElementCatalog::infoOf(b.element);
+        if (infoA.onWall != infoB.onWall) {
+            return infoB.onWall;
+        }
+        return a.y + infoA.tilesHeight < b.y + infoB.tilesHeight;
     });
 
     QPixmap map = floorLayer;

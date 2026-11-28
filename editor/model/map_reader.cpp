@@ -44,13 +44,20 @@ ZoneMap toZone(const EditorZoneData& data, const std::string& zoneName, std::vec
         placeBuilding(zone, building, zoneName, errors);
     }
     for (const MapElement& item: data.decorations) {
-        zone.place(decorElement(static_cast<DecorId>(item.id)), item.x, item.y);
+        if (!ElementCatalog::infoOf(decorElement(static_cast<DecorId>(item.id))).onWall) {
+            zone.place(decorElement(static_cast<DecorId>(item.id)), item.x, item.y);
+        }
     }
     for (const MapElement& piece: data.frame) {
         zone.place(wallElement(static_cast<FramePieceId>(piece.id)), piece.x, piece.y);
     }
     for (const TilePosition& tile: data.lockedTiles) {
         zone.lock(tile.x, tile.y);
+    }
+    for (const MapElement& item: data.decorations) {
+        if (ElementCatalog::infoOf(decorElement(static_cast<DecorId>(item.id))).onWall) {
+            zone.place(decorElement(static_cast<DecorId>(item.id)), item.x, item.y);
+        }
     }
     if (data.doorTown) {
         zone.setFixedDoor("door_town", data.doorTown->x, data.doorTown->y);

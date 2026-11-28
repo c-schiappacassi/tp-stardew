@@ -89,6 +89,21 @@ bool ZoneMap::canPlace(ElementId element, int x, int y) const {
 
     const PlacedElement candidate{element, x, y};
     const std::vector<TileOffset> tiles = occupiedAt(candidate);
+
+    if (info.onWall) {
+        for (const TileOffset& tile: tiles) {
+            if (!isWall(tile.x, tile.y)) {
+                return false;
+            }
+        }
+        for (const PlacedElement& other: elements) {
+            if (ElementCatalog::infoOf(other.element).onWall && boxesOverlap(candidate, other) &&
+                shareTile(tiles, occupiedAt(other))) {
+                return false;
+            }
+        }
+        return true;
+    }
     std::vector<TileOffset> doorTiles;
     for (const TileOffset& tile: tiles) {
         const bool solid = std::any_of(info.blocked.begin(), info.blocked.end(), [&](const TileOffset& blocked) {
@@ -159,7 +174,7 @@ bool ZoneMap::isFixed(const PlacedElement& placed) const {
     if (placed.element.kind == ElementKind::Wall) {
         return true;
     }
-    if (placed.element.kind == ElementKind::Portal) {
+    if (placed.element.kind == ElementKind::Portal || ElementCatalog::infoOf(placed.element).onWall) {
         return false;
     }
     for (const TileOffset& tile: occupiedAt(placed)) {
@@ -172,4 +187,19 @@ bool ZoneMap::isFixed(const PlacedElement& placed) const {
 
 int ZoneMap::index(int x, int y) const {
     return y * width + x;
+}
+
+bool ZoneMap::isWall(int x, int y) const {
+    if (!isLocked(x, y)) {
+        return false;
+    }
+    if (getFloor(x, y) != TileTextureId::DungeonVoid) {
+        return true;
+    }
+    for (const PlacedElement& placed: elements) {
+        if (placed.element.kind == ElementKind::Wall && covers(placed, x, y)) {
+            return true;
+        }
+    }
+    return false;
 }

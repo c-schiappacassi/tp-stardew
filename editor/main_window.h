@@ -15,8 +15,8 @@ public:
     explicit MainWindow(QWidget* parent = nullptr);
 
 private:
-    void openEditor(const WorldMap& map);
-    void openMapFile(const QString& path);
+    void openEditor(const WorldMap& map, const QString& savePath);
+    void openMapFile(const QString& path, const QString& savePath);
     void createMap();
     void editExistingMap();
     void closeEditor();
