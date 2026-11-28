@@ -12,6 +12,7 @@
 #include "entities/entity_id_generator.h"
 #include "farm/decorations/decoration_items.h"
 #include "farm/farm_constants.h"
+#include "interior_furniture_position.h"
 #include "player/player_manager.h"
 
 const CollisionBox Interior::BED_BOX{22, 32};
@@ -23,8 +24,18 @@ bool Interior::validPosition(const Position& position) {
 
 Interior::Interior(const InteriorLayout& layout):
     location(layout.location), outside(layout.outside), extraOutside(layout.extraOutside), returnPosition(layout.returnPosition),
-    entry(layout.entry), exit(layout.exit), beds(layout.beds), background(layout.background) {
+    entry(layout.entry), exit(layout.exit), beds(layout.beds), background(layout.background),
+    furnitureObstacles(staticFurnitureBounds(layout.background)) {
     space.setMap(layout.terrain);
+}
+
+std::vector<CollisionBounds> Interior::staticFurnitureBounds(const BackgroundData& background) {
+    std::vector<CollisionBounds> result;
+    for (const auto& item: background.furniture) {
+        if (const auto box = interiorFurnitureCollisionBox(item.id, item.dir))
+            result.push_back(box->at(item.pos));
+    }
+    return result;
 }
 
 bool Interior::validLayout(const InteriorLayout& room) {
@@ -35,6 +46,10 @@ bool Interior::validLayout(const InteriorLayout& room) {
         !validPosition(room.outside.position) || !validPosition(room.returnPosition) || !validPosition(room.entry) || !validPosition(room.exit) ||
         !room.terrain.isWalkable(playerBox.at(room.entry)) || !room.terrain.isWalkable(playerBox.at(room.exit)) || !room.terrain.hasBasePath(room.entry, room.exit))
         return false;
+    for (const auto& furniture: staticFurnitureBounds(room.background)) {
+        if (furniture.intersects(playerBox.at(room.entry)) || furniture.intersects(playerBox.at(room.exit)))
+            return false;
+    }
     if (room.background.interior && room.background.interior->npc) {
         const auto& npc = *room.background.interior->npc;
         const auto expected = shop_products::merchantForInterior(room.location.interior_id);
@@ -87,7 +102,7 @@ ZoneMap Interior::walkingMap() const {
         const auto cell = terrain.baseCellAt(position).value();
         floor[cell.first][cell.second] = terrain.isWalkable(playerBox.at(position)) && space.canWalk(playerBox.at(position)) &&
             (!background.interior || !background.interior->npc || !playerBox.at(background.interior->npc->pos).intersects(playerBox.at(position))) &&
-            std::none_of(beds.begin(), beds.end(), [&](const auto& bed) { return BED_BOX.at(bed).intersects(playerBox.at(position)); });
+            !blockedByFixedObstacle(playerBox.at(position));
     }
     return ZoneMap{floor, terrain.getCellSize()};
 }
@@ -104,11 +119,16 @@ bool Interior::hasAccessibleBeds() const {
     });
 }
 
-std::vector<CollisionBounds> Interior::bedObstacles() const {
-    std::vector<CollisionBounds> result;
+std::vector<CollisionBounds> Interior::fixedObstacles() const {
+    std::vector<CollisionBounds> result = furnitureObstacles;
     for (const auto& bed: beds)
         result.push_back(BED_BOX.at(bed));
     return result;
+}
+
+bool Interior::blockedByFixedObstacle(const CollisionBounds& bounds) const {
+    return std::any_of(beds.begin(), beds.end(), [&](const auto& bed) { return BED_BOX.at(bed).intersects(bounds); }) ||
+        std::any_of(furnitureObstacles.begin(), furnitureObstacles.end(), [&](const auto& furniture) { return furniture.intersects(bounds); });
 }
 
 bool Interior::initializeStorage(const std::vector<ChestSpawn>& initial, EntityIdGenerator& ids) {
@@ -116,7 +136,7 @@ bool Interior::initializeStorage(const std::vector<ChestSpawn>& initial, EntityI
         return initial.empty();
     if (!space.setReservedPositions({entry, exit}))
         return false;
-    space.setObstacles(bedObstacles());
+    space.setObstacles(fixedObstacles());
     for (const auto& spawn: initial) {
         try {
             if (ids.getNextId() == 0 || !chests.place(ids.getNextId(), spawn.base, space, spawn.items))
@@ -140,7 +160,7 @@ bool Interior::sameBaseCell(const Position& first, const Position& second) const
 bool Interior::canWalk(const CollisionBounds& bounds) const {
     return space.getMap().isWalkable(bounds) && space.canWalk(bounds) &&
         (!background.interior || !background.interior->npc || !CollisionBox{entity_dimensions::PLAYER}.at(background.interior->npc->pos).intersects(bounds)) &&
-        std::none_of(beds.begin(), beds.end(), [&](const auto& bed) { return BED_BOX.at(bed).intersects(bounds); });
+        !blockedByFixedObstacle(bounds);
 }
 
 bool Interior::canMove(const PlayerSnapshot& player, const Position& next) const {
@@ -225,7 +245,7 @@ bool Interior::useSelectedItem(PlayerManager& players, uint16_t playerId, Direct
     if (!player.canAct() || player.getZone() != Zone::InsideHouse || player.getInterior() != location)
         return false;
     if (location.interior_id == InteriorId::PlayerHouse) {
-        auto obstacles = bedObstacles();
+        auto obstacles = fixedObstacles();
         for (const auto id: players.connectedPlayerIds()) {
             const auto other = players.snapshot(id);
             if (other.getZone() == Zone::InsideHouse && other.getInterior() == location)
@@ -246,13 +266,14 @@ std::optional<bool> Interior::interactWithDecoration(PlayerManager& players, uin
     if (!selected || (selected->item_id != ItemId::Shovel && !Decoration::isDecoration(selected->item_id)))
         return std::nullopt;
     const auto& terrain = space.getMap();
-    const auto position = terrain.findAdjacentPosition(player.getPosition(), direction,
-        player.getCollisionBounds(player.getPosition()), CollisionBox{entity_dimensions::DECORATION});
     const bool shovel = selected->item_id == ItemId::Shovel;
+    const CollisionBox box = shovel ? CollisionBox{entity_dimensions::DECORATION} : Decoration::collisionBoxFor(selected->item_id, direction);
+    const auto position = terrain.findAdjacentPosition(player.getPosition(), direction,
+        player.getCollisionBounds(player.getPosition()), box);
     if (shovel) {
         const auto& items = decorations.getDecorations();
         const auto target = std::find_if(items.begin(), items.end(), [&](const auto& entry) {
-            return position && terrain.sameBaseCell(entry.second.getPosition(), *position);
+            return position && entry.second.getBounds().intersects(box.at(*position));
         });
         if (target == items.end())
             return std::nullopt;
@@ -307,16 +328,23 @@ void Interior::restoreStorage(const InteriorData& saved, const std::map<uint32_t
     chests = ChestManager{};
     decorations = DecorationManager{};
     space.clearOccupants();
-    space.setObstacles(bedObstacles());
+    space.setObstacles(fixedObstacles());
     for (const auto& item: saved.furniture) {
-        if (item.type != FurnitureId::Chest) {
-            if (item.type > FurnitureId::Chest || !decorations.place(item.id, item.pos, decoration_items::itemFor(item.type), space, item.dir))
-                throw std::runtime_error(server_constants::INVALID_SAVED_HOUSE_DECORATION);
+        if (item.type != FurnitureId::Chest)
             continue;
-        }
         const auto contents = inventories.find(item.id);
         if (contents == inventories.end() || !chests.place(item.id, item.pos, space, contents->second))
             throw std::runtime_error(server_constants::INVALID_SAVED_CHEST_FURNITURE_OR_CONTENTS);
     }
-    groundItems.restoreItems(saved.loot);
+    auto loot = saved.loot;
+    for (const auto& item: saved.furniture) {
+        if (item.type == FurnitureId::Chest)
+            continue;
+        const ItemId decoration = decoration_items::itemFor(item.type);
+        if (item.type > FurnitureId::Chest || !Decoration::isDecoration(decoration) || item.dir < Direction::Up || item.dir > Direction::Right)
+            throw std::runtime_error(server_constants::INVALID_SAVED_HOUSE_DECORATION);
+        if (!decorations.place(item.id, item.pos, decoration, space, item.dir))
+            loot.push_back(LootData{item.id, item.pos, decoration, 1, Quality::None, LootKind::Item});
+    }
+    groundItems.restoreItems(loot);
 }

@@ -391,6 +391,16 @@ enum class FurnitureId : uint8_t{
     BrownSofa,
     BrownArmCouch,
     Chest,
+
+    // Exclusivo de los shops
+    PierreShopShelf,
+    PierreCashRegister,
+    PierreProductBin,
+    MarnieGrass,
+    CashRegister,
+    ClintsChair,
+    RobinCashRegister,
+    RobinPlantTable,
 };
 
 enum class BuildingId : uint8_t{

@@ -84,7 +84,7 @@ std::vector<TileData> FarmTerrain::backgroundData() const {
     std::vector<TileData> result;
     result.reserve(background.size());
     for (const auto& tile: background) {
-        if (tile.textureId > static_cast<uint16_t>(TileTextureId::Dirt))
+        if (tile.textureId > static_cast<uint16_t>(TileTextureId::DungeonInnerCornerTopLeft))
             throw std::runtime_error(server_constants::UNKNOWN_FARM_TEXTURE_ID);
         result.push_back({Position{tile.tile.getX() * 16, tile.tile.getY() * 16}, static_cast<TileTextureId>(tile.textureId)});
     }

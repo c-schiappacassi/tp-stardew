@@ -22,6 +22,7 @@ private:
     static constexpr int OFFSET_Y = -22;
 
     static bool validPosition(const Position& position);
+    static std::vector<CollisionBounds> staticFurnitureBounds(const BackgroundData& background);
 
     InteriorLocation location;
     WorldLocation outside;
@@ -31,6 +32,7 @@ private:
     Position exit;
     std::vector<Position> beds;
     BackgroundData background;
+    std::vector<CollisionBounds> furnitureObstacles;
     PlacementSpace space;
     ChestManager chests;
     DecorationManager decorations;
@@ -38,7 +40,8 @@ private:
 
     bool canApproachBed(const Position& position, const Position& bed) const;
     ZoneMap walkingMap() const;
-    std::vector<CollisionBounds> bedObstacles() const;
+    std::vector<CollisionBounds> fixedObstacles() const;
+    bool blockedByFixedObstacle(const CollisionBounds& bounds) const;
     std::optional<bool> interactWithDecoration(PlayerManager& players, uint16_t playerId, Direction direction, EntityIdGenerator& ids, std::chrono::steady_clock::time_point now);
 
 public:

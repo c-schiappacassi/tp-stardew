@@ -89,7 +89,8 @@ enum class SpriteId : uint16_t {
     Craftables,
     NightSky,
     DaySky,
-    Junimo
+    Junimo,
+    TownInteriors
 };
 
 enum class UiSpriteId : uint8_t {

@@ -1,0 +1,190 @@
+# MarniesShop (11x15 tiles, 176x240 px)
+[[interiors]]
+interior_id = 1
+width = 11
+height = 15
+entry = [5, 10]
+exit = [5, 13]
+npc = [3, 5]
+furniture = [
+    [2, 6, 29, 0],  # CR
+]
+# walkable map (# = walkable). Only a picture: the server reads `background` below, keep both in sync.
+#   ...........
+#   ...........
+#   ...........
+#   ...........
+#   ...######..
+#   ..########.
+#   ..########.
+#   .#########.
+#   .#########.
+#   .#########.
+#   .#########.
+#   .....#.....
+#   .....#.....
+#   .....#.....
+#   ...........
+background = [
+    [0, 0, 0, "unwalkable"], [1, 0, 0, "unwalkable"], [2, 0, 0, "unwalkable"], [3, 0, 0, "unwalkable"], [4, 0, 0, "unwalkable"], [5, 0, 0, "unwalkable"], [6, 0, 0, "unwalkable"], [7, 0, 0, "unwalkable"], [8, 0, 0, "unwalkable"], [9, 0, 0, "unwalkable"], [10, 0, 0, "unwalkable"],
+    [0, 1, 0, "unwalkable"], [1, 1, 0, "unwalkable"], [2, 1, 0, "unwalkable"], [3, 1, 0, "unwalkable"], [4, 1, 0, "unwalkable"], [5, 1, 0, "unwalkable"], [6, 1, 0, "unwalkable"], [7, 1, 0, "unwalkable"], [8, 1, 0, "unwalkable"], [9, 1, 0, "unwalkable"], [10, 1, 0, "unwalkable"],
+    [0, 2, 0, "unwalkable"], [1, 2, 0, "unwalkable"], [2, 2, 0, "unwalkable"], [3, 2, 0, "unwalkable"], [4, 2, 0, "unwalkable"], [5, 2, 0, "unwalkable"], [6, 2, 0, "unwalkable"], [7, 2, 0, "unwalkable"], [8, 2, 0, "unwalkable"], [9, 2, 0, "unwalkable"], [10, 2, 0, "unwalkable"],
+    [0, 3, 0, "unwalkable"], [1, 3, 0, "unwalkable"], [2, 3, 0, "unwalkable"], [3, 3, 0, "unwalkable"], [4, 3, 0, "unwalkable"], [5, 3, 0, "unwalkable"], [6, 3, 0, "unwalkable"], [7, 3, 0, "unwalkable"], [8, 3, 0, "unwalkable"], [9, 3, 0, "unwalkable"], [10, 3, 0, "unwalkable"],
+    [0, 4, 0, "unwalkable"], [1, 4, 0, "unwalkable"], [2, 4, 0, "unwalkable"], [3, 4, 0, "walkable"], [4, 4, 0, "walkable"], [5, 4, 0, "walkable"], [6, 4, 0, "walkable"], [7, 4, 0, "walkable"], [8, 4, 0, "walkable"], [9, 4, 0, "unwalkable"], [10, 4, 0, "unwalkable"],
+    [0, 5, 0, "unwalkable"], [1, 5, 0, "unwalkable"], [2, 5, 0, "walkable"], [3, 5, 0, "walkable"], [4, 5, 0, "walkable"], [5, 5, 0, "walkable"], [6, 5, 0, "walkable"], [7, 5, 0, "walkable"], [8, 5, 0, "walkable"], [9, 5, 0, "walkable"], [10, 5, 0, "unwalkable"],
+    [0, 6, 0, "unwalkable"], [1, 6, 0, "unwalkable"], [2, 6, 0, "walkable"], [3, 6, 0, "walkable"], [4, 6, 0, "walkable"], [5, 6, 0, "walkable"], [6, 6, 0, "walkable"], [7, 6, 0, "walkable"], [8, 6, 0, "walkable"], [9, 6, 0, "walkable"], [10, 6, 0, "unwalkable"],
+    [0, 7, 0, "unwalkable"], [1, 7, 0, "walkable"], [2, 7, 0, "walkable"], [3, 7, 0, "walkable"], [4, 7, 0, "walkable"], [5, 7, 0, "walkable"], [6, 7, 0, "walkable"], [7, 7, 0, "walkable"], [8, 7, 0, "walkable"], [9, 7, 0, "walkable"], [10, 7, 0, "unwalkable"],
+    [0, 8, 0, "unwalkable"], [1, 8, 0, "walkable"], [2, 8, 0, "walkable"], [3, 8, 0, "walkable"], [4, 8, 0, "walkable"], [5, 8, 0, "walkable"], [6, 8, 0, "walkable"], [7, 8, 0, "walkable"], [8, 8, 0, "walkable"], [9, 8, 0, "walkable"], [10, 8, 0, "unwalkable"],
+    [0, 9, 0, "unwalkable"], [1, 9, 0, "walkable"], [2, 9, 0, "walkable"], [3, 9, 0, "walkable"], [4, 9, 0, "walkable"], [5, 9, 0, "walkable"], [6, 9, 0, "walkable"], [7, 9, 0, "walkable"], [8, 9, 0, "walkable"], [9, 9, 0, "walkable"], [10, 9, 0, "unwalkable"],
+    [0, 10, 0, "unwalkable"], [1, 10, 0, "walkable"], [2, 10, 0, "walkable"], [3, 10, 0, "walkable"], [4, 10, 0, "walkable"], [5, 10, 0, "walkable"], [6, 10, 0, "walkable"], [7, 10, 0, "walkable"], [8, 10, 0, "walkable"], [9, 10, 0, "walkable"], [10, 10, 0, "unwalkable"],
+    [0, 11, 0, "unwalkable"], [1, 11, 0, "unwalkable"], [2, 11, 0, "unwalkable"], [3, 11, 0, "unwalkable"], [4, 11, 0, "unwalkable"], [5, 11, 0, "walkable"], [6, 11, 0, "unwalkable"], [7, 11, 0, "unwalkable"], [8, 11, 0, "unwalkable"], [9, 11, 0, "unwalkable"], [10, 11, 0, "unwalkable"],
+    [0, 12, 0, "unwalkable"], [1, 12, 0, "unwalkable"], [2, 12, 0, "unwalkable"], [3, 12, 0, "unwalkable"], [4, 12, 0, "unwalkable"], [5, 12, 0, "walkable"], [6, 12, 0, "unwalkable"], [7, 12, 0, "unwalkable"], [8, 12, 0, "unwalkable"], [9, 12, 0, "unwalkable"], [10, 12, 0, "unwalkable"],
+    [0, 13, 0, "unwalkable"], [1, 13, 0, "unwalkable"], [2, 13, 0, "unwalkable"], [3, 13, 0, "unwalkable"], [4, 13, 0, "unwalkable"], [5, 13, 0, "walkable"], [6, 13, 0, "unwalkable"], [7, 13, 0, "unwalkable"], [8, 13, 0, "unwalkable"], [9, 13, 0, "unwalkable"], [10, 13, 0, "unwalkable"],
+    [0, 14, 0, "unwalkable"], [1, 14, 0, "unwalkable"], [2, 14, 0, "unwalkable"], [3, 14, 0, "unwalkable"], [4, 14, 0, "unwalkable"], [5, 14, 0, "unwalkable"], [6, 14, 0, "unwalkable"], [7, 14, 0, "unwalkable"], [8, 14, 0, "unwalkable"], [9, 14, 0, "unwalkable"], [10, 14, 0, "unwalkable"],
+]
+
+# PierresShop (18x19 tiles, 288x304 px)
+[[interiors]]
+interior_id = 2
+width = 18
+height = 19
+entry = [6, 14]
+exit = [6, 16]
+npc = [4, 4]
+furniture = [
+    [3, 5, 26, 0],  # Cash
+    [3, 9, 27, 0],  # PB
+    [10, 6, 25, 2],  # Ss (top)
+    [10, 9, 25, 2],  # Ss (middle)
+    [10, 16, 25, 3],  # Ss (bottom left)
+    [14, 16, 25, 3],  # Ss (bottom right)
+]
+# walkable map (# = walkable). Only a picture: the server reads `background` below, keep both in sync.
+#   ..................
+#   ..................
+#   ..................
+#   ..................
+#   ..######.########.
+#   ..###############.
+#   ..###############.
+#   ..###############.
+#   ..###############.
+#   ..###############.
+#   ..###############.
+#   ..###############.
+#   ..###############.
+#   ..###############.
+#   ..###############.
+#   ......#..########.
+#   ......#..########.
+#   .........########.
+#   ..................
+background = [
+    [0, 0, 0, "unwalkable"], [1, 0, 0, "unwalkable"], [2, 0, 0, "unwalkable"], [3, 0, 0, "unwalkable"], [4, 0, 0, "unwalkable"], [5, 0, 0, "unwalkable"], [6, 0, 0, "unwalkable"], [7, 0, 0, "unwalkable"], [8, 0, 0, "unwalkable"], [9, 0, 0, "unwalkable"], [10, 0, 0, "unwalkable"], [11, 0, 0, "unwalkable"], [12, 0, 0, "unwalkable"], [13, 0, 0, "unwalkable"], [14, 0, 0, "unwalkable"], [15, 0, 0, "unwalkable"], [16, 0, 0, "unwalkable"], [17, 0, 0, "unwalkable"],
+    [0, 1, 0, "unwalkable"], [1, 1, 0, "unwalkable"], [2, 1, 0, "unwalkable"], [3, 1, 0, "unwalkable"], [4, 1, 0, "unwalkable"], [5, 1, 0, "unwalkable"], [6, 1, 0, "unwalkable"], [7, 1, 0, "unwalkable"], [8, 1, 0, "unwalkable"], [9, 1, 0, "unwalkable"], [10, 1, 0, "unwalkable"], [11, 1, 0, "unwalkable"], [12, 1, 0, "unwalkable"], [13, 1, 0, "unwalkable"], [14, 1, 0, "unwalkable"], [15, 1, 0, "unwalkable"], [16, 1, 0, "unwalkable"], [17, 1, 0, "unwalkable"],
+    [0, 2, 0, "unwalkable"], [1, 2, 0, "unwalkable"], [2, 2, 0, "unwalkable"], [3, 2, 0, "unwalkable"], [4, 2, 0, "unwalkable"], [5, 2, 0, "unwalkable"], [6, 2, 0, "unwalkable"], [7, 2, 0, "unwalkable"], [8, 2, 0, "unwalkable"], [9, 2, 0, "unwalkable"], [10, 2, 0, "unwalkable"], [11, 2, 0, "unwalkable"], [12, 2, 0, "unwalkable"], [13, 2, 0, "unwalkable"], [14, 2, 0, "unwalkable"], [15, 2, 0, "unwalkable"], [16, 2, 0, "unwalkable"], [17, 2, 0, "unwalkable"],
+    [0, 3, 0, "unwalkable"], [1, 3, 0, "unwalkable"], [2, 3, 0, "unwalkable"], [3, 3, 0, "unwalkable"], [4, 3, 0, "unwalkable"], [5, 3, 0, "unwalkable"], [6, 3, 0, "unwalkable"], [7, 3, 0, "unwalkable"], [8, 3, 0, "unwalkable"], [9, 3, 0, "unwalkable"], [10, 3, 0, "unwalkable"], [11, 3, 0, "unwalkable"], [12, 3, 0, "unwalkable"], [13, 3, 0, "unwalkable"], [14, 3, 0, "unwalkable"], [15, 3, 0, "unwalkable"], [16, 3, 0, "unwalkable"], [17, 3, 0, "unwalkable"],
+    [0, 4, 0, "unwalkable"], [1, 4, 0, "unwalkable"], [2, 4, 0, "walkable"], [3, 4, 0, "walkable"], [4, 4, 0, "walkable"], [5, 4, 0, "walkable"], [6, 4, 0, "walkable"], [7, 4, 0, "walkable"], [8, 4, 0, "unwalkable"], [9, 4, 0, "walkable"], [10, 4, 0, "walkable"], [11, 4, 0, "walkable"], [12, 4, 0, "walkable"], [13, 4, 0, "walkable"], [14, 4, 0, "walkable"], [15, 4, 0, "walkable"], [16, 4, 0, "walkable"], [17, 4, 0, "unwalkable"],
+    [0, 5, 0, "unwalkable"], [1, 5, 0, "unwalkable"], [2, 5, 0, "walkable"], [3, 5, 0, "walkable"], [4, 5, 0, "walkable"], [5, 5, 0, "walkable"], [6, 5, 0, "walkable"], [7, 5, 0, "walkable"], [8, 5, 0, "walkable"], [9, 5, 0, "walkable"], [10, 5, 0, "walkable"], [11, 5, 0, "walkable"], [12, 5, 0, "walkable"], [13, 5, 0, "walkable"], [14, 5, 0, "walkable"], [15, 5, 0, "walkable"], [16, 5, 0, "walkable"], [17, 5, 0, "unwalkable"],
+    [0, 6, 0, "unwalkable"], [1, 6, 0, "unwalkable"], [2, 6, 0, "walkable"], [3, 6, 0, "walkable"], [4, 6, 0, "walkable"], [5, 6, 0, "walkable"], [6, 6, 0, "walkable"], [7, 6, 0, "walkable"], [8, 6, 0, "walkable"], [9, 6, 0, "walkable"], [10, 6, 0, "walkable"], [11, 6, 0, "walkable"], [12, 6, 0, "walkable"], [13, 6, 0, "walkable"], [14, 6, 0, "walkable"], [15, 6, 0, "walkable"], [16, 6, 0, "walkable"], [17, 6, 0, "unwalkable"],
+    [0, 7, 0, "unwalkable"], [1, 7, 0, "unwalkable"], [2, 7, 0, "walkable"], [3, 7, 0, "walkable"], [4, 7, 0, "walkable"], [5, 7, 0, "walkable"], [6, 7, 0, "walkable"], [7, 7, 0, "walkable"], [8, 7, 0, "walkable"], [9, 7, 0, "walkable"], [10, 7, 0, "walkable"], [11, 7, 0, "walkable"], [12, 7, 0, "walkable"], [13, 7, 0, "walkable"], [14, 7, 0, "walkable"], [15, 7, 0, "walkable"], [16, 7, 0, "walkable"], [17, 7, 0, "unwalkable"],
+    [0, 8, 0, "unwalkable"], [1, 8, 0, "unwalkable"], [2, 8, 0, "walkable"], [3, 8, 0, "walkable"], [4, 8, 0, "walkable"], [5, 8, 0, "walkable"], [6, 8, 0, "walkable"], [7, 8, 0, "walkable"], [8, 8, 0, "walkable"], [9, 8, 0, "walkable"], [10, 8, 0, "walkable"], [11, 8, 0, "walkable"], [12, 8, 0, "walkable"], [13, 8, 0, "walkable"], [14, 8, 0, "walkable"], [15, 8, 0, "walkable"], [16, 8, 0, "walkable"], [17, 8, 0, "unwalkable"],
+    [0, 9, 0, "unwalkable"], [1, 9, 0, "unwalkable"], [2, 9, 0, "walkable"], [3, 9, 0, "walkable"], [4, 9, 0, "walkable"], [5, 9, 0, "walkable"], [6, 9, 0, "walkable"], [7, 9, 0, "walkable"], [8, 9, 0, "walkable"], [9, 9, 0, "walkable"], [10, 9, 0, "walkable"], [11, 9, 0, "walkable"], [12, 9, 0, "walkable"], [13, 9, 0, "walkable"], [14, 9, 0, "walkable"], [15, 9, 0, "walkable"], [16, 9, 0, "walkable"], [17, 9, 0, "unwalkable"],
+    [0, 10, 0, "unwalkable"], [1, 10, 0, "unwalkable"], [2, 10, 0, "walkable"], [3, 10, 0, "walkable"], [4, 10, 0, "walkable"], [5, 10, 0, "walkable"], [6, 10, 0, "walkable"], [7, 10, 0, "walkable"], [8, 10, 0, "walkable"], [9, 10, 0, "walkable"], [10, 10, 0, "walkable"], [11, 10, 0, "walkable"], [12, 10, 0, "walkable"], [13, 10, 0, "walkable"], [14, 10, 0, "walkable"], [15, 10, 0, "walkable"], [16, 10, 0, "walkable"], [17, 10, 0, "unwalkable"],
+    [0, 11, 0, "unwalkable"], [1, 11, 0, "unwalkable"], [2, 11, 0, "walkable"], [3, 11, 0, "walkable"], [4, 11, 0, "walkable"], [5, 11, 0, "walkable"], [6, 11, 0, "walkable"], [7, 11, 0, "walkable"], [8, 11, 0, "walkable"], [9, 11, 0, "walkable"], [10, 11, 0, "walkable"], [11, 11, 0, "walkable"], [12, 11, 0, "walkable"], [13, 11, 0, "walkable"], [14, 11, 0, "walkable"], [15, 11, 0, "walkable"], [16, 11, 0, "walkable"], [17, 11, 0, "unwalkable"],
+    [0, 12, 0, "unwalkable"], [1, 12, 0, "unwalkable"], [2, 12, 0, "walkable"], [3, 12, 0, "walkable"], [4, 12, 0, "walkable"], [5, 12, 0, "walkable"], [6, 12, 0, "walkable"], [7, 12, 0, "walkable"], [8, 12, 0, "walkable"], [9, 12, 0, "walkable"], [10, 12, 0, "walkable"], [11, 12, 0, "walkable"], [12, 12, 0, "walkable"], [13, 12, 0, "walkable"], [14, 12, 0, "walkable"], [15, 12, 0, "walkable"], [16, 12, 0, "walkable"], [17, 12, 0, "unwalkable"],
+    [0, 13, 0, "unwalkable"], [1, 13, 0, "unwalkable"], [2, 13, 0, "walkable"], [3, 13, 0, "walkable"], [4, 13, 0, "walkable"], [5, 13, 0, "walkable"], [6, 13, 0, "walkable"], [7, 13, 0, "walkable"], [8, 13, 0, "walkable"], [9, 13, 0, "walkable"], [10, 13, 0, "walkable"], [11, 13, 0, "walkable"], [12, 13, 0, "walkable"], [13, 13, 0, "walkable"], [14, 13, 0, "walkable"], [15, 13, 0, "walkable"], [16, 13, 0, "walkable"], [17, 13, 0, "unwalkable"],
+    [0, 14, 0, "unwalkable"], [1, 14, 0, "unwalkable"], [2, 14, 0, "walkable"], [3, 14, 0, "walkable"], [4, 14, 0, "walkable"], [5, 14, 0, "walkable"], [6, 14, 0, "walkable"], [7, 14, 0, "walkable"], [8, 14, 0, "walkable"], [9, 14, 0, "walkable"], [10, 14, 0, "walkable"], [11, 14, 0, "walkable"], [12, 14, 0, "walkable"], [13, 14, 0, "walkable"], [14, 14, 0, "walkable"], [15, 14, 0, "walkable"], [16, 14, 0, "walkable"], [17, 14, 0, "unwalkable"],
+    [0, 15, 0, "unwalkable"], [1, 15, 0, "unwalkable"], [2, 15, 0, "unwalkable"], [3, 15, 0, "unwalkable"], [4, 15, 0, "unwalkable"], [5, 15, 0, "unwalkable"], [6, 15, 0, "walkable"], [7, 15, 0, "unwalkable"], [8, 15, 0, "unwalkable"], [9, 15, 0, "walkable"], [10, 15, 0, "walkable"], [11, 15, 0, "walkable"], [12, 15, 0, "walkable"], [13, 15, 0, "walkable"], [14, 15, 0, "walkable"], [15, 15, 0, "walkable"], [16, 15, 0, "walkable"], [17, 15, 0, "unwalkable"],
+    [0, 16, 0, "unwalkable"], [1, 16, 0, "unwalkable"], [2, 16, 0, "unwalkable"], [3, 16, 0, "unwalkable"], [4, 16, 0, "unwalkable"], [5, 16, 0, "unwalkable"], [6, 16, 0, "walkable"], [7, 16, 0, "unwalkable"], [8, 16, 0, "unwalkable"], [9, 16, 0, "walkable"], [10, 16, 0, "walkable"], [11, 16, 0, "walkable"], [12, 16, 0, "walkable"], [13, 16, 0, "walkable"], [14, 16, 0, "walkable"], [15, 16, 0, "walkable"], [16, 16, 0, "walkable"], [17, 16, 0, "unwalkable"],
+    [0, 17, 0, "unwalkable"], [1, 17, 0, "unwalkable"], [2, 17, 0, "unwalkable"], [3, 17, 0, "unwalkable"], [4, 17, 0, "unwalkable"], [5, 17, 0, "unwalkable"], [6, 17, 0, "unwalkable"], [7, 17, 0, "unwalkable"], [8, 17, 0, "unwalkable"], [9, 17, 0, "walkable"], [10, 17, 0, "walkable"], [11, 17, 0, "walkable"], [12, 17, 0, "walkable"], [13, 17, 0, "walkable"], [14, 17, 0, "walkable"], [15, 17, 0, "walkable"], [16, 17, 0, "walkable"], [17, 17, 0, "unwalkable"],
+    [0, 18, 0, "unwalkable"], [1, 18, 0, "unwalkable"], [2, 18, 0, "unwalkable"], [3, 18, 0, "unwalkable"], [4, 18, 0, "unwalkable"], [5, 18, 0, "unwalkable"], [6, 18, 0, "unwalkable"], [7, 18, 0, "unwalkable"], [8, 18, 0, "unwalkable"], [9, 18, 0, "unwalkable"], [10, 18, 0, "unwalkable"], [11, 18, 0, "unwalkable"], [12, 18, 0, "unwalkable"], [13, 18, 0, "unwalkable"], [14, 18, 0, "unwalkable"], [15, 18, 0, "unwalkable"], [16, 18, 0, "unwalkable"], [17, 18, 0, "unwalkable"],
+]
+
+# RobinsShop (11x14 tiles, 176x224 px)
+[[interiors]]
+interior_id = 3
+width = 11
+height = 14
+entry = [6, 10]
+exit = [6, 12]
+npc = [7, 5]
+furniture = [
+    [7, 6, 31, 0],  # CR
+    [1, 9, 32, 0],  # PD
+]
+# walkable map (# = walkable). Only a picture: the server reads `background` below, keep both in sync.
+#   ...........
+#   ...........
+#   ...........
+#   ...........
+#   .....###...
+#   ..#######..
+#   ..#######..
+#   .########..
+#   .#########.
+#   .#########.
+#   .#########.
+#   ......#....
+#   ......#....
+#   ...........
+background = [
+    [0, 0, 0, "unwalkable"], [1, 0, 0, "unwalkable"], [2, 0, 0, "unwalkable"], [3, 0, 0, "unwalkable"], [4, 0, 0, "unwalkable"], [5, 0, 0, "unwalkable"], [6, 0, 0, "unwalkable"], [7, 0, 0, "unwalkable"], [8, 0, 0, "unwalkable"], [9, 0, 0, "unwalkable"], [10, 0, 0, "unwalkable"],
+    [0, 1, 0, "unwalkable"], [1, 1, 0, "unwalkable"], [2, 1, 0, "unwalkable"], [3, 1, 0, "unwalkable"], [4, 1, 0, "unwalkable"], [5, 1, 0, "unwalkable"], [6, 1, 0, "unwalkable"], [7, 1, 0, "unwalkable"], [8, 1, 0, "unwalkable"], [9, 1, 0, "unwalkable"], [10, 1, 0, "unwalkable"],
+    [0, 2, 0, "unwalkable"], [1, 2, 0, "unwalkable"], [2, 2, 0, "unwalkable"], [3, 2, 0, "unwalkable"], [4, 2, 0, "unwalkable"], [5, 2, 0, "unwalkable"], [6, 2, 0, "unwalkable"], [7, 2, 0, "unwalkable"], [8, 2, 0, "unwalkable"], [9, 2, 0, "unwalkable"], [10, 2, 0, "unwalkable"],
+    [0, 3, 0, "unwalkable"], [1, 3, 0, "unwalkable"], [2, 3, 0, "unwalkable"], [3, 3, 0, "unwalkable"], [4, 3, 0, "unwalkable"], [5, 3, 0, "unwalkable"], [6, 3, 0, "unwalkable"], [7, 3, 0, "unwalkable"], [8, 3, 0, "unwalkable"], [9, 3, 0, "unwalkable"], [10, 3, 0, "unwalkable"],
+    [0, 4, 0, "unwalkable"], [1, 4, 0, "unwalkable"], [2, 4, 0, "unwalkable"], [3, 4, 0, "unwalkable"], [4, 4, 0, "unwalkable"], [5, 4, 0, "walkable"], [6, 4, 0, "walkable"], [7, 4, 0, "walkable"], [8, 4, 0, "unwalkable"], [9, 4, 0, "unwalkable"], [10, 4, 0, "unwalkable"],
+    [0, 5, 0, "unwalkable"], [1, 5, 0, "unwalkable"], [2, 5, 0, "walkable"], [3, 5, 0, "walkable"], [4, 5, 0, "walkable"], [5, 5, 0, "walkable"], [6, 5, 0, "walkable"], [7, 5, 0, "walkable"], [8, 5, 0, "walkable"], [9, 5, 0, "unwalkable"], [10, 5, 0, "unwalkable"],
+    [0, 6, 0, "unwalkable"], [1, 6, 0, "unwalkable"], [2, 6, 0, "walkable"], [3, 6, 0, "walkable"], [4, 6, 0, "walkable"], [5, 6, 0, "walkable"], [6, 6, 0, "walkable"], [7, 6, 0, "walkable"], [8, 6, 0, "walkable"], [9, 6, 0, "unwalkable"], [10, 6, 0, "unwalkable"],
+    [0, 7, 0, "unwalkable"], [1, 7, 0, "walkable"], [2, 7, 0, "walkable"], [3, 7, 0, "walkable"], [4, 7, 0, "walkable"], [5, 7, 0, "walkable"], [6, 7, 0, "walkable"], [7, 7, 0, "walkable"], [8, 7, 0, "walkable"], [9, 7, 0, "unwalkable"], [10, 7, 0, "unwalkable"],
+    [0, 8, 0, "unwalkable"], [1, 8, 0, "walkable"], [2, 8, 0, "walkable"], [3, 8, 0, "walkable"], [4, 8, 0, "walkable"], [5, 8, 0, "walkable"], [6, 8, 0, "walkable"], [7, 8, 0, "walkable"], [8, 8, 0, "walkable"], [9, 8, 0, "walkable"], [10, 8, 0, "unwalkable"],
+    [0, 9, 0, "unwalkable"], [1, 9, 0, "walkable"], [2, 9, 0, "walkable"], [3, 9, 0, "walkable"], [4, 9, 0, "walkable"], [5, 9, 0, "walkable"], [6, 9, 0, "walkable"], [7, 9, 0, "walkable"], [8, 9, 0, "walkable"], [9, 9, 0, "walkable"], [10, 9, 0, "unwalkable"],
+    [0, 10, 0, "unwalkable"], [1, 10, 0, "walkable"], [2, 10, 0, "walkable"], [3, 10, 0, "walkable"], [4, 10, 0, "walkable"], [5, 10, 0, "walkable"], [6, 10, 0, "walkable"], [7, 10, 0, "walkable"], [8, 10, 0, "walkable"], [9, 10, 0, "walkable"], [10, 10, 0, "unwalkable"],
+    [0, 11, 0, "unwalkable"], [1, 11, 0, "unwalkable"], [2, 11, 0, "unwalkable"], [3, 11, 0, "unwalkable"], [4, 11, 0, "unwalkable"], [5, 11, 0, "unwalkable"], [6, 11, 0, "walkable"], [7, 11, 0, "unwalkable"], [8, 11, 0, "unwalkable"], [9, 11, 0, "unwalkable"], [10, 11, 0, "unwalkable"],
+    [0, 12, 0, "unwalkable"], [1, 12, 0, "unwalkable"], [2, 12, 0, "unwalkable"], [3, 12, 0, "unwalkable"], [4, 12, 0, "unwalkable"], [5, 12, 0, "unwalkable"], [6, 12, 0, "walkable"], [7, 12, 0, "unwalkable"], [8, 12, 0, "unwalkable"], [9, 12, 0, "unwalkable"], [10, 12, 0, "unwalkable"],
+    [0, 13, 0, "unwalkable"], [1, 13, 0, "unwalkable"], [2, 13, 0, "unwalkable"], [3, 13, 0, "unwalkable"], [4, 13, 0, "unwalkable"], [5, 13, 0, "unwalkable"], [6, 13, 0, "unwalkable"], [7, 13, 0, "unwalkable"], [8, 13, 0, "unwalkable"], [9, 13, 0, "unwalkable"], [10, 13, 0, "unwalkable"],
+]
+
+# ClintsShop (14x14 tiles, 224x224 px)
+[[interiors]]
+interior_id = 4
+width = 14
+height = 14
+entry = [4, 10]
+exit = [4, 12]
+npc = [2, 6]
+furniture = [
+    [1, 6, 30, 0],  # S
+    [1, 7, 29, 0],  # CR
+]
+# walkable map (# = walkable). Only a picture: the server reads `background` below, keep both in sync.
+#   ..............
+#   ..............
+#   ..............
+#   ..............
+#   ..#####.......
+#   .#######..#...
+#   .##########...
+#   .############.
+#   .############.
+#   .############.
+#   .############.
+#   ....#.........
+#   ....#.........
+#   ..............
+background = [
+    [0, 0, 0, "unwalkable"], [1, 0, 0, "unwalkable"], [2, 0, 0, "unwalkable"], [3, 0, 0, "unwalkable"], [4, 0, 0, "unwalkable"], [5, 0, 0, "unwalkable"], [6, 0, 0, "unwalkable"], [7, 0, 0, "unwalkable"], [8, 0, 0, "unwalkable"], [9, 0, 0, "unwalkable"], [10, 0, 0, "unwalkable"], [11, 0, 0, "unwalkable"], [12, 0, 0, "unwalkable"], [13, 0, 0, "unwalkable"],
+    [0, 1, 0, "unwalkable"], [1, 1, 0, "unwalkable"], [2, 1, 0, "unwalkable"], [3, 1, 0, "unwalkable"], [4, 1, 0, "unwalkable"], [5, 1, 0, "unwalkable"], [6, 1, 0, "unwalkable"], [7, 1, 0, "unwalkable"], [8, 1, 0, "unwalkable"], [9, 1, 0, "unwalkable"], [10, 1, 0, "unwalkable"], [11, 1, 0, "unwalkable"], [12, 1, 0, "unwalkable"], [13, 1, 0, "unwalkable"],
+    [0, 2, 0, "unwalkable"], [1, 2, 0, "unwalkable"], [2, 2, 0, "unwalkable"], [3, 2, 0, "unwalkable"], [4, 2, 0, "unwalkable"], [5, 2, 0, "unwalkable"], [6, 2, 0, "unwalkable"], [7, 2, 0, "unwalkable"], [8, 2, 0, "unwalkable"], [9, 2, 0, "unwalkable"], [10, 2, 0, "unwalkable"], [11, 2, 0, "unwalkable"], [12, 2, 0, "unwalkable"], [13, 2, 0, "unwalkable"],
+    [0, 3, 0, "unwalkable"], [1, 3, 0, "unwalkable"], [2, 3, 0, "unwalkable"], [3, 3, 0, "unwalkable"], [4, 3, 0, "unwalkable"], [5, 3, 0, "unwalkable"], [6, 3, 0, "unwalkable"], [7, 3, 0, "unwalkable"], [8, 3, 0, "unwalkable"], [9, 3, 0, "unwalkable"], [10, 3, 0, "unwalkable"], [11, 3, 0, "unwalkable"], [12, 3, 0, "unwalkable"], [13, 3, 0, "unwalkable"],
+    [0, 4, 0, "unwalkable"], [1, 4, 0, "unwalkable"], [2, 4, 0, "walkable"], [3, 4, 0, "walkable"], [4, 4, 0, "walkable"], [5, 4, 0, "walkable"], [6, 4, 0, "walkable"], [7, 4, 0, "unwalkable"], [8, 4, 0, "unwalkable"], [9, 4, 0, "unwalkable"], [10, 4, 0, "unwalkable"], [11, 4, 0, "unwalkable"], [12, 4, 0, "unwalkable"], [13, 4, 0, "unwalkable"],
+    [0, 5, 0, "unwalkable"], [1, 5, 0, "walkable"], [2, 5, 0, "walkable"], [3, 5, 0, "walkable"], [4, 5, 0, "walkable"], [5, 5, 0, "walkable"], [6, 5, 0, "walkable"], [7, 5, 0, "walkable"], [8, 5, 0, "unwalkable"], [9, 5, 0, "unwalkable"], [10, 5, 0, "walkable"], [11, 5, 0, "unwalkable"], [12, 5, 0, "unwalkable"], [13, 5, 0, "unwalkable"],
+    [0, 6, 0, "unwalkable"], [1, 6, 0, "walkable"], [2, 6, 0, "walkable"], [3, 6, 0, "walkable"], [4, 6, 0, "walkable"], [5, 6, 0, "walkable"], [6, 6, 0, "walkable"], [7, 6, 0, "walkable"], [8, 6, 0, "walkable"], [9, 6, 0, "walkable"], [10, 6, 0, "walkable"], [11, 6, 0, "unwalkable"], [12, 6, 0, "unwalkable"], [13, 6, 0, "unwalkable"],
+    [0, 7, 0, "unwalkable"], [1, 7, 0, "walkable"], [2, 7, 0, "walkable"], [3, 7, 0, "walkable"], [4, 7, 0, "walkable"], [5, 7, 0, "walkable"], [6, 7, 0, "walkable"], [7, 7, 0, "walkable"], [8, 7, 0, "walkable"], [9, 7, 0, "walkable"], [10, 7, 0, "walkable"], [11, 7, 0, "walkable"], [12, 7, 0, "walkable"], [13, 7, 0, "unwalkable"],
+    [0, 8, 0, "unwalkable"], [1, 8, 0, "walkable"], [2, 8, 0, "walkable"], [3, 8, 0, "walkable"], [4, 8, 0, "walkable"], [5, 8, 0, "walkable"], [6, 8, 0, "walkable"], [7, 8, 0, "walkable"], [8, 8, 0, "walkable"], [9, 8, 0, "walkable"], [10, 8, 0, "walkable"], [11, 8, 0, "walkable"], [12, 8, 0, "walkable"], [13, 8, 0, "unwalkable"],
+    [0, 9, 0, "unwalkable"], [1, 9, 0, "walkable"], [2, 9, 0, "walkable"], [3, 9, 0, "walkable"], [4, 9, 0, "walkable"], [5, 9, 0, "walkable"], [6, 9, 0, "walkable"], [7, 9, 0, "walkable"], [8, 9, 0, "walkable"], [9, 9, 0, "walkable"], [10, 9, 0, "walkable"], [11, 9, 0, "walkable"], [12, 9, 0, "walkable"], [13, 9, 0, "unwalkable"],
+    [0, 10, 0, "unwalkable"], [1, 10, 0, "walkable"], [2, 10, 0, "walkable"], [3, 10, 0, "walkable"], [4, 10, 0, "walkable"], [5, 10, 0, "walkable"], [6, 10, 0, "walkable"], [7, 10, 0, "walkable"], [8, 10, 0, "walkable"], [9, 10, 0, "walkable"], [10, 10, 0, "walkable"], [11, 10, 0, "walkable"], [12, 10, 0, "walkable"], [13, 10, 0, "unwalkable"],
+    [0, 11, 0, "unwalkable"], [1, 11, 0, "unwalkable"], [2, 11, 0, "unwalkable"], [3, 11, 0, "unwalkable"], [4, 11, 0, "walkable"], [5, 11, 0, "unwalkable"], [6, 11, 0, "unwalkable"], [7, 11, 0, "unwalkable"], [8, 11, 0, "unwalkable"], [9, 11, 0, "unwalkable"], [10, 11, 0, "unwalkable"], [11, 11, 0, "unwalkable"], [12, 11, 0, "unwalkable"], [13, 11, 0, "unwalkable"],
+    [0, 12, 0, "unwalkable"], [1, 12, 0, "unwalkable"], [2, 12, 0, "unwalkable"], [3, 12, 0, "unwalkable"], [4, 12, 0, "walkable"], [5, 12, 0, "unwalkable"], [6, 12, 0, "unwalkable"], [7, 12, 0, "unwalkable"], [8, 12, 0, "unwalkable"], [9, 12, 0, "unwalkable"], [10, 12, 0, "unwalkable"], [11, 12, 0, "unwalkable"], [12, 12, 0, "unwalkable"], [13, 12, 0, "unwalkable"],
+    [0, 13, 0, "unwalkable"], [1, 13, 0, "unwalkable"], [2, 13, 0, "unwalkable"], [3, 13, 0, "unwalkable"], [4, 13, 0, "unwalkable"], [5, 13, 0, "unwalkable"], [6, 13, 0, "unwalkable"], [7, 13, 0, "unwalkable"], [8, 13, 0, "unwalkable"], [9, 13, 0, "unwalkable"], [10, 13, 0, "unwalkable"], [11, 13, 0, "unwalkable"], [12, 13, 0, "unwalkable"], [13, 13, 0, "unwalkable"],
+]

@@ -9,11 +9,11 @@ bool DecorationManager::place(EntityId id, const Position& position, ItemId item
     Placement& placement, Direction direction) {
     if (!Decoration::isDecoration(item) || id == 0 || placement.contains(id) ||
         direction < Direction::Up || direction > Direction::Right ||
-        !placement.isAvailable(CollisionBox{entity_dimensions::DECORATION}.at(position))) {
+        !placement.isAvailable(Decoration::collisionBoxFor(item, direction).at(position))) {
         return false;
     }
     const Decoration decoration{id, position, item, direction};
-    const CollisionBox collision{entity_dimensions::DECORATION};
+    const CollisionBox collision = Decoration::collisionBoxFor(item, direction);
     PlacementReservation reservation{placement, id, position, collision, decoration.blocksMovement()};
     if (!reservation.isReserved() || !decorations.emplace(id, decoration).second) {
         return false;

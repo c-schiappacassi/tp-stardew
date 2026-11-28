@@ -62,14 +62,13 @@ InteriorTemplate InteriorTomlReader::readTemplate(const toml::table& table, Inte
         const auto& tile = tupleAt(&node, 4, field + server_constants::FIELD_BACKGROUND);
         const int x = numberAt(tile.get(0), width - 1, field + server_constants::FIELD_BACKGROUND_X);
         const int y = numberAt(tile.get(1), height - 1, field + server_constants::FIELD_BACKGROUND_Y);
-        const auto texture = static_cast<TileTextureId>(numberAt(tile.get(2),
-            static_cast<int>(TileTextureId::DungeonInnerCornerTopLeft), field + server_constants::FIELD_BACKGROUND_TEXTURE_ID));
+        numberAt(tile.get(2), static_cast<int>(TileTextureId::DungeonInnerCornerTopLeft),
+            field + server_constants::FIELD_BACKGROUND_TEXTURE_ID);
         const auto* state = tile.get(3)->as_string();
         if (seen[y][x] || !state || (state->get() != server_constants::WALKABLE && state->get() != server_constants::UNWALKABLE))
             invalid(field + server_constants::FIELD_BACKGROUND, server_constants::INVALID_OR_DUPLICATE_FLOOR_TILE);
         seen[y][x] = true;
         floor[y][x] = state->get() == server_constants::WALKABLE;
-        result.background.floor.push_back({Position{x * entity_dimensions::TILE_SIZE, y * entity_dimensions::TILE_SIZE}, texture});
     }
     result.terrain = ZoneMap{floor, entity_dimensions::TILE_SIZE};
     result.entry = positionAt(table.get(server_constants::ENTRY), result.terrain, width, height, field + server_constants::FIELD_ENTRY);
@@ -102,7 +101,7 @@ InteriorTemplate InteriorTomlReader::readTemplate(const toml::table& table, Inte
             const auto& item = tupleAt(&node, 4, field + server_constants::FIELD_FURNITURE);
             const int x = numberAt(item.get(0), width - 1, field + server_constants::FIELD_FURNITURE);
             const int y = numberAt(item.get(1), height - 1, field + server_constants::FIELD_FURNITURE);
-            const auto type = static_cast<FurnitureId>(numberAt(item.get(2), static_cast<int>(FurnitureId::Chest), field + server_constants::FIELD_FURNITURE_ID));
+            const auto type = static_cast<FurnitureId>(numberAt(item.get(2), static_cast<int>(FurnitureId::RobinPlantTable), field + server_constants::FIELD_FURNITURE_ID));
             const auto direction = static_cast<Direction>(numberAt(item.get(3), static_cast<int>(Direction::Right), field + server_constants::FIELD_FURNITURE_DIRECTION));
             const auto position = interiorFurnitureBaseFromTileOrigin(Position{x * tileSize, y * tileSize}, type, direction);
             result.background.furniture.push_back({position, type, direction});

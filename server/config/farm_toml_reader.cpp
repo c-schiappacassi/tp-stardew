@@ -20,6 +20,7 @@
 #include "entities/collision_box.h"
 #include "entities/entity_dimensions.h"
 #include "farm/animals/animal_species.h"
+#include "farm/decorations/decoration.h"
 #include "farm/decorations/decoration_items.h"
 #include "inventory/inventory.h"
 #include "town/town_map.h"
@@ -396,7 +397,7 @@ void FarmTomlReader::validateInitialPlacements(const FarmLayout& layout,
             invalid(server_constants::FARM_FURNITURE, server_constants::UNSUPPORTED_FURNITURE_OR_POSITION);
         }
 
-        const auto bounds = decorationBox.at(spawn.base);
+        const auto bounds = Decoration::collisionBoxFor(spawn.item, Direction::Down).at(spawn.base);
         if (!canPlace(bounds)) {
             invalid(server_constants::FARM_FURNITURE, server_constants::FURNITURE_OVERLAPS_OR_IS_OUTSIDE_THE_MAP);
         }

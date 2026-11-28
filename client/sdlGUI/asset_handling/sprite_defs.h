@@ -153,11 +153,12 @@ namespace SpriteDefs {
 
         // interiors
         {SpriteId::PlayerHouseInterior, "farm/interior.png"},
-        {SpriteId::MarniesInterior, "farm/interior.png"},
-        {SpriteId::PierresInterior, "farm/interior.png"},
-        {SpriteId::ClintsInterior, "farm/interior.png"},
-        {SpriteId::RobinsInterior, "farm/interior.png"},
+        {SpriteId::MarniesInterior, "market/world/marnies_store_interior.png"},
+        {SpriteId::PierresInterior, "market/world/pierre_store_interior.png"},
+        {SpriteId::ClintsInterior, "market/world/clint_store_interior.png"},
+        {SpriteId::RobinsInterior, "market/world/robin_store_interior.png"},
         {SpriteId::ComunityCenterInterior, "farm/interior.png"},
+        {SpriteId::TownInteriors, "market/world/tilesets_town_interiors.png"},
 
         // npcs
         {SpriteId::Marnie, "market/npcs/marnie.png"},
@@ -207,18 +208,17 @@ namespace SpriteDefs {
         {Quality::Excellent,   quality(338, 392)},
         {Quality::Incredible,   quality(346, 392)},
         {Quality::Perfect,   quality(354, 392)},
-        };
+    };
 
     // Map background
-
     inline const std::map<InteriorId, Sprite> INTERIORS = {
         {InteriorId::PlayerHouse , {SpriteId::PlayerHouseInterior, 0, 0, 272, 272}},
-        {InteriorId::PierresShop , {SpriteId::PierresInterior, 0, 0, 272, 272}},
-        {InteriorId::MarniesShop , {SpriteId::MarniesInterior, 0, 0, 272, 272}},
-        {InteriorId::ClintsShop , {SpriteId::ClintsInterior, 0, 0, 272, 272}},
-        {InteriorId::RobinsShop , {SpriteId::RobinsInterior, 0, 0, 272, 272}},
+        {InteriorId::PierresShop , {SpriteId::PierresInterior, 0, 0, 288, 304}},
+        {InteriorId::MarniesShop , {SpriteId::MarniesInterior, 0, 0, 176, 240}},
+        {InteriorId::ClintsShop , {SpriteId::ClintsInterior, 0, 0, 224, 224}},
+        {InteriorId::RobinsShop , {SpriteId::RobinsInterior, 0, 0, 176, 224}},
         {InteriorId::ComunityCenter , {SpriteId::ComunityCenterInterior, 0, 0, 272, 272}},
-        };
+    };
     
 
     inline const std::map<NpcId, Sprite> NPCS = {
@@ -244,10 +244,16 @@ namespace SpriteDefs {
         {TileTextureId::ConnctionStonePathGrassLeftSide, {SpriteId::TownSpring, 0, 320, 16, 16}},
         {TileTextureId::ConnctionStonePathGrassTop,      {SpriteId::TownSpring, 16, 304, 16, 16}},
         {TileTextureId::ConnctionStonePathGrassBottom,   {SpriteId::TownSpring, 16, 336, 16, 16}},
+        {TileTextureId::ConnctionStonePathGrassTopRightCorner,    {SpriteId::TownSpring, 32, 304, 16, 16}},
+        {TileTextureId::ConnctionStonePathGrassBottomRightCorner, {SpriteId::TownSpring, 32, 336, 16, 16}},
+        {TileTextureId::ConnctionStonePathGrassBottomLeftCorner,  {SpriteId::TownSpring, 0, 336, 16, 16}},
+        {TileTextureId::ConnctionStonePathGrassRightSide,         {SpriteId::TownSpring, 32, 320, 16, 16}},
         {TileTextureId::TilledDirt,   {SpriteId::TilledDirt, 0,0, 16, 16}},
         {TileTextureId::WateredDirt,   {SpriteId::TilledDirt, 64,0, 16, 16}},
 
         {TileTextureId::DungeonFloor,                 {SpriteId::MinesTiles, 1216, 704, 16, 16}},
+        {TileTextureId::DungeonDottedFloor,           {SpriteId::MinesTiles, 1104, 736, 16, 16}},
+        {TileTextureId::DungeonPebbledFloor,          {SpriteId::MinesTiles, 1168, 720, 16, 16}},
         {TileTextureId::DungeonVoid,                  {SpriteId::MinesTiles, 1264, 640, 16, 16}},
         {TileTextureId::DungeonLeftWall,              {SpriteId::MinesTiles, 1088, 704, 16, 64}},
         {TileTextureId::DungeonRightWall,             {SpriteId::MinesTiles, 1264, 736, 16, 64}},
@@ -256,7 +262,11 @@ namespace SpriteDefs {
         {TileTextureId::DungeonBottomRightCorner1,    {SpriteId::MinesTiles, 1248, 768, 16, 16}},
         {TileTextureId::DungeonInnerCornerTopRight,   {SpriteId::MinesTiles, 1104, 768, 16, 16}},
         {TileTextureId::DungeonInnerCornerTopLeft,    {SpriteId::MinesTiles, 1232, 768, 16, 16}},
-        };
+    };
+
+    inline constexpr bool is_wall_decor(DecorId id) {
+        return id == DecorId::WallSpiderWeb || id == DecorId::WallLantern || id == DecorId::SmallWallLantern;
+    }
 
     inline constexpr bool is_over_dungeon_floor(TileTextureId id) {
         switch (id) {
@@ -315,9 +325,22 @@ namespace SpriteDefs {
         {DecorId::PottedPlants,      on_tile(SpriteId::TownSpring, 368, 476, 47, 36)},
         {DecorId::SmallBlueFlower,   on_tile(SpriteId::TownSpring, 353, 432, 16, 16)},
         {DecorId::SignPost,          on_tile(SpriteId::OutdoorsSpring, 160, 256, 16, 32)},
+        {DecorId::FenceSideLeft,     on_tile(SpriteId::TownSpring, 0, 432, 16, 16)},
+        {DecorId::FenceSideRight,    on_tile(SpriteId::TownSpring, 32, 432, 16, 16)},
+        {DecorId::SmallBench,        on_tile(SpriteId::TownSpring, 32, 154, 32, 22)},
+        {DecorId::PottedFern,        on_tile(SpriteId::TownSpring, 16, 145, 16, 16)},
+        {DecorId::ChairFacingRight,  on_tile(SpriteId::TownSpring, 128, 9, 16, 38)},
+        {DecorId::Mailbox,           on_tile(SpriteId::TownSpring, 146, 0, 12, 32)},
+        {DecorId::TrashCan,          on_tile(SpriteId::TownSpring, 224, 26, 16, 22)},
+        {DecorId::ChairFacingLeft,   on_tile(SpriteId::TownSpring, 352, 9, 15, 38)},
+        {DecorId::FlowerBox,         on_tile(SpriteId::TownSpring, 368, 9, 16, 21)},
+        {DecorId::PottedFlower,      on_tile(SpriteId::TownSpring, 384, 16, 16, 32)},
+        {DecorId::Table,             on_tile(SpriteId::TownSpring, 432, 526, 48, 34)},
+        {DecorId::WallSpiderWeb,     on_tile(SpriteId::MinesTiles, 1056, 704, 32, 32)},
+        {DecorId::WallLantern,       on_tile(SpriteId::MinesTiles, 1040, 640, 32, 32)},
+        {DecorId::SmallWallLantern,  on_tile(SpriteId::MinesTiles, 1040, 672, 16, 16)},
         };
 
-    // Direction::None vale para todas las direcciones; Left es Right espejado
     inline const std::map<std::pair<FurnitureId, Direction>, FlippableSprite> FURNITURE = [] {
         struct Def { FurnitureId id; Direction dir; Sprite sprite; };
         const Def defs[] = {
@@ -353,6 +376,19 @@ namespace SpriteDefs {
             {FurnitureId::BrownArmCouch,       Direction::Down,   standing(SpriteId::Furniture, 384, 144, 32, 32)},
             {FurnitureId::BrownArmCouch,       Direction::Right,  standing(SpriteId::Furniture, 416, 144, 32, 32)},
             {FurnitureId::BrownArmCouch,       Direction::Up,     standing(SpriteId::Furniture, 448, 144, 32, 32)},
+
+            // shop furniture
+            {FurnitureId::PierreShopShelf,     Direction::Down,   standing(SpriteId::TownInteriors, 416, 464, 96, 48)},
+            {FurnitureId::PierreShopShelf,     Direction::Up,     standing(SpriteId::TownInteriors, 416, 464, 96, 48)},
+            {FurnitureId::PierreShopShelf,     Direction::Left,   standing(SpriteId::TownInteriors, 160, 928, 32, 96)},
+            {FurnitureId::PierreShopShelf,     Direction::Right,  standing(SpriteId::TownInteriors, 128, 928, 32, 96)},
+            {FurnitureId::PierreCashRegister,  Direction::None,   standing(SpriteId::TownInteriors, 304, 480, 96, 32)},
+            {FurnitureId::PierreProductBin,    Direction::None,   standing(SpriteId::TownInteriors, 416, 428, 32, 36)},
+            {FurnitureId::MarnieGrass,         Direction::None,   standing(SpriteId::TownInteriors, 336, 344, 16, 24)},
+            {FurnitureId::CashRegister,        Direction::None,   standing(SpriteId::TownInteriors, 336, 452, 48, 28)},
+            {FurnitureId::ClintsChair,         Direction::None,   standing(SpriteId::TownInteriors, 143, 243, 16, 28)},
+            {FurnitureId::RobinCashRegister,   Direction::None,   standing(SpriteId::TownInteriors, 336, 413, 48, 28)},
+            {FurnitureId::RobinPlantTable,     Direction::None,   standing(SpriteId::TownInteriors, 305, 1386, 16, 38)},
             };
         std::map<std::pair<FurnitureId, Direction>, FlippableSprite> m;
         for (const Def& d : defs) {

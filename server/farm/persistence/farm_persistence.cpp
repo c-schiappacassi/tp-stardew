@@ -84,15 +84,21 @@ void FarmPersistence::restore(const FarmRestoreData& saved, const FarmConfig& co
         animals.findMutable(data.id)->restoreProgress(std::chrono::milliseconds{static_cast<int64_t>(production->second)}, products->second);
     }
     for (const FurnitureData& data: saved.farm.furniture) {
-        if (data.type == FurnitureId::Chest) {
-            const auto contents = saved.chestInventories.find(data.id);
-            if (contents == saved.chestInventories.end() || !chests.place(data.id, data.pos, space, contents->second))
-                throw std::runtime_error(server_constants::FAILED_TO_RESTORE_CHEST);
-        } else {
-            const ItemId item = decoration_items::itemFor(data.type);
-            if (!decorations.place(data.id, data.pos, item, space, data.dir))
-                throw std::runtime_error(server_constants::FAILED_TO_RESTORE_DECORATION);
-        }
+        if (data.type != FurnitureId::Chest)
+            continue;
+        const auto contents = saved.chestInventories.find(data.id);
+        if (contents == saved.chestInventories.end() || !chests.place(data.id, data.pos, space, contents->second))
+            throw std::runtime_error(server_constants::FAILED_TO_RESTORE_CHEST);
     }
-    groundItems.restoreItems(saved.farm.loot);
+    auto loot = saved.farm.loot;
+    for (const FurnitureData& data: saved.farm.furniture) {
+        if (data.type == FurnitureId::Chest)
+            continue;
+        const ItemId item = decoration_items::itemFor(data.type);
+        if (!Decoration::isDecoration(item) || data.dir < Direction::Up || data.dir > Direction::Right)
+            throw std::runtime_error(server_constants::FAILED_TO_RESTORE_DECORATION);
+        if (!decorations.place(data.id, data.pos, item, space, data.dir))
+            loot.push_back(LootData{data.id, data.pos, item, 1, Quality::None, LootKind::Item});
+    }
+    groundItems.restoreItems(loot);
 }

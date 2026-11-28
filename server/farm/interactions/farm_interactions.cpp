@@ -42,8 +42,9 @@ bool FarmInteractions::useShovel(const PlayerManager& players, uint16_t playerId
     if (!position) {
         return false;
     }
+    const auto tile = CollisionBox{entity_dimensions::DECORATION}.at(*position);
     for (const auto& [id, decoration]: decorations.getDecorations()) {
-        if (terrain.getMap().sameBaseCell(decoration.getPosition(), *position)) {
+        if (decoration.getBounds().intersects(tile)) {
             if (!groundItems.drop(decoration.getPosition(), decoration.getItem(), 1, Quality::None, entityIds)) {
                 return false;
             }
@@ -80,8 +81,8 @@ bool FarmInteractions::collectProduct(const PlayerManager& players, uint16_t pla
 bool FarmInteractions::placeSelectedItem(PlayerManager& players, uint16_t playerId, EntityIdGenerator& entityIds, Direction direction, ItemId item) const {
     const auto player = players.snapshot(playerId);
     const auto cropType = cropTypeForSeed(item);
-    const auto size = cropType ? entity_dimensions::CROP : entity_dimensions::DECORATION;
-    const auto position = targeting.findAdjacentPosition(player, direction, terrain.getMap(), CollisionBox{size});
+    const CollisionBox box = cropType ? CollisionBox{entity_dimensions::CROP} : Decoration::collisionBoxFor(item, direction);
+    const auto position = targeting.findAdjacentPosition(player, direction, terrain.getMap(), box);
     if (!position || entityIds.getNextId() == 0) {
         return false;
     }

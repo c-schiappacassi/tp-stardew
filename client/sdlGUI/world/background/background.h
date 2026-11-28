@@ -75,6 +75,25 @@ private:
     static bool is_flat(FurnitureId id) {
         return id == FurnitureId::Bed || id == FurnitureId::BeigeRug || id == FurnitureId::BlueRug;
     }
+
+    static int wall_decor_sort_y(const Position& pos, const Sprite& sprite,
+                                 const std::vector<FramePieceData>& frame, AssetManager& assets) {
+        const int left = pos.getX() + sprite.get_dx();
+        const int top = pos.getY() + sprite.get_dy();
+        const int right = left + sprite.get_width();
+        const int bottom = top + sprite.get_height();
+        int sort_y = bottom;
+        for (const FramePieceData& f : frame) {
+            const Sprite& wall = assets.get_sprite(f.id);
+            const int wall_left = f.pos.getX() + wall.get_dx();
+            const int wall_top = f.pos.getY() + wall.get_dy();
+            const int wall_bottom = wall_top + wall.get_height();
+            if (left < wall_left + wall.get_width() && wall_left < right && top < wall_bottom && wall_top < bottom) {
+                sort_y = std::max(sort_y, wall_bottom + 1);
+            }
+        }
+        return sort_y;
+    }
 public:
     explicit Background(const BackgroundData& data, AssetManager& assets) {
         if (data.interior) {
@@ -91,8 +110,14 @@ public:
         }
 
         props.reserve(data.decor.size() + data.frame.size() + data.buildings.size() + data.furniture.size() + data.portals.size() + 1);
-        for (const DecorData& d : data.decor)
-            props.emplace_back(d.pos, assets.get_sprite(d.id));
+        for (const DecorData& d : data.decor) {
+            const Sprite& sprite = assets.get_sprite(d.id);
+            if (SpriteDefs::is_wall_decor(d.id)) {
+                props.emplace_back(d.pos, sprite, false, wall_decor_sort_y(d.pos, sprite, data.frame, assets));
+            } else {
+                props.emplace_back(d.pos, sprite);
+            }
+        }
         for (const FramePieceData& f : data.frame)
             props.emplace_back(f.pos, assets.get_sprite(f.id));
         for (const BuildingData& b : data.buildings)

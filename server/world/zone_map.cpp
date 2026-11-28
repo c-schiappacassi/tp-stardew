@@ -222,29 +222,36 @@ bool ZoneMap::canReach(const Position& origin, const Position& position, Directi
 
 std::optional<Position> ZoneMap::findAdjacentPosition(const Position& origin, Direction direction, const CollisionBounds& actorBounds,
     const CollisionBox& collision, uint16_t range) const {
-    auto cell = baseCellAt(origin);
-    if (!cell) {
+    const auto cell = baseCellAt(origin);
+    if (!cell || cellSize <= 0) {
         return std::nullopt;
     }
+    Cell step{0, 0};
     switch (direction) {
         case Direction::Up:
-            --cell->first;
+            step.first = -1;
             break;
         case Direction::Down:
-            ++cell->first;
+            step.first = 1;
             break;
         case Direction::Left:
-            --cell->second;
+            step.second = -1;
             break;
         case Direction::Right:
-            ++cell->second;
+            step.second = 1;
             break;
         default:
             return std::nullopt;
     }
-    const auto position = baseAt(*cell);
-    if (!position || !canReach(origin, *position, direction, range) || actorBounds.intersects(collision.at(*position))) {
-        return std::nullopt;
+    const int maxTiles = range / cellSize + 1;
+    for (int distance = 1; distance <= maxTiles; ++distance) {
+        const auto position = baseAt({cell->first + step.first * distance, cell->second + step.second * distance});
+        if (!position || !canReach(origin, *position, direction, range)) {
+            return std::nullopt;
+        }
+        if (!actorBounds.intersects(collision.at(*position))) {
+            return position;
+        }
     }
-    return position;
+    return std::nullopt;
 }

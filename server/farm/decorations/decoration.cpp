@@ -5,6 +5,7 @@
 #include <stdexcept>
 
 #include "decoration_items.h"
+#include "world/interiors/interior_furniture_position.h"
 
 Decoration::Decoration(EntityId id, const Position& position, ItemId item, Direction direction):
     id(id), position(position), item(item), direction(direction) {
@@ -22,6 +23,12 @@ EntityId Decoration::getId() const { return id; }
 const Position& Decoration::getPosition() const { return position; }
 ItemId Decoration::getItem() const { return item; }
 Direction Decoration::getDirection() const { return direction; }
+CollisionBox Decoration::collisionBoxFor(ItemId item, Direction direction) {
+    return furnitureCollisionBox(decoration_items::furnitureFor(item), direction);
+}
+
+CollisionBounds Decoration::getBounds() const { return collisionBoxFor(item, direction).at(position); }
+
 bool Decoration::blocksMovement() const {
     return item != ItemId::BeigeRug && item != ItemId::BlueRug;
 }
