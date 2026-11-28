@@ -628,6 +628,10 @@ void ClientProtocol::send(const CheckCodeDTO& dto) {
 
 void ClientProtocol::recv(ServerStatus& status) {
     status.status = static_cast<StatusCode>(base.receiveUint8());
+
+    if (status.status > StatusCode::Error)
+        throw ProtocolError("Unknown status code");
+
     status.errorMsg = base.receiveString();
     status.successMsg = base.receiveString();
     status.gameId = base.receiveString();
@@ -653,6 +657,10 @@ void ClientProtocol::recv(ServerStatus& status) {
 
 void ClientProtocol::recv(qtStatus& status) {
     status.status = static_cast<StatusCode>(base.receiveUint8());
+
+    if (status.status > StatusCode::Error)
+        throw ProtocolError("Unknown status code");
+
     status.errorMsg = base.receiveString();
     status.successMsg = base.receiveString();
 

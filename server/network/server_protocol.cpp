@@ -213,8 +213,13 @@ ServerProtocol::ServerProtocol(Socket&& socket) : base(std::move(socket)) {}
 
 void ServerProtocol::shutdown() { base.shutdown(); }
 
-MessageType ServerProtocol::receiveType() { 
-    return static_cast<MessageType>(base.receiveUint8()); 
+MessageType ServerProtocol::receiveType() {
+    const auto type = static_cast<MessageType>(base.receiveUint8());
+    if (!(type >= MessageType::CreateGame && type <= MessageType::ExitGame) &&
+        !(type >= MessageType::Move && type <= MessageType::CloseChest)) {
+        throw ProtocolError("Unknown message type");
+        }
+    return type;
 }
 
 Position ServerProtocol::receivePosition() {
