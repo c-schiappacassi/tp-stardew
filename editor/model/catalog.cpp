@@ -28,7 +28,6 @@ const std::vector<FloorInfo>& floors() {
         {TileTextureId::DungeonFloor, "Floor", MINE, 1216, 704},
         {TileTextureId::DungeonDottedFloor, "Dotted floor", MINE, 1104, 736},
         {TileTextureId::DungeonPebbledFloor, "Pebbled floor", MINE, 1168, 720},
-        {TileTextureId::DungeonBrickFloor, "Brick floor", MINE, 1024, 816, 48, 48},
         {TileTextureId::DungeonVoid, "Void (black)", MINE, 1264, 640, 16, 16, false},
         {TileTextureId::DungeonLeftWall, "Left wall", MINE, 1088, 704, 16, 64, false, true},
         {TileTextureId::DungeonRightWall, "Right wall", MINE, 1264, 736, 16, 64, false, true},

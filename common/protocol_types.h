@@ -273,7 +273,6 @@ enum class TileTextureId : uint8_t{
     ConnctionStonePathGrassRightSide,
     DungeonDottedFloor,
     DungeonPebbledFloor,
-    DungeonBrickFloor,
     DungeonInnerCornerTopLeft,
 };
 

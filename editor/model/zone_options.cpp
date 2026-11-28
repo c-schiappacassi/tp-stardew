@@ -98,8 +98,7 @@ ZoneOptions townOptions() {
 
 ZoneOptions mineOptions() {
     return {
-        {TileTextureId::DungeonFloor, TileTextureId::DungeonDottedFloor, TileTextureId::DungeonPebbledFloor,
-         TileTextureId::DungeonBrickFloor},
+        {TileTextureId::DungeonFloor, TileTextureId::DungeonDottedFloor, TileTextureId::DungeonPebbledFloor},
         {
             decorElement(DecorId::WeirdGreenPlant),
             decorElement(DecorId::SmallFern),
